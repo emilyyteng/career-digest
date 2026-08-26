@@ -1,0 +1,5 @@
+{
+  "name": "career-digest",
+  "private": true,
+  "workspaces": ["apps/api"]
+}

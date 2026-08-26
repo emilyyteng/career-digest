@@ -2,16 +2,21 @@
 
 Personal internship finder and application tracker.
 
-Scrapes software engineering internship postings, stores them in PostgreSQL, filters by preferences, and (later) ranks them with an LLM. Also tracks application status, notes, and documents.
+## Milestone 1
 
-## Stack
+Ingest public Greenhouse job-board JSON, store it in PostgreSQL, and list internships over HTTP.
 
-- Backend: Node.js + TypeScript
-- Database: PostgreSQL
-- Frontend: React
-- Job boards (initial): Greenhouse, Lever, Ashby
-- Ranking (later): OpenAI API
+## Setup
 
-## Status
+```bash
+cp .env.example .env
+createdb career_digest   # or: docker compose up -d
+npm install
+npm run migrate -w @career-digest/api
+npm run ingest -w @career-digest/api
+npm run dev -w @career-digest/api
+```
 
-Early setup. First milestone is still being planned.
+Then open http://localhost:3000/jobs (internships only) or http://localhost:3000/jobs?all=true.
+
+Edit the Greenhouse boards in `apps/api/src/config/companies.ts`.
