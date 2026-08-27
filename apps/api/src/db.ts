@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -15,10 +15,12 @@ if (!connectionString) {
 export const pool = new pg.Pool({ connectionString });
 
 export async function migrate(): Promise<void> {
-  const sqlPath = path.join(
-    fileURLToPath(new URL(".", import.meta.url)),
-    "sql/001_init.sql",
-  );
-  const sql = await readFile(sqlPath, "utf8");
-  await pool.query(sql);
+  const sqlDir = path.join(fileURLToPath(new URL(".", import.meta.url)), "sql");
+  const files = (await readdir(sqlDir))
+    .filter((name) => name.endsWith(".sql"))
+    .sort();
+  for (const name of files) {
+    const sql = await readFile(path.join(sqlDir, name), "utf8");
+    await pool.query(sql);
+  }
 }

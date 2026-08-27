@@ -19,11 +19,25 @@ CREATE TABLE IF NOT EXISTS postings (
   url text NOT NULL,
   description_html text,
   is_internship boolean NOT NULL DEFAULT false,
+  first_published_at timestamptz,
+  source_updated_at timestamptz,
+  cycle_status text,
   first_seen_at timestamptz NOT NULL DEFAULT now(),
   last_seen_at timestamptz NOT NULL DEFAULT now(),
+  removed_from_board_at timestamptz,
   raw jsonb NOT NULL,
   UNIQUE (source, external_id)
 );
 
+CREATE TABLE IF NOT EXISTS applications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  posting_id uuid NOT NULL UNIQUE REFERENCES postings (id) ON DELETE RESTRICT,
+  status text NOT NULL DEFAULT 'applied',
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS postings_is_internship_idx ON postings (is_internship);
 CREATE INDEX IF NOT EXISTS postings_company_id_idx ON postings (company_id);
+

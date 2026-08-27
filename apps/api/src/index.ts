@@ -27,12 +27,18 @@ app.get("/jobs", async (req, res) => {
        p.department,
        p.url,
        p.is_internship AS "isInternship",
+       p.cycle_status AS "cycleStatus",
+       p.first_published_at AS "firstPublishedAt",
+       p.source_updated_at AS "sourceUpdatedAt",
        p.first_seen_at AS "firstSeenAt",
        p.last_seen_at AS "lastSeenAt"
      FROM postings p
      JOIN companies c ON c.id = p.company_id
-     WHERE ($1::boolean IS FALSE OR p.is_internship)
-     ORDER BY p.last_seen_at DESC`,
+     WHERE p.removed_from_board_at IS NULL
+       AND ($1::boolean IS FALSE OR p.is_internship)
+     ORDER BY
+       CASE p.cycle_status WHEN 'target' THEN 0 WHEN 'optional' THEN 1 ELSE 2 END,
+       p.last_seen_at DESC`,
     [internshipsOnly],
   );
   res.json({ count: result.rows.length, jobs: result.rows });
