@@ -1,54 +1,171 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getApplications, type ApplicationRow } from "../api";
+import { deleteApplication, getApplications, type ApplicationRow } from "../api";
+import { formatShortDate } from "../formatDate";
+import PostingDates from "../PostingDates";
+import StarButton from "../StarButton";
+import AddApplicationForm from "./AddApplicationForm";
 
-const TABS = ["all", "starred", "applied", "interviewing", "hired", "declined"];
+const TABS = ["all", "starred", "applied", "interviewing", "hired", "declined"] as const;
+
+const EMPTY_COUNTS: Record<(typeof TABS)[number], number> = {
+  all: 0,
+  starred: 0,
+  applied: 0,
+  interviewing: 0,
+  hired: 0,
+  declined: 0,
+};
 
 export default function Applications() {
-  const [params, setParams] = useSearchParams();
-  const status = params.get("status") ?? "all";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const status = searchParams.get("status") ?? "all";
   const [rows, setRows] = useState<ApplicationRow[]>([]);
+  const [counts, setCounts] = useState(EMPTY_COUNTS);
   const [error, setError] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+
+  async function load() {
+    const data = await getApplications(status);
+    setRows(data.applications);
+    setCounts({ ...EMPTY_COUNTS, ...data.counts });
+  }
 
   useEffect(() => {
-    getApplications(status)
-      .then((data) => setRows(data.applications))
-      .catch((err: Error) => setError(err.message));
+    load().catch((err: Error) => setError(err.message));
   }, [status]);
+
+  useEffect(() => {
+    if (!adding) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setAdding(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [adding]);
+
+  async function unstar(row: ApplicationRow) {
+    if (row.status !== "starred" || pendingId) return;
+    setPendingId(row.id);
+    setRows((current) => current.filter((item) => item.id !== row.id));
+    setCounts((current) => ({
+      ...current,
+      all: Math.max(0, current.all - 1),
+      starred: Math.max(0, current.starred - 1),
+    }));
+    try {
+      await deleteApplication(row.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not unstar");
+      await load().catch(() => undefined);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  function onCreated(row: ApplicationRow) {
+    setAdding(false);
+    if (status !== "all" && row.status !== status) {
+      setSearchParams({ status: row.status });
+      return;
+    }
+    void load().catch((err: Error) => setError(err.message));
+  }
 
   return (
     <section>
-      <div className="tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            className={tab === status ? "tab on" : "tab"}
-            onClick={() => setParams(tab === "all" ? {} : { status: tab })}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="tabs-row">
+        <div className="tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={tab === status ? "tab on" : "tab"}
+              aria-current={tab === status ? "page" : undefined}
+              aria-label={`${tab}, ${counts[tab]} application${counts[tab] === 1 ? "" : "s"}`}
+              onClick={() => setSearchParams(tab === "all" ? {} : { status: tab })}
+            >
+              <span className="tab-label">{tab}</span>
+              <span className="tab-count">{counts[tab]}</span>
+            </button>
+          ))}
+        </div>
+        <button type="button" onClick={() => setAdding(true)}>
+          Add application +
+        </button>
       </div>
       {error && <p className="error">{error}</p>}
       {rows.length === 0 && <p className="muted">Nothing in this tab yet.</p>}
-      {rows.map((row) => (
-        <article key={row.id} className="card">
-          <h2>
-            <Link to={`/applications/${row.id}`}>{row.title ?? "Untitled"}</Link>
-          </h2>
-          <div className="meta">
-            <span>{row.company}</span>
-            {row.location && <span>{row.location}</span>}
-            <span className="badge">{row.status}</span>
-            {row.postingId ? (
-              <span className="badge">{row.source ?? "linked"}</span>
-            ) : (
-              <span className="badge">manual</span>
+      {rows.map((row) => {
+        const appliedLabel = formatShortDate(row.appliedAt);
+        return (
+          <article key={row.id} className="card">
+            {row.status === "starred" && (
+              <StarButton
+                starred
+                disabled={pendingId === row.id}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void unstar(row);
+                }}
+              />
             )}
+            <Link className="card-hit" to={`/applications/${row.id}`}>
+              <h2>{row.title ?? "Untitled"}</h2>
+              <div className="meta">
+                <span className="employer">{row.company}</span>
+                <span className="location">{row.location ?? ""}</span>
+                <span className="meta-badges">
+                  {row.status !== "starred" && (
+                  <span className={`badge status-${row.status}`}>{row.status}</span>
+                )}
+                  {row.postingId ? (
+                    <span className="badge">{row.source ?? "linked"}</span>
+                  ) : (
+                    <span className="badge">manual</span>
+                  )}
+                  <PostingDates
+                    firstPublishedAt={row.firstPublishedAt}
+                    sourceUpdatedAt={row.sourceUpdatedAt}
+                  />
+                </span>
+              </div>
+            </Link>
+            {(appliedLabel || row.url) && (
+              <div className="row-actions">
+                {appliedLabel && (
+                  <span className="applied-date">Date applied: {appliedLabel}</span>
+                )}
+                {row.url && (
+                  <a
+                    className="external"
+                    href={row.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    Apply on site <span className="ext-icon" aria-hidden="true">↗</span>
+                  </a>
+                )}
+              </div>
+            )}
+          </article>
+        );
+      })}
+      {adding && (
+        <div
+          className="modal-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setAdding(false);
+          }}
+        >
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-app-title">
+            <AddApplicationForm onCreated={onCreated} onCancel={() => setAdding(false)} />
           </div>
-        </article>
-      ))}
+        </div>
+      )}
     </section>
   );
 }
