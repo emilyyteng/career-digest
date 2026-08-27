@@ -5,13 +5,19 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "ingest": "tsx src/ingest.ts",
+    "scrape": "tsx src/scrape.ts",
+    "rank": "tsx src/rank.ts",
+    "rank:live": "tsx src/rank.ts --live",
+    "board-refresh": "tsx src/boardRefresh.ts",
     "migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
     "@types/multer": "^2.2.0",
+    "cheerio": "^1.2.0",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "multer": "^2.2.0",
+    "openai": "^7.7.0",
     "pg": "^8.13.1"
   },
   "devDependencies": {

@@ -11,3 +11,8 @@ coverage/
 .vscode/
 *.swp
 data/uploads/
+data/openai-rate.json
+data/rank-batch.json
+data/rank-status.json
+data/board-refresh.json
+data/cron.log

@@ -6,6 +6,12 @@
     "dev:api": "npm run dev -w @career-digest/api",
     "dev:web": "npm run dev -w @career-digest/web",
     "ingest": "npm run ingest -w @career-digest/api",
+    "scrape": "npm run scrape -w @career-digest/api",
+    "rank": "npm run rank -w @career-digest/api",
+    "rank:live": "npm run rank:live -w @career-digest/api",
+    "board-refresh": "npm run board-refresh -w @career-digest/api",
+    "cron:install": "bash scripts/install-daily-board.sh",
+    "cron:uninstall": "bash scripts/uninstall-daily-board.sh",
     "migrate": "npm run migrate -w @career-digest/api"
   }
 }
