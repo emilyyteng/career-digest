@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS postings (
   department text,
   url text NOT NULL,
   description_html text,
-  is_internship boolean NOT NULL DEFAULT false,
   first_published_at timestamptz,
   source_updated_at timestamptz,
   cycle_status text,
@@ -31,13 +30,26 @@ CREATE TABLE IF NOT EXISTS postings (
 
 CREATE TABLE IF NOT EXISTS applications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  posting_id uuid NOT NULL UNIQUE REFERENCES postings (id) ON DELETE RESTRICT,
+  posting_id uuid UNIQUE REFERENCES postings (id) ON DELETE RESTRICT,
   status text NOT NULL DEFAULT 'applied',
   notes text,
+  company_name text,
+  title text,
+  location text,
+  url text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS postings_is_internship_idx ON postings (is_internship);
+CREATE TABLE IF NOT EXISTS application_documents (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  application_id uuid NOT NULL REFERENCES applications (id) ON DELETE CASCADE,
+  original_name text NOT NULL,
+  stored_name text NOT NULL,
+  mime_type text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS postings_company_id_idx ON postings (company_id);
+CREATE INDEX IF NOT EXISTS postings_removed_from_board_at_idx ON postings (removed_from_board_at);
 

@@ -38,9 +38,9 @@ async function upsertPosting(
   await pool.query(
     `INSERT INTO postings (
        source, external_id, company_id, title, location, department,
-       url, description_html, is_internship, first_published_at,
+       url, description_html, first_published_at,
        source_updated_at, cycle_status, raw
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb)
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)
      ON CONFLICT (source, external_id) DO UPDATE SET
        company_id = EXCLUDED.company_id,
        title = EXCLUDED.title,
@@ -48,7 +48,6 @@ async function upsertPosting(
        department = EXCLUDED.department,
        url = EXCLUDED.url,
        description_html = COALESCE(EXCLUDED.description_html, postings.description_html),
-       is_internship = EXCLUDED.is_internship,
        first_published_at = EXCLUDED.first_published_at,
        source_updated_at = EXCLUDED.source_updated_at,
        cycle_status = EXCLUDED.cycle_status,
@@ -64,7 +63,6 @@ async function upsertPosting(
       posting.department,
       posting.url,
       posting.descriptionHtml,
-      posting.isInternship,
       posting.firstPublishedAt,
       posting.sourceUpdatedAt,
       posting.cycleStatus,
@@ -83,7 +81,7 @@ async function reconcileRemovedFromBoard(
      SET removed_from_board_at = COALESCE(removed_from_board_at, now())
      WHERE company_id = $1
        AND NOT (external_id = ANY($2::text[]))
-       AND id IN (SELECT posting_id FROM applications)`,
+       AND id IN (SELECT posting_id FROM applications WHERE posting_id IS NOT NULL)`,
     [companyId, seenExternalIds],
   );
 
@@ -91,7 +89,7 @@ async function reconcileRemovedFromBoard(
     `DELETE FROM postings
      WHERE company_id = $1
        AND NOT (external_id = ANY($2::text[]))
-       AND id NOT IN (SELECT posting_id FROM applications)`,
+       AND id NOT IN (SELECT posting_id FROM applications WHERE posting_id IS NOT NULL)`,
     [companyId, seenExternalIds],
   );
 
@@ -107,21 +105,18 @@ async function dropUntrackedRejected(companyId: string): Promise<number> {
     id: string;
     title: string;
     location: string | null;
-    is_internship: boolean;
   }>(
-    `SELECT p.id, p.title, p.location, p.is_internship
+    `SELECT p.id, p.title, p.location
      FROM postings p
      WHERE p.company_id = $1
-       AND p.id NOT IN (SELECT posting_id FROM applications)`,
+       AND p.id NOT IN (SELECT posting_id FROM applications WHERE posting_id IS NOT NULL)`,
     [companyId],
   );
 
   const dropIds = rows.rows
     .filter(
       (row) =>
-        !row.is_internship ||
-        isExpiredInternTerm(row.title) ||
-        !isAllowedUsLocation(row.location),
+        isExpiredInternTerm(row.title) || !isAllowedUsLocation(row.location),
     )
     .map((row) => row.id);
 
@@ -189,7 +184,7 @@ async function ingest(): Promise<void> {
   }
 
   const simplifyCompany: CompanyConfig = {
-    name: "Simplify miscellaneous",
+    name: "Simplify",
     source: "simplify",
     boardToken: "listings",
   };
@@ -228,11 +223,11 @@ async function ingest(): Promise<void> {
     deleted += await dropUntrackedRejected(companyId);
 
     console.log(
-      `simplify/miscellaneous: ${postings.length} listed, ${toUpsert.length} upserted, ${removed.deleted} deleted (gone, no application), ${removed.retained} kept closed (applied)`,
+      `simplify: ${postings.length} listed, ${toUpsert.length} upserted, ${removed.deleted} deleted (gone, no application), ${removed.retained} kept closed (applied)`,
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`simplify/miscellaneous: FAILED ${message}`);
+    console.error(`simplify: FAILED ${message}`);
   }
 
   console.log(

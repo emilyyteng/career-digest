@@ -8,8 +8,10 @@
     "migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
+    "@types/multer": "^2.2.0",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "multer": "^2.2.0",
     "pg": "^8.13.1"
   },
   "devDependencies": {

@@ -1,5 +1,11 @@
 {
   "name": "career-digest",
   "private": true,
-  "workspaces": ["apps/api"]
+  "workspaces": ["apps/api", "apps/web"],
+  "scripts": {
+    "dev:api": "npm run dev -w @career-digest/api",
+    "dev:web": "npm run dev -w @career-digest/web",
+    "ingest": "npm run ingest -w @career-digest/api",
+    "migrate": "npm run migrate -w @career-digest/api"
+  }
 }
