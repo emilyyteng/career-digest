@@ -20,10 +20,18 @@ CREATE TABLE IF NOT EXISTS postings (
   description_html text,
   first_published_at timestamptz,
   source_updated_at timestamptz,
-  cycle_status text,
   first_seen_at timestamptz NOT NULL DEFAULT now(),
   last_seen_at timestamptz NOT NULL DEFAULT now(),
   removed_from_board_at timestamptz,
+  scraped_at timestamptz,
+  scrape_status text,
+  rank_score smallint,
+  rank_eligible boolean,
+  rank_reason text,
+  rank_location_fit text,
+  ranked_at timestamptz,
+  rank_model text,
+  rank_prompt_version text,
   raw jsonb NOT NULL,
   UNIQUE (source, external_id)
 );
@@ -37,6 +45,9 @@ CREATE TABLE IF NOT EXISTS applications (
   title text,
   location text,
   url text,
+  description_html text,
+  applied_at timestamptz,
+  status_changed_at timestamptz NOT NULL DEFAULT now(),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -52,4 +63,18 @@ CREATE TABLE IF NOT EXISTS application_documents (
 
 CREATE INDEX IF NOT EXISTS postings_company_id_idx ON postings (company_id);
 CREATE INDEX IF NOT EXISTS postings_removed_from_board_at_idx ON postings (removed_from_board_at);
+
+CREATE TABLE IF NOT EXISTS rank_profile (
+  id int PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  memo text NOT NULL DEFAULT '',
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS posting_feedback (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  posting_id uuid NOT NULL UNIQUE REFERENCES postings (id) ON DELETE CASCADE,
+  kind text NOT NULL CHECK (kind IN ('like', 'dismiss')),
+  note text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 
