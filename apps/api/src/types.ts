@@ -1,7 +1,5 @@
 export type Source = "greenhouse" | "lever" | "ashby" | "simplify";
 
-export type CycleStatus = "target" | "optional" | "stale";
-
 export type CompanyConfig = {
   name: string;
   source: Source;
@@ -17,7 +15,6 @@ export type NormalizedPosting = {
   url: string;
   descriptionHtml: string | null;
   isInternship: boolean;
-  cycleStatus: CycleStatus | null;
   firstPublishedAt: Date | null;
   sourceUpdatedAt: Date | null;
   raw: unknown;

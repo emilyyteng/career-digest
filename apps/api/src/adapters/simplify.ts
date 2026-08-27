@@ -1,8 +1,7 @@
 import type { NormalizedPosting } from "../types.js";
-import { classifyInternship } from "../filter.js";
 
 const SIMPLIFY_LISTINGS_URL =
-  "https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/.github/scripts/listings.json";
+  "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json";
 
 type SimplifyListing = {
   id?: string;
@@ -57,7 +56,6 @@ export async function fetchSimplifyMiscellaneousJobs(): Promise<{
 
     seenIds.push(listing.id);
     const location = (listing.locations ?? []).filter(Boolean).join(" | ") || null;
-    const titleForCycle = [listing.title, "intern", ...(listing.terms ?? [])].join(" ");
     const published = parseUnix(listing.date_posted);
 
     postings.push({
@@ -69,7 +67,6 @@ export async function fetchSimplifyMiscellaneousJobs(): Promise<{
       url: listing.url,
       descriptionHtml: null,
       isInternship: true,
-      cycleStatus: classifyInternship(titleForCycle, published),
       firstPublishedAt: published,
       sourceUpdatedAt: parseUnix(listing.date_updated) ?? published,
       raw: listing,

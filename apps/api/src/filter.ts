@@ -1,5 +1,4 @@
 import { isAllowedUsLocation } from "./location.js";
-import type { CycleStatus } from "./types.js";
 
 /** Cheap title-only intern filter. Avoids matching "internal" / "international". */
 export function looksLikeInternship(title: string): boolean {
@@ -70,28 +69,28 @@ export function isExpiredInternTerm(title: string): boolean {
   return internTermFromTitle(title) === "expired";
 }
 
+type PersistStatus = "keep" | "skip";
+
 /**
- * Summer 2027 (and other ≥2027 terms) → target.
- * Fall/Winter 2026 → optional (still visible).
- * Summer/Spring 2026 → stale (not inserted; deleted if never applied).
- * No year in title → optional if first_published is within 120 days (new rows)
- * or if the row is already stored and still on the board.
+ * Title heuristics for ingest only (not shown in the UI).
+ * ≥ TARGET_YEAR in the title, Fall/Winter of the prior year, or an undated
+ * intern title with a recent first_published → insert.
+ * Summer/Spring of the prior year, or an undated title older than 120 days → skip.
  */
 export function classifyInternship(
   title: string,
   firstPublishedAt: Date | null,
   now = new Date(),
   alreadyStored = false,
-): CycleStatus | null {
-  if (!looksLikeInternship(title)) return null;
+): PersistStatus {
+  if (!looksLikeInternship(title)) return "skip";
 
   const term = internTermFromTitle(title);
-  if (term === "target") return "target";
-  if (term === "optional") return "optional";
-  if (term === "expired") return "stale";
+  if (term === "target" || term === "optional") return "keep";
+  if (term === "expired") return "skip";
 
-  if (alreadyStored) return "optional";
-  return isRecentEnough(firstPublishedAt, now) ? "optional" : "stale";
+  if (alreadyStored) return "keep";
+  return isRecentEnough(firstPublishedAt, now) ? "keep" : "skip";
 }
 
 /** New rows only. Existing open listings use shouldKeepExistingOnBoard. */
@@ -100,8 +99,7 @@ export function shouldPersistInternship(
   firstPublishedAt: Date | null,
   now = new Date(),
 ): boolean {
-  const status = classifyInternship(title, firstPublishedAt, now, false);
-  return status === "target" || status === "optional";
+  return classifyInternship(title, firstPublishedAt, now, false) === "keep";
 }
 
 export function shouldKeepExistingOnBoard(

@@ -1,5 +1,5 @@
 import type { NormalizedPosting } from "../types.js";
-import { classifyInternship, looksLikeInternship } from "../filter.js";
+import { looksLikeInternship } from "../filter.js";
 
 type LeverJob = {
   id?: string;
@@ -40,7 +40,6 @@ function toNormalized(job: LeverJob): NormalizedPosting | null {
     url: job.hostedUrl || job.applyUrl || `https://jobs.lever.co/${job.id}`,
     descriptionHtml: html,
     isInternship: looksLikeInternship(job.text),
-    cycleStatus: classifyInternship(job.text, published),
     firstPublishedAt: published,
     sourceUpdatedAt: published,
     raw: job,

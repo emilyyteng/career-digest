@@ -1,9 +1,10 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { fetchBoardJobs, fetchMissingDescription } from "./adapters/index.js";
 import { fetchSimplifyMiscellaneousJobs } from "./adapters/simplify.js";
 import { companies } from "./config/companies.js";
 import { migrate, pool } from "./db.js";
 import {
-  classifyInternship,
   isExpiredInternTerm,
   shouldInsertPosting,
   shouldKeepExistingOnBoard,
@@ -39,8 +40,8 @@ async function upsertPosting(
     `INSERT INTO postings (
        source, external_id, company_id, title, location, department,
        url, description_html, first_published_at,
-       source_updated_at, cycle_status, raw
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)
+       source_updated_at, raw
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
      ON CONFLICT (source, external_id) DO UPDATE SET
        company_id = EXCLUDED.company_id,
        title = EXCLUDED.title,
@@ -50,7 +51,6 @@ async function upsertPosting(
        description_html = COALESCE(EXCLUDED.description_html, postings.description_html),
        first_published_at = EXCLUDED.first_published_at,
        source_updated_at = EXCLUDED.source_updated_at,
-       cycle_status = EXCLUDED.cycle_status,
        last_seen_at = now(),
        removed_from_board_at = NULL,
        raw = EXCLUDED.raw`,
@@ -65,7 +65,6 @@ async function upsertPosting(
       posting.descriptionHtml,
       posting.firstPublishedAt,
       posting.sourceUpdatedAt,
-      posting.cycleStatus,
       JSON.stringify(posting.raw),
     ],
   );
@@ -125,7 +124,12 @@ async function dropUntrackedRejected(companyId: string): Promise<number> {
   return dropIds.length;
 }
 
-async function ingest(): Promise<void> {
+function simplifyFilterTitle(posting: NormalizedPosting): string {
+  const terms = (posting.raw as { terms?: string[] } | null)?.terms ?? [];
+  return [posting.title, ...terms].join(" ");
+}
+
+export async function runIngest(): Promise<void> {
   await migrate();
 
   let listed = 0;
@@ -153,12 +157,6 @@ async function ingest(): Promise<void> {
       });
 
       for (const posting of toUpsert) {
-        posting.cycleStatus = classifyInternship(
-          posting.title,
-          posting.firstPublishedAt,
-          new Date(),
-          knownIds.has(posting.externalId),
-        );
         if (!knownIds.has(posting.externalId)) {
           posting.descriptionHtml = await fetchMissingDescription(company, posting);
         }
@@ -198,21 +196,12 @@ async function ingest(): Promise<void> {
     const knownIds = await existingExternalIds(companyId);
     const toUpsert = postings.filter((posting) => {
       const known = knownIds.has(posting.externalId);
-      if (known) return shouldKeepExistingOnBoard(posting.title, posting.location);
-      return shouldInsertPosting(
-        posting.title,
-        posting.location,
-        posting.firstPublishedAt,
-      );
+      const title = simplifyFilterTitle(posting);
+      if (known) return shouldKeepExistingOnBoard(title, posting.location);
+      return shouldInsertPosting(title, posting.location, posting.firstPublishedAt);
     });
 
     for (const posting of toUpsert) {
-      posting.cycleStatus = classifyInternship(
-        posting.title,
-        posting.firstPublishedAt,
-        new Date(),
-        knownIds.has(posting.externalId),
-      );
       await upsertPosting(companyId, posting);
       upserted += 1;
     }
@@ -235,8 +224,14 @@ async function ingest(): Promise<void> {
   );
 }
 
-try {
-  await ingest();
-} finally {
-  await pool.end();
+const isMain =
+  process.argv[1] != null &&
+  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
+if (isMain) {
+  try {
+    await runIngest();
+  } finally {
+    await pool.end();
+  }
 }

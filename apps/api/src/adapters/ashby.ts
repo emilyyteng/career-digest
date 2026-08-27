@@ -1,5 +1,5 @@
 import type { NormalizedPosting } from "../types.js";
-import { classifyInternship, looksLikeInternship } from "../filter.js";
+import { looksLikeInternship } from "../filter.js";
 
 type AshbyJob = {
   id?: string;
@@ -39,7 +39,6 @@ function toNormalized(job: AshbyJob): NormalizedPosting | null {
     url: job.jobUrl || job.applyUrl || `https://jobs.ashbyhq.com/${job.id}`,
     descriptionHtml: html,
     isInternship: looksLikeInternship(job.title),
-    cycleStatus: classifyInternship(job.title, published),
     firstPublishedAt: published,
     sourceUpdatedAt: parseTimestamp(job.updatedAt) ?? published,
     raw: job,
