@@ -1,4 +1,4 @@
-export type Source = "greenhouse" | "lever" | "ashby";
+export type Source = "greenhouse" | "lever" | "ashby" | "simplify";
 
 export type CycleStatus = "target" | "optional" | "stale";
 

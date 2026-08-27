@@ -13,6 +13,8 @@ export async function fetchBoardJobs(
       return fetchLeverJobs(company.boardToken);
     case "ashby":
       return fetchAshbyJobs(company.boardToken);
+    case "simplify":
+      return [];
   }
 }
 

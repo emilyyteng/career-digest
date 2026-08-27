@@ -1,3 +1,4 @@
+import { isAllowedUsLocation } from "./location.js";
 import type { CycleStatus } from "./types.js";
 
 /** Cheap title-only intern filter. Avoids matching "internal" / "international". */
@@ -103,6 +104,25 @@ export function shouldPersistInternship(
   return status === "target" || status === "optional";
 }
 
-export function shouldKeepExistingOnBoard(title: string): boolean {
-  return looksLikeInternship(title) && !isExpiredInternTerm(title);
+export function shouldKeepExistingOnBoard(
+  title: string,
+  location?: string | null,
+): boolean {
+  return (
+    looksLikeInternship(title) &&
+    !isExpiredInternTerm(title) &&
+    isAllowedUsLocation(location)
+  );
+}
+
+export function shouldInsertPosting(
+  title: string,
+  location: string | null,
+  firstPublishedAt: Date | null,
+  now = new Date(),
+): boolean {
+  return (
+    shouldPersistInternship(title, firstPublishedAt, now) &&
+    isAllowedUsLocation(location)
+  );
 }

@@ -1,15 +1,17 @@
 import { fetchBoardJobs, fetchMissingDescription } from "./adapters/index.js";
+import { fetchSimplifyMiscellaneousJobs } from "./adapters/simplify.js";
 import { companies } from "./config/companies.js";
 import { migrate, pool } from "./db.js";
 import {
   classifyInternship,
   isExpiredInternTerm,
+  shouldInsertPosting,
   shouldKeepExistingOnBoard,
-  shouldPersistInternship,
 } from "./filter.js";
-import type { NormalizedPosting } from "./types.js";
+import { isAllowedUsLocation } from "./location.js";
+import type { CompanyConfig, NormalizedPosting } from "./types.js";
 
-async function upsertCompany(company: (typeof companies)[number]): Promise<string> {
+async function upsertCompany(company: CompanyConfig): Promise<string> {
   const result = await pool.query<{ id: string }>(
     `INSERT INTO companies (name, source, board_token)
      VALUES ($1, $2, $3)
@@ -101,8 +103,13 @@ async function reconcileRemovedFromBoard(
 
 /** Full-time leftovers and expired intern terms, unless they have an application. */
 async function dropUntrackedRejected(companyId: string): Promise<number> {
-  const rows = await pool.query<{ id: string; title: string; is_internship: boolean }>(
-    `SELECT p.id, p.title, p.is_internship
+  const rows = await pool.query<{
+    id: string;
+    title: string;
+    location: string | null;
+    is_internship: boolean;
+  }>(
+    `SELECT p.id, p.title, p.location, p.is_internship
      FROM postings p
      WHERE p.company_id = $1
        AND p.id NOT IN (SELECT posting_id FROM applications)`,
@@ -111,7 +118,10 @@ async function dropUntrackedRejected(companyId: string): Promise<number> {
 
   const dropIds = rows.rows
     .filter(
-      (row) => !row.is_internship || isExpiredInternTerm(row.title),
+      (row) =>
+        !row.is_internship ||
+        isExpiredInternTerm(row.title) ||
+        !isAllowedUsLocation(row.location),
     )
     .map((row) => row.id);
 
@@ -139,8 +149,12 @@ async function ingest(): Promise<void> {
       const knownIds = await existingExternalIds(companyId);
       const toUpsert = postings.filter((posting) => {
         const known = knownIds.has(posting.externalId);
-        if (known) return shouldKeepExistingOnBoard(posting.title);
-        return shouldPersistInternship(posting.title, posting.firstPublishedAt);
+        if (known) return shouldKeepExistingOnBoard(posting.title, posting.location);
+        return shouldInsertPosting(
+          posting.title,
+          posting.location,
+          posting.firstPublishedAt,
+        );
       });
 
       for (const posting of toUpsert) {
@@ -172,6 +186,53 @@ async function ingest(): Promise<void> {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`${company.source}/${company.name}: FAILED ${message}`);
     }
+  }
+
+  const simplifyCompany: CompanyConfig = {
+    name: "Simplify miscellaneous",
+    source: "simplify",
+    boardToken: "listings",
+  };
+
+  try {
+    const companyId = await upsertCompany(simplifyCompany);
+    const { postings, seenIds } = await fetchSimplifyMiscellaneousJobs();
+    listed += postings.length;
+    internships += postings.length;
+
+    const knownIds = await existingExternalIds(companyId);
+    const toUpsert = postings.filter((posting) => {
+      const known = knownIds.has(posting.externalId);
+      if (known) return shouldKeepExistingOnBoard(posting.title, posting.location);
+      return shouldInsertPosting(
+        posting.title,
+        posting.location,
+        posting.firstPublishedAt,
+      );
+    });
+
+    for (const posting of toUpsert) {
+      posting.cycleStatus = classifyInternship(
+        posting.title,
+        posting.firstPublishedAt,
+        new Date(),
+        knownIds.has(posting.externalId),
+      );
+      await upsertPosting(companyId, posting);
+      upserted += 1;
+    }
+
+    const removed = await reconcileRemovedFromBoard(companyId, seenIds);
+    deleted += removed.deleted;
+    retainedClosed += removed.retained;
+    deleted += await dropUntrackedRejected(companyId);
+
+    console.log(
+      `simplify/miscellaneous: ${postings.length} listed, ${toUpsert.length} upserted, ${removed.deleted} deleted (gone, no application), ${removed.retained} kept closed (applied)`,
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`simplify/miscellaneous: FAILED ${message}`);
   }
 
   console.log(

@@ -14,8 +14,7 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/jobs", async (req, res) => {
-  const internshipsOnly = req.query.all !== "true";
+app.get("/jobs", async (_req, res) => {
   const result = await pool.query(
     `SELECT
        p.id,
@@ -35,11 +34,10 @@ app.get("/jobs", async (req, res) => {
      FROM postings p
      JOIN companies c ON c.id = p.company_id
      WHERE p.removed_from_board_at IS NULL
-       AND ($1::boolean IS FALSE OR p.is_internship)
+       AND p.is_internship
      ORDER BY
        CASE p.cycle_status WHEN 'target' THEN 0 WHEN 'optional' THEN 1 ELSE 2 END,
        p.last_seen_at DESC`,
-    [internshipsOnly],
   );
   res.json({ count: result.rows.length, jobs: result.rows });
 });

@@ -2,14 +2,15 @@
 
 Personal internship finder and application tracker.
 
-Ingests public ATS job boards, keeps current internships in PostgreSQL, and lists them over HTTP. Later: LLM ranking and an application tracker.
+Ingests public ATS job boards (plus Simplify miscellaneous URLs), keeps current US internships in PostgreSQL, and lists them over HTTP. Next: a local React UI and application tracker, then LLM ranking.
 
 ## Stack
 
 - Backend: Node.js + TypeScript + Express
-- Database: PostgreSQL
-- Job boards: Greenhouse, Lever, Ashby (Simplify miscellaneous planned)
+- Database: PostgreSQL (Postgres.app locally; Docker Compose optional)
+- Job boards: Greenhouse, Lever, Ashby, Simplify miscellaneous
 - Ranking (later): OpenAI API
+- UI (next): React, local only
 
 ## Milestone 1
 
@@ -20,6 +21,12 @@ Greenhouse ingest, Postgres schema, `GET /jobs`.
 - Lever and Ashby adapters, plus a larger verified company list
 - Season / recency filters (`target` vs `optional` vs stale)
 - Retention: keep rows that are still on the board; delete taken-down jobs only if there is no application record
+
+## Milestone 3
+
+- US-only location filter (drop confident non-US; keep unknown/mixed)
+- Simplify miscellaneous ingest for apply URLs that are not Greenhouse, Lever, or Ashby
+- `GET /jobs` lists open internships only (`?all=true` removed)
 
 ## Setup
 
@@ -32,7 +39,6 @@ npm run ingest -w @career-digest/api
 npm run dev -w @career-digest/api
 ```
 
-- http://localhost:3000/jobs — open internships (not taken down), `target` then `optional`
-- http://localhost:3000/jobs?all=true — same table, including non-internship rows if any remain
+http://localhost:3000/jobs — open internships, `target` then `optional`.
 
 Boards: `apps/api/src/config/companies.ts`.
