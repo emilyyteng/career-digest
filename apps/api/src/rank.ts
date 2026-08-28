@@ -8,6 +8,7 @@ import {
   OpenAiRateGate,
   estimateTokens,
 } from "./openaiRateLimit.js";
+import { applyBatchFiles, applyScore } from "./rankBatchApply.js";
 import {
   clearBatchState,
   hasPendingRankBatch,
@@ -25,7 +26,6 @@ import {
   parseRankResult,
   type RankContext,
   type RankExample,
-  type RankResult,
 } from "./rankPrompt.js";
 
 export { getRankBatchStatus, hasPendingRankBatch } from "./rankBatchStatus.js";
@@ -64,17 +64,6 @@ type ChunkMeta = {
   chunkTotal: number;
   chunkSize: number;
   startedAt?: string;
-};
-
-type BatchOutputLine = {
-  custom_id?: string;
-  response?: {
-    status_code?: number;
-    body?: {
-      choices?: Array<{ message?: { content?: string | null } }>;
-    };
-  };
-  error?: { message?: string } | null;
 };
 
 function termsFromRaw(raw: unknown): string[] {
@@ -194,25 +183,20 @@ function completionBody(model: string, user: string) {
   };
 }
 
-async function applyScore(id: string, result: RankResult, model: string): Promise<void> {
-  await pool.query(
-    `UPDATE postings
-     SET rank_score = $2,
-         rank_eligible = $3,
-         rank_reason = $4,
-         rank_location_fit = $5,
-         ranked_at = now(),
-         rank_model = $6,
-         rank_prompt_version = $7
-     WHERE id = $1`,
-    [id, result.score, result.eligible, result.reason, result.location_fit, model, RANK_PROMPT_VERSION],
-  );
-}
-
-async function loadRows(force: boolean, limit: number): Promise<RankRow[]> {
+async function loadRows(
+  force: boolean,
+  limit: number,
+  phase: "any" | "unranked" | "outdated" = "any",
+): Promise<RankRow[]> {
   const params: unknown[] = [];
   let versionFilter = "";
-  if (!force) {
+  let phaseFilter = "";
+  if (phase === "unranked") {
+    phaseFilter = "AND p.ranked_at IS NULL";
+  } else if (phase === "outdated") {
+    params.push(RANK_PROMPT_VERSION);
+    phaseFilter = `AND p.ranked_at IS NOT NULL AND p.rank_prompt_version IS DISTINCT FROM $${params.length}`;
+  } else if (!force) {
     params.push(RANK_PROMPT_VERSION);
     versionFilter = `AND (p.rank_prompt_version IS DISTINCT FROM $1 OR p.ranked_at IS NULL)`;
   }
@@ -240,6 +224,11 @@ async function loadRows(force: boolean, limit: number): Promise<RankRow[]> {
      WHERE p.removed_from_board_at IS NULL
        ${descriptionFilter}
        ${versionFilter}
+       ${phaseFilter}
+       AND NOT EXISTS (
+         SELECT 1 FROM posting_feedback fb
+         WHERE fb.posting_id = p.id AND fb.kind = 'dismiss'
+       )
      ORDER BY p.last_seen_at DESC
      ${limitClause}`,
     params,
@@ -357,40 +346,6 @@ function chunkRows(rows: RankRow[], context: RankContext): RankRow[][] {
   return chunks;
 }
 
-async function applyBatchOutput(client: OpenAI, fileId: string, model: string): Promise<{ ok: number; error: number }> {
-  const response = await client.files.content(fileId);
-  const text = await response.text();
-  let ok = 0;
-  let error = 0;
-  for (const line of text.split("\n")) {
-    if (!line.trim()) continue;
-    let parsed: BatchOutputLine;
-    try {
-      parsed = JSON.parse(line) as BatchOutputLine;
-    } catch {
-      error += 1;
-      continue;
-    }
-    const id = parsed.custom_id;
-    const content = parsed.response?.body?.choices?.[0]?.message?.content;
-    if (!id || parsed.response?.status_code !== 200 || !content) {
-      error += 1;
-      const message = parsed.error?.message ?? `HTTP ${parsed.response?.status_code ?? "?"}`;
-      console.error(`rank failed ${id ?? "unknown"}: ${message}`);
-      continue;
-    }
-    try {
-      await applyScore(id, parseRankResult(content), model);
-      ok += 1;
-    } catch (err) {
-      error += 1;
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`rank failed ${id}: ${message}`);
-    }
-  }
-  return { ok, error };
-}
-
 async function loadRowsByIds(ids: string[]): Promise<RankRow[]> {
   if (ids.length === 0) return [];
   const { rows } = await pool.query<RankRow>(
@@ -410,7 +365,11 @@ async function loadRowsByIds(ids: string[]): Promise<RankRow[]> {
      WHERE p.id = ANY($1::uuid[])
        AND p.removed_from_board_at IS NULL
        AND p.description_html IS NOT NULL AND btrim(p.description_html) <> ''
-       AND (p.rank_prompt_version IS DISTINCT FROM $2 OR p.ranked_at IS NULL)`,
+       AND (p.rank_prompt_version IS DISTINCT FROM $2 OR p.ranked_at IS NULL)
+       AND NOT EXISTS (
+         SELECT 1 FROM posting_feedback fb
+         WHERE fb.posting_id = p.id AND fb.kind = 'dismiss'
+       )`,
     [ids, RANK_PROMPT_VERSION],
   );
   return rows;
@@ -440,30 +399,6 @@ async function loadSubmittedIdsFromBatch(
     console.warn(`Could not read batch input file: ${message}`);
     return [];
   }
-}
-
-async function applyBatchFiles(
-  client: OpenAI,
-  batch: {
-    status: string;
-    output_file_id?: string | null;
-    error_file_id?: string | null;
-  },
-  model: string,
-): Promise<{ ok: number; error: number }> {
-  let ok = 0;
-  let error = 0;
-  if (batch.output_file_id) {
-    await patchBatchProgress({ phase: "applying", openaiStatus: batch.status });
-    const applied = await applyBatchOutput(client, batch.output_file_id, model);
-    ok += applied.ok;
-    error += applied.error;
-  }
-  if (batch.error_file_id) {
-    const extra = await applyBatchOutput(client, batch.error_file_id, model);
-    error += extra.error;
-  }
-  return { ok, error };
 }
 
 async function liveRankLeftovers(
@@ -682,6 +617,7 @@ async function rankLive(
 export async function runLiveRank(opts?: {
   limit?: number;
   force?: boolean;
+  phase?: "any" | "unranked" | "outdated";
 }): Promise<{ ok: number; error: number; halted: boolean }> {
   await migrate();
   const apiKey = process.env.OPENAI_API_KEY;
@@ -690,14 +626,17 @@ export async function runLiveRank(opts?: {
   }
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
   const force = opts?.force === true;
+  const phase = opts?.phase ?? "any";
   const envLimit = Number(process.env.RANK_LIMIT);
   const limit =
     opts?.limit ??
     (Number.isFinite(envLimit) && envLimit > 0 ? Math.floor(envLimit) : undefined);
-  const rows = await loadRows(force, limit ?? Number.NaN);
+  const rows = await loadRows(force, limit ?? Number.NaN, phase);
 
+  const phaseLabel =
+    phase === "unranked" ? ", unranked only" : phase === "outdated" ? ", rerank outdated" : "";
   console.log(
-    `Live ranking ${rows.length} posting(s) with ${model} (${RANK_PROMPT_VERSION}${force ? ", --all" : ""}${limit ? `, limit=${limit}` : ""}).`,
+    `Live ranking ${rows.length} posting(s) with ${model} (${RANK_PROMPT_VERSION}${force ? ", --all" : ""}${phaseLabel}${limit ? `, limit=${limit}` : ""}).`,
   );
   const skippedBlank = await countSkippedBlankDescriptions(force);
   if (skippedBlank > 0) {
@@ -713,6 +652,80 @@ export async function runLiveRank(opts?: {
   const context = await loadContext();
   const result = await rankLive(apiKey, model, rows, context);
   return { ok: result.ok, error: result.error, halted: Boolean(result.halted) };
+}
+
+async function abandonPendingBatch(client: OpenAI): Promise<void> {
+  const pending = await loadBatchState();
+  if (!pending) return;
+  console.log(`Abandoning pending batch ${pending.batchId} for live backlog.`);
+  try {
+    await client.batches.cancel(pending.batchId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`Batch cancel request: ${message}`);
+  }
+  await clearBatchState();
+}
+
+/**
+ * One-shot live backlog: unranked postings first, then rerank prior scores with the
+ * current prompt version. Skips blank JDs and user-dismissed mismatches.
+ */
+export async function runLiveRankBacklog(): Promise<{
+  ok: number;
+  error: number;
+  halted: boolean;
+}> {
+  await migrate();
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not set. Add it to .env");
+  }
+  const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
+  const client = new OpenAI({ apiKey });
+  await abandonPendingBatch(client);
+
+  const skippedBlank = await countSkippedBlankDescriptions(false);
+  if (skippedBlank > 0) {
+    console.log(
+      `Skipping ${skippedBlank} posting(s) with empty job descriptions (not ranked).`,
+    );
+  }
+
+  let ok = 0;
+  let error = 0;
+  const context = await loadContext();
+
+  const unranked = await loadRows(false, Number.NaN, "unranked");
+  console.log(
+    `Backlog phase 1: ${unranked.length} unranked posting(s) (${RANK_PROMPT_VERSION}).`,
+  );
+  if (unranked.length > 0) {
+    const phase1 = await rankLive(apiKey, model, unranked, context);
+    ok += phase1.ok;
+    error += phase1.error;
+    if (phase1.halted) {
+      console.log(`Stopped after phase 1. Ranked ${ok}, failed ${error}.`);
+      return { ok, error, halted: true };
+    }
+  }
+
+  const outdated = await loadRows(false, Number.NaN, "outdated");
+  console.log(
+    `Backlog phase 2: ${outdated.length} prior ranking(s) to refresh (${RANK_PROMPT_VERSION}).`,
+  );
+  if (outdated.length > 0) {
+    const phase2 = await rankLive(apiKey, model, outdated, context);
+    ok += phase2.ok;
+    error += phase2.error;
+    if (phase2.halted) {
+      console.log(`Stopped after phase 2. Ranked ${ok}, failed ${error}.`);
+      return { ok, error, halted: true };
+    }
+  }
+
+  console.log(`Backlog done. Ranked ${ok}, failed ${error}.`);
+  return { ok, error, halted: false };
 }
 
 async function rankBatch(
@@ -832,8 +845,16 @@ async function rank(): Promise<void> {
   }
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
   const live = process.argv.includes("--live");
+  const backlog = process.argv.includes("--backlog");
   const force = process.argv.includes("--all");
   const limit = Number(process.env.RANK_LIMIT);
+
+  if (live && backlog) {
+    const result = await runLiveRankBacklog();
+    if (result.halted) process.exitCode = 1;
+    return;
+  }
+
   const rows = await loadRows(force, limit);
 
   console.log(

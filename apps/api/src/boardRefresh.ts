@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DailyCapError } from "./openaiRateLimit.js";
 import { hasPendingRankBatch, runLiveRank } from "./rank.js";
+import { recordRankBatchSuccess } from "./rankBatchStatus.js";
 import { runIngest } from "./ingest.js";
 import { runScrape } from "./scrape.js";
 
@@ -95,7 +96,13 @@ async function executeBoardRefresh(): Promise<void> {
     state = { ...state, phase: "rank" };
     await persist();
     try {
-      await runLiveRank({ limit: boardRankLimit() });
+      const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
+      const result = await runLiveRank({ limit: boardRankLimit() });
+      await recordRankBatchSuccess({
+        model,
+        appliedOk: result.ok,
+        appliedError: result.error,
+      });
     } catch (err) {
       if (err instanceof DailyCapError) {
         console.error(`board refresh: light rank stopped on daily cap — ${err.message}`);

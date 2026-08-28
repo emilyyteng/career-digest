@@ -9,6 +9,7 @@
     "scrape": "npm run scrape -w @career-digest/api",
     "rank": "npm run rank -w @career-digest/api",
     "rank:live": "npm run rank:live -w @career-digest/api",
+    "rank:live-backlog": "npm run rank:live-backlog -w @career-digest/api",
     "board-refresh": "npm run board-refresh -w @career-digest/api",
     "cron:install": "bash scripts/install-daily-board.sh",
     "cron:uninstall": "bash scripts/uninstall-daily-board.sh",

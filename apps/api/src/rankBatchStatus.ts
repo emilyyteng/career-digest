@@ -65,7 +65,16 @@ type FinishedStatus = {
 };
 
 const OPENAI_REFRESH_MS = 12_000;
+/** How long since last CLI heartbeat before we treat the batch as orphaned. */
+export const BATCH_ORPHAN_MS = 90_000;
 let lastOpenAiRefresh = 0;
+
+export function isBatchStateStale(updatedAt: string | null | undefined, now = Date.now()): boolean {
+  if (!updatedAt) return true;
+  const t = Date.parse(updatedAt);
+  if (!Number.isFinite(t)) return true;
+  return now - t >= BATCH_ORPHAN_MS;
+}
 
 function blank(): RankBatchSnapshot {
   return {
@@ -296,9 +305,10 @@ function snapshotFromPending(state: BatchState): RankBatchSnapshot {
   }
 
   if (openai === "completed") {
+    const stale = isBatchStateStale(state.updatedAt);
     return {
       ...blank(),
-      status: "ready",
+      status: stale ? "ready" : "running",
       phase: "waiting",
       batchId: state.batchId,
       model: state.model,
@@ -311,15 +321,18 @@ function snapshotFromPending(state: BatchState): RankBatchSnapshot {
       chunkSize: state.chunkSize,
       startedAt: state.startedAt,
       updatedAt: state.updatedAt,
-      hint:
-        "Batch finished on OpenAI. Re-run npm run rank to apply scores (and continue remaining chunks).",
+      hint: stale
+        ? "Batch finished on OpenAI — auto-applying scores to the database…"
+        : "Batch finished on OpenAI — applying scores to the database…",
     };
   }
 
   if (openai === "failed" || openai === "expired" || openai === "cancelled") {
+    const hasProgress = (counts?.completed ?? 0) > 0 || (counts?.failed ?? 0) > 0;
+    const stale = isBatchStateStale(state.updatedAt);
     return {
       ...blank(),
-      status: "error",
+      status: hasProgress && !stale ? "running" : "error",
       phase: "waiting",
       batchId: state.batchId,
       model: state.model,
@@ -332,8 +345,12 @@ function snapshotFromPending(state: BatchState): RankBatchSnapshot {
       chunkSize: state.chunkSize,
       startedAt: state.startedAt,
       updatedAt: state.updatedAt,
-      error: `OpenAI batch ${openai}`,
-      hint: "Batch did not complete. Check the terminal or re-run npm run rank.",
+      error: hasProgress ? null : `OpenAI batch ${openai}`,
+      hint: hasProgress
+        ? stale
+          ? `Batch ${openai} — auto-applying finished scores…`
+          : `Batch ${openai} — applying finished scores…`
+        : "Batch did not complete. Check the terminal or re-run npm run rank.",
     };
   }
 

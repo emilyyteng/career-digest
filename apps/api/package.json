@@ -8,6 +8,7 @@
     "scrape": "tsx src/scrape.ts",
     "rank": "tsx src/rank.ts",
     "rank:live": "tsx src/rank.ts --live",
+    "rank:live-backlog": "tsx src/rank.ts --live --backlog",
     "board-refresh": "tsx src/boardRefresh.ts",
     "migrate": "tsx src/migrate.ts"
   },

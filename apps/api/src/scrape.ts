@@ -177,6 +177,7 @@ export async function runScrape(): Promise<void> {
          OR (
            scrape_status IN ('empty', 'too_large')
            AND scraped_at < now() - interval '24 hours'
+           AND COALESCE(source_updated_at, last_seen_at) > scraped_at
          )
          OR (
            scrape_status = 'blocked'
@@ -195,7 +196,11 @@ export async function runScrape(): Promise<void> {
        AND scrape_status IS DISTINCT FROM 'skipped_ats'
        AND NOT (
          (scrape_status IN ('timeout', 'error') AND scraped_at < now() - interval '6 hours')
-         OR (scrape_status IN ('empty', 'too_large') AND scraped_at < now() - interval '24 hours')
+         OR (
+           scrape_status IN ('empty', 'too_large')
+           AND scraped_at < now() - interval '24 hours'
+           AND COALESCE(source_updated_at, last_seen_at) > scraped_at
+         )
          OR (scrape_status = 'blocked' AND scraped_at < now() - interval '48 hours')
        )`,
   );
