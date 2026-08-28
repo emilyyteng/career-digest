@@ -1,6 +1,6 @@
 import type { NormalizedPosting } from "../types.js";
 
-const SIMPLIFY_LISTINGS_URL =
+export const SIMPLIFY_LISTINGS_URL =
   "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json";
 
 type SimplifyListing = {

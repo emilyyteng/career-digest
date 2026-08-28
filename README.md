@@ -19,7 +19,9 @@ Ingests public ATS job boards (plus Simplify URLs), scrapes missing descriptions
 Pull internship listings from Greenhouse, Lever, Ashby, and Simplify into Postgres, with US location filtering, season/recency rules, and retention that keeps applied roles even when a posting leaves the board.
 
 - Multi-ATS adapters and verified company list
+- `npm run discover-boards` diffs Simplify ATS URLs against `companies.ts` (Greenhouse `gh_jid` / embed probe; `--write` to append)
 - Simplify ingest for non-ATS apply URLs
+- After ingest, collapse Simplify misc rows when Greenhouse/Lever/Ashby has the same job (`npm run merge-postings`)
 - `GET /jobs` for open internships (not yet applied; to-do stays visible)
 
 ### Milestone 2 — Local tracker UI
@@ -38,6 +40,7 @@ Fill missing job descriptions (mostly Simplify miscellaneous URLs) by scraping a
 - Skip blank descriptions during rank (saves OpenAI tokens)
 - Ashby/Lever/Greenhouse JDs from board JSON at ingest
 - User-dismissed mismatches leave the needs-description tab
+- Editable apply/posting URLs on job and application detail pages
 
 ### Milestone 4 — OpenAI ranking & daily digest pipeline
 
@@ -94,6 +97,8 @@ npm run dev:web
 | Command | Purpose |
 |---------|---------|
 | `npm run migrate` | Apply SQL migrations |
+| `npm run discover-boards` | Diff Simplify ATS URLs vs `companies.ts` (`--write` to merge) |
+| `npm run merge-postings` | Collapse Simplify misc rows when Greenhouse has same `gh_jid` |
 | `npm run ingest` | Pull ATS + Simplify listings |
 | `npm run scrape` | Fill blank Simplify descriptions |
 | `npm run rank` | Rank via OpenAI Batch API |

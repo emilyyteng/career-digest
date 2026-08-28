@@ -10,7 +10,9 @@
     "rank:live": "tsx src/rank.ts --live",
     "rank:live-backlog": "tsx src/rank.ts --live --backlog",
     "board-refresh": "tsx src/boardRefresh.ts",
-    "migrate": "tsx src/migrate.ts"
+    "migrate": "tsx src/migrate.ts",
+    "discover-boards": "tsx src/discoverBoards.ts",
+    "merge-postings": "tsx src/mergeDuplicatePostings.ts"
   },
   "dependencies": {
     "@types/multer": "^2.2.0",

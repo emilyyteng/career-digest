@@ -13,6 +13,8 @@
     "board-refresh": "npm run board-refresh -w @career-digest/api",
     "cron:install": "bash scripts/install-daily-board.sh",
     "cron:uninstall": "bash scripts/uninstall-daily-board.sh",
-    "migrate": "npm run migrate -w @career-digest/api"
+    "migrate": "npm run migrate -w @career-digest/api",
+    "discover-boards": "npm run discover-boards -w @career-digest/api --",
+    "merge-postings": "npm run merge-postings -w @career-digest/api"
   }
 }
