@@ -12,75 +12,58 @@ Ingests public ATS job boards (plus Simplify URLs), scrapes missing descriptions
 - Ranking: OpenAI API (`gpt-4o-mini` by default; Batch + live)
 - UI: React (Vite), local only
 
-## Milestone 1
+## Milestones
 
-Greenhouse ingest, Postgres schema, `GET /jobs`.
+### Milestone 1 — Job ingest & open board API
 
-## Milestone 2
+Pull internship listings from Greenhouse, Lever, Ashby, and Simplify into Postgres, with US location filtering, season/recency rules, and retention that keeps applied roles even when a posting leaves the board.
 
-- Lever and Ashby adapters, plus a larger verified company list
-- Season / recency filters for ingest (insert intern titles; skip expired terms and old undated listings)
-- Retention: keep rows that are still on the board; delete taken-down jobs only if there is no application record
+- Multi-ATS adapters and verified company list
+- Simplify ingest for non-ATS apply URLs
+- `GET /jobs` for open internships (not yet applied; starred stay visible)
 
-## Milestone 3
+### Milestone 2 — Local tracker UI
 
-- US-only location filter (drop confident non-US; keep unknown/mixed)
-- Simplify ingest for apply URLs that are not Greenhouse, Lever, or Ashby
-- `GET /jobs` lists open internships only (`?all=true` removed)
+A React app to browse the digest board and run a personal application tracker alongside it—star roles, mark applied, add manual Handshake/LinkedIn entries, link postings, notes, and file uploads.
 
-## Milestone 4
+- Jobs list and Applications list with status tabs
+- Application detail with documents and optional posting link
+- Nullable `posting_id` for manual-only applications
 
-- Local React UI: Jobs vs Applications
-- Star / apply / manual applications / link a posting / notes / documents
-- `is_internship` column removed (intern-only `postings` table)
+### Milestone 3 — Descriptions & scraping
 
-## Milestone 5
+Fill missing job descriptions (mostly Simplify miscellaneous URLs) by scraping apply pages, with sanitized HTML extraction and retry backoff so ranking only runs on postings with real JD text.
 
-- Scrape blank Simplify descriptions from apply pages (HTML sanitize, link-preserving extraction)
-- `scrape_status` + retry backoff for blocked/empty/error hosts
-- Skip ranking postings with empty job descriptions (saves OpenAI tokens)
+- `scrape_status` tracking and host-specific retry windows
+- Skip blank descriptions during rank (saves OpenAI tokens)
+- Ashby/Lever/Greenhouse JDs from board JSON at ingest
 
-## Milestone 6
+### Milestone 4 — OpenAI ranking & daily digest pipeline
 
-- OpenAI ranking: Batch API by default (`npm run rank`), live drip (`npm run rank:live`)
-- Client rate gate (RPM/RPD/TPM), stall cancel + live fallback for small leftovers
-- Preference signal from likes/dismissals and applied/interviewing/accepted tracker rows
+Score and sort roles with OpenAI using your feedback and tracker history as preference signals, then automate ingest → scrape → light rank via board refresh and an optional daily cron.
 
-## Milestone 7
+- Batch ranking (`npm run rank`) and live drip (`npm run rank:live`, `rank:live-backlog`)
+- Client rate gate (RPM/RPD/TPM), stall recovery, rerank queue
+- Board refresh UI, like/dismiss feedback, rank badges and batch banner
+- Jobs tabs: ranked, mismatches, unranked, needs description (search/sort per tab)
 
-- Board refresh pipeline: ingest → scrape → light live rank (`npm run board-refresh`)
-- Optional daily 5pm LaunchAgent cron (`npm run cron:install`)
-- Jobs UI: Refresh board, rank badges, like/dismiss feedback, Batch progress banner
+### Milestone 5 — Applications workflow
 
-## Milestone 8
+Polish the tracker for day-to-day use: pipeline statuses, rich job descriptions, document preview, and UI details that make applying and reviewing materials faster.
 
-- Applications: date applied, rich-text JD paste, status-change ordering, tab counts
-- Status-colored badges; location autocomplete from existing applications
+- Status tabs including accepted and declined; date applied; status-change ordering
+- Rich-text JD paste, scroll-box descriptions, location autocomplete
+- In-browser PDF/image preview for uploaded materials
 - Modal add-application form; save/upload flash confirmations
 
-## Milestone 9
+### Milestone 6 — Interviews, home, and ops dashboards
 
-- Interview threads: link one or more applications, linear step pipeline (assessment → phone → onsite → offer)
-- Interviews list with active/past tabs, countdown timers, quick actions (submit / complete / open link)
-- Interview workspace: step timeline, notes, resolve thread
+Track interview pipelines per company, see what needs attention at a glance, and monitor ingest/rank/scrape health without digging through logs.
 
-## Milestone 10
-
-- Jobs board tabs: ranked, mismatches, unranked, needs description (with per-tab counts)
-- Per-job rerank queue with live feedback; search and sort within each tab
-- Rank prompt v2 with richer preference context; `rank:live-backlog` for one-shot catch-up
-
-## Milestone 11
-
-- Home dashboard: greeting, last digest, needs attention (interviews + starred), new & top picks
-- Pipeline **Status** page (`/status`): board refresh, rank batch, scrape backlog, cron schedule
-- `GET /api/ops` and `GET /api/home` for operational snapshots
-
-## Milestone 12
-
-- Application status **accepted** (renamed from hired); declined tab on Applications
-- In-browser document preview (PDFs/images) from application detail
-- Sakura-terminal UI theme, favicon, JD scroll boxes, nav routing (`/` home, `/jobs` board)
+- Interview threads with linear steps, countdown timers, workspace, and resolve flow
+- Home dashboard: greeting, last digest, interviews/starred attention, new & top picks
+- Pipeline Status page (`/status`) and `GET /api/ops` / `GET /api/home`
+- Sakura-terminal UI theme, favicon, nav routing (`/` home, `/jobs` board)
 
 ## Setup
 
