@@ -20,8 +20,8 @@ Pull internship listings from Greenhouse, Lever, Ashby, and Simplify into Postgr
 
 - Multi-ATS adapters and verified company list
 - `npm run discover-boards` scans Simplify ATS URLs (Greenhouse/Lever/Ashby/Oracle) against `companies.ts`; Oracle boards over 250 jobs are deferred for Simplify hybrid (`ORACLE_DISCOVER_MAX_JOBS`; `--write` to append)
-- Simplify ingest for **miscellaneous** apply URLs only (skips direct `greenhouse.io` / `lever.co` / `ashbyhq.com` links; those come from ATS board ingest)
-- After ingest, merge collapses remaining duplicates when an ATS board has the same job id (main case: `gh_jid` embeds on custom domains; `npm run merge-postings`)
+- Simplify ingest for **miscellaneous** apply URLs only (skips direct `greenhouse.io` / `lever.co` / `ashbyhq.com` / `oraclecloud.com` links; oracle hybrid rows stay on Simplify until merge)
+- After ingest, merge collapses duplicates when an ATS board has the same job id (`gh_jid` embeds, Oracle `/job/{id}`; `npm run merge-postings`)
 - `GET /jobs` for open internships (not yet applied; to-do stays visible)
 
 ### Milestone 2 — Local tracker UI
@@ -98,7 +98,7 @@ npm run dev:web
 |---------|---------|
 | `npm run migrate` | Apply SQL migrations |
 | `npm run discover-boards` | Diff Simplify ATS URLs vs `companies.ts` (Oracle size probe; `--write` to append) |
-| `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id (gh_jid embeds, slip-throughs) |
+| `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id (gh_jid, Oracle job id, slip-throughs) |
 | `npm run ingest` | Pull ATS boards + Simplify miscellaneous listings (merge runs at end) |
 | `npm run scrape` | Fill blank Simplify descriptions |
 | `npm run rank` | Rank via OpenAI Batch API |

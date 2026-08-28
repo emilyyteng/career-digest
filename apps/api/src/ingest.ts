@@ -139,7 +139,15 @@ export async function runIngest(): Promise<void> {
   let deleted = 0;
   let retainedClosed = 0;
 
-  for (const company of companies) {
+  const sourceFilter = process.env.INGEST_SOURCES?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const companyList =
+    sourceFilter && sourceFilter.length > 0
+      ? companies.filter((c) => sourceFilter.includes(c.source))
+      : companies;
+
+  for (const company of companyList) {
     try {
       const companyId = await upsertCompany(company);
       const postings = await fetchBoardJobs(company);
@@ -218,7 +226,7 @@ export async function runIngest(): Promise<void> {
 
   const merged = await runMergeDuplicatePostings();
   console.log(
-    `merge duplicates: greenhouse ${merged.greenhouse.deletedSimplify}/${merged.greenhouse.pairs}, lever ${merged.lever.deletedSimplify}/${merged.lever.pairs}, ashby ${merged.ashby.deletedSimplify}/${merged.ashby.pairs}; moved ${merged.applicationsMoved} application(s), merged ${merged.applicationsMerged} application(s).`,
+    `merge duplicates: greenhouse ${merged.greenhouse.deletedSimplify}/${merged.greenhouse.pairs}, lever ${merged.lever.deletedSimplify}/${merged.lever.pairs}, ashby ${merged.ashby.deletedSimplify}/${merged.ashby.pairs}, oracle ${merged.oracle.deletedSimplify}/${merged.oracle.pairs}; moved ${merged.applicationsMoved} application(s), merged ${merged.applicationsMerged} application(s).`,
   );
 
   console.log(

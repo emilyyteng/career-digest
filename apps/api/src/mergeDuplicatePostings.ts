@@ -1,13 +1,14 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PoolClient } from "pg";
+import { extractOracleJobIdFromUrl } from "./adapters/oracle.js";
 import { migrate, pool } from "./db.js";
 
 type DuplicatePair = {
   simplify_id: string;
   canonical_id: string;
   match_key: string;
-  source: "greenhouse" | "lever" | "ashby";
+  source: "greenhouse" | "lever" | "ashby" | "oracle";
 };
 
 type ApplicationRow = {
@@ -53,6 +54,11 @@ export function extractAshbyPostingId(url: string): string | null {
     /\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/i,
   );
   return uuid?.[1] ?? null;
+}
+
+/** Oracle requisition id from Candidate Experience job URLs. */
+export function extractOracleJobId(url: string): string | null {
+  return extractOracleJobIdFromUrl(url);
 }
 
 async function loadGreenhousePairs(client: PoolClient): Promise<DuplicatePair[]> {
@@ -122,6 +128,24 @@ async function loadAshbyPairs(client: PoolClient): Promise<DuplicatePair[]> {
            AND a.external_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
          )
        )`,
+  );
+  return rows;
+}
+
+async function loadOraclePairs(client: PoolClient): Promise<DuplicatePair[]> {
+  const { rows } = await client.query<DuplicatePair>(
+    `SELECT
+       s.id AS simplify_id,
+       o.id AS canonical_id,
+       o.external_id AS match_key,
+       'oracle'::text AS source
+     FROM postings s
+     JOIN postings o ON o.source = 'oracle'
+     WHERE s.source = 'simplify'
+       AND s.removed_from_board_at IS NULL
+       AND o.removed_from_board_at IS NULL
+       AND s.url ILIKE '%oraclecloud%'
+       AND substring(s.url from '/job/([^/?#]+)') = o.external_id`,
   );
   return rows;
 }
@@ -233,6 +257,7 @@ export type MergeDuplicateResult = {
   greenhouse: MergeSourceStats;
   lever: MergeSourceStats;
   ashby: MergeSourceStats;
+  oracle: MergeSourceStats;
   applicationsMoved: number;
   applicationsMerged: number;
 };
@@ -282,6 +307,7 @@ export async function runMergeDuplicatePostings(): Promise<MergeDuplicateResult>
   const greenhouse: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
   const lever: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
   const ashby: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
+  const oracle: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
   const applicationsMoved = { count: 0 };
   const applicationsMerged = { count: 0 };
   const seenSimplify = new Set<string>();
@@ -311,6 +337,14 @@ export async function runMergeDuplicatePostings(): Promise<MergeDuplicateResult>
       applicationsMerged,
       seenSimplify,
     );
+    await mergePairs(
+      client,
+      await loadOraclePairs(client),
+      oracle,
+      applicationsMoved,
+      applicationsMerged,
+      seenSimplify,
+    );
   } finally {
     client.release();
   }
@@ -319,6 +353,7 @@ export async function runMergeDuplicatePostings(): Promise<MergeDuplicateResult>
     greenhouse,
     lever,
     ashby,
+    oracle,
     applicationsMoved: applicationsMoved.count,
     applicationsMerged: applicationsMerged.count,
   };
@@ -332,7 +367,7 @@ if (isMain) {
   try {
     const result = await runMergeDuplicatePostings();
     console.log(
-      `Done. greenhouse=${result.greenhouse.deletedSimplify}/${result.greenhouse.pairs} lever=${result.lever.deletedSimplify}/${result.lever.pairs} ashby=${result.ashby.deletedSimplify}/${result.ashby.pairs} simplify rows removed; moved ${result.applicationsMoved} application(s), merged ${result.applicationsMerged} application(s).`,
+      `Done. greenhouse=${result.greenhouse.deletedSimplify}/${result.greenhouse.pairs} lever=${result.lever.deletedSimplify}/${result.lever.pairs} ashby=${result.ashby.deletedSimplify}/${result.ashby.pairs} oracle=${result.oracle.deletedSimplify}/${result.oracle.pairs} simplify rows removed; moved ${result.applicationsMoved} application(s), merged ${result.applicationsMerged} application(s).`,
     );
   } finally {
     await pool.end();

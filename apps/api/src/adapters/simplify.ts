@@ -15,11 +15,12 @@ type SimplifyListing = {
   active?: boolean;
 };
 
-function atsFamily(url: string): "greenhouse" | "lever" | "ashby" | null {
+function atsFamily(url: string): "greenhouse" | "lever" | "ashby" | "oracle" | null {
   const lower = url.toLowerCase();
   if (lower.includes("greenhouse.io")) return "greenhouse";
   if (lower.includes("lever.co")) return "lever";
   if (lower.includes("ashbyhq.com")) return "ashby";
+  if (lower.includes("oraclecloud.com")) return "oracle";
   return null;
 }
 
@@ -85,8 +86,9 @@ export async function fetchSimplifyListings(): Promise<{
 
 /**
  * Ingest path: non-ATS apply URLs only (Workday, custom careers, Greenhouse gh_jid on custom domains).
- * Direct greenhouse.io / lever.co / ashbyhq.com links are skipped here; those jobs come from ATS board ingest.
- * Merge collapses gh_jid embed duplicates after ATS ingest.
+ * Skips direct greenhouse.io / lever.co / ashbyhq.com / oraclecloud.com links (board ingest or hybrid).
+ * Oraclecloud listing ids still appear in seenIds so deferred large-tenant rows survive reconcile
+ * until merge removes duplicates for configured oracle boards.
  */
 export async function fetchSimplifyMiscellaneousJobs(): Promise<{
   postings: NormalizedPosting[];
@@ -99,7 +101,13 @@ export async function fetchSimplifyMiscellaneousJobs(): Promise<{
   for (const listing of listings) {
     if (!listing.id || !listing.title || !listing.url) continue;
     if (!listing.active) continue;
-    if (!isMiscellaneousApplyUrl(listing.url)) continue;
+    if (!isMiscellaneousApplyUrl(listing.url)) {
+      // Hybrid Oracle tenants (no full-board ingest): keep simplify row on the board.
+      if (atsFamily(listing.url) === "oracle") {
+        seenIds.push(listing.id);
+      }
+      continue;
+    }
 
     seenIds.push(listing.id);
     postings.push(listingToPosting(listing));
