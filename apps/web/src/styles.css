@@ -858,11 +858,17 @@ button.star.on:hover:not(:disabled) svg {
   border-color: #e0b080;
   color: #7a4f24;
 }
+.card .row-actions button.secondary.todo-toggle .btn-icon,
+.detail .row-actions button.secondary.todo-toggle .btn-icon {
+  color: var(--accent-yellow-deep);
+}
 .row-actions .todo-toggle.on {
   border-color: var(--accent-yellow-deep);
   background: #fdf8e8;
 }
-.row-actions .todo-toggle.on .btn-icon {
+.row-actions .todo-toggle.on .btn-icon,
+.card .row-actions button.secondary.todo-toggle.on .btn-icon,
+.detail .row-actions button.secondary.todo-toggle.on .btn-icon {
   color: #8b6914;
 }
 
