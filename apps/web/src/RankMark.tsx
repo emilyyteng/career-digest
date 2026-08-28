@@ -15,8 +15,29 @@ export function isUnranked(job: Pick<JobCard, "rankScore" | "rankEligible">): bo
   return job.rankScore == null && job.rankEligible == null;
 }
 
-export function RankBadges({ job }: { job: JobCard }) {
+export function isMismatch(job: Pick<JobCard, "rankEligible">): boolean {
+  return job.rankEligible === false;
+}
+
+export function isBlankJobDescription(html: string | null | undefined): boolean {
+  return !html?.trim();
+}
+
+function hideRankDisplay(
+  view?: "ranked" | "mismatches" | "unranked" | "needs-description",
+): boolean {
+  return view === "needs-description";
+}
+
+export function RankBadges({
+  job,
+  view,
+}: {
+  job: JobCard;
+  view?: "ranked" | "mismatches" | "unranked" | "needs-description";
+}) {
   const unranked = isUnranked(job);
+  const hideRank = hideRankDisplay(view);
   return (
     <span className="meta-badges">
       <span className="badge">{job.source}</span>
@@ -24,12 +45,17 @@ export function RankBadges({ job }: { job: JobCard }) {
         firstPublishedAt={job.firstPublishedAt}
         sourceUpdatedAt={job.sourceUpdatedAt}
       />
-      {unranked && <span className="badge unranked">unranked</span>}
-      {job.rankEligible === false && <span className="badge mismatch">mismatch</span>}
-      {job.rankScore != null && job.rankEligible !== false && (
+      {unranked && !hideRank && <span className="badge unranked">unranked</span>}
+      {hideRank && <span className="badge no-description">no description</span>}
+      {!hideRank && job.rankEligible === false && (
+        <span className="badge mismatch">mismatch</span>
+      )}
+      {!hideRank && job.rankScore != null && (
         <span className="badge score">{job.rankScore}</span>
       )}
-      {job.feedbackKind === "like" && <span className="badge liked">liked</span>}
+      {!hideRank && job.feedbackKind === "like" && (
+        <span className="badge liked">liked</span>
+      )}
     </span>
   );
 }
@@ -37,16 +63,27 @@ export function RankBadges({ job }: { job: JobCard }) {
 export function RankNote({
   job,
   compact = false,
+  view,
 }: {
   job: JobCard;
   compact?: boolean;
+  view?: "ranked" | "mismatches" | "unranked" | "needs-description";
 }) {
+  if (hideRankDisplay(view)) {
+    const scrape = job.scrapeStatus?.replace(/_/g, " ") ?? "not scraped";
+    return (
+      <p className={`rank-reason ${compact ? "compact" : ""}`}>
+        Scrape: {scrape}. Open the posting to review manually.
+      </p>
+    );
+  }
+
   if (isUnranked(job)) {
     return (
       <p className={`rank-reason ${compact ? "compact" : ""}`}>
         {compact
           ? "Unranked — not scored yet."
-          : "Unranked — this role has not been scored yet. Turn on Show unranked to keep these at the top of Jobs."}
+          : "Unranked — waiting for the next ranking run."}
       </p>
     );
   }

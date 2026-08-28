@@ -18,9 +18,9 @@ const COPY: Record<Kind, { heading: string; lede: string; confirm: string; note:
     note: "What makes this a good example? (optional)",
   },
   dismiss: {
-    heading: "Dismiss this role?",
-    lede: "This tells ranking that it does not fit you. It will leave the Jobs list.",
-    confirm: "Dismiss",
+    heading: "Mark as mismatch?",
+    lede: "Marks this as a mismatch and saves your note for future rankings. Review mismatches on the Mismatches tab.",
+    confirm: "Mark mismatch",
     note: "Why doesn't this fit? (optional)",
   },
   unlike: {

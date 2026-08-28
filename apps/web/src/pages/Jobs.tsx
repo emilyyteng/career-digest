@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   clearJobFeedback,
@@ -7,21 +7,53 @@ import {
   getBoardRefresh,
   getJobs,
   getRankBatch,
+  getRerankQueue,
+  queueJobRerank,
   sendJobFeedback,
   startBoardRefresh,
   type BoardRefreshStatus,
   type JobCard,
+  type JobView,
   type RankBatchStatus,
+  type RerankQueueSnapshot,
 } from "../api";
-import { RankBadges, RankNote } from "../RankMark";
+import { isMismatch, RankBadges, RankNote } from "../RankMark";
 import StarButton from "../StarButton";
 import FeedbackDialog from "./FeedbackDialog";
+import RerankDialog from "./RerankDialog";
 
 const PAGE_SIZE = 25;
+
+const TABS: { id: JobView; label: string }[] = [
+  { id: "ranked", label: "ranked" },
+  { id: "mismatches", label: "mismatches" },
+  { id: "unranked", label: "unranked" },
+  { id: "needs-description", label: "needs description" },
+];
+
+const EMPTY_COUNTS: Record<JobView, number> = {
+  ranked: 0,
+  mismatches: 0,
+  unranked: 0,
+  "needs-description": 0,
+};
+
 type JobSort = "rank" | "published" | "updated";
 
-function parseSort(value: string | null): JobSort {
-  return value === "published" || value === "updated" ? value : "rank";
+function parseView(value: string | null): JobView {
+  if (
+    value === "mismatches" ||
+    value === "unranked" ||
+    value === "needs-description"
+  ) {
+    return value;
+  }
+  return "ranked";
+}
+
+function parseSort(value: string | null, view: JobView): JobSort {
+  if (value === "published" || value === "updated") return value;
+  return view === "ranked" ? "rank" : "published";
 }
 
 function refreshLabel(status: BoardRefreshStatus | null): string {
@@ -55,104 +87,15 @@ function RankBatchBanner({ status }: { status: RankBatchStatus }) {
   );
 }
 
-function SearchBar({
-  initial,
-  count,
-  loading,
-  sort,
-  unranked,
-  mismatches,
-  refresh,
-  onQuery,
-  onSort,
-  onUnranked,
-  onMismatches,
-  onRefresh,
-}: {
-  initial: string;
-  count: number;
-  loading: boolean;
-  sort: JobSort;
-  unranked: boolean;
-  mismatches: boolean;
-  refresh: BoardRefreshStatus | null;
-  onQuery: (query: string) => void;
-  onSort: (sort: JobSort) => void;
-  onUnranked: (on: boolean) => void;
-  onMismatches: (on: boolean) => void;
-  onRefresh: () => void;
-}) {
-  const [q, setQ] = useState(initial);
-  const refreshing = refresh?.status === "running";
-
-  useEffect(() => {
-    setQ(initial);
-  }, [initial]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => onQuery(q), 200);
-    return () => window.clearTimeout(timer);
-  }, [q, onQuery]);
-
-  return (
-    <div className="toolbar">
-      <input
-        placeholder="Search title, company, location"
-        value={q}
-        onChange={(event) => setQ(event.target.value)}
-        aria-label="Search jobs"
-      />
-      <div className="toolbar-toggles">
-        <select
-          className="sort"
-          aria-label="Sort jobs"
-          value={sort}
-          onChange={(event) => onSort(parseSort(event.target.value))}
-        >
-          <option value="rank">Sort: rank</option>
-          <option value="published">Sort: published</option>
-          <option value="updated">Sort: updated</option>
-        </select>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={unranked}
-            onChange={(event) => onUnranked(event.target.checked)}
-          />
-          Show unranked
-        </label>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={mismatches}
-            onChange={(event) => onMismatches(event.target.checked)}
-          />
-          Show mismatches
-        </label>
-        <button
-          type="button"
-          className="secondary refresh-btn"
-          disabled={refreshing}
-          onClick={onRefresh}
-        >
-          {refreshing && <span className="spinner" aria-hidden="true" />}
-          {refreshLabel(refresh)}
-        </button>
-      </div>
-      <span className="count">{loading ? "Loading…" : `${count} open`}</span>
-    </div>
-  );
-}
-
 export default function Jobs() {
   const [params, setParams] = useSearchParams();
   const query = params.get("q") ?? "";
-  const sort = parseSort(params.get("sort"));
-  const unranked = params.get("unranked") !== "0";
-  const mismatches = params.get("mismatches") === "1";
+  const view = parseView(params.get("view"));
+  const sort = parseSort(params.get("sort"), view);
   const page = Math.max(1, Number(params.get("page") || 1));
   const [jobs, setJobs] = useState<JobCard[]>([]);
   const [count, setCount] = useState(0);
+  const [counts, setCounts] = useState(EMPTY_COUNTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -162,26 +105,62 @@ export default function Jobs() {
     job: JobCard;
     kind: "like" | "dismiss" | "unlike";
   } | null>(null);
+  const [rerankDialog, setRerankDialog] = useState<JobCard | null>(null);
+  const [rerankQueue, setRerankQueue] = useState<RerankQueueSnapshot["items"]>([]);
+  const [searchInput, setSearchInput] = useState(query);
+  const wasReranking = useRef(false);
   const wasRefreshing = useRef(false);
   const wasRanking = useRef(false);
 
   const pageCount = Math.max(1, Math.ceil(count / PAGE_SIZE));
 
+  function jobsParams(
+    nextPage: number,
+    nextView = view,
+    nextQuery = query,
+    nextSort = sort,
+  ) {
+    const nextParams = new URLSearchParams();
+    if (nextQuery) nextParams.set("q", nextQuery);
+    if (nextView !== "ranked") nextParams.set("view", nextView);
+    const defaultSort: JobSort = nextView === "ranked" ? "rank" : "published";
+    if (nextSort !== defaultSort) {
+      nextParams.set("sort", nextSort);
+    }
+    if (nextPage > 1) nextParams.set("page", String(nextPage));
+    return nextParams;
+  }
+
   async function reload(nextPage = page) {
-    const data = await getJobs(query, nextPage, PAGE_SIZE, { mismatches, unranked, sort });
+    const data = await getJobs(query, nextPage, PAGE_SIZE, { view, sort });
     setJobs(data.jobs);
     setCount(data.count);
+    setCounts({ ...EMPTY_COUNTS, ...data.counts });
     return data;
   }
 
   useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const trimmed = searchInput.trim();
+      if (trimmed === query) return;
+      setParams(jobsParams(1, view, trimmed), { replace: true });
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [searchInput, query, view, sort, setParams]);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    getJobs(query, page, PAGE_SIZE, { mismatches, unranked, sort })
+    getJobs(query, page, PAGE_SIZE, { view, sort })
       .then((data) => {
         if (cancelled) return;
         setJobs(data.jobs);
         setCount(data.count);
+        setCounts({ ...EMPTY_COUNTS, ...data.counts });
         setError(null);
       })
       .catch((err: Error) => {
@@ -193,7 +172,7 @@ export default function Jobs() {
     return () => {
       cancelled = true;
     };
-  }, [query, page, mismatches, unranked, sort]);
+  }, [query, page, view, sort]);
 
   useEffect(() => {
     let cancelled = false;
@@ -207,10 +186,40 @@ export default function Jobs() {
         if (!cancelled) setRankBatch(status);
       })
       .catch(() => undefined);
+    getRerankQueue()
+      .then((snapshot) => {
+        if (!cancelled) setRerankQueue(snapshot.items);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const active = rerankQueue.some(
+      (item) => item.status === "queued" || item.status === "running",
+    );
+    if (!active) return;
+    wasReranking.current = true;
+    const timer = window.setInterval(() => {
+      getRerankQueue()
+        .then((snapshot) => setRerankQueue(snapshot.items))
+        .catch(() => undefined);
+    }, 2000);
+    return () => window.clearInterval(timer);
+  }, [rerankQueue]);
+
+  useEffect(() => {
+    if (!rerankQueue.some((item) => item.status === "queued" || item.status === "running")) {
+      if (!wasReranking.current) return;
+      wasReranking.current = false;
+      setLoading(true);
+      reload()
+        .catch((err: Error) => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  }, [rerankQueue]);
 
   useEffect(() => {
     if (refresh?.status !== "running") return;
@@ -238,9 +247,7 @@ export default function Jobs() {
   }, [refresh]);
 
   useEffect(() => {
-    const active =
-      rankBatch?.status === "running" || rankBatch?.status === "ready";
-    // Poll often while active; occasionally while idle so a CLI-started batch appears.
+    const active = rankBatch?.status === "running" || rankBatch?.status === "ready";
     const ms = active ? 2500 : 12_000;
     if (active) wasRanking.current = true;
     const timer = window.setInterval(() => {
@@ -266,60 +273,19 @@ export default function Jobs() {
       .finally(() => setLoading(false));
   }, [rankBatch]);
 
-  const setQuery = useCallback(
-    (next: string) => {
-      const trimmed = next.trim();
-      setParams(
-        (current) => {
-          const currentQ = current.get("q") ?? "";
-          if (trimmed === currentQ) return current;
-          const nextParams = new URLSearchParams();
-          if (trimmed) nextParams.set("q", trimmed);
-          if (current.get("mismatches") === "1") nextParams.set("mismatches", "1");
-          if (current.get("unranked") === "0") nextParams.set("unranked", "0");
-          const currentSort = current.get("sort");
-          if (currentSort === "published" || currentSort === "updated") {
-            nextParams.set("sort", currentSort);
-          }
-          return nextParams;
-        },
-        { replace: true },
-      );
-    },
-    [setParams],
-  );
+  function setView(next: JobView) {
+    const nextSort =
+      next === "ranked" ? "rank" : sort === "rank" ? "published" : sort;
+    setParams(jobsParams(1, next, query, nextSort));
+  }
 
-  function jobsParams(
-    nextPage: number,
-    nextMismatches = mismatches,
-    nextUnranked = unranked,
-    nextQuery = query,
-    nextSort = sort,
-  ) {
-    const nextParams = new URLSearchParams();
-    if (nextQuery) nextParams.set("q", nextQuery);
-    if (nextMismatches) nextParams.set("mismatches", "1");
-    if (!nextUnranked) nextParams.set("unranked", "0");
-    if (nextSort !== "rank") nextParams.set("sort", nextSort);
-    if (nextPage > 1) nextParams.set("page", String(nextPage));
-    return nextParams;
+  function setSort(next: JobSort) {
+    setParams(jobsParams(1, view, query, next));
   }
 
   function setPage(next: number) {
     setParams(jobsParams(next));
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function setMismatches(on: boolean) {
-    setParams(jobsParams(1, on));
-  }
-
-  function setUnranked(on: boolean) {
-    setParams(jobsParams(1, mismatches, on));
-  }
-
-  function setSort(next: JobSort) {
-    setParams(jobsParams(1, mismatches, unranked, query, next));
   }
 
   async function refreshBoard() {
@@ -361,6 +327,7 @@ export default function Jobs() {
           ),
         );
       }
+      await reload().catch(() => undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update star");
       await reload().catch(() => undefined);
@@ -401,24 +368,84 @@ export default function Jobs() {
     }
   }
 
+  async function confirmRerank(note: string) {
+    if (!rerankDialog) return;
+    const job = rerankDialog;
+    setPendingId(job.id);
+    try {
+      await queueJobRerank(job.id, note);
+      setRerankDialog(null);
+      const snapshot = await getRerankQueue();
+      setRerankQueue(snapshot.items);
+      wasReranking.current = true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not queue rerank");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  function rerankStatusFor(jobId: string): RerankQueueSnapshot["items"][number] | null {
+    return rerankQueue.find((item) => item.postingId === jobId) ?? null;
+  }
+
   const refreshing = refresh?.status === "running";
+  const showRankActions = view !== "needs-description";
 
   return (
     <section>
-      <SearchBar
-        initial={query}
-        count={count}
-        loading={loading}
-        unranked={unranked}
-        mismatches={mismatches}
-        sort={sort}
-        refresh={refresh}
-        onQuery={setQuery}
-        onSort={setSort}
-        onUnranked={setUnranked}
-        onMismatches={setMismatches}
-        onRefresh={() => void refreshBoard()}
-      />
+      <div className="tabs-row">
+        <div className="tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={tab.id === view ? "tab on" : "tab"}
+              aria-current={tab.id === view ? "page" : undefined}
+              aria-label={`${tab.label}, ${counts[tab.id]} posting${counts[tab.id] === 1 ? "" : "s"}`}
+              onClick={() => setView(tab.id)}
+            >
+              <span className="tab-label">{tab.label}</span>
+              <span className="tab-count">{counts[tab.id]}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="secondary refresh-btn"
+          disabled={refreshing}
+          onClick={() => void refreshBoard()}
+        >
+          {refreshing && <span className="spinner" aria-hidden="true" />}
+          {refreshLabel(refresh)}
+        </button>
+      </div>
+
+      <div className="jobs-search-row">
+        <input
+          className="jobs-search-input"
+          placeholder="Search title, company, location"
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          aria-label="Search jobs in this tab"
+        />
+        <select
+          className="sort jobs-sort-select"
+          aria-label="Sort jobs"
+          value={sort}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (next === "rank" || next === "published" || next === "updated") {
+              setSort(next);
+            }
+          }}
+        >
+          {view === "ranked" && <option value="rank">Sort: rank</option>}
+          <option value="published">Sort: published</option>
+          <option value="updated">Sort: updated</option>
+        </select>
+      </div>
+
       {refreshing && (
         <p className="refresh-banner" role="status">
           <span className="spinner" aria-hidden="true" />
@@ -436,53 +463,88 @@ export default function Jobs() {
       {rankBatch && <RankBatchBanner status={rankBatch} />}
       {error && <p className="error">{error}</p>}
       {loading && jobs.length === 0 && <p className="muted">Loading jobs…</p>}
-      {jobs.map((job) => (
-        <article key={job.id} className="card">
-          <StarButton
-            starred={job.applicationStatus === "starred"}
-            disabled={pendingId === job.id}
-            onClick={() => toggleStar(job)}
-          />
-          <h2>
-            <Link to={`/jobs/${job.id}`}>{job.title}</Link>
-          </h2>
-          <div className="meta">
-            <span className="employer">{job.company}</span>
-            <span className="location">{job.location ?? ""}</span>
-            <RankBadges job={job} />
-          </div>
-          <RankNote job={job} compact />
-          <div className="row-actions">
-            <button type="button" onClick={() => markApplied(job)}>
-              Applied
-            </button>
-            <button
-              type="button"
-              className="secondary"
+      {!loading && jobs.length === 0 && <p className="muted">Nothing in this tab yet.</p>}
+      {jobs.map((job) => {
+        const mismatch = isMismatch(job);
+        const rerank = rerankStatusFor(job.id);
+        const rerankBusy =
+          rerank?.status === "queued" || rerank?.status === "running" || pendingId === job.id;
+        return (
+          <article key={job.id} className="card">
+            <StarButton
+              starred={job.applicationStatus === "starred"}
               disabled={pendingId === job.id}
-              onClick={() =>
-                setDialog({
-                  job,
-                  kind: job.feedbackKind === "like" ? "unlike" : "like",
-                })
-              }
-            >
-              {job.feedbackKind === "like" ? "Liked" : "Like"}
-            </button>
-            <button
-              type="button"
-              className="secondary"
-              disabled={pendingId === job.id}
-              onClick={() => setDialog({ job, kind: "dismiss" })}
-            >
-              Dismiss
-            </button>
-            <a className="external" href={job.url} target="_blank" rel="noreferrer">
-              Apply on site <span className="ext-icon" aria-hidden="true">↗</span>
-            </a>
-          </div>
-        </article>
-      ))}
+              onClick={() => toggleStar(job)}
+            />
+            <h2>
+              <Link to={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer">
+                {job.title}
+              </Link>
+            </h2>
+            <div className="meta">
+              <span className="employer">{job.company}</span>
+              <span className="location">{job.location ?? ""}</span>
+              <RankBadges job={job} view={view} />
+            </div>
+            <RankNote job={job} compact view={view} />
+            <div className="row-actions">
+              <button type="button" className="secondary" onClick={() => markApplied(job)}>
+                Applied<span className="btn-icon" aria-hidden="true">✓</span>
+              </button>
+              {showRankActions &&
+                (mismatch ? (
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={rerankBusy}
+                    onClick={() => setRerankDialog(job)}
+                  >
+                    {rerank?.status === "queued" || rerank?.status === "running" ? (
+                      <>
+                        <span className="spinner" aria-hidden="true" />
+                        Reranking…
+                      </>
+                    ) : rerank?.status === "error" ? (
+                      "Rerank failed"
+                    ) : (
+                      "Rerank"
+                    )}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={pendingId === job.id}
+                      onClick={() =>
+                        setDialog({
+                          job,
+                          kind: job.feedbackKind === "like" ? "unlike" : "like",
+                        })
+                      }
+                    >
+                      {job.feedbackKind === "like" ? "Liked" : "Like"}
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={pendingId === job.id}
+                      onClick={() => setDialog({ job, kind: "dismiss" })}
+                    >
+                      Mismatch
+                    </button>
+                  </>
+                ))}
+              <a className="external" href={job.url} target="_blank" rel="noreferrer">
+                Apply on site <span className="ext-icon" aria-hidden="true">↗</span>
+              </a>
+            </div>
+            {rerank?.status === "error" && rerank.error && (
+              <p className="error card-inline-error">{rerank.error}</p>
+            )}
+          </article>
+        );
+      })}
       {count > 0 && (
         <nav className="pager" aria-label="Jobs pages">
           {page > 1 ? (
@@ -534,6 +596,14 @@ export default function Jobs() {
           pending={pendingId === dialog.job.id}
           onCancel={() => setDialog(null)}
           onConfirm={(note) => void confirmFeedback(note)}
+        />
+      )}
+      {rerankDialog && (
+        <RerankDialog
+          title={`${rerankDialog.company} — ${rerankDialog.title}`}
+          pending={pendingId === rerankDialog.id}
+          onCancel={() => setRerankDialog(null)}
+          onConfirm={(note) => void confirmRerank(note)}
         />
       )}
     </section>
