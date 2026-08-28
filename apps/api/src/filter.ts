@@ -2,7 +2,13 @@ import { isAllowedUsLocation } from "./location.js";
 
 /** Cheap title-only intern filter. Avoids matching "internal" / "international". */
 export function looksLikeInternship(title: string): boolean {
-  return /\bintern(?:ship)?s?\b|\bco-?ops?\b/i.test(title);
+  return (
+    /\bintern(?:ship)?s?\b|\bco-?ops?\b/i.test(title) ||
+    // Finance-style student programs (often SWE tracks): "Technology Summer Analyst", etc.
+    /\b(?:summer|spring|winter|fall|autumn)\s+analyst\b/i.test(title) ||
+    // Parallel banking internship title (e.g. Summer Associate).
+    /\bsummer\s+associate\b/i.test(title)
+  );
 }
 
 export const TARGET_YEAR = 2027;
