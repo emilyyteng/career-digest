@@ -78,7 +78,7 @@ export default function FeedbackDialog({
             <button type="button" className="secondary" onClick={onCancel} disabled={pending}>
               Cancel
             </button>
-            <button type="submit" disabled={pending}>
+            <button type="submit" className="modal-confirm-btn" disabled={pending}>
               {pending ? "Saving…" : copy.confirm}
             </button>
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   clearJobFeedback,
   createApplication,
@@ -12,17 +12,21 @@ import {
   type RerankQueueSnapshot,
 } from "../api";
 import { isBlankJobDescription, isMismatch, RankBadges, RankNote } from "../RankMark";
-import StarButton from "../StarButton";
+import JobFeedbackButtons from "../JobFeedbackButtons";
 import FeedbackDialog from "./FeedbackDialog";
+import { listReturnTo } from "../navigationReturn";
 import RerankDialog from "./RerankDialog";
+import StepActionConfirm from "../StepActionConfirm";
 
 export default function JobDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [job, setJob] = useState<JobDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [dialog, setDialog] = useState<"like" | "dismiss" | "unlike" | null>(null);
+  const [appliedConfirm, setAppliedConfirm] = useState(false);
   const [rerankOpen, setRerankOpen] = useState(false);
   const [rerankQueue, setRerankQueue] = useState<RerankQueueSnapshot["items"]>([]);
   const wasReranking = useRef(false);
@@ -65,27 +69,36 @@ export default function JobDetail() {
     void load().catch(() => undefined);
   }, [rerankQueue]);
 
-  async function toggleStar() {
+  async function toggleTodo() {
     if (!job || pending) return;
     setPending(true);
     try {
-      if (job.applicationStatus === "starred" && job.applicationId) {
+      if (job.applicationStatus === "todo" && job.applicationId) {
         await deleteApplication(job.applicationId);
       } else {
-        await createApplication({ postingId: job.id, status: "starred" });
+        await createApplication({ postingId: job.id, status: "todo" });
       }
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update star");
+      setError(err instanceof Error ? err.message : "Could not update to-do");
     } finally {
       setPending(false);
     }
   }
 
-  async function markApplied() {
+  async function confirmApplied() {
     if (!job) return;
-    const result = await createApplication({ postingId: job.id, status: "applied" });
-    navigate(`/applications/${result.id}`);
+    setAppliedConfirm(false);
+    try {
+      const result = await createApplication({ postingId: job.id, status: "applied" });
+      navigate(`/applications/${result.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not mark applied");
+    }
+  }
+
+  async function markApplied() {
+    setAppliedConfirm(true);
   }
 
   async function confirmFeedback(note: string) {
@@ -134,15 +147,19 @@ export default function JobDetail() {
 
   return (
     <article className="detail">
-      <StarButton
-        starred={job.applicationStatus === "starred"}
-        disabled={pending}
-        onClick={() => toggleStar()}
-      />
       <p>
-        <Link to="/jobs">← Jobs</Link>
+        <Link to={listReturnTo(location, "/jobs")}>← Jobs</Link>
       </p>
-      <h2>{job.title}</h2>
+      <div className="card-title-row detail-title-row">
+        <h2>{job.title}</h2>
+        <JobFeedbackButtons
+          liked={job.feedbackKind === "like"}
+          dismissed={job.feedbackKind === "dismiss"}
+          disabled={pending}
+          onLike={() => setDialog(job.feedbackKind === "like" ? "unlike" : "like")}
+          onDismiss={() => setDialog("dismiss")}
+        />
+      </div>
       <div className="meta">
         <span className="employer">{job.company}</span>
         <span className="location">{job.location ?? ""}</span>
@@ -157,11 +174,23 @@ export default function JobDetail() {
         </a>
       </p>
       <div className="row-actions">
-        <button type="button" className="secondary" onClick={() => markApplied()}>
+        <button
+          type="button"
+          className={
+            job.applicationStatus === "todo"
+              ? "secondary todo-toggle on"
+              : "secondary todo-toggle"
+          }
+          disabled={pending}
+          onClick={() => void toggleTodo()}
+        >
+          To-do<span className="btn-icon" aria-hidden="true">★</span>
+        </button>
+        <button type="button" className="secondary" disabled={pending} onClick={() => markApplied()}>
           Applied<span className="btn-icon" aria-hidden="true">✓</span>
         </button>
         {!needsDescription &&
-          (mismatch ? (
+          mismatch && (
             <button
               type="button"
               className="secondary"
@@ -179,26 +208,7 @@ export default function JobDetail() {
                 "Rerank"
               )}
             </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="secondary"
-                disabled={pending}
-                onClick={() => setDialog(job.feedbackKind === "like" ? "unlike" : "like")}
-              >
-                {job.feedbackKind === "like" ? "Liked" : "Like"}
-              </button>
-              <button
-                type="button"
-                className="secondary"
-                disabled={pending}
-                onClick={() => setDialog("dismiss")}
-              >
-                Mismatch
-              </button>
-            </>
-          ))}
+          )}
       </div>
       {rerank?.status === "error" && rerank.error && (
         <p className="error">{rerank.error}</p>
@@ -229,6 +239,24 @@ export default function JobDetail() {
           onCancel={() => setRerankOpen(false)}
           onConfirm={(note) => void confirmRerank(note)}
         />
+      )}
+      {appliedConfirm && (
+        <div
+          className="modal-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setAppliedConfirm(false);
+          }}
+        >
+          <div className="modal" role="dialog" aria-modal="true">
+            <StepActionConfirm
+              title="Mark as applied?"
+              description="This removes the role from your Jobs list and moves it to Applications."
+              confirmLabel="Mark applied"
+              onConfirm={() => void confirmApplied()}
+              onCancel={() => setAppliedConfirm(false)}
+            />
+          </div>
+        </div>
       )}
     </article>
   );

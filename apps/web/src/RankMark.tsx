@@ -32,14 +32,17 @@ function hideRankDisplay(
 export function RankBadges({
   job,
   view,
+  inline = false,
 }: {
   job: JobCard;
   view?: "ranked" | "mismatches" | "unranked" | "needs-description";
+  /** Omit outer `.meta-badges` wrapper when parent already provides it. */
+  inline?: boolean;
 }) {
   const unranked = isUnranked(job);
   const hideRank = hideRankDisplay(view);
-  return (
-    <span className="meta-badges">
+  const badges = (
+    <>
       <span className="badge">{job.source}</span>
       <PostingDates
         firstPublishedAt={job.firstPublishedAt}
@@ -56,8 +59,10 @@ export function RankBadges({
       {!hideRank && job.feedbackKind === "like" && (
         <span className="badge liked">liked</span>
       )}
-    </span>
+    </>
   );
+  if (inline) return badges;
+  return <span className="meta-badges">{badges}</span>;
 }
 
 export function RankNote({

@@ -12,7 +12,7 @@ export default function StarButton({ starred, disabled, onClick }: Props) {
       type="button"
       className={starred ? "star on" : "star"}
       aria-pressed={starred}
-      aria-label={starred ? "Unstar" : "Star"}
+      aria-label={starred ? "Remove from to-do" : "Add to to-do"}
       disabled={disabled}
       onClick={onClick}
     >

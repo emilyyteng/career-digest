@@ -26,7 +26,7 @@ export default function StepActionConfirm({
         <button type="button" className="secondary" onClick={onCancel}>
           Cancel
         </button>
-        <button type="button" onClick={onConfirm}>{confirmLabel}</button>
+        <button type="button" className="modal-confirm-btn" onClick={onConfirm}>{confirmLabel}</button>
       </div>
     </div>
   );

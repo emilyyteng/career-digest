@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   clearJobFeedback,
   createApplication,
@@ -18,10 +18,12 @@ import {
   type RerankQueueSnapshot,
 } from "../api";
 import { isMismatch, RankBadges, RankNote } from "../RankMark";
-import StarButton from "../StarButton";
+import JobFeedbackButtons from "../JobFeedbackButtons";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import FeedbackDialog from "./FeedbackDialog";
 import RerankDialog from "./RerankDialog";
+import StepActionConfirm from "../StepActionConfirm";
+import { listLinkState } from "../navigationReturn";
 
 const PAGE_SIZE = 25;
 
@@ -80,7 +82,36 @@ function refreshLabel(status: BoardRefreshStatus | null): string {
   return "Refreshing…";
 }
 
-function RankBatchBanner({ status }: { status: RankBatchStatus }) {
+/** User-dismissed rank banners for this browser tab (survives route changes and reloads). */
+const DISMISSED_RANK_BANNERS_KEY = "career-digest:dismissed-rank-banners";
+
+function readDismissedRankBannerKeys(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_RANK_BANNERS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((item): item is string => typeof item === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistDismissedRankBannerKey(key: string): void {
+  const keys = readDismissedRankBannerKeys();
+  keys.add(key);
+  sessionStorage.setItem(DISMISSED_RANK_BANNERS_KEY, JSON.stringify([...keys]));
+}
+
+const dismissedRankBannerKeys = readDismissedRankBannerKeys();
+
+function RankBatchBanner({
+  status,
+  onDismiss,
+}: {
+  status: RankBatchStatus;
+  onDismiss: () => void;
+}) {
   if (status.status === "idle") return null;
   if (status.status === "ok" && status.finishedAt) {
     const age = Date.now() - new Date(status.finishedAt).getTime();
@@ -96,14 +127,27 @@ function RankBatchBanner({ status }: { status: RankBatchStatus }) {
           ? "rank-batch-banner ok"
           : "rank-batch-banner";
   return (
-    <p className={className} role="status">
-      {active && <span className="spinner" aria-hidden="true" />}
-      {status.hint ?? "Ranking…"}
-    </p>
+    <div className={className} role="status">
+      <span className="rank-batch-banner-text">
+        {active && <span className="spinner" aria-hidden="true" />}
+        {status.hint ?? "Ranking…"}
+      </span>
+      <button
+        type="button"
+        className="rank-batch-dismiss"
+        aria-label="Dismiss"
+        onClick={onDismiss}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" />
+        </svg>
+      </button>
+    </div>
   );
 }
 
 export default function Jobs() {
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const query = params.get("q") ?? "";
   const view = parseView(params.get("view"));
@@ -121,11 +165,13 @@ export default function Jobs() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [refresh, setRefresh] = useState<BoardRefreshStatus | null>(null);
   const [rankBatch, setRankBatch] = useState<RankBatchStatus | null>(null);
+  const [dismissedRankBannerKey, setDismissedRankBannerKey] = useState<string | null>(null);
   const [dialog, setDialog] = useState<{
     job: JobCard;
     kind: "like" | "dismiss" | "unlike";
   } | null>(null);
   const [rerankDialog, setRerankDialog] = useState<JobCard | null>(null);
+  const [appliedConfirm, setAppliedConfirm] = useState<JobCard | null>(null);
   const [rerankQueue, setRerankQueue] = useState<RerankQueueSnapshot["items"]>([]);
   const [searchInput, setSearchInput] = useState(query);
   const wasReranking = useRef(false);
@@ -341,30 +387,30 @@ export default function Jobs() {
     }
   }
 
-  async function toggleStar(job: JobCard) {
+  async function toggleTodo(job: JobCard) {
     if (pendingId) return;
     setPendingId(job.id);
-    const starred = job.applicationStatus === "starred";
+    const onTodo = job.applicationStatus === "todo";
     setJobs((current) =>
       current.map((row) =>
         row.id === job.id
           ? {
               ...row,
-              applicationStatus: starred ? null : "starred",
-              applicationId: starred ? null : row.applicationId,
+              applicationStatus: onTodo ? null : "todo",
+              applicationId: onTodo ? null : row.applicationId,
             }
           : row,
       ),
     );
     try {
-      if (starred) {
+      if (onTodo) {
         if (job.applicationId) await deleteApplication(job.applicationId);
       } else {
-        const created = await createApplication({ postingId: job.id, status: "starred" });
+        const created = await createApplication({ postingId: job.id, status: "todo" });
         setJobs((current) =>
           current.map((row) =>
             row.id === job.id
-              ? { ...row, applicationId: created.id, applicationStatus: "starred" }
+              ? { ...row, applicationId: created.id, applicationStatus: "todo" }
               : row,
           ),
         );
@@ -372,14 +418,17 @@ export default function Jobs() {
       invalidateListCache("applications:");
       await reload().catch(() => undefined);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update star");
+      setError(err instanceof Error ? err.message : "Could not update to-do");
       await reload().catch(() => undefined);
     } finally {
       setPendingId(null);
     }
   }
 
-  async function markApplied(job: JobCard) {
+  async function confirmApplied() {
+    if (!appliedConfirm) return;
+    const job = appliedConfirm;
+    setAppliedConfirm(null);
     try {
       await createApplication({ postingId: job.id, status: "applied" });
       invalidateListCache("applications:");
@@ -390,6 +439,10 @@ export default function Jobs() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not mark applied");
     }
+  }
+
+  async function markApplied(job: JobCard) {
+    setAppliedConfirm(job);
   }
 
   async function confirmFeedback(note: string) {
@@ -403,6 +456,7 @@ export default function Jobs() {
         await sendJobFeedback(job.id, kind, note);
       }
       setDialog(null);
+      invalidateListCache("jobs:");
       const data = await reload();
       if (data.jobs.length === 0 && page > 1) setPage(page - 1);
     } catch (err) {
@@ -435,6 +489,16 @@ export default function Jobs() {
 
   const refreshing = refresh?.status === "running";
   const showRankActions = view !== "needs-description";
+  const rankBannerKey =
+    rankBatch == null
+      ? null
+      : rankBatch.status === "ok" || rankBatch.status === "error"
+        ? `${rankBatch.status}:${rankBatch.finishedAt ?? ""}`
+        : `${rankBatch.status}:${rankBatch.batchId ?? rankBatch.updatedAt ?? ""}`;
+  const rankBannerDismissed =
+    rankBannerKey != null &&
+    (dismissedRankBannerKey === rankBannerKey ||
+      dismissedRankBannerKeys.has(rankBannerKey));
 
   return (
     <section>
@@ -504,7 +568,16 @@ export default function Jobs() {
           …
         </p>
       )}
-      {rankBatch && <RankBatchBanner status={rankBatch} />}
+      {rankBatch && rankBannerKey && !rankBannerDismissed && (
+          <RankBatchBanner
+            status={rankBatch}
+            onDismiss={() => {
+              dismissedRankBannerKeys.add(rankBannerKey);
+              persistDismissedRankBannerKey(rankBannerKey);
+              setDismissedRankBannerKey(rankBannerKey);
+            }}
+          />
+        )}
       {error && <p className="error">{error}</p>}
       {loading && jobs.length === 0 && <p className="muted">Loading jobs…</p>}
       {!loading && jobs.length === 0 && <p className="muted">Nothing in this tab yet.</p>}
@@ -515,16 +588,25 @@ export default function Jobs() {
           rerank?.status === "queued" || rerank?.status === "running" || pendingId === job.id;
         return (
           <article key={job.id} className="card">
-            <StarButton
-              starred={job.applicationStatus === "starred"}
-              disabled={pendingId === job.id}
-              onClick={() => toggleStar(job)}
-            />
-            <h2>
-              <Link to={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer">
-                {job.title}
-              </Link>
-            </h2>
+            <div className="card-title-row">
+              <h2>
+                <Link to={`/jobs/${job.id}`} state={listLinkState(location)}>
+                  {job.title}
+                </Link>
+              </h2>
+              <JobFeedbackButtons
+                liked={job.feedbackKind === "like"}
+                dismissed={job.feedbackKind === "dismiss"}
+                disabled={pendingId === job.id}
+                onLike={() =>
+                  setDialog({
+                    job,
+                    kind: job.feedbackKind === "like" ? "unlike" : "like",
+                  })
+                }
+                onDismiss={() => setDialog({ job, kind: "dismiss" })}
+              />
+            </div>
             <div className="meta">
               <span className="employer">{job.company}</span>
               <span className="location">{job.location ?? ""}</span>
@@ -532,11 +614,28 @@ export default function Jobs() {
             </div>
             <RankNote job={job} compact view={view} />
             <div className="row-actions">
-              <button type="button" className="secondary" onClick={() => markApplied(job)}>
+              <button
+                type="button"
+                className={
+                  job.applicationStatus === "todo"
+                    ? "secondary todo-toggle on"
+                    : "secondary todo-toggle"
+                }
+                disabled={pendingId === job.id}
+                onClick={() => toggleTodo(job)}
+              >
+                To-do<span className="btn-icon" aria-hidden="true">★</span>
+              </button>
+              <button
+                type="button"
+                className="secondary"
+                disabled={pendingId === job.id}
+                onClick={() => markApplied(job)}
+              >
                 Applied<span className="btn-icon" aria-hidden="true">✓</span>
               </button>
               {showRankActions &&
-                (mismatch ? (
+                mismatch && (
                   <button
                     type="button"
                     className="secondary"
@@ -554,31 +653,7 @@ export default function Jobs() {
                       "Rerank"
                     )}
                   </button>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={pendingId === job.id}
-                      onClick={() =>
-                        setDialog({
-                          job,
-                          kind: job.feedbackKind === "like" ? "unlike" : "like",
-                        })
-                      }
-                    >
-                      {job.feedbackKind === "like" ? "Liked" : "Like"}
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={pendingId === job.id}
-                      onClick={() => setDialog({ job, kind: "dismiss" })}
-                    >
-                      Mismatch
-                    </button>
-                  </>
-                ))}
+                )}
               <a className="external" href={job.url} target="_blank" rel="noreferrer">
                 Apply on site <span className="ext-icon" aria-hidden="true">↗</span>
               </a>
@@ -649,6 +724,24 @@ export default function Jobs() {
           onCancel={() => setRerankDialog(null)}
           onConfirm={(note) => void confirmRerank(note)}
         />
+      )}
+      {appliedConfirm && (
+        <div
+          className="modal-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setAppliedConfirm(null);
+          }}
+        >
+          <div className="modal" role="dialog" aria-modal="true">
+            <StepActionConfirm
+              title="Mark as applied?"
+              description="This removes the role from your Jobs list and moves it to Applications."
+              confirmLabel="Mark applied"
+              onConfirm={() => void confirmApplied()}
+              onCancel={() => setAppliedConfirm(null)}
+            />
+          </div>
+        </div>
       )}
     </section>
   );

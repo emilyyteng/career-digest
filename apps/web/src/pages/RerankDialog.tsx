@@ -52,7 +52,7 @@ export default function RerankDialog({ title, pending, onCancel, onConfirm }: Pr
             <button type="button" className="secondary" onClick={onCancel} disabled={pending}>
               Cancel
             </button>
-            <button type="submit" disabled={pending || !note.trim()}>
+            <button type="submit" className="modal-confirm-btn" disabled={pending || !note.trim()}>
               {pending ? "Queueing…" : "Rerank"}
             </button>
           </div>
