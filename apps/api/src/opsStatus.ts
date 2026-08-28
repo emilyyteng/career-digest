@@ -13,7 +13,7 @@ const DEFAULT_CRON_MINUTE = 0;
 
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
-  AND (a.id IS NULL OR a.status = 'starred')
+  AND (a.id IS NULL OR a.status = 'todo')
 `;
 const HAS_DESCRIPTION = `p.description_html IS NOT NULL AND btrim(p.description_html) <> ''`;
 const BLANK_DESCRIPTION_P = `(p.description_html IS NULL OR btrim(p.description_html) = '')`;
@@ -127,7 +127,9 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
            AND p.ranked_at IS NULL
            AND p.rank_eligible IS NOT FALSE
        )::text AS unranked,
-       COUNT(*) FILTER (WHERE ${BLANK_DESCRIPTION_P})::text AS needs_description,
+       COUNT(*) FILTER (
+         WHERE ${BLANK_DESCRIPTION_P} AND p.rank_eligible IS NOT FALSE
+       )::text AS needs_description,
        COUNT(*) FILTER (
          WHERE ${BLANK_DESCRIPTION_P}
            AND p.ranked_at IS NULL

@@ -7,17 +7,6 @@ export function looksLikeInternship(title: string): boolean {
 
 export const TARGET_YEAR = 2027;
 
-/**
- * Rolling window from the moment ingest runs, not a fixed calendar date.
- * Only used to decide whether to INSERT an intern title with no class year.
- * Existing rows that are still on the board are updated, not deleted, even
- * after 120 days. Taken-down jobs are handled in ingest (keep if applied).
- *
- * Later: this constant (and intern vs new-grad rules) should be config so a
- * 2028 full-time search does not keep using summer-intern heuristics.
- */
-export const MAX_AGE_DAYS_WITHOUT_YEAR = 120;
-
 type Season = "spring" | "summer" | "fall" | "winter";
 
 export function yearsInTitle(title: string): number[] {
@@ -32,12 +21,6 @@ function seasonsInTitle(title: string): Season[] {
     found.push(raw === "autumn" ? "fall" : (raw as Season));
   }
   return found;
-}
-
-function isRecentEnough(firstPublishedAt: Date | null, now: Date): boolean {
-  if (!firstPublishedAt) return false;
-  const ageMs = now.getTime() - firstPublishedAt.getTime();
-  return ageMs >= 0 && ageMs <= MAX_AGE_DAYS_WITHOUT_YEAR * 24 * 60 * 60 * 1000;
 }
 
 type InternTerm = "target" | "optional" | "expired" | "unspecified";
@@ -64,42 +47,23 @@ function internTermFromTitle(title: string): InternTerm {
   return "optional";
 }
 
-/** Summer/Spring 2026-style terms we do not want in the live digest. */
+/** Summer/Spring prior-year terms we do not want in the live digest. */
 export function isExpiredInternTerm(title: string): boolean {
   return internTermFromTitle(title) === "expired";
 }
 
-type PersistStatus = "keep" | "skip";
-
 /**
- * Title heuristics for ingest only (not shown in the UI).
- * ≥ TARGET_YEAR in the title, Fall/Winter of the prior year, or an undated
- * intern title with a recent first_published → insert.
- * Summer/Spring of the prior year, or an undated title older than 120 days → skip.
+ * Whether to insert an intern posting from ingest.
+ * ATS boards only return open roles; Simplify misc uses active: true — presence
+ * on those feeds is the freshness signal, not first_published age.
  */
-export function classifyInternship(
+export function shouldInsertPosting(
   title: string,
-  firstPublishedAt: Date | null,
-  now = new Date(),
-  alreadyStored = false,
-): PersistStatus {
-  if (!looksLikeInternship(title)) return "skip";
-
-  const term = internTermFromTitle(title);
-  if (term === "target" || term === "optional") return "keep";
-  if (term === "expired") return "skip";
-
-  if (alreadyStored) return "keep";
-  return isRecentEnough(firstPublishedAt, now) ? "keep" : "skip";
-}
-
-/** New rows only. Existing open listings use shouldKeepExistingOnBoard. */
-export function shouldPersistInternship(
-  title: string,
-  firstPublishedAt: Date | null,
-  now = new Date(),
+  location: string | null,
 ): boolean {
-  return classifyInternship(title, firstPublishedAt, now, false) === "keep";
+  if (!looksLikeInternship(title)) return false;
+  if (isExpiredInternTerm(title)) return false;
+  return isAllowedUsLocation(location);
 }
 
 export function shouldKeepExistingOnBoard(
@@ -109,18 +73,6 @@ export function shouldKeepExistingOnBoard(
   return (
     looksLikeInternship(title) &&
     !isExpiredInternTerm(title) &&
-    isAllowedUsLocation(location)
-  );
-}
-
-export function shouldInsertPosting(
-  title: string,
-  location: string | null,
-  firstPublishedAt: Date | null,
-  now = new Date(),
-): boolean {
-  return (
-    shouldPersistInternship(title, firstPublishedAt, now) &&
     isAllowedUsLocation(location)
   );
 }

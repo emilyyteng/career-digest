@@ -14,6 +14,7 @@ import { getRerankQueueSnapshot, queueRerank } from "./rankRerankQueue.js";
 import {
   APPLICATION_STATUSES,
   isApplicationStatus,
+  normalizeApplicationStatus,
 } from "./statuses.js";
 import {
   addInterviewStep,
@@ -46,6 +47,7 @@ const applicationSelect = `
     a.status,
     a.notes,
     a.applied_at AS "appliedAt",
+    a.due_at AS "dueAt",
     a.status_changed_at AS "statusChangedAt",
     a.created_at AS "createdAt",
     a.updated_at AS "updatedAt",
@@ -107,13 +109,20 @@ function parseAppliedAt(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseDueAt(value: unknown): Date | null {
+  if (value === null || value === "") return null;
+  if (typeof value !== "string") return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function resolveAppliedAt(opts: {
   status: string;
   previousAppliedAt?: Date | string | null;
   explicit?: unknown;
   explicitProvided: boolean;
 }): Date | null {
-  if (opts.status === "starred") return null;
+  if (opts.status === "todo") return null;
   if (opts.explicitProvided) return parseAppliedAt(opts.explicit);
   if (opts.previousAppliedAt) {
     return opts.previousAppliedAt instanceof Date
@@ -167,7 +176,7 @@ function parseJobView(raw: string): JobView {
 
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
-  AND (a.id IS NULL OR a.status = 'starred')
+  AND (a.id IS NULL OR a.status = 'todo')
 `;
 
 const HAS_DESCRIPTION = `p.description_html IS NOT NULL AND btrim(p.description_html) <> ''`;
@@ -180,7 +189,7 @@ function jobViewFilter(view: JobView): string {
     case "unranked":
       return `AND ${HAS_DESCRIPTION} AND p.ranked_at IS NULL AND p.rank_eligible IS NOT FALSE`;
     case "needs-description":
-      return `AND ${BLANK_DESCRIPTION}`;
+      return `AND ${BLANK_DESCRIPTION} AND p.rank_eligible IS NOT FALSE`;
     default:
       return `AND ${HAS_DESCRIPTION} AND p.ranked_at IS NOT NULL AND p.rank_eligible IS NOT FALSE`;
   }
@@ -207,7 +216,9 @@ async function jobTabCounts(): Promise<Record<JobView, number>> {
            AND p.ranked_at IS NULL
            AND p.rank_eligible IS NOT FALSE
        )::text AS unranked,
-       COUNT(*) FILTER (WHERE ${BLANK_DESCRIPTION})::text AS needs_description
+       COUNT(*) FILTER (
+         WHERE ${BLANK_DESCRIPTION} AND p.rank_eligible IS NOT FALSE
+       )::text AS needs_description
      FROM postings p
      LEFT JOIN applications a ON a.posting_id = p.id
      WHERE ${JOBS_LIST_BASE}`,
@@ -411,7 +422,8 @@ api.delete("/jobs/:id/feedback", async (req, res) => {
 });
 
 api.get("/applications", async (req, res) => {
-  const status = String(req.query.status ?? "all");
+  const rawStatus = String(req.query.status ?? "all");
+  const status = rawStatus === "starred" ? "todo" : rawStatus;
   const params: unknown[] = [];
   let where = "";
   if (status !== "all") {
@@ -419,25 +431,25 @@ api.get("/applications", async (req, res) => {
       res.status(400).json({ error: "Invalid status" });
       return;
     }
-    params.push(status);
+    params.push(normalizeApplicationStatus(status));
     where = "WHERE a.status = $1";
   }
-  // Starred: newest into that tab first. Non-starred: date applied, then date created.
   const orderBy =
     status === "all"
       ? `ORDER BY
            CASE a.status
-             WHEN 'accepted' THEN 0
+             WHEN 'todo' THEN 0
              WHEN 'interviewing' THEN 1
              WHEN 'applied' THEN 2
-             WHEN 'starred' THEN 3
+             WHEN 'accepted' THEN 3
              WHEN 'declined' THEN 4
              ELSE 5
            END,
-           CASE WHEN a.status = 'starred' THEN a.status_changed_at ELSE a.applied_at END DESC NULLS LAST,
+           CASE WHEN a.status = 'todo' THEN a.due_at ELSE a.applied_at END ASC NULLS LAST,
+           CASE WHEN a.status = 'todo' THEN a.status_changed_at ELSE NULL END DESC NULLS LAST,
            a.created_at DESC`
-      : status === "starred"
-        ? `ORDER BY a.status_changed_at DESC, a.created_at DESC`
+      : status === "todo" || status === "starred"
+        ? `ORDER BY a.due_at ASC NULLS LAST, a.status_changed_at DESC, a.created_at DESC`
         : `ORDER BY a.applied_at DESC NULLS LAST, a.created_at DESC`;
   const result = await pool.query(
     `${applicationSelect} ${where} ${orderBy}`,
@@ -448,7 +460,7 @@ api.get("/applications", async (req, res) => {
   );
   const counts: Record<string, number> = {
     all: 0,
-    starred: 0,
+    todo: 0,
     applied: 0,
     interviewing: 0,
     accepted: 0,
@@ -456,7 +468,8 @@ api.get("/applications", async (req, res) => {
   };
   for (const row of countsResult.rows) {
     const n = Number(row.count) || 0;
-    counts[row.status] = n;
+    const key = row.status === "starred" ? "todo" : row.status;
+    if (key in counts) counts[key] = n;
     counts.all += n;
   }
   res.json({ count: result.rows.length, counts, applications: result.rows });
@@ -514,8 +527,9 @@ api.post("/applications", async (req, res) => {
     description?: string;
     descriptionHtml?: string;
     appliedAt?: string | null;
+    dueAt?: string | null;
   };
-  const status = body.status ?? "applied";
+  const status = normalizeApplicationStatus(body.status ?? "applied");
   if (!isApplicationStatus(status)) {
     res.status(400).json({ error: "Invalid status" });
     return;
@@ -527,20 +541,31 @@ api.post("/applications", async (req, res) => {
     explicit: body.appliedAt,
     explicitProvided,
   });
+  const dueProvided = Object.prototype.hasOwnProperty.call(body, "dueAt");
+  const dueAt =
+    status === "todo"
+      ? dueProvided
+        ? parseDueAt(body.dueAt)
+        : null
+      : null;
 
   if (body.postingId) {
     const inserted = await pool.query(
-      `INSERT INTO applications (posting_id, status, notes, applied_at, status_changed_at)
-       VALUES ($1, $2, $3, $4, now())
+      `INSERT INTO applications (posting_id, status, notes, applied_at, due_at, status_changed_at)
+       VALUES ($1, $2, $3, $4, $5, now())
        ON CONFLICT (posting_id) DO UPDATE SET
          status = EXCLUDED.status,
          notes = COALESCE(EXCLUDED.notes, applications.notes),
          applied_at = CASE
-           WHEN EXCLUDED.status = 'starred' THEN NULL
+           WHEN EXCLUDED.status = 'todo' THEN NULL
            WHEN EXCLUDED.applied_at IS NOT NULL THEN EXCLUDED.applied_at
            WHEN applications.applied_at IS NOT NULL THEN applications.applied_at
            WHEN EXCLUDED.status IN ('applied', 'interviewing', 'accepted') THEN now()
            ELSE applications.applied_at
+         END,
+         due_at = CASE
+           WHEN EXCLUDED.status <> 'todo' THEN NULL
+           ELSE EXCLUDED.due_at
          END,
          status_changed_at = CASE
            WHEN applications.status IS DISTINCT FROM EXCLUDED.status THEN now()
@@ -548,7 +573,7 @@ api.post("/applications", async (req, res) => {
          END,
          updated_at = now()
        RETURNING id`,
-      [body.postingId, status, body.notes ?? null, appliedAt],
+      [body.postingId, status, body.notes ?? null, appliedAt, dueAt],
     );
     res.status(201).json({ id: inserted.rows[0].id });
     return;
@@ -564,9 +589,9 @@ api.post("/applications", async (req, res) => {
   );
   const inserted = await pool.query(
     `INSERT INTO applications (
-       status, notes, company_name, title, location, url, description_html, applied_at, status_changed_at
+       status, notes, company_name, title, location, url, description_html, applied_at, due_at, status_changed_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
      RETURNING id`,
     [
       status,
@@ -577,13 +602,14 @@ api.post("/applications", async (req, res) => {
       body.url?.trim() || null,
       descriptionHtml,
       appliedAt,
+      dueAt,
     ],
   );
   res.status(201).json({ id: inserted.rows[0].id });
 });
 
 const STATUS_RANK: Record<string, number> = {
-  starred: 0,
+  todo: 0,
   applied: 1,
   interviewing: 2,
   accepted: 3,
@@ -602,6 +628,7 @@ api.patch("/applications/:id", async (req, res) => {
     notes?: string;
     postingId?: string | null;
     appliedAt?: string | null;
+    dueAt?: string | null;
     description?: string;
     descriptionHtml?: string | null;
   };
@@ -618,10 +645,11 @@ api.patch("/applications/:id", async (req, res) => {
       notes: string | null;
       status: string;
       applied_at: Date | null;
+      due_at: Date | null;
       description_html: string | null;
       status_changed_at: Date;
     }>(
-      `SELECT id, notes, status, applied_at, description_html, status_changed_at
+      `SELECT id, notes, status, applied_at, due_at, description_html, status_changed_at
        FROM applications WHERE id = $1`,
       [req.params.id],
     );
@@ -633,8 +661,9 @@ api.patch("/applications/:id", async (req, res) => {
 
     const previousStatus = current.rows[0].status;
     let notes = body.notes !== undefined ? body.notes : current.rows[0].notes;
-    let status = body.status ?? previousStatus;
+    let status = body.status ? normalizeApplicationStatus(body.status) : previousStatus;
     const explicitProvided = Object.prototype.hasOwnProperty.call(body, "appliedAt");
+    const dueProvided = Object.prototype.hasOwnProperty.call(body, "dueAt");
 
     let descriptionHtml = current.rows[0].description_html;
     if (body.descriptionHtml !== undefined) {
@@ -675,6 +704,12 @@ api.patch("/applications/:id", async (req, res) => {
       explicit: body.appliedAt,
       explicitProvided,
     });
+    const dueAtFinal =
+      status !== "todo"
+        ? null
+        : dueProvided
+          ? parseDueAt(body.dueAt)
+          : current.rows[0].due_at;
     const statusChanged = status !== previousStatus;
 
     const result = await client.query(
@@ -682,9 +717,10 @@ api.patch("/applications/:id", async (req, res) => {
          status = $2,
          notes = $3,
          applied_at = $4,
-         description_html = $5,
-         posting_id = CASE WHEN $6::boolean THEN $7::uuid ELSE posting_id END,
-         status_changed_at = CASE WHEN $8::boolean THEN now() ELSE status_changed_at END,
+         due_at = $5,
+         description_html = $6,
+         posting_id = CASE WHEN $7::boolean THEN $8::uuid ELSE posting_id END,
+         status_changed_at = CASE WHEN $9::boolean THEN now() ELSE status_changed_at END,
          updated_at = now()
        WHERE id = $1
        RETURNING id`,
@@ -693,6 +729,7 @@ api.patch("/applications/:id", async (req, res) => {
         status,
         notes,
         appliedAtFinal,
+        dueAtFinal,
         descriptionHtml,
         body.postingId !== undefined,
         body.postingId ?? null,
@@ -860,11 +897,11 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
 
 api.delete("/applications/:id", async (req, res) => {
   const result = await pool.query(
-    `DELETE FROM applications WHERE id = $1 AND status = 'starred' RETURNING id`,
+    `DELETE FROM applications WHERE id = $1 AND status = 'todo' RETURNING id`,
     [req.params.id],
   );
   if (!result.rows[0]) {
-    res.status(404).json({ error: "Starred application not found" });
+    res.status(404).json({ error: "To-do application not found" });
     return;
   }
   res.json({ ok: true });

@@ -4,7 +4,7 @@ import { listInterviewThreads } from "./interviews.js";
 
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
-  AND (a.id IS NULL OR a.status = 'starred')
+  AND (a.id IS NULL OR a.status = 'todo')
 `;
 const HAS_DESCRIPTION = `p.description_html IS NOT NULL AND btrim(p.description_html) <> ''`;
 
@@ -22,14 +22,23 @@ export type HomeJobPick = {
   pickKind: "top" | "newly_ranked" | "new_to_digest";
 };
 
-export type HomeStarredApplication = {
+export type HomeTodoApplication = {
   id: string;
   company: string | null;
   title: string | null;
   location: string | null;
   url: string | null;
   statusChangedAt: string | null;
+  applyByLabel: string | null;
+  applyByIso: string | null;
 };
+
+function applyByLabel(dueAt: string | null): string | null {
+  if (!dueAt) return null;
+  const formatted = formatDeadlineLong(dueAt);
+  if (!formatted) return null;
+  return `Apply by: ${formatted}`;
+}
 
 export type HomeInterviewAttention = {
   threadId: string;
@@ -85,8 +94,8 @@ export type HomeDashboard = {
     newlyRanked: HomeJobPick[];
     newToDigest: HomeJobPick[];
   };
-  starred: HomeStarredApplication[];
-  starredTotal: number;
+  todo: HomeTodoApplication[];
+  todoTotal: number;
   needsAttention: {
     interviews: HomeInterviewAttention[];
     interviewActionCount: number;
@@ -122,10 +131,12 @@ function mapPick(row: JobRow, pickKind: HomeJobPick["pickKind"]): HomeJobPick {
   };
 }
 
+const HOME_ATTENTION_LIMIT = 4;
+
 async function loadJobRows(
   whereExtra: string,
   orderBy: string,
-  limit = 5,
+  limit = HOME_ATTENTION_LIMIT,
   excludeIds: string[] = [],
 ): Promise<JobRow[]> {
   const params: unknown[] = [];
@@ -172,14 +183,14 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
   const topRankedRows = await loadJobRows(
     `AND p.ranked_at IS NOT NULL`,
     `p.rank_score DESC NULLS LAST, p.ranked_at DESC`,
-    5,
+    HOME_ATTENTION_LIMIT,
   );
   const topIds = topRankedRows.map((r) => r.id);
 
   const newlyRankedRows = await loadJobRows(
     `AND p.ranked_at IS NOT NULL AND p.ranked_at > now() - interval '7 days'`,
     `p.ranked_at DESC`,
-    5,
+    HOME_ATTENTION_LIMIT,
     topIds,
   );
   const excludeNew = [...topIds, ...newlyRankedRows.map((r) => r.id)];
@@ -187,16 +198,24 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
   const newToDigestRows = await loadJobRows(
     `AND p.first_seen_at > now() - interval '14 days'`,
     `p.first_seen_at DESC`,
-    5,
+    HOME_ATTENTION_LIMIT,
     excludeNew,
   );
 
-  const starredCount = await pool.query<{ count: string }>(
-    `SELECT COUNT(*)::text AS count FROM applications WHERE status = 'starred'`,
+  const todoCount = await pool.query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM applications WHERE status = 'todo'`,
   );
-  const starredTotal = Number(starredCount.rows[0]?.count ?? 0) || 0;
+  const todoTotal = Number(todoCount.rows[0]?.count ?? 0) || 0;
 
-  const starred = await pool.query<HomeStarredApplication>(
+  const todo = await pool.query<{
+    id: string;
+    company: string | null;
+    title: string | null;
+    location: string | null;
+    url: string | null;
+    statusChangedAt: string | null;
+    dueAt: string | null;
+  }>(
     `SELECT
        a.id,
        COALESCE(
@@ -207,18 +226,19 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
        COALESCE(a.title, p.title) AS title,
        COALESCE(a.location, p.location) AS location,
        COALESCE(a.url, p.url) AS url,
-       a.status_changed_at AS "statusChangedAt"
+       a.status_changed_at AS "statusChangedAt",
+       a.due_at AS "dueAt"
      FROM applications a
      LEFT JOIN postings p ON p.id = a.posting_id
      LEFT JOIN companies c ON c.id = p.company_id
-     WHERE a.status = 'starred'
-     ORDER BY a.status_changed_at DESC NULLS LAST, a.created_at DESC
-     LIMIT 5`,
+     WHERE a.status = 'todo'
+     ORDER BY a.due_at ASC NULLS LAST, a.status_changed_at DESC, a.created_at DESC
+     LIMIT ${HOME_ATTENTION_LIMIT}`,
   );
 
   const interviewData = await listInterviewThreads(pool, "active");
   const interviews: HomeInterviewAttention[] = interviewData.actionRequired
-    .slice(0, 5)
+    .slice(0, HOME_ATTENTION_LIMIT)
     .map((row) => ({
       threadId: row.id,
       company: row.company,
@@ -244,8 +264,17 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       newlyRanked: newlyRankedRows.map((r) => mapPick(r, "newly_ranked")),
       newToDigest: newToDigestRows.map((r) => mapPick(r, "new_to_digest")),
     },
-    starred: starred.rows,
-    starredTotal,
+    todo: todo.rows.map((row) => ({
+      id: row.id,
+      company: row.company,
+      title: row.title,
+      location: row.location,
+      url: row.url,
+      statusChangedAt: row.statusChangedAt,
+      applyByLabel: row.dueAt ? applyByLabel(row.dueAt) : null,
+      applyByIso: row.dueAt ?? null,
+    })),
+    todoTotal,
     needsAttention: {
       interviews,
       interviewActionCount: interviewData.actionRequired.length,

@@ -149,11 +149,7 @@ export async function runIngest(): Promise<void> {
       const toUpsert = postings.filter((posting) => {
         const known = knownIds.has(posting.externalId);
         if (known) return shouldKeepExistingOnBoard(posting.title, posting.location);
-        return shouldInsertPosting(
-          posting.title,
-          posting.location,
-          posting.firstPublishedAt,
-        );
+        return shouldInsertPosting(posting.title, posting.location);
       });
 
       for (const posting of toUpsert) {
@@ -198,7 +194,7 @@ export async function runIngest(): Promise<void> {
       const known = knownIds.has(posting.externalId);
       const title = simplifyFilterTitle(posting);
       if (known) return shouldKeepExistingOnBoard(title, posting.location);
-      return shouldInsertPosting(title, posting.location, posting.firstPublishedAt);
+      return shouldInsertPosting(title, posting.location);
     });
 
     for (const posting of toUpsert) {

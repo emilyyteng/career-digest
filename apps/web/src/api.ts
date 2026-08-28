@@ -31,6 +31,7 @@ export type ApplicationRow = {
   status: string;
   notes: string | null;
   appliedAt: string | null;
+  dueAt: string | null;
   company: string | null;
   title: string | null;
   location: string | null;
@@ -169,13 +170,15 @@ export type HomeJobPick = {
   pickKind: "top" | "newly_ranked" | "new_to_digest";
 };
 
-export type HomeStarredApplication = {
+export type HomeTodoApplication = {
   id: string;
   company: string | null;
   title: string | null;
   location: string | null;
   url: string | null;
   statusChangedAt: string | null;
+  applyByLabel: string | null;
+  applyByIso: string | null;
 };
 
 export type HomeDashboard = {
@@ -191,8 +194,8 @@ export type HomeDashboard = {
     newlyRanked: HomeJobPick[];
     newToDigest: HomeJobPick[];
   };
-  starred: HomeStarredApplication[];
-  starredTotal: number;
+  todo: HomeTodoApplication[];
+  todoTotal: number;
   needsAttention: {
     interviews: Array<{
       threadId: string;
