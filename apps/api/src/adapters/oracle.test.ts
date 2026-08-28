@@ -3,6 +3,8 @@ import {
   buildOracleJobUrl,
   buildOracleListFinder,
   extractOracleJobIdFromUrl,
+  isOracleCloudAtsUrl,
+  parseOracleBoardFromUrl,
   parseOracleBoardToken,
 } from "./oracle.js";
 
@@ -58,5 +60,18 @@ assertEqual(
   "1910",
   "extract job id",
 );
+
+const oracleBoard = parseOracleBoardFromUrl(
+  "https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/28488",
+);
+assert(oracleBoard !== null, "parseOracleBoardFromUrl");
+assertEqual(oracleBoard!.boardToken, "fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com|CX_1", "oracle boardToken");
+assert(
+  isOracleCloudAtsUrl(
+    "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
+  ),
+  "isOracleCloudAtsUrl true",
+);
+assert(!isOracleCloudAtsUrl("https://boards.greenhouse.io/embed/job_app"), "isOracleCloudAtsUrl false");
 
 console.log("oracle.test.ts: all assertions passed");

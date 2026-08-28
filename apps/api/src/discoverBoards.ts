@@ -1,6 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  isOracleCloudAtsUrl,
+  parseOracleBoardFromUrl,
+  probeOracleBoardJobCount,
+} from "./adapters/oracle.js";
 import { companies as configuredCompanies } from "./config/companies.js";
 import { SIMPLIFY_LISTINGS_URL } from "./adapters/simplify.js";
 import type { CompanyConfig, Source } from "./types.js";
@@ -18,9 +23,15 @@ type DiscoveredBoard = {
   method: "direct_url" | "greenhouse_embed_probe" | "name_match_probe";
   sampleUrl?: string;
   listingCount: number;
+  totalJobsCount?: number;
 };
 
-const ATS_SOURCES: Source[] = ["greenhouse", "lever", "ashby"];
+type DeferredOracleBoard = DiscoveredBoard & {
+  totalJobsCount: number;
+};
+
+const ATS_SOURCES: Source[] = ["greenhouse", "lever", "ashby", "oracle"];
+const DEFAULT_ORACLE_DISCOVER_MAX_JOBS = 250;
 const INVALID_TOKENS = new Set(["embed", "jobs", "job-board", "job_app"]);
 
 const DIRECT_PATTERNS: Array<{ source: Source; re: RegExp }> = [
@@ -100,6 +111,11 @@ function existingKeys(companies: CompanyConfig[]): Set<string> {
   return new Set(companies.map((c) => key(c.source, c.boardToken)));
 }
 
+function oracleDiscoverMaxJobs(): number {
+  const n = Number(process.env.ORACLE_DISCOVER_MAX_JOBS);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_ORACLE_DISCOVER_MAX_JOBS;
+}
+
 async function fetchSimplifyListings(): Promise<SimplifyListing[]> {
   const response = await fetch(SIMPLIFY_LISTINGS_URL, {
     headers: { Accept: "application/json" },
@@ -167,12 +183,15 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
   newBoards: DiscoveredBoard[];
   unresolvedEmbed: Array<{ company: string; sampleUrl: string; ghJid: string; listings: number }>;
   skippedInvalid: Array<{ source: Source; boardToken: string; company: string; sampleUrl: string }>;
+  deferredLargeOracle: DeferredOracleBoard[];
+  skippedOracleProbe: Array<{ boardToken: string; company: string; sampleUrl: string }>;
 }> {
   const listings = await fetchSimplifyListings();
   const active = listings.filter((row) => row.active && row.url?.trim());
   const known = existingKeys(configured);
 
   const directCounts = new Map<string, { board: DiscoveredBoard; sampleUrl: string }>();
+  const oracleCounts = new Map<string, { board: DiscoveredBoard; sampleUrl: string }>();
   const embedByCompany = new Map<
     string,
     { company: string; sampleUrl: string; ghJid: string; count: number }
@@ -222,6 +241,29 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
       continue;
     }
 
+    if (isOracleCloudAtsUrl(url)) {
+      const parsed = parseOracleBoardFromUrl(url);
+      if (!parsed) continue;
+      const id = key("oracle", parsed.boardToken);
+      if (known.has(id)) continue;
+      const existing = oracleCounts.get(id);
+      if (existing) {
+        existing.board.listingCount += 1;
+      } else {
+        oracleCounts.set(id, {
+          board: {
+            name: company,
+            source: "oracle",
+            boardToken: parsed.boardToken,
+            method: "direct_url",
+            listingCount: 1,
+          },
+          sampleUrl: url,
+        });
+      }
+      continue;
+    }
+
     const embedJobId = parseGreenhouseEmbedJobId(url);
     if (embedJobId) {
       const embedKey = company.toLowerCase();
@@ -242,6 +284,33 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
   const newBoards: DiscoveredBoard[] = [];
   for (const { board, sampleUrl } of directCounts.values()) {
     board.sampleUrl = sampleUrl;
+    newBoards.push(board);
+  }
+
+  const deferredLargeOracle: DeferredOracleBoard[] = [];
+  const skippedOracleProbe: Array<{
+    boardToken: string;
+    company: string;
+    sampleUrl: string;
+  }> = [];
+  const oracleMaxJobs = oracleDiscoverMaxJobs();
+
+  for (const { board, sampleUrl } of oracleCounts.values()) {
+    board.sampleUrl = sampleUrl;
+    const totalJobsCount = await probeOracleBoardJobCount(board.boardToken);
+    if (totalJobsCount == null) {
+      skippedOracleProbe.push({
+        boardToken: board.boardToken,
+        company: board.name,
+        sampleUrl,
+      });
+      continue;
+    }
+    board.totalJobsCount = totalJobsCount;
+    if (totalJobsCount > oracleMaxJobs) {
+      deferredLargeOracle.push({ ...board, totalJobsCount });
+      continue;
+    }
     newBoards.push(board);
   }
 
@@ -302,6 +371,8 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
     newBoards: newBoards.sort((a, b) => a.name.localeCompare(b.name)),
     unresolvedEmbed: unresolvedEmbed.sort((a, b) => a.company.localeCompare(b.company)),
     skippedInvalid,
+    deferredLargeOracle: deferredLargeOracle.sort((a, b) => a.name.localeCompare(b.name)),
+    skippedOracleProbe,
   };
 }
 
@@ -336,7 +407,7 @@ function writeCompaniesFile(companiesPath: string, toAdd: DiscoveredBoard[]): vo
 
 function parseCompaniesFile(content: string): CompanyConfig[] {
   const re =
-    /\{\s*name:\s*"((?:\\.|[^"\\])*)",\s*source:\s*"(greenhouse|lever|ashby)",\s*boardToken:\s*"((?:\\.|[^"\\])*)"\s*\}/g;
+    /\{\s*name:\s*"((?:\\.|[^"\\])*)",\s*source:\s*"(greenhouse|lever|ashby|oracle)",\s*boardToken:\s*"((?:\\.|[^"\\])*)"\s*\}/g;
   const out: CompanyConfig[] = [];
   for (const match of content.matchAll(re)) {
     out.push({
@@ -352,21 +423,34 @@ function printReport(
   configured: CompanyConfig[],
   result: Awaited<ReturnType<typeof discoverBoards>>,
 ): void {
-  const { newBoards, unresolvedEmbed, skippedInvalid } = result;
+  const {
+    newBoards,
+    unresolvedEmbed,
+    skippedInvalid,
+    deferredLargeOracle,
+    skippedOracleProbe,
+  } = result;
   const activeConfigured = configured.filter((c) => ATS_SOURCES.includes(c.source));
+  const oracleMaxJobs = oracleDiscoverMaxJobs();
 
   console.log("Simplify board discovery");
   console.log(`Configured ATS boards: ${activeConfigured.length}`);
   console.log(`New boards to add: ${newBoards.length}`);
+  console.log(
+    `Deferred large Oracle boards (>${oracleMaxJobs} jobs, keep Simplify hybrid): ${deferredLargeOracle.length}`,
+  );
   console.log(`Unresolved Greenhouse embeds (gh_jid): ${unresolvedEmbed.length}`);
   console.log(`Skipped invalid direct tokens: ${skippedInvalid.length}`);
+  console.log(`Oracle boards with failed size probe: ${skippedOracleProbe.length}`);
   console.log("");
 
   if (newBoards.length > 0) {
     console.log("== New boards ==");
     for (const board of newBoards) {
+      const jobs =
+        board.totalJobsCount != null ? ` boardJobs=${board.totalJobsCount}` : "";
       console.log(
-        `  ${board.source}/${board.boardToken}  (${board.name})  listings=${board.listingCount}  via=${board.method}`,
+        `  ${board.source}/${board.boardToken}  (${board.name})  simplifyListings=${board.listingCount}${jobs}  via=${board.method}`,
       );
       if (board.sampleUrl) console.log(`    sample: ${board.sampleUrl}`);
     }
@@ -374,6 +458,27 @@ function printReport(
     console.log("Suggested companies.ts lines:");
     for (const board of newBoards) {
       console.log(formatEntry(board));
+    }
+    console.log("");
+  }
+
+  if (deferredLargeOracle.length > 0) {
+    console.log(
+      `== Deferred Oracle boards (>${oracleMaxJobs} total jobs — use Simplify misc, not full ingest) ==`,
+    );
+    for (const board of deferredLargeOracle) {
+      console.log(
+        `  oracle/${board.boardToken}  (${board.name})  simplifyListings=${board.listingCount}  boardJobs=${board.totalJobsCount}`,
+      );
+      if (board.sampleUrl) console.log(`    sample: ${board.sampleUrl}`);
+    }
+    console.log("");
+  }
+
+  if (skippedOracleProbe.length > 0) {
+    console.log("== Oracle boards with failed size probe (not added) ==");
+    for (const row of skippedOracleProbe) {
+      console.log(`  ${row.company}  ${row.boardToken}  ${row.sampleUrl}`);
     }
     console.log("");
   }
@@ -404,7 +509,13 @@ function printReport(
 
   console.log("Notes:");
   console.log(
-    "  • Direct greenhouse.io / lever.co / ashbyhq.com URLs are the primary discovery path.",
+    "  • Direct greenhouse.io / lever.co / ashbyhq.com / oraclecloud.com URLs are primary discovery paths.",
+  );
+  console.log(
+    "  • Oracle boardToken format: {apiHost}|{siteNumber}. Boards over ORACLE_DISCOVER_MAX_JOBS",
+  );
+  console.log(
+    `    (default ${DEFAULT_ORACLE_DISCOVER_MAX_JOBS}) are deferred for Simplify hybrid ingest.`,
   );
   console.log(
     "  • Custom-domain Greenhouse embeds (gh_jid=) are probed via company slug, domain, fly+domain, and same-name boards.",

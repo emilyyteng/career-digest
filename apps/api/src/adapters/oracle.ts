@@ -80,6 +80,34 @@ export function buildOracleJobUrl(
   return `https://${apiHost}/hcmUI/CandidateExperience/${locale}/sites/${siteNumber}/job/${jobId}`;
 }
 
+/** Parse Candidate Experience URLs into apiHost + siteNumber board config. */
+export function parseOracleBoardFromUrl(url: string): {
+  apiHost: string;
+  siteNumber: string;
+  boardToken: string;
+} | null {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.toLowerCase().includes("oraclecloud.com")) return null;
+    const siteMatch = parsed.pathname.match(/\/sites\/([^/?#]+)/i);
+    if (!siteMatch?.[1]) return null;
+    const siteNumber = decodeURIComponent(siteMatch[1]).trim();
+    if (!siteNumber) return null;
+    const apiHost = parsed.hostname;
+    return {
+      apiHost,
+      siteNumber,
+      boardToken: `${apiHost}|${siteNumber}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function isOracleCloudAtsUrl(url: string): boolean {
+  return Boolean(parseOracleBoardFromUrl(url));
+}
+
 function parsePostedDate(value: string | undefined): Date | null {
   if (!value?.trim()) return null;
   const date = new Date(value.trim());
@@ -210,6 +238,17 @@ export async function fetchOracleJobs(boardToken: string): Promise<NormalizedPos
   }
 
   return postings;
+}
+
+/** Probe total open jobs on a board (one list request). Used by discover-boards sizing. */
+export async function probeOracleBoardJobCount(boardToken: string): Promise<number | null> {
+  const { apiHost, siteNumber } = parseOracleBoardToken(boardToken);
+  const url = buildListUrl(apiHost, siteNumber, 0);
+  const response = await oracleFetch(url, apiHost);
+  if (!response.ok) return null;
+  const body = (await response.json()) as OracleListResponse;
+  const total = body.items?.[0]?.TotalJobsCount;
+  return typeof total === "number" && Number.isFinite(total) ? total : null;
 }
 
 export async function fetchOracleJobDetails(
