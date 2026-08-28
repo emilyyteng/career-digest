@@ -1,4 +1,11 @@
-import { useEffect, useRef, type ClipboardEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from "react";
 
 /** Strip dangerous bits from pasted HTML before insert; server re-sanitizes on save. */
 function lightSanitize(html: string): string {
@@ -37,6 +44,22 @@ export function isEmptyRichHtml(html: string | null | undefined): boolean {
   return text.length === 0;
 }
 
+function closestAnchor(node: Node | null, root: HTMLElement): HTMLAnchorElement | null {
+  let current: Node | null = node;
+  while (current && current !== root) {
+    if (current instanceof HTMLAnchorElement) return current;
+    current = current.parentNode;
+  }
+  return null;
+}
+
+type LinkBubble = {
+  href: string;
+  top: number;
+  left: number;
+  anchor: HTMLAnchorElement;
+};
+
 type Props = {
   value: string;
   onChange: (html: string) => void;
@@ -54,7 +77,10 @@ export default function RichTextField({
   "aria-label": ariaLabel,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
   const lastEmitted = useRef<string | null>(null);
+  const [linkBubble, setLinkBubble] = useState<LinkBubble | null>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -64,12 +90,63 @@ export default function RichTextField({
     if (el.innerHTML === (value || "") && lastEmitted.current === value) return;
     el.innerHTML = value || "";
     lastEmitted.current = value;
+    setLinkBubble(null);
   }, [value]);
+
+  useEffect(() => {
+    function onDocMouseDown(event: globalThis.MouseEvent) {
+      const target = event.target as Node;
+      if (bubbleRef.current?.contains(target)) return;
+      if (ref.current?.contains(target) && closestAnchor(target, ref.current)) return;
+      setLinkBubble(null);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, []);
 
   function emit() {
     const html = ref.current?.innerHTML ?? "";
     lastEmitted.current = html;
     onChange(html);
+  }
+
+  function positionBubble(anchor: HTMLAnchorElement) {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const rect = anchor.getBoundingClientRect();
+    const href = anchor.getAttribute("href")?.trim() || "";
+    if (!href) {
+      setLinkBubble(null);
+      return;
+    }
+    setLinkBubble({
+      href,
+      top: rect.top - wrapRect.top - 8,
+      left: rect.left - wrapRect.left + rect.width / 2,
+      anchor,
+    });
+  }
+
+  function showBubbleForSelection() {
+    const editor = ref.current;
+    if (!editor) return;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      setLinkBubble(null);
+      return;
+    }
+    const node = selection.focusNode ?? selection.anchorNode;
+    if (!node || !editor.contains(node)) {
+      setLinkBubble(null);
+      return;
+    }
+    const anchor = closestAnchor(node, editor);
+    if (!anchor) {
+      setLinkBubble(null);
+      return;
+    }
+    positionBubble(anchor);
   }
 
   function run(command: string, arg?: string) {
@@ -95,6 +172,53 @@ export default function RichTextField({
     const url = window.prompt("Link URL", existing || "https://");
     if (!url?.trim()) return;
     run("createLink", url.trim());
+    requestAnimationFrame(showBubbleForSelection);
+  }
+
+  function editLink() {
+    if (!linkBubble) return;
+    const next = window.prompt("Link URL", linkBubble.href);
+    if (next == null) return;
+    const trimmed = next.trim();
+    if (!trimmed) {
+      removeLink();
+      return;
+    }
+    linkBubble.anchor.setAttribute("href", trimmed);
+    linkBubble.anchor.setAttribute("target", "_blank");
+    linkBubble.anchor.setAttribute("rel", "noopener noreferrer");
+    emit();
+    positionBubble(linkBubble.anchor);
+  }
+
+  function removeLink() {
+    if (!linkBubble) return;
+    const anchor = linkBubble.anchor;
+    const parent = anchor.parentNode;
+    if (!parent) return;
+    while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
+    parent.removeChild(anchor);
+    setLinkBubble(null);
+    emit();
+  }
+
+  function onEditorMouseDown(event: ReactMouseEvent<HTMLDivElement>) {
+    const editor = ref.current;
+    if (!editor) return;
+    const anchor = closestAnchor(event.target as Node, editor);
+    if (!anchor) {
+      setLinkBubble(null);
+      return;
+    }
+    // Keep caret/selection behavior, but don't navigate away while editing.
+    event.preventDefault();
+    const range = document.createRange();
+    range.selectNodeContents(anchor);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    editor.focus();
+    positionBubble(anchor);
   }
 
   const empty = isEmptyRichHtml(value);
@@ -128,11 +252,38 @@ export default function RichTextField({
           List
         </button>
       </div>
-      <div className="rich-text-editor-wrap">
+      <div className="rich-text-editor-wrap" ref={wrapRef}>
         {empty && placeholder && (
           <span className="rich-text-placeholder" aria-hidden="true">
             {placeholder}
           </span>
+        )}
+        {linkBubble && (
+          <div
+            ref={bubbleRef}
+            className="rich-text-link-bubble"
+            style={{ top: linkBubble.top, left: linkBubble.left }}
+            role="dialog"
+            aria-label="Link"
+          >
+            <a
+              className="rich-text-link-url"
+              href={linkBubble.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={linkBubble.href}
+            >
+              {linkBubble.href}
+            </a>
+            <div className="rich-text-link-actions">
+              <button type="button" className="secondary" onClick={editLink}>
+                Edit
+              </button>
+              <button type="button" className="secondary" onClick={removeLink}>
+                Remove
+              </button>
+            </div>
+          </div>
         )}
         <div
           ref={ref}
@@ -146,6 +297,9 @@ export default function RichTextField({
           onInput={emit}
           onPaste={onPaste}
           onBlur={emit}
+          onMouseDown={onEditorMouseDown}
+          onKeyUp={showBubbleForSelection}
+          onMouseUp={showBubbleForSelection}
         />
       </div>
     </div>

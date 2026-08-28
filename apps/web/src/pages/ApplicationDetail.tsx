@@ -13,16 +13,19 @@ import { formatShortDate, toDateInputValue } from "../formatDate";
 import PostingDates from "../PostingDates";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 import StarButton from "../StarButton";
+import DocumentPreviewModal from "../DocumentPreviewModal";
 
 const STATUSES = [
   { id: "starred", label: "Starred", hint: "Saved, not applied yet. Stays on Jobs." },
   { id: "applied", label: "Applied", hint: "Leaves the Jobs list." },
   { id: "interviewing", label: "Interviewing", hint: "Leaves the Jobs list." },
-  { id: "hired", label: "Hired", hint: "Leaves the Jobs list." },
+  { id: "accepted", label: "Accepted", hint: "Leaves the Jobs list." },
   { id: "declined", label: "Declined", hint: "Leaves the Jobs list." },
 ] as const;
 
 const FLASH_MS = 2500;
+
+type FlashTarget = "status" | "description" | "notes" | "appliedAt" | "upload" | "link";
 
 export default function ApplicationDetail() {
   const { id } = useParams();
@@ -33,14 +36,19 @@ export default function ApplicationDetail() {
   const [appliedAt, setAppliedAt] = useState("");
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<JobCard[]>([]);
+  const [previewDoc, setPreviewDoc] = useState<{
+    id: string;
+    name: string;
+    mimeType: string | null;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [flash, setFlash] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ target: FlashTarget; message: string } | null>(null);
   const [statusPending, setStatusPending] = useState(false);
   const flashTimer = useRef<number | null>(null);
 
-  function showFlash(message: string) {
+  function showFlash(message: string, target: FlashTarget) {
     if (flashTimer.current) window.clearTimeout(flashTimer.current);
-    setFlash(message);
+    setFlash({ target, message });
     flashTimer.current = window.setTimeout(() => {
       setFlash(null);
       flashTimer.current = null;
@@ -73,7 +81,7 @@ export default function ApplicationDetail() {
     try {
       await patchApplication(id, { notes });
       await load();
-      showFlash("Saved!");
+      showFlash("Saved!", "notes");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save notes");
     }
@@ -88,7 +96,7 @@ export default function ApplicationDetail() {
         descriptionHtml: isEmptyRichHtml(descriptionHtml) ? null : descriptionHtml,
       });
       await load();
-      showFlash("Saved!");
+      showFlash("Saved!", "description");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save description");
     }
@@ -101,7 +109,7 @@ export default function ApplicationDetail() {
     try {
       await patchApplication(id, { appliedAt: appliedAt || null });
       await load();
-      showFlash("Saved!");
+      showFlash("Saved!", "appliedAt");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save date");
     }
@@ -114,7 +122,7 @@ export default function ApplicationDetail() {
     try {
       await patchApplication(id, { status });
       await load();
-      showFlash("Saved!");
+      showFlash("Saved!", "status");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update status");
     } finally {
@@ -140,7 +148,7 @@ export default function ApplicationDetail() {
       await patchApplication(id, { postingId });
       setMatches([]);
       await load();
-      showFlash("Saved!");
+      showFlash("Saved!", "link");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not link posting");
     }
@@ -152,7 +160,7 @@ export default function ApplicationDetail() {
     try {
       await uploadDocument(id, file);
       await load();
-      showFlash("Uploaded!");
+      showFlash("Uploaded!", "upload");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not upload document");
     }
@@ -197,15 +205,11 @@ export default function ApplicationDetail() {
         )}
         {row.url && (
           <a className="external" href={row.url} target="_blank" rel="noreferrer">
-            Apply on site <span className="ext-icon" aria-hidden="true">↗</span>
+            {row.status === "starred" ? "Apply on site" : "Link to posting"}
+            <span className="ext-icon" aria-hidden="true">↗</span>
           </a>
         )}
       </div>
-      {flash && (
-        <p className="save-flash" role="status" aria-live="polite">
-          {flash}
-        </p>
-      )}
       {error && <p className="error">{error}</p>}
       <div className="status-block">
         <h3>Tracker stage</h3>
@@ -213,6 +217,11 @@ export default function ApplicationDetail() {
           Current: <strong>{current?.label ?? row.status}</strong>. These buttons move this role
           between Applications tabs. They do not apply for you.
         </p>
+        {flash?.target === "status" && (
+          <p className="save-flash" role="status" aria-live="polite">
+            {flash.message}
+          </p>
+        )}
         <div className="status-pills" role="radiogroup" aria-label="Tracker stage">
           {STATUSES.map((item) => (
             <button
@@ -240,16 +249,24 @@ export default function ApplicationDetail() {
                 onChange={(event) => setAppliedAt(event.target.value)}
               />
             </label>
-            <button type="submit" className="secondary">
-              Save date
-            </button>
+            <div className="save-inline-row save-end">
+              <button type="submit" className="secondary">
+                Save date
+              </button>
+              {flash?.target === "appliedAt" && (
+                <span className="save-flash-inline" role="status" aria-live="polite">
+                  {flash.message}
+                </span>
+              )}
+            </div>
           </form>
         )}
       </div>
       {row.postingId ? (
-        <div className="description">
+        <div className="description description-scroll">
           <h3>Job description</h3>
           <div
+            className="description-body"
             dangerouslySetInnerHTML={{
               __html:
                 row.descriptionHtml ||
@@ -266,27 +283,64 @@ export default function ApplicationDetail() {
             placeholder="Paste the job description — links and formatting are kept"
             minHeight="12rem"
           />
-          <p>
+          <div className="save-inline-row save-end">
             <button type="submit">Save description</button>
-          </p>
+            {flash?.target === "description" && (
+              <span className="save-flash-inline" role="status" aria-live="polite">
+                {flash.message}
+              </span>
+            )}
+          </div>
         </form>
       )}
       <form onSubmit={saveNotes}>
         <h3>Notes</h3>
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-        <p>
+        <div className="save-inline-row save-end">
           <button type="submit">Save notes</button>
-        </p>
+          {flash?.target === "notes" && (
+            <span className="save-flash-inline" role="status" aria-live="polite">
+              {flash.message}
+            </span>
+          )}
+        </div>
       </form>
       <h3>Documents</h3>
-      <ul>
+      <ul className="document-list">
         {(row.documents ?? []).map((doc) => (
           <li key={doc.id}>
-            <a href={`/api/applications/${row.id}/documents/${doc.id}`}>{doc.originalName}</a>
+            <button
+              type="button"
+              className="document-link"
+              onClick={() =>
+                setPreviewDoc({
+                  id: doc.id,
+                  name: doc.originalName,
+                  mimeType: doc.mimeType,
+                })
+              }
+            >
+              {doc.originalName}
+            </button>
           </li>
         ))}
       </ul>
-      <input type="file" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+      {previewDoc && row && (
+        <DocumentPreviewModal
+          url={`/api/applications/${row.id}/documents/${previewDoc.id}?view=1`}
+          title={previewDoc.name}
+          mimeType={previewDoc.mimeType}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
+      <div className="save-inline-row upload-row">
+        <input type="file" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+        {flash?.target === "upload" && (
+          <span className="save-flash-inline" role="status" aria-live="polite">
+            {flash.message}
+          </span>
+        )}
+      </div>
       {!row.postingId && (
         <div>
           <h3>Link a digest posting</h3>
@@ -295,7 +349,7 @@ export default function ApplicationDetail() {
             and associate it. Duplicate tracker rows for that posting are merged. Applied+ postings
             then leave the Jobs list; starred ones stay there until you mark applied.
           </p>
-          <div className="toolbar">
+          <div className="toolbar toolbar-search-end">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -312,9 +366,16 @@ export default function ApplicationDetail() {
                 <span className="employer">{job.company}</span>
                 <span className="location">{job.location ?? ""}</span>
               </div>
-              <button type="button" onClick={() => linkPosting(job.id)}>
-                Associate
-              </button>
+              <div className="save-inline-row">
+                <button type="button" onClick={() => linkPosting(job.id)}>
+                  Associate
+                </button>
+                {flash?.target === "link" && (
+                  <span className="save-flash-inline" role="status" aria-live="polite">
+                    {flash.message}
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>

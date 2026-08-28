@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { deleteApplication, getApplications, type ApplicationRow } from "../api";
 import { formatShortDate } from "../formatDate";
 import PostingDates from "../PostingDates";
 import StarButton from "../StarButton";
-import AddApplicationForm from "./AddApplicationForm";
+import AddApplicationForm, { type AddApplicationFormHandle } from "./AddApplicationForm";
 
-const TABS = ["all", "starred", "applied", "interviewing", "hired", "declined"] as const;
+const TABS = ["all", "starred", "applied", "interviewing", "accepted", "declined"] as const;
 
 const EMPTY_COUNTS: Record<(typeof TABS)[number], number> = {
   all: 0,
   starred: 0,
   applied: 0,
   interviewing: 0,
-  hired: 0,
+  accepted: 0,
   declined: 0,
 };
 
@@ -25,6 +25,7 @@ export default function Applications() {
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const addFormRef = useRef<AddApplicationFormHandle>(null);
 
   async function load() {
     const data = await getApplications(status);
@@ -39,11 +40,15 @@ export default function Applications() {
   useEffect(() => {
     if (!adding) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setAdding(false);
+      if (event.key === "Escape") addFormRef.current?.requestClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [adding]);
+
+  function requestCloseAdd() {
+    addFormRef.current?.requestClose();
+  }
 
   async function unstar(row: ApplicationRow) {
     if (row.status !== "starred" || pendingId) return;
@@ -112,7 +117,12 @@ export default function Applications() {
                 }}
               />
             )}
-            <Link className="card-hit" to={`/applications/${row.id}`}>
+            <Link
+              className="card-hit"
+              to={`/applications/${row.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <h2>{row.title ?? "Untitled"}</h2>
               <div className="meta">
                 <span className="employer">{row.company}</span>
@@ -146,7 +156,8 @@ export default function Applications() {
                     rel="noreferrer"
                     onClick={(event) => event.stopPropagation()}
                   >
-                    Apply on site <span className="ext-icon" aria-hidden="true">↗</span>
+                    {row.status === "starred" ? "Apply on site" : "Link to posting"}
+                    <span className="ext-icon" aria-hidden="true">↗</span>
                   </a>
                 )}
               </div>
@@ -158,11 +169,15 @@ export default function Applications() {
         <div
           className="modal-backdrop"
           onClick={(event) => {
-            if (event.target === event.currentTarget) setAdding(false);
+            if (event.target === event.currentTarget) requestCloseAdd();
           }}
         >
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-app-title">
-            <AddApplicationForm onCreated={onCreated} onCancel={() => setAdding(false)} />
+            <AddApplicationForm
+              ref={addFormRef}
+              onCreated={onCreated}
+              onCancel={() => setAdding(false)}
+            />
           </div>
         </div>
       )}
