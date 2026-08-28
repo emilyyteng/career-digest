@@ -63,13 +63,19 @@ async function loadGreenhousePairs(client: PoolClient): Promise<DuplicatePair[]>
        g.external_id AS match_key,
        'greenhouse'::text AS source
      FROM postings s
-     JOIN postings g
-       ON g.source = 'greenhouse'
-       AND g.external_id = substring(s.url from '(?:^|[?&])gh_jid=([0-9]+)')
+     JOIN postings g ON g.source = 'greenhouse'
      WHERE s.source = 'simplify'
-       AND s.url ~ '(?:^|[?&])gh_jid=[0-9]+'
        AND s.removed_from_board_at IS NULL
-       AND g.removed_from_board_at IS NULL`,
+       AND g.removed_from_board_at IS NULL
+       AND (
+         g.external_id = substring(s.url from '(?:^|[?&])gh_jid=([0-9]+)')
+         OR g.external_id = substring(s.url from 'boards\\.greenhouse\\.io/[^/]+/jobs/([0-9]+)')
+         OR g.external_id = substring(s.url from 'job-boards\\.greenhouse\\.io/[^/]+/jobs/([0-9]+)')
+         OR (
+           s.url ~ 'boards\\.greenhouse\\.io/embed'
+           AND g.external_id = substring(s.url from '[?&]token=([0-9]+)')
+         )
+       )`,
   );
   return rows;
 }

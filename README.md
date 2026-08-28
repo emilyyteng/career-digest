@@ -19,9 +19,9 @@ Ingests public ATS job boards (plus Simplify URLs), scrapes missing descriptions
 Pull internship listings from Greenhouse, Lever, Ashby, and Simplify into Postgres, with US location filtering, season/recency rules, and retention that keeps applied roles even when a posting leaves the board.
 
 - Multi-ATS adapters and verified company list
-- `npm run discover-boards` diffs Simplify ATS URLs against `companies.ts` (Greenhouse `gh_jid` / embed probe; `--write` to append)
-- Simplify ingest for non-ATS apply URLs
-- After ingest, collapse Simplify misc rows when Greenhouse/Lever/Ashby has the same job (`npm run merge-postings`)
+- `npm run discover-boards` scans all Simplify URLs (including direct ATS links) against `companies.ts` (`gh_jid` / embed probe; `--write` to append)
+- Simplify ingest for **miscellaneous** apply URLs only (skips direct `greenhouse.io` / `lever.co` / `ashbyhq.com` links; those come from ATS board ingest)
+- After ingest, merge collapses remaining duplicates when an ATS board has the same job id (main case: `gh_jid` embeds on custom domains; `npm run merge-postings`)
 - `GET /jobs` for open internships (not yet applied; to-do stays visible)
 
 ### Milestone 2 — Local tracker UI
@@ -34,7 +34,7 @@ A React app to browse the digest board and run a personal application tracker al
 
 ### Milestone 3 — Descriptions & scraping
 
-Fill missing job descriptions (mostly Simplify miscellaneous URLs) by scraping apply pages, with sanitized HTML extraction and retry backoff so ranking only runs on postings with real JD text.
+Fill missing job descriptions for Simplify miscellaneous URLs by scraping apply pages, with sanitized HTML extraction and retry backoff so ranking only runs on postings with real JD text. Scrape uses the same host check as misc ingest; ATS URLs in the Simplify table are marked `skipped_ats` (defense in depth — JDs come from board JSON at ingest).
 
 - `scrape_status` tracking and host-specific retry windows
 - Skip blank descriptions during rank (saves OpenAI tokens)
@@ -98,8 +98,8 @@ npm run dev:web
 |---------|---------|
 | `npm run migrate` | Apply SQL migrations |
 | `npm run discover-boards` | Diff Simplify ATS URLs vs `companies.ts` (`--write` to merge) |
-| `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id |
-| `npm run ingest` | Pull ATS + Simplify listings |
+| `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id (gh_jid embeds, slip-throughs) |
+| `npm run ingest` | Pull ATS boards + Simplify miscellaneous listings (merge runs at end) |
 | `npm run scrape` | Fill blank Simplify descriptions |
 | `npm run rank` | Rank via OpenAI Batch API |
 | `npm run rank:live` | Rank synchronously (rate-limited) |
