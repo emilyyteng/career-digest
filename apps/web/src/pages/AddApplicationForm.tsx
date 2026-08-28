@@ -6,7 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { createApplication, getApplication, type ApplicationRow } from "../api";
-import { toDateInputValue } from "../formatDate";
+import { combineApplyByDateTime, toDateInputValue, applyByTimeInputValue, DEFAULT_APPLY_BY_TIME } from "../formatDate";
 import LocationSuggest from "../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 
@@ -27,8 +27,10 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
   function AddApplicationForm({ onCreated, onCancel }, ref) {
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
-    const [status, setStatus] = useState("applied");
+    const [status, setStatus] = useState("todo");
     const [appliedAt, setAppliedAt] = useState(todayInput);
+    const [applyByDate, setApplyByDate] = useState("");
+    const [applyByTime, setApplyByTime] = useState(DEFAULT_APPLY_BY_TIME);
     const [location, setLocation] = useState("");
     const [descriptionHtml, setDescriptionHtml] = useState("");
     const [company, setCompany] = useState("");
@@ -36,7 +38,8 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
     const [url, setUrl] = useState("");
     const [notes, setNotes] = useState("");
     const [confirmDiscard, setConfirmDiscard] = useState(false);
-    const showAppliedAt = status !== "starred";
+    const showAppliedAt = status !== "todo";
+    const showApplyBy = status === "todo";
 
     const dirty =
       company.trim() !== "" ||
@@ -45,13 +48,12 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
       url.trim() !== "" ||
       notes.trim() !== "" ||
       !isEmptyRichHtml(descriptionHtml) ||
-      status !== "applied" ||
-      (showAppliedAt && appliedAt !== todayInput());
+      status !== "todo" ||
+      (showAppliedAt && appliedAt !== todayInput()) ||
+      (showApplyBy && (applyByDate !== "" || applyByTime !== DEFAULT_APPLY_BY_TIME));
 
     function requestClose() {
       if (!onCancel) return;
-      // Backdrop / Escape while the discard prompt is open: stay on the prompt
-      // (use Keep editing / Discard). Escape is handled below to return to the form.
       if (confirmDiscard) return;
       if (!dirty) {
         onCancel();
@@ -79,6 +81,10 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
       setSaving(true);
       setError(null);
       try {
+        const dueAt =
+          showApplyBy && applyByDate
+            ? combineApplyByDateTime(applyByDate, applyByTime)
+            : null;
         const created = await createApplication({
           status,
           company,
@@ -88,6 +94,7 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
           notes,
           descriptionHtml: isEmptyRichHtml(descriptionHtml) ? null : descriptionHtml,
           appliedAt: showAppliedAt && appliedAt ? appliedAt : null,
+          dueAt,
         });
         const row = await getApplication(created.id);
         onCreated(row);
@@ -109,7 +116,7 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
             <button type="button" className="secondary" onClick={() => setConfirmDiscard(false)}>
               Keep editing
             </button>
-            <button type="button" onClick={() => onCancel?.()}>
+            <button type="button" className="modal-confirm-btn" onClick={() => onCancel?.()}>
               Discard
             </button>
           </div>
@@ -132,10 +139,10 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
             onChange={(event) => {
               const next = event.target.value;
               setStatus(next);
-              if (next !== "starred" && !appliedAt) setAppliedAt(todayInput());
+              if (next !== "todo" && !appliedAt) setAppliedAt(todayInput());
             }}
           >
-            <option value="starred">starred</option>
+            <option value="todo">to-do</option>
             <option value="applied">applied</option>
             <option value="interviewing">interviewing</option>
             <option value="accepted">accepted</option>
@@ -185,9 +192,32 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
               onChange={(event) => setAppliedAt(event.target.value)}
             />
             <span className="field-hint muted">
-              Recorded when you applied. Cleared if you move back to starred.
+              Recorded when you applied. Cleared if you move back to to-do.
             </span>
           </label>
+        )}
+        {showApplyBy && (
+          <div className="interview-datetime-row">
+            <label>
+              Apply-by date
+              <input
+                type="date"
+                value={applyByDate}
+                onChange={(event) => setApplyByDate(event.target.value)}
+              />
+            </label>
+            <label>
+              Apply-by time
+              <input
+                type="time"
+                value={applyByTime}
+                onChange={(event) => setApplyByTime(event.target.value)}
+              />
+            </label>
+            <span className="field-hint muted">
+              Optional deadline for this to-do. Leave date blank if unknown.
+            </span>
+          </div>
         )}
         <label>
           Job description

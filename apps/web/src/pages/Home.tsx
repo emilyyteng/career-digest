@@ -4,7 +4,7 @@ import { getHomeDashboard, type HomeDashboard, type HomeJobPick } from "../api";
 import InterviewCountdown from "../InterviewCountdown";
 import { formatStepWhen } from "../formatDate";
 
-const ATTENTION_LIMIT = 5;
+const ATTENTION_LIMIT = 4;
 
 function greetingPeriod(): string {
   const hour = new Date().getHours();
@@ -62,7 +62,7 @@ export default function Home() {
   const attention = data.needsAttention;
   const digestWhen = formatWhen(data.lastDigest.lastOkAt ?? data.lastDigest.finishedAt);
   const interviewTotal = attention.interviewActionCount;
-  const starredTotal = data.starredTotal;
+  const todoTotal = data.todoTotal;
 
   return (
     <section className="home-page">
@@ -126,14 +126,14 @@ export default function Home() {
         </div>
 
         <div className="home-attention-subsection">
-          <h4 className="home-subheading">Starred roles</h4>
-          {data.starred.length === 0 ? (
-            <p className="muted home-pick-empty">No starred roles yet.</p>
+          <h4 className="home-subheading">Applications</h4>
+          {data.todo.length === 0 ? (
+            <p className="muted home-pick-empty">No to-do applications yet.</p>
           ) : (
             <>
               <ul className="home-list">
-                {data.starred.map((row) => (
-                  <li key={row.id} className="home-job-row">
+                {data.todo.map((row) => (
+                  <li key={row.id} className="home-job-row home-interview-row">
                     <Link to={`/applications/${row.id}`} className="home-job-main">
                       <span className="home-job-title">
                         {row.company ?? "Unknown"} · {row.title ?? "Untitled"}
@@ -142,11 +142,19 @@ export default function Home() {
                         <span className="muted home-job-meta">{row.location}</span>
                       )}
                     </Link>
+                    {row.applyByIso && (
+                      <div className="home-interview-deadline">
+                        {row.applyByLabel && (
+                          <div className="home-interview-deadline-date">{row.applyByLabel}</div>
+                        )}
+                        <InterviewCountdown target={row.applyByIso} />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
-              {starredTotal > ATTENTION_LIMIT && (
-                <SeeMore to="/applications?status=starred" label="See more →" />
+              {todoTotal > ATTENTION_LIMIT && (
+                <SeeMore to="/applications?status=todo" label="See more →" />
               )}
             </>
           )}

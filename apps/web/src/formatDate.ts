@@ -77,6 +77,37 @@ export function combineDateAndTime(date: string, time: string): string | null {
   return local.toISOString();
 }
 
+export function applyByLabel(value: string | null | undefined): string | null {
+  const formatted = formatDeadlineLong(value);
+  if (!formatted) return null;
+  return `Apply by: ${formatted}`;
+}
+
+/** Default apply-by time when none is set (end of day). */
+export const DEFAULT_APPLY_BY_TIME = "23:59";
+
+/** Local time for apply-by `<input type="time">` (defaults to end of day). */
+export function applyByTimeInputValue(value: string | null | undefined): string {
+  const time = toTimeInputValue(value);
+  return time || DEFAULT_APPLY_BY_TIME;
+}
+
+/** Combine apply-by date + time for API (empty time → 11:59 PM). */
+export function combineApplyByDateTime(date: string, time: string): string | null {
+  if (!date.trim()) return null;
+  return combineDateAndTime(date, time.trim() || DEFAULT_APPLY_BY_TIME);
+}
+
+/** Local time for `<input type="time">`. */
+export function toTimeInputValue(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const h = String(date.getHours()).padStart(2, "0");
+  const m = String(date.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
 /** Local calendar date for `<input type="date">`. */
 export function toDateInputValue(value: string | null | undefined): string {
   if (!value) return "";
