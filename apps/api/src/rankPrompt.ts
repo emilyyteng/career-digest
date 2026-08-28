@@ -1,5 +1,11 @@
 export const RANK_PROMPT_VERSION = "2026-08-27.5";
 
+/** Max like/dismiss rows in rank prompts (recency-ordered; oldest drop off). */
+export const FEEDBACK_EXAMPLE_LIMIT = 75;
+
+/** Max application tracker rows in rank prompts (longer rows; keep smaller). */
+export const TRACKER_EXAMPLE_LIMIT = 12;
+
 export const LOCATION_FITS = [
   "la",
   "bay",
@@ -263,7 +269,7 @@ export function buildUserPrompt(job: RankJob, context: RankContext): string {
   parts.push(`Dismissed examples (strong negatives):\n${formatExamples(context.dismissals)}`);
   if (context.tracker.length > 0) {
     parts.push(
-      `Application tracker (applied / interviewing / accepted only; ignore starred and declined):\n${context.tracker
+      `Application tracker (applied / interviewing / accepted only; ignore to-do and declined):\n${context.tracker
         .map((row) => {
           const lines = [`- [${row.status}] ${row.company}: ${row.title}`];
           if (row.notes?.trim()) lines.push(`  Notes: ${row.notes.trim()}`);

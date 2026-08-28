@@ -12,6 +12,8 @@ import {
   RANK_JSON_SCHEMA,
   RANK_PROMPT_VERSION,
   SYSTEM_PROMPT,
+  FEEDBACK_EXAMPLE_LIMIT,
+  TRACKER_EXAMPLE_LIMIT,
   buildRerankUserPrompt,
   parseRankResult,
   type RankContext,
@@ -20,7 +22,6 @@ import {
 
 const JD_MAX_CHARS = 6000;
 const MAX_COMPLETION_TOKENS = 400;
-const EXAMPLE_LIMIT = 12;
 const RANK_ATTEMPTS = 6;
 
 type RankRow = {
@@ -105,7 +106,7 @@ async function loadContext(): Promise<RankContext> {
      WHERE f.kind = 'like'
      ORDER BY f.created_at DESC
      LIMIT $1`,
-    [EXAMPLE_LIMIT],
+    [FEEDBACK_EXAMPLE_LIMIT],
   );
   const dismissals = await pool.query<RankExample>(
     `SELECT
@@ -121,7 +122,7 @@ async function loadContext(): Promise<RankContext> {
      WHERE f.kind = 'dismiss'
      ORDER BY f.created_at DESC
      LIMIT $1`,
-    [EXAMPLE_LIMIT],
+    [FEEDBACK_EXAMPLE_LIMIT],
   );
   const tracker = await pool.query<{
     status: string;
@@ -144,10 +145,10 @@ async function loadContext(): Promise<RankContext> {
      FROM applications a
      LEFT JOIN postings p ON p.id = a.posting_id
      LEFT JOIN companies c ON c.id = p.company_id
-     WHERE a.status NOT IN ('starred', 'declined')
+     WHERE a.status NOT IN ('todo', 'declined')
      ORDER BY a.updated_at DESC
      LIMIT $1`,
-    [EXAMPLE_LIMIT],
+    [TRACKER_EXAMPLE_LIMIT],
   );
   return {
     memo: memo.rows[0]?.memo ?? "",
