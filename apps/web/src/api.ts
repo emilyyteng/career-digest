@@ -225,6 +225,15 @@ export const startBoardRefresh = async () => {
 export const getJob = (id: string) =>
   parse<JobDetail>(api(`/api/jobs/${id}`));
 
+export const patchJob = (id: string, body: { url: string }) =>
+  parse<{ id: string; url: string }>(
+    api(`/api/jobs/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
 export const getApplications = (status = "all") =>
   parse<{
     count: number;

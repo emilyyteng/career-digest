@@ -116,6 +116,22 @@ function parseDueAt(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseHttpUrl(value: unknown, opts?: { allowEmpty?: boolean }): string | null {
+  if (value === null || value === "") {
+    return opts?.allowEmpty ? null : null;
+  }
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return opts?.allowEmpty ? null : null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    return trimmed;
+  } catch {
+    return null;
+  }
+}
+
 function resolveAppliedAt(opts: {
   status: string;
   previousAppliedAt?: Date | string | null;
@@ -347,6 +363,28 @@ api.get("/jobs/:id", async (req, res) => {
     return;
   }
   res.json(result.rows[0]);
+});
+
+api.patch("/jobs/:id", async (req, res) => {
+  const body = req.body as { url?: string };
+  if (!Object.prototype.hasOwnProperty.call(body, "url")) {
+    res.status(400).json({ error: "url is required" });
+    return;
+  }
+  const url = parseHttpUrl(body.url);
+  if (!url) {
+    res.status(400).json({ error: "Invalid URL — use http:// or https://" });
+    return;
+  }
+  const updated = await pool.query(
+    `UPDATE postings SET url = $2, updated_at = now() WHERE id = $1 RETURNING id`,
+    [req.params.id, url],
+  );
+  if (!updated.rows[0]) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  res.json({ id: updated.rows[0].id, url });
 });
 
 api.post("/jobs/:id/feedback", async (req, res) => {
@@ -629,6 +667,7 @@ api.patch("/applications/:id", async (req, res) => {
     postingId?: string | null;
     appliedAt?: string | null;
     dueAt?: string | null;
+    url?: string | null;
     description?: string;
     descriptionHtml?: string | null;
   };
@@ -664,6 +703,13 @@ api.patch("/applications/:id", async (req, res) => {
     let status = body.status ? normalizeApplicationStatus(body.status) : previousStatus;
     const explicitProvided = Object.prototype.hasOwnProperty.call(body, "appliedAt");
     const dueProvided = Object.prototype.hasOwnProperty.call(body, "dueAt");
+    const urlProvided = Object.prototype.hasOwnProperty.call(body, "url");
+    if (urlProvided && body.url != null && String(body.url).trim() && !parseHttpUrl(body.url, { allowEmpty: true })) {
+      await client.query("ROLLBACK");
+      res.status(400).json({ error: "Invalid URL — use http:// or https://" });
+      return;
+    }
+    const urlFinal = urlProvided ? parseHttpUrl(body.url, { allowEmpty: true }) : undefined;
 
     let descriptionHtml = current.rows[0].description_html;
     if (body.descriptionHtml !== undefined) {
@@ -719,6 +765,7 @@ api.patch("/applications/:id", async (req, res) => {
          applied_at = $4,
          due_at = $5,
          description_html = $6,
+         url = CASE WHEN $10::boolean THEN $11 ELSE url END,
          posting_id = CASE WHEN $7::boolean THEN $8::uuid ELSE posting_id END,
          status_changed_at = CASE WHEN $9::boolean THEN now() ELSE status_changed_at END,
          updated_at = now()
@@ -734,6 +781,8 @@ api.patch("/applications/:id", async (req, res) => {
         body.postingId !== undefined,
         body.postingId ?? null,
         statusChanged,
+        urlProvided,
+        urlFinal,
       ],
     );
     const resolution = applicationResolutionFromStatus(status);

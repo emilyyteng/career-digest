@@ -38,6 +38,7 @@ type FlashTarget =
   | "notes"
   | "appliedAt"
   | "dueAt"
+  | "url"
   | "upload"
   | "link";
 
@@ -50,6 +51,7 @@ export default function ApplicationDetail() {
   const [appliedAt, setAppliedAt] = useState("");
   const [applyByDate, setApplyByDate] = useState("");
   const [applyByTime, setApplyByTime] = useState(DEFAULT_APPLY_BY_TIME);
+  const [url, setUrl] = useState("");
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<JobCard[]>([]);
   const [previewDoc, setPreviewDoc] = useState<{
@@ -86,6 +88,7 @@ export default function ApplicationDetail() {
     setAppliedAt(toDateInputValue(data.appliedAt));
     setApplyByDate(toDateInputValue(data.dueAt));
     setApplyByTime(applyByTimeInputValue(data.dueAt));
+    setUrl(data.url ?? "");
   }
 
   useEffect(() => {
@@ -200,6 +203,21 @@ export default function ApplicationDetail() {
     }
   }
 
+  async function saveUrl(event: FormEvent) {
+    event.preventDefault();
+    if (!id) return;
+    setError(null);
+    try {
+      await patchApplication(id, { url: url.trim() || null });
+      invalidateListCache("applications:");
+      invalidateListCache("jobs:");
+      await load();
+      showFlash("Saved!", "url");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save URL");
+    }
+  }
+
   async function onFile(file: File | null) {
     if (!id || !file) return;
     setError(null);
@@ -246,6 +264,30 @@ export default function ApplicationDetail() {
         </div>
       )}
       {error && <p className="error">{error}</p>}
+      <form className="inline-date-form url-edit-form" onSubmit={saveUrl}>
+        <label>
+          Apply / posting URL
+          <input
+            type="url"
+            value={url}
+            placeholder="https://…"
+            onChange={(event) => setUrl(event.target.value)}
+          />
+          <span className="field-hint muted">
+            {row.postingId
+              ? "Overrides the linked digest URL for this application when set."
+              : "Used for Apply on site links."}
+          </span>
+        </label>
+        <div className="save-inline-row save-end">
+          <button type="submit" className="secondary">Save URL</button>
+          {flash?.target === "url" && (
+            <span className="save-flash-inline" role="status" aria-live="polite">
+              {flash.message}
+            </span>
+          )}
+        </div>
+      </form>
       <div className="status-block">
         <div className="status-block-head">
           <h3>Tracker stage</h3>
@@ -256,7 +298,7 @@ export default function ApplicationDetail() {
               target="_blank"
               rel="noreferrer"
             >
-              {row.status === "todo" ? "Apply on site" : "Link to posting"}
+              {row.status === "todo" ? "Open apply link" : "Open posting"}
               <span className="ext-icon" aria-hidden="true">↗</span>
             </a>
           )}

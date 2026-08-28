@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   clearJobFeedback,
@@ -6,11 +6,13 @@ import {
   deleteApplication,
   getJob,
   getRerankQueue,
+  patchJob,
   queueJobRerank,
   sendJobFeedback,
   type JobDetail,
   type RerankQueueSnapshot,
 } from "../api";
+import { invalidateListCache } from "../listCache";
 import { isBlankJobDescription, isMismatch, RankBadges, RankNote } from "../RankMark";
 import JobFeedbackButtons from "../JobFeedbackButtons";
 import FeedbackDialog from "./FeedbackDialog";
@@ -29,11 +31,16 @@ export default function JobDetail() {
   const [appliedConfirm, setAppliedConfirm] = useState(false);
   const [rerankOpen, setRerankOpen] = useState(false);
   const [rerankQueue, setRerankQueue] = useState<RerankQueueSnapshot["items"]>([]);
+  const [urlDraft, setUrlDraft] = useState("");
+  const [urlFlash, setUrlFlash] = useState<string | null>(null);
   const wasReranking = useRef(false);
+  const urlFlashTimer = useRef<number | null>(null);
 
   async function load() {
     if (!id) return;
-    setJob(await getJob(id));
+    const data = await getJob(id);
+    setJob(data);
+    setUrlDraft(data.url);
   }
 
   useEffect(() => {
@@ -68,6 +75,34 @@ export default function JobDetail() {
     wasReranking.current = false;
     void load().catch(() => undefined);
   }, [rerankQueue]);
+
+  useEffect(() => {
+    return () => {
+      if (urlFlashTimer.current) window.clearTimeout(urlFlashTimer.current);
+    };
+  }, []);
+
+  async function saveUrl(event: FormEvent) {
+    event.preventDefault();
+    if (!job) return;
+    setPending(true);
+    setUrlFlash(null);
+    try {
+      await patchJob(job.id, { url: urlDraft.trim() });
+      invalidateListCache("jobs:");
+      await load();
+      setUrlFlash("Saved!");
+      if (urlFlashTimer.current) window.clearTimeout(urlFlashTimer.current);
+      urlFlashTimer.current = window.setTimeout(() => {
+        setUrlFlash(null);
+        urlFlashTimer.current = null;
+      }, 2500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save URL");
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function toggleTodo() {
     if (!job || pending) return;
@@ -136,7 +171,7 @@ export default function JobDetail() {
     }
   }
 
-  if (error) return <p className="error">{error}</p>;
+  if (error && !job) return <p className="error">{error}</p>;
   if (!job) return <p className="muted">Loading…</p>;
 
   const mismatch = isMismatch(job);
@@ -168,11 +203,38 @@ export default function JobDetail() {
           view={needsDescription ? "needs-description" : undefined}
         />
       </div>
-      <p>
-        <a className="external" href={job.url} target="_blank" rel="noreferrer">
-          Apply on site <span className="ext-icon" aria-hidden="true">↗</span>
-        </a>
-      </p>
+      {error && <p className="error">{error}</p>}
+      <form className="inline-date-form url-edit-form" onSubmit={(event) => void saveUrl(event)}>
+        <label>
+          Apply URL
+          <input
+            type="url"
+            value={urlDraft}
+            placeholder="https://…"
+            disabled={pending}
+            onChange={(event) => setUrlDraft(event.target.value)}
+          />
+          <span className="field-hint muted">
+            Updates the digest posting link (used for scrape and apply buttons).
+          </span>
+        </label>
+        <div className="save-inline-row">
+          <button type="submit" className="secondary" disabled={pending || !urlDraft.trim()}>
+            Save URL
+          </button>
+          {urlDraft.trim() && (
+            <a className="external" href={urlDraft} target="_blank" rel="noreferrer">
+              Open link
+              <span className="ext-icon" aria-hidden="true">↗</span>
+            </a>
+          )}
+          {urlFlash && (
+            <span className="save-flash-inline" role="status" aria-live="polite">
+              {urlFlash}
+            </span>
+          )}
+        </div>
+      </form>
       <div className="row-actions">
         <button
           type="button"
