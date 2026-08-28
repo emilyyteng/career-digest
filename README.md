@@ -20,11 +20,11 @@ Pull internship listings from Greenhouse, Lever, Ashby, and Simplify into Postgr
 
 - Multi-ATS adapters and verified company list
 - Simplify ingest for non-ATS apply URLs
-- `GET /jobs` for open internships (not yet applied; starred stay visible)
+- `GET /jobs` for open internships (not yet applied; to-do stays visible)
 
 ### Milestone 2 — Local tracker UI
 
-A React app to browse the digest board and run a personal application tracker alongside it—star roles, mark applied, add manual Handshake/LinkedIn entries, link postings, notes, and file uploads.
+A React app to browse the digest board and run a personal application tracker alongside it—mark to-do, mark applied, add manual Handshake/LinkedIn entries, link postings, notes, and file uploads.
 
 - Jobs list and Applications list with status tabs
 - Application detail with documents and optional posting link
@@ -37,6 +37,7 @@ Fill missing job descriptions (mostly Simplify miscellaneous URLs) by scraping a
 - `scrape_status` tracking and host-specific retry windows
 - Skip blank descriptions during rank (saves OpenAI tokens)
 - Ashby/Lever/Greenhouse JDs from board JSON at ingest
+- User-dismissed mismatches leave the needs-description tab
 
 ### Milestone 4 — OpenAI ranking & daily digest pipeline
 
@@ -44,24 +45,28 @@ Score and sort roles with OpenAI using your feedback and tracker history as pref
 
 - Batch ranking (`npm run rank`) and live drip (`npm run rank:live`, `rank:live-backlog`)
 - Client rate gate (RPM/RPD/TPM), stall recovery, rerank queue
-- Board refresh UI, like/dismiss feedback, rank badges and batch banner
+- Board refresh UI, heart/mismatch feedback, rank badges and dismissible batch banner
 - Jobs tabs: ranked, mismatches, unranked, needs description (search/sort per tab)
+- Up to 75 recent likes and dismissals per rank prompt; 12 tracker rows
 
 ### Milestone 5 — Applications workflow
 
 Polish the tracker for day-to-day use: pipeline statuses, rich job descriptions, document preview, and UI details that make applying and reviewing materials faster.
 
+- **To-do** tab with apply-by deadlines, countdown timers, and remove-from-to-do on cards
+- Status badges (to-do / applied / interviewing / accepted / declined) plus source on every card
+- Apply-by time defaults to 11:59 PM; same-tab navigation preserves list tab, sort, and search
 - Status tabs including accepted and declined; date applied; status-change ordering
 - Rich-text JD paste, scroll-box descriptions, location autocomplete
 - In-browser PDF/image preview for uploaded materials
-- Modal add-application form; save/upload flash confirmations
+- Modal add-application form (defaults to to-do); save/upload flash confirmations
 
 ### Milestone 6 — Interviews, home, and ops dashboards
 
 Track interview pipelines per company, see what needs attention at a glance, and monitor ingest/rank/scrape health without digging through logs.
 
 - Interview threads with linear steps, countdown timers, workspace, and resolve flow
-- Home dashboard: greeting, last digest, interviews/starred attention, new & top picks
+- Home dashboard: greeting, last digest, interviews and to-do applications attention, new & top picks
 - Pipeline Status page (`/status`) and `GET /api/ops` / `GET /api/home`
 - Sakura-terminal UI theme, favicon, nav routing (`/` home, `/jobs` board)
 
@@ -97,4 +102,4 @@ npm run dev:web
 | `npm run board-refresh` | Ingest + scrape + light live rank |
 | `npm run cron:install` | Install 5pm daily board refresh (macOS) |
 
-Jobs lists open digest roles that are not yet applied (starred stay visible). Applications is the tracker (including Handshake/LinkedIn rows you add yourself). Link a digest posting from an application detail page to merge the two.
+Jobs lists open digest roles that are not yet applied (to-do stays visible). Applications is the tracker (including Handshake/LinkedIn rows you add yourself). Link a digest posting from an application detail page to merge the two.
