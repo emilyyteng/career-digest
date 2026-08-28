@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import {
   buildOracleDetailsFinder,
   buildOracleJobUrl,
@@ -8,70 +9,70 @@ import {
   parseOracleBoardToken,
 } from "./oracle.js";
 
-function assert(condition: boolean, message: string): void {
-  if (!condition) throw new Error(message);
-}
+describe("parseOracleBoardToken", () => {
+  it("splits host and siteNumber", () => {
+    expect(parseOracleBoardToken("elxb.fa.us2.oraclecloud.com|CX")).toEqual({
+      apiHost: "elxb.fa.us2.oraclecloud.com",
+      siteNumber: "CX",
+    });
+  });
 
-function assertEqual<T>(actual: T, expected: T, label: string): void {
-  if (actual !== expected) {
-    throw new Error(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
-  }
-}
+  it("rejects invalid tokens", () => {
+    expect(() => parseOracleBoardToken("invalid")).toThrow(/Invalid oracle boardToken/);
+  });
+});
 
-// parseOracleBoardToken
-const parsed = parseOracleBoardToken("elxb.fa.us2.oraclecloud.com|CX");
-assertEqual(parsed.apiHost, "elxb.fa.us2.oraclecloud.com", "apiHost");
-assertEqual(parsed.siteNumber, "CX", "siteNumber");
+describe("oracle finder strings", () => {
+  it("builds list finder with literal separators", () => {
+    expect(buildOracleListFinder("CX_1", 0)).toBe(
+      "findReqs;siteNumber=CX_1,limit=200,sortBy=POSTING_DATES_DESC",
+    );
+    expect(buildOracleListFinder("CX", 200)).toBe(
+      "findReqs;siteNumber=CX,limit=200,offset=200,sortBy=POSTING_DATES_DESC",
+    );
+  });
 
-try {
-  parseOracleBoardToken("invalid");
-  throw new Error("parseOracleBoardToken should reject invalid token");
-} catch (err) {
-  assert(err instanceof Error && err.message.includes("Invalid oracle"), "invalid token error");
-}
+  it("builds details finder with quoted job id", () => {
+    expect(buildOracleDetailsFinder("CX_1", "32629")).toBe(
+      "ById;Id=\"32629\",siteNumber=CX_1",
+    );
+  });
+});
 
-// Finder strings — semicolons/commas must stay literal (not URL-encoded by builder)
-assertEqual(
-  buildOracleListFinder("CX_1", 0),
-  "findReqs;siteNumber=CX_1,limit=200,sortBy=POSTING_DATES_DESC",
-  "list finder offset 0",
-);
-assertEqual(
-  buildOracleListFinder("CX", 200),
-  "findReqs;siteNumber=CX,limit=200,offset=200,sortBy=POSTING_DATES_DESC",
-  "list finder offset 200",
-);
-assertEqual(
-  buildOracleDetailsFinder("CX_1", "32629"),
-  "ById;Id=\"32629\",siteNumber=CX_1",
-  "details finder",
-);
+describe("oracle URL helpers", () => {
+  it("builds Candidate Experience job URLs", () => {
+    expect(buildOracleJobUrl("elxb.fa.us2.oraclecloud.com", "CX", "1910")).toBe(
+      "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
+    );
+  });
 
-// URL helpers
-assertEqual(
-  buildOracleJobUrl("elxb.fa.us2.oraclecloud.com", "CX", "1910"),
-  "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
-  "job url",
-);
-assertEqual(
-  extractOracleJobIdFromUrl(
-    "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
-  ),
-  "1910",
-  "extract job id",
-);
+  it("extracts job ids from URLs", () => {
+    expect(
+      extractOracleJobIdFromUrl(
+        "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
+      ),
+    ).toBe("1910");
+  });
 
-const oracleBoard = parseOracleBoardFromUrl(
-  "https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/28488",
-);
-assert(oracleBoard !== null, "parseOracleBoardFromUrl");
-assertEqual(oracleBoard!.boardToken, "fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com|CX_1", "oracle boardToken");
-assert(
-  isOracleCloudAtsUrl(
-    "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
-  ),
-  "isOracleCloudAtsUrl true",
-);
-assert(!isOracleCloudAtsUrl("https://boards.greenhouse.io/embed/job_app"), "isOracleCloudAtsUrl false");
+  it("parses board config from listing URLs", () => {
+    const board = parseOracleBoardFromUrl(
+      "https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/28488",
+    );
+    expect(board).toEqual({
+      apiHost: "fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com",
+      siteNumber: "CX_1",
+      boardToken: "fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com|CX_1",
+    });
+  });
 
-console.log("oracle.test.ts: all assertions passed");
+  it("detects oracle cloud ATS URLs", () => {
+    expect(
+      isOracleCloudAtsUrl(
+        "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
+      ),
+    ).toBe(true);
+    expect(isOracleCloudAtsUrl("https://boards.greenhouse.io/embed/job_app")).toBe(
+      false,
+    );
+  });
+});

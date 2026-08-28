@@ -13,7 +13,8 @@
     "migrate": "tsx src/migrate.ts",
     "discover-boards": "tsx src/discoverBoards.ts",
     "merge-postings": "tsx src/mergeDuplicatePostings.ts",
-    "test:oracle": "tsx src/adapters/oracle.test.ts"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@types/multer": "^2.2.0",
@@ -29,6 +30,7 @@
     "@types/node": "^22.13.10",
     "@types/pg": "^8.11.11",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
   }
 }

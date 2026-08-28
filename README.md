@@ -99,6 +99,7 @@ npm run dev:web
 | `npm run migrate` | Apply SQL migrations |
 | `npm run discover-boards` | Diff Simplify ATS URLs vs `companies.ts` (Oracle size probe; `--write` to append) |
 | `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id (gh_jid, Oracle job id, slip-throughs) |
+| `npm run test` | Run API unit tests (Vitest) |
 | `npm run ingest` | Pull ATS boards + Simplify miscellaneous listings (merge runs at end) |
 | `npm run scrape` | Fill blank Simplify descriptions |
 | `npm run rank` | Rank via OpenAI Batch API |
