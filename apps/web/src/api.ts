@@ -16,6 +16,7 @@ export type JobCard = {
   rankReason: string | null;
   rankLocationFit: string | null;
   feedbackKind: "like" | "dismiss" | null;
+  scrapeStatus?: string | null;
 };
 
 export type JobDetail = JobCard & {
@@ -54,10 +55,14 @@ export function api(path: string, init?: RequestInit) {
   return fetch(path, init);
 }
 
+export type JobView = "ranked" | "mismatches" | "unranked" | "needs-description";
+
 export type JobsPage = {
   count: number;
   page: number;
   pageSize: number;
+  view: JobView;
+  counts: Record<JobView, number>;
   jobs: JobCard[];
 };
 
@@ -65,14 +70,13 @@ export const getJobs = (
   q = "",
   page = 1,
   pageSize = 25,
-  opts?: { mismatches?: boolean; unranked?: boolean; sort?: "rank" | "published" | "updated" },
+  opts?: { view?: JobView; sort?: "rank" | "published" | "updated" },
 ) => {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   params.set("page", String(page));
   params.set("pageSize", String(pageSize));
-  if (opts?.mismatches) params.set("mismatches", "1");
-  if (opts?.unranked === false) params.set("unranked", "0");
+  if (opts?.view && opts.view !== "ranked") params.set("view", opts.view);
   if (opts?.sort && opts.sort !== "rank") params.set("sort", opts.sort);
   return parse<JobsPage>(api(`/api/jobs?${params}`));
 };
@@ -113,6 +117,96 @@ export const getBoardRefresh = () =>
 
 export const getRankBatch = () =>
   parse<RankBatchStatus>(api("/api/rank/batch"));
+
+export type OpsStatus = {
+  boardRefresh: BoardRefreshStatus;
+  rankBatch: RankBatchStatus;
+  rerankQueue: RerankQueueSnapshot;
+  rankPromptVersion: string;
+  boardRankLimit: number;
+  rankingModel: string;
+  jobCounts: {
+    ranked: number;
+    unranked: number;
+    mismatches: number;
+    needsDescription: number;
+  };
+  unrankedBlank: number;
+  descriptions: {
+    simplifyBlankTotal: number;
+    simplifyDueNow: number;
+    simplifyDeferred: number;
+    bySource: Array<{ source: string; blank: number }>;
+    byScrapeStatus: Array<{ status: string; count: number }>;
+  };
+  schedule: {
+    cronInstalled: boolean;
+    cronTimeLocal: string;
+    nextBoardRefreshAt: string;
+    steps: string[];
+    scrapeRetryNote: string;
+    scrapeNextRetries: Array<{
+      status: string;
+      count: number;
+      nextRetryAt: string | null;
+    }>;
+  };
+};
+
+export const getOpsStatus = () => parse<OpsStatus>(api("/api/ops"));
+
+export type HomeJobPick = {
+  id: string;
+  company: string;
+  title: string;
+  location: string | null;
+  rankScore: number | null;
+  rankReason: string | null;
+  rankedAt: string | null;
+  firstSeenAt: string | null;
+  applicationId: string | null;
+  applicationStatus: string | null;
+  pickKind: "top" | "newly_ranked" | "new_to_digest";
+};
+
+export type HomeStarredApplication = {
+  id: string;
+  company: string | null;
+  title: string | null;
+  location: string | null;
+  url: string | null;
+  statusChangedAt: string | null;
+};
+
+export type HomeDashboard = {
+  greetingName: string;
+  lastDigest: {
+    status: string;
+    finishedAt: string | null;
+    lastOkAt: string | null;
+    error: string | null;
+  };
+  newAndTopPicks: {
+    topRanked: HomeJobPick[];
+    newlyRanked: HomeJobPick[];
+    newToDigest: HomeJobPick[];
+  };
+  starred: HomeStarredApplication[];
+  starredTotal: number;
+  needsAttention: {
+    interviews: Array<{
+      threadId: string;
+      company: string | null;
+      primaryTitle: string | null;
+      nextStepTitle: string | null;
+      deadlineLabel: string | null;
+      deadlineIso: string | null;
+    }>;
+    interviewActionCount: number;
+  };
+};
+
+export const getHomeDashboard = () => parse<HomeDashboard>(api("/api/home"));
 
 export const startBoardRefresh = async () => {
   const response = await api("/api/board/refresh", { method: "POST" });
@@ -180,6 +274,34 @@ export const sendJobFeedback = (jobId: string, kind: "like" | "dismiss", note = 
 export const clearJobFeedback = (jobId: string) =>
   parse<{ ok: boolean }>(api(`/api/jobs/${jobId}/feedback`, { method: "DELETE" }));
 
+export type RerankQueueSnapshot = {
+  items: Array<{
+    postingId: string;
+    status: "queued" | "running" | "ok" | "error";
+    error: string | null;
+  }>;
+};
+
+export const getRerankQueue = () =>
+  parse<RerankQueueSnapshot>(api("/api/jobs/rerank-queue"));
+
+export const queueJobRerank = async (jobId: string, note: string) => {
+  const response = await api(`/api/jobs/${jobId}/rerank`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ note }),
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    queued?: boolean;
+    alreadyQueued?: boolean;
+    error?: string;
+  };
+  if (!response.ok && response.status !== 409) {
+    throw new Error(body.error || response.statusText);
+  }
+  return body;
+};
+
 export const uploadDocument = (applicationId: string, file: File) => {
   const data = new FormData();
   data.append("file", file);
@@ -190,3 +312,102 @@ export const uploadDocument = (applicationId: string, file: File) => {
     }),
   );
 };
+
+export type InterviewPickerApplication = {
+  id: string;
+  postingId: string | null;
+  status: string;
+  company: string | null;
+  title: string | null;
+  location: string | null;
+  appliedAt: string | null;
+};
+
+export type InterviewStep = {
+  id: string;
+  kind: string;
+  title: string;
+  status: string;
+  dueAt: string | null;
+  scheduledAt: string | null;
+  url: string | null;
+  notes: string | null;
+  prepNotes: string | null;
+  sortOrder: number;
+  completedAt: string | null;
+};
+
+export type InterviewThreadListItem = {
+  id: string;
+  status: string;
+  resolution: string | null;
+  label: string | null;
+  resolvedAt: string | null;
+  primaryApplicationId: string;
+  company: string | null;
+  primaryTitle: string | null;
+  memberCount: number;
+  members: InterviewPickerApplication[];
+  nextStep: InterviewStep | null;
+  canAddStep: boolean;
+  updatedAt: string;
+};
+
+export type InterviewThreadDetail = InterviewThreadListItem & {
+  steps: InterviewStep[];
+};
+
+export const getInterviewPickerApplications = () =>
+  parse<{ applications: InterviewPickerApplication[] }>(
+    api("/api/interviews/picker-applications"),
+  );
+
+export const getInterviews = (view: "active" | "past" = "active") =>
+  parse<{
+    actionRequired: InterviewThreadListItem[];
+    awaiting: InterviewThreadListItem[];
+    past: InterviewThreadListItem[];
+  }>(api(`/api/interviews?view=${view}`));
+
+export const getInterviewThread = (threadId: string) =>
+  parse<InterviewThreadDetail>(api(`/api/interviews/${threadId}`));
+
+export const createInterview = (body: Record<string, unknown>) =>
+  parse<{ id: string }>(
+    api("/api/interviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const patchInterviewThread = (threadId: string, body: Record<string, unknown>) =>
+  parse<{ ok: boolean }>(
+    api(`/api/interviews/${threadId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const addInterviewStep = (threadId: string, body: Record<string, unknown>) =>
+  parse<{ id: string }>(
+    api(`/api/interviews/${threadId}/steps`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const patchInterviewStep = (
+  threadId: string,
+  stepId: string,
+  body: Record<string, unknown>,
+) =>
+  parse<{ ok: boolean }>(
+    api(`/api/interviews/${threadId}/steps/${stepId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
