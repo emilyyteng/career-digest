@@ -44,7 +44,7 @@ Greenhouse ingest, Postgres schema, `GET /jobs`.
 
 - OpenAI ranking: Batch API by default (`npm run rank`), live drip (`npm run rank:live`)
 - Client rate gate (RPM/RPD/TPM), stall cancel + live fallback for small leftovers
-- Preference signal from likes/dismissals and applied/interviewing/hired tracker rows
+- Preference signal from likes/dismissals and applied/interviewing/accepted tracker rows
 
 ## Milestone 7
 
@@ -57,6 +57,30 @@ Greenhouse ingest, Postgres schema, `GET /jobs`.
 - Applications: date applied, rich-text JD paste, status-change ordering, tab counts
 - Status-colored badges; location autocomplete from existing applications
 - Modal add-application form; save/upload flash confirmations
+
+## Milestone 9
+
+- Interview threads: link one or more applications, linear step pipeline (assessment → phone → onsite → offer)
+- Interviews list with active/past tabs, countdown timers, quick actions (submit / complete / open link)
+- Interview workspace: step timeline, notes, resolve thread
+
+## Milestone 10
+
+- Jobs board tabs: ranked, mismatches, unranked, needs description (with per-tab counts)
+- Per-job rerank queue with live feedback; search and sort within each tab
+- Rank prompt v2 with richer preference context; `rank:live-backlog` for one-shot catch-up
+
+## Milestone 11
+
+- Home dashboard: greeting, last digest, needs attention (interviews + starred), new & top picks
+- Pipeline **Status** page (`/status`): board refresh, rank batch, scrape backlog, cron schedule
+- `GET /api/ops` and `GET /api/home` for operational snapshots
+
+## Milestone 12
+
+- Application status **accepted** (renamed from hired); declined tab on Applications
+- In-browser document preview (PDFs/images) from application detail
+- Sakura-terminal UI theme, favicon, JD scroll boxes, nav routing (`/` home, `/jobs` board)
 
 ## Setup
 
@@ -73,7 +97,7 @@ npm run dev:api
 npm run dev:web
 ```
 
-- API: http://localhost:3000/api/jobs
+- API: http://localhost:3000
 - UI: http://localhost:5173
 - Boards: `apps/api/src/config/companies.ts`
 
@@ -86,6 +110,7 @@ npm run dev:web
 | `npm run scrape` | Fill blank Simplify descriptions |
 | `npm run rank` | Rank via OpenAI Batch API |
 | `npm run rank:live` | Rank synchronously (rate-limited) |
+| `npm run rank:live-backlog` | One-shot unranked + outdated rerank |
 | `npm run board-refresh` | Ingest + scrape + light live rank |
 | `npm run cron:install` | Install 5pm daily board refresh (macOS) |
 
