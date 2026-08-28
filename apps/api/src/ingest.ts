@@ -11,6 +11,7 @@ import {
 } from "./filter.js";
 import { isAllowedUsLocation } from "./location.js";
 import type { CompanyConfig, NormalizedPosting } from "./types.js";
+import { runMergeDuplicatePostings } from "./mergeDuplicatePostings.js";
 
 async function upsertCompany(company: CompanyConfig): Promise<string> {
   const result = await pool.query<{ id: string }>(
@@ -214,6 +215,11 @@ export async function runIngest(): Promise<void> {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`simplify: FAILED ${message}`);
   }
+
+  const merged = await runMergeDuplicatePostings();
+  console.log(
+    `merge duplicates: greenhouse ${merged.greenhouse.deletedSimplify}/${merged.greenhouse.pairs}, lever ${merged.lever.deletedSimplify}/${merged.lever.pairs}, ashby ${merged.ashby.deletedSimplify}/${merged.ashby.pairs}; moved ${merged.applicationsMoved} application(s), merged ${merged.applicationsMerged} application(s).`,
+  );
 
   console.log(
     `Done. Listed ${listed}, intern-titled ${internships}, upserted ${upserted}, deleted ${deleted}, retained closed ${retainedClosed}.`,
