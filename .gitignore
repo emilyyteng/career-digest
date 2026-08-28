@@ -10,6 +10,7 @@ coverage/
 .idea/
 .vscode/
 *.swp
+*.tsbuildinfo
 data/uploads/
 data/openai-rate.json
 data/rank-batch.json
