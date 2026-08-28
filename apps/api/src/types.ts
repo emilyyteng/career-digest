@@ -1,4 +1,4 @@
-export type Source = "greenhouse" | "lever" | "ashby" | "simplify";
+export type Source = "greenhouse" | "lever" | "ashby" | "oracle" | "simplify";
 
 export type CompanyConfig = {
   name: string;

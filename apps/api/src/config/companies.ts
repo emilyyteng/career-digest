@@ -3,6 +3,7 @@ import type { CompanyConfig } from "../types.js";
 /**
  * Boards verified against each ATS public job API.
  * Greenhouse / Lever / Ashby tokens seeded from Simplify intern-list URLs.
+ * Oracle: boardToken = "{apiHost}|{siteNumber}" (Fusion Candidate Experience).
  */
 export const companies: CompanyConfig[] = [
   { name: "1-800 Contacts", source: "greenhouse", boardToken: "1800contacts" },
@@ -122,6 +123,7 @@ export const companies: CompanyConfig[] = [
   { name: "Custom Computer Specialists", source: "greenhouse", boardToken: "customcomputerspecialists" },
   { name: "Dark Wolf Solutions", source: "greenhouse", boardToken: "darkwolfsolutions" },
   { name: "Databricks", source: "greenhouse", boardToken: "databricks" },
+  { name: "DC Water", source: "oracle", boardToken: "elxb.fa.us2.oraclecloud.com|CX" },
   { name: "Defense Unicorns", source: "greenhouse", boardToken: "defenseunicorns" },
   { name: "DESIGNME Hair", source: "greenhouse", boardToken: "designmehair" },
   { name: "Detroit Lions", source: "greenhouse", boardToken: "detroitlions" },

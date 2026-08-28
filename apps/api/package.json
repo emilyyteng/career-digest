@@ -12,7 +12,8 @@
     "board-refresh": "tsx src/boardRefresh.ts",
     "migrate": "tsx src/migrate.ts",
     "discover-boards": "tsx src/discoverBoards.ts",
-    "merge-postings": "tsx src/mergeDuplicatePostings.ts"
+    "merge-postings": "tsx src/mergeDuplicatePostings.ts",
+    "test:oracle": "tsx src/adapters/oracle.test.ts"
   },
   "dependencies": {
     "@types/multer": "^2.2.0",
