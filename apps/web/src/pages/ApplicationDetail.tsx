@@ -14,6 +14,7 @@ import PostingDates from "../PostingDates";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 import StarButton from "../StarButton";
 import DocumentPreviewModal from "../DocumentPreviewModal";
+import { invalidateListCache } from "../listCache";
 
 const STATUSES = [
   { id: "starred", label: "Starred", hint: "Saved, not applied yet. Stays on Jobs." },
@@ -121,6 +122,8 @@ export default function ApplicationDetail() {
     setError(null);
     try {
       await patchApplication(id, { status });
+      invalidateListCache("applications:");
+      invalidateListCache("jobs:");
       await load();
       showFlash("Saved!", "status");
     } catch (err) {
@@ -133,6 +136,8 @@ export default function ApplicationDetail() {
   async function unstar() {
     if (!row || row.status !== "starred") return;
     await deleteApplication(row.id);
+    invalidateListCache("applications:");
+    invalidateListCache("jobs:");
     navigate("/applications?status=starred");
   }
 
@@ -146,6 +151,8 @@ export default function ApplicationDetail() {
     setError(null);
     try {
       await patchApplication(id, { postingId });
+      invalidateListCache("applications:");
+      invalidateListCache("jobs:");
       setMatches([]);
       await load();
       showFlash("Saved!", "link");

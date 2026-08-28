@@ -19,10 +19,26 @@ import {
 } from "../api";
 import { isMismatch, RankBadges, RankNote } from "../RankMark";
 import StarButton from "../StarButton";
+import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import FeedbackDialog from "./FeedbackDialog";
 import RerankDialog from "./RerankDialog";
 
 const PAGE_SIZE = 25;
+
+type JobsListSnapshot = {
+  jobs: JobCard[];
+  count: number;
+  counts: Record<JobView, number>;
+};
+
+function jobsListCacheKey(
+  query: string,
+  page: number,
+  view: JobView,
+  sort: JobSort,
+): string {
+  return `jobs:${view}:${sort}:${page}:${query}`;
+}
 
 const TABS: { id: JobView; label: string }[] = [
   { id: "ranked", label: "ranked" },
@@ -93,10 +109,14 @@ export default function Jobs() {
   const view = parseView(params.get("view"));
   const sort = parseSort(params.get("sort"), view);
   const page = Math.max(1, Number(params.get("page") || 1));
-  const [jobs, setJobs] = useState<JobCard[]>([]);
-  const [count, setCount] = useState(0);
-  const [counts, setCounts] = useState(EMPTY_COUNTS);
-  const [loading, setLoading] = useState(true);
+  const initialCacheKey = jobsListCacheKey(query, page, view, sort);
+  const initialSnapshot = readListCache<JobsListSnapshot>(initialCacheKey);
+  const [jobs, setJobs] = useState<JobCard[]>(() => initialSnapshot?.jobs ?? []);
+  const [count, setCount] = useState(() => initialSnapshot?.count ?? 0);
+  const [counts, setCounts] = useState<Record<JobView, number>>(
+    () => initialSnapshot?.counts ?? EMPTY_COUNTS,
+  );
+  const [loading, setLoading] = useState(() => !initialSnapshot);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [refresh, setRefresh] = useState<BoardRefreshStatus | null>(null);
@@ -131,11 +151,22 @@ export default function Jobs() {
     return nextParams;
   }
 
+  function applyJobsData(data: Awaited<ReturnType<typeof getJobs>>, cacheKey: string) {
+    const snapshot: JobsListSnapshot = {
+      jobs: data.jobs,
+      count: data.count,
+      counts: { ...EMPTY_COUNTS, ...data.counts },
+    };
+    writeListCache(cacheKey, snapshot);
+    setJobs(snapshot.jobs);
+    setCount(snapshot.count);
+    setCounts(snapshot.counts);
+  }
+
   async function reload(nextPage = page) {
+    const cacheKey = jobsListCacheKey(query, nextPage, view, sort);
     const data = await getJobs(query, nextPage, PAGE_SIZE, { view, sort });
-    setJobs(data.jobs);
-    setCount(data.count);
-    setCounts({ ...EMPTY_COUNTS, ...data.counts });
+    applyJobsData(data, cacheKey);
     return data;
   }
 
@@ -154,13 +185,21 @@ export default function Jobs() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    const cacheKey = jobsListCacheKey(query, page, view, sort);
+    const cached = readListCache<JobsListSnapshot>(cacheKey);
+    if (cached) {
+      setJobs(cached.jobs);
+      setCount(cached.count);
+      setCounts(cached.counts);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     getJobs(query, page, PAGE_SIZE, { view, sort })
       .then((data) => {
         if (cancelled) return;
-        setJobs(data.jobs);
-        setCount(data.count);
-        setCounts({ ...EMPTY_COUNTS, ...data.counts });
+        applyJobsData(data, cacheKey);
         setError(null);
       })
       .catch((err: Error) => {
@@ -214,7 +253,8 @@ export default function Jobs() {
     if (!rerankQueue.some((item) => item.status === "queued" || item.status === "running")) {
       if (!wasReranking.current) return;
       wasReranking.current = false;
-      setLoading(true);
+      invalidateListCache("jobs:");
+      setLoading(jobs.length === 0);
       reload()
         .catch((err: Error) => setError(err.message))
         .finally(() => setLoading(false));
@@ -239,7 +279,8 @@ export default function Jobs() {
     if (refresh.status === "error") {
       setError(refresh.error || "Board refresh failed");
     }
-    setLoading(true);
+    invalidateListCache("jobs:");
+    setLoading(jobs.length === 0);
     reload()
       .then(() => setError((current) => (refresh.status === "error" ? current : null)))
       .catch((err: Error) => setError(err.message))
@@ -267,7 +308,8 @@ export default function Jobs() {
     if (!wasRanking.current) return;
     if (rankBatch.status !== "ok" && rankBatch.status !== "error") return;
     wasRanking.current = false;
-    setLoading(true);
+    invalidateListCache("jobs:");
+    setLoading(jobs.length === 0);
     reload()
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
@@ -327,6 +369,7 @@ export default function Jobs() {
           ),
         );
       }
+      invalidateListCache("applications:");
       await reload().catch(() => undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update star");
@@ -339,6 +382,7 @@ export default function Jobs() {
   async function markApplied(job: JobCard) {
     try {
       await createApplication({ postingId: job.id, status: "applied" });
+      invalidateListCache("applications:");
       const data = await reload();
       if (data.jobs.length === 0 && page > 1) {
         setPage(page - 1);

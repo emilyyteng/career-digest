@@ -4,6 +4,7 @@ import { deleteApplication, getApplications, type ApplicationRow } from "../api"
 import { formatShortDate } from "../formatDate";
 import PostingDates from "../PostingDates";
 import StarButton from "../StarButton";
+import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import AddApplicationForm, { type AddApplicationFormHandle } from "./AddApplicationForm";
 
 const TABS = ["all", "starred", "applied", "interviewing", "accepted", "declined"] as const;
@@ -17,24 +18,77 @@ const EMPTY_COUNTS: Record<(typeof TABS)[number], number> = {
   declined: 0,
 };
 
+type ApplicationsSnapshot = {
+  applications: ApplicationRow[];
+  counts: Record<(typeof TABS)[number], number>;
+};
+
+function applicationsCacheKey(status: string): string {
+  return `applications:${status}`;
+}
+
 export default function Applications() {
   const [searchParams, setSearchParams] = useSearchParams();
   const status = searchParams.get("status") ?? "all";
-  const [rows, setRows] = useState<ApplicationRow[]>([]);
-  const [counts, setCounts] = useState(EMPTY_COUNTS);
+  const initialCacheKey = applicationsCacheKey(status);
+  const initialSnapshot = readListCache<ApplicationsSnapshot>(initialCacheKey);
+  const [rows, setRows] = useState<ApplicationRow[]>(
+    () => initialSnapshot?.applications ?? [],
+  );
+  const [counts, setCounts] = useState(
+    () => initialSnapshot?.counts ?? EMPTY_COUNTS,
+  );
+  const [loaded, setLoaded] = useState(() => !!initialSnapshot);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const addFormRef = useRef<AddApplicationFormHandle>(null);
 
+  function applyApplicationsData(
+    data: Awaited<ReturnType<typeof getApplications>>,
+    cacheKey: string,
+  ) {
+    const snapshot: ApplicationsSnapshot = {
+      applications: data.applications,
+      counts: { ...EMPTY_COUNTS, ...data.counts },
+    };
+    writeListCache(cacheKey, snapshot);
+    setRows(snapshot.applications);
+    setCounts(snapshot.counts);
+    setLoaded(true);
+  }
+
   async function load() {
+    const cacheKey = applicationsCacheKey(status);
     const data = await getApplications(status);
-    setRows(data.applications);
-    setCounts({ ...EMPTY_COUNTS, ...data.counts });
+    applyApplicationsData(data, cacheKey);
   }
 
   useEffect(() => {
-    load().catch((err: Error) => setError(err.message));
+    let cancelled = false;
+    const cacheKey = applicationsCacheKey(status);
+    const cached = readListCache<ApplicationsSnapshot>(cacheKey);
+    if (cached) {
+      setRows(cached.applications);
+      setCounts(cached.counts);
+      setLoaded(true);
+    } else {
+      setLoaded(false);
+    }
+
+    getApplications(status)
+      .then((data) => {
+        if (cancelled) return;
+        applyApplicationsData(data, cacheKey);
+        setError(null);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [status]);
 
   useEffect(() => {
@@ -61,6 +115,7 @@ export default function Applications() {
     }));
     try {
       await deleteApplication(row.id);
+      invalidateListCache("applications:");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not unstar");
       await load().catch(() => undefined);
@@ -71,6 +126,7 @@ export default function Applications() {
 
   function onCreated(row: ApplicationRow) {
     setAdding(false);
+    invalidateListCache("applications:");
     if (status !== "all" && row.status !== status) {
       setSearchParams({ status: row.status });
       return;
@@ -101,7 +157,8 @@ export default function Applications() {
         </button>
       </div>
       {error && <p className="error">{error}</p>}
-      {rows.length === 0 && <p className="muted">Nothing in this tab yet.</p>}
+      {!loaded && rows.length === 0 && <p className="muted">Loading…</p>}
+      {loaded && rows.length === 0 && <p className="muted">Nothing in this tab yet.</p>}
       {rows.map((row) => {
         const appliedLabel = formatShortDate(row.appliedAt);
         return (
