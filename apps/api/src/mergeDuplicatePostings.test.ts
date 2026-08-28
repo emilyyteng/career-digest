@@ -4,7 +4,7 @@ import {
   extractGreenhouseJobId,
   extractLeverPostingId,
   extractOracleJobId,
-} from "./mergeDuplicatePostings.js";
+} from "./mergeUrlExtractors.js";
 
 describe("extractGreenhouseJobId", () => {
   it("extracts gh_jid from custom domain URLs", () => {
