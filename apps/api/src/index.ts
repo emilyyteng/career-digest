@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import { config as loadEnv } from "dotenv";
 import { migrate } from "./db.js";
+import { startRankBatchWatcher } from "./rankBatchWatcher.js";
 import { api, ensureUploadDir } from "./routes.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
@@ -20,6 +21,7 @@ app.get("/health", (_req, res) => {
 
 await migrate();
 await ensureUploadDir();
+startRankBatchWatcher();
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);

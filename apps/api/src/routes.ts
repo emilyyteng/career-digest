@@ -7,11 +7,26 @@ import multer from "multer";
 import { getBoardRefresh, startBoardRefresh } from "./boardRefresh.js";
 import { pool } from "./db.js";
 import { sanitizeDescriptionHtml } from "./descriptionFromHtml.js";
+import { getHomeDashboard } from "./home.js";
+import { getOpsStatus } from "./opsStatus.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
+import { getRerankQueueSnapshot, queueRerank } from "./rankRerankQueue.js";
 import {
   APPLICATION_STATUSES,
   isApplicationStatus,
 } from "./statuses.js";
+import {
+  addInterviewStep,
+  applicationResolutionFromStatus,
+  addThreadMembers,
+  createInterviewThread,
+  getInterviewThread,
+  listInterviewThreads,
+  listPickerApplications,
+  patchInterviewStep,
+  patchInterviewThread,
+  resolveThreadsForApplication,
+} from "./interviews.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -108,7 +123,7 @@ function resolveAppliedAt(opts: {
   if (
     opts.status === "applied" ||
     opts.status === "interviewing" ||
-    opts.status === "hired"
+    opts.status === "accepted"
   ) {
     return new Date();
   }
@@ -130,10 +145,85 @@ api.get("/rank/batch", async (_req, res) => {
   res.json(await getRankBatchStatus());
 });
 
+api.get("/ops", async (_req, res) => {
+  res.json(await getOpsStatus());
+});
+
+api.get("/home", async (_req, res) => {
+  res.json(await getHomeDashboard());
+});
+
+api.get("/jobs/rerank-queue", async (_req, res) => {
+  res.json(getRerankQueueSnapshot());
+});
+
+const JOB_VIEWS = ["ranked", "mismatches", "unranked", "needs-description"] as const;
+type JobView = (typeof JOB_VIEWS)[number];
+
+function parseJobView(raw: string): JobView {
+  if (JOB_VIEWS.includes(raw as JobView)) return raw as JobView;
+  return "ranked";
+}
+
+const JOBS_LIST_BASE = `
+  p.removed_from_board_at IS NULL
+  AND (a.id IS NULL OR a.status = 'starred')
+`;
+
+const HAS_DESCRIPTION = `p.description_html IS NOT NULL AND btrim(p.description_html) <> ''`;
+const BLANK_DESCRIPTION = `(p.description_html IS NULL OR btrim(p.description_html) = '')`;
+
+function jobViewFilter(view: JobView): string {
+  switch (view) {
+    case "mismatches":
+      return `AND p.rank_eligible IS FALSE AND ${HAS_DESCRIPTION}`;
+    case "unranked":
+      return `AND ${HAS_DESCRIPTION} AND p.ranked_at IS NULL AND p.rank_eligible IS NOT FALSE`;
+    case "needs-description":
+      return `AND ${BLANK_DESCRIPTION}`;
+    default:
+      return `AND ${HAS_DESCRIPTION} AND p.ranked_at IS NOT NULL AND p.rank_eligible IS NOT FALSE`;
+  }
+}
+
+async function jobTabCounts(): Promise<Record<JobView, number>> {
+  const result = await pool.query<{
+    ranked: string;
+    mismatches: string;
+    unranked: string;
+    needs_description: string;
+  }>(
+    `SELECT
+       COUNT(*) FILTER (
+         WHERE ${HAS_DESCRIPTION}
+           AND p.ranked_at IS NOT NULL
+           AND p.rank_eligible IS NOT FALSE
+       )::text AS ranked,
+       COUNT(*) FILTER (
+         WHERE ${HAS_DESCRIPTION} AND p.rank_eligible IS FALSE
+       )::text AS mismatches,
+       COUNT(*) FILTER (
+         WHERE ${HAS_DESCRIPTION}
+           AND p.ranked_at IS NULL
+           AND p.rank_eligible IS NOT FALSE
+       )::text AS unranked,
+       COUNT(*) FILTER (WHERE ${BLANK_DESCRIPTION})::text AS needs_description
+     FROM postings p
+     LEFT JOIN applications a ON a.posting_id = p.id
+     WHERE ${JOBS_LIST_BASE}`,
+  );
+  const row = result.rows[0];
+  return {
+    ranked: Number(row?.ranked ?? 0) || 0,
+    mismatches: Number(row?.mismatches ?? 0) || 0,
+    unranked: Number(row?.unranked ?? 0) || 0,
+    "needs-description": Number(row?.needs_description ?? 0) || 0,
+  };
+}
+
 api.get("/jobs", async (req, res) => {
   const q = String(req.query.q ?? "").trim();
-  const mismatches = req.query.mismatches === "1" || req.query.mismatches === "true";
-  const showUnranked = req.query.unranked !== "0" && req.query.unranked !== "false";
+  const view = parseJobView(String(req.query.view ?? "ranked"));
   const sortKey = String(req.query.sort ?? "rank");
   const sort =
     sortKey === "published" || sortKey === "updated" ? sortKey : "rank";
@@ -151,17 +241,13 @@ api.get("/jobs", async (req, res) => {
       OR COALESCE(p.location, '') ILIKE $1
     )`;
   }
-  const eligibleFilter = mismatches ? "" : "AND p.rank_eligible IS NOT FALSE";
-  const unrankedFilter = showUnranked ? "" : "AND p.ranked_at IS NOT NULL";
+  const effectiveSort = view === "ranked" ? sort : sort === "rank" ? "published" : sort;
   const orderBy =
-    sort === "published"
+    effectiveSort === "published"
       ? "p.first_published_at DESC NULLS LAST, p.first_seen_at DESC"
-      : sort === "updated"
+      : effectiveSort === "updated"
         ? "COALESCE(p.source_updated_at, p.first_published_at) DESC NULLS LAST, p.last_seen_at DESC"
-        : `${showUnranked ? "CASE WHEN p.ranked_at IS NULL THEN 0 ELSE 1 END," : ""}
-       CASE WHEN p.rank_eligible IS FALSE THEN 1 ELSE 0 END,
-       p.rank_score DESC NULLS LAST,
-       p.last_seen_at DESC`;
+        : "p.rank_score DESC NULLS LAST, p.last_seen_at DESC";
   params.push(pageSize, offset);
   const limitPh = `$${params.length - 1}`;
   const offsetPh = `$${params.length}`;
@@ -187,6 +273,7 @@ api.get("/jobs", async (req, res) => {
        p.rank_eligible AS "rankEligible",
        p.rank_reason AS "rankReason",
        p.rank_location_fit AS "rankLocationFit",
+       p.scrape_status AS "scrapeStatus",
        a.id AS "applicationId",
        a.status AS "applicationStatus",
        f.kind AS "feedbackKind",
@@ -195,11 +282,8 @@ api.get("/jobs", async (req, res) => {
      JOIN companies c ON c.id = p.company_id
      LEFT JOIN applications a ON a.posting_id = p.id
      LEFT JOIN posting_feedback f ON f.posting_id = p.id
-     WHERE p.removed_from_board_at IS NULL
-       AND (a.id IS NULL OR a.status = 'starred')
-       AND (f.kind IS NULL OR f.kind <> 'dismiss')
-       ${eligibleFilter}
-       ${unrankedFilter}
+     WHERE ${JOBS_LIST_BASE}
+       ${jobViewFilter(view)}
        ${search}
      ORDER BY
        ${orderBy}
@@ -208,7 +292,8 @@ api.get("/jobs", async (req, res) => {
   );
   const count = result.rows[0]?.totalCount ?? 0;
   const jobs = result.rows.map(({ totalCount: _total, ...job }) => job);
-  res.json({ count, page, pageSize, jobs });
+  const counts = await jobTabCounts();
+  res.json({ count, page, pageSize, view, counts, jobs });
 });
 
 api.get("/jobs/:id", async (req, res) => {
@@ -275,7 +360,42 @@ api.post("/jobs/:id/feedback", async (req, res) => {
      RETURNING id, kind, note`,
     [req.params.id, kind, note],
   );
+  if (kind === "dismiss") {
+    await pool.query(
+      `UPDATE postings
+       SET rank_eligible = false
+       WHERE id = $1`,
+      [req.params.id],
+    );
+  }
   res.status(201).json(inserted.rows[0]);
+});
+
+api.post("/jobs/:id/rerank", async (req, res) => {
+  const note = String((req.body as { note?: string }).note ?? "").trim();
+  if (!note) {
+    res.status(400).json({ error: "note is required" });
+    return;
+  }
+  const posting = await pool.query(
+    `SELECT id, rank_eligible FROM postings WHERE id = $1 AND removed_from_board_at IS NULL`,
+    [req.params.id],
+  );
+  if (!posting.rows[0]) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  if (posting.rows[0].rank_eligible !== false) {
+    res.status(400).json({ error: "Only mismatch postings can be reranked" });
+    return;
+  }
+  try {
+    const result = queueRerank(req.params.id, note);
+    res.status(result.alreadyQueued ? 409 : 202).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(400).json({ error: message });
+  }
 });
 
 api.delete("/jobs/:id/feedback", async (req, res) => {
@@ -302,22 +422,23 @@ api.get("/applications", async (req, res) => {
     params.push(status);
     where = "WHERE a.status = $1";
   }
-  // Within a status: newest entry into that status first (created, or status change).
-  // All tab: hired → interviewing → applied → starred → declined, then same within-status order.
+  // Starred: newest into that tab first. Non-starred: date applied, then date created.
   const orderBy =
     status === "all"
       ? `ORDER BY
            CASE a.status
-             WHEN 'hired' THEN 0
+             WHEN 'accepted' THEN 0
              WHEN 'interviewing' THEN 1
              WHEN 'applied' THEN 2
              WHEN 'starred' THEN 3
              WHEN 'declined' THEN 4
              ELSE 5
            END,
-           a.status_changed_at DESC,
+           CASE WHEN a.status = 'starred' THEN a.status_changed_at ELSE a.applied_at END DESC NULLS LAST,
            a.created_at DESC`
-      : `ORDER BY a.status_changed_at DESC, a.created_at DESC`;
+      : status === "starred"
+        ? `ORDER BY a.status_changed_at DESC, a.created_at DESC`
+        : `ORDER BY a.applied_at DESC NULLS LAST, a.created_at DESC`;
   const result = await pool.query(
     `${applicationSelect} ${where} ${orderBy}`,
     params,
@@ -330,7 +451,7 @@ api.get("/applications", async (req, res) => {
     starred: 0,
     applied: 0,
     interviewing: 0,
-    hired: 0,
+    accepted: 0,
     declined: 0,
   };
   for (const row of countsResult.rows) {
@@ -418,7 +539,7 @@ api.post("/applications", async (req, res) => {
            WHEN EXCLUDED.status = 'starred' THEN NULL
            WHEN EXCLUDED.applied_at IS NOT NULL THEN EXCLUDED.applied_at
            WHEN applications.applied_at IS NOT NULL THEN applications.applied_at
-           WHEN EXCLUDED.status IN ('applied', 'interviewing', 'hired') THEN now()
+           WHEN EXCLUDED.status IN ('applied', 'interviewing', 'accepted') THEN now()
            ELSE applications.applied_at
          END,
          status_changed_at = CASE
@@ -465,7 +586,7 @@ const STATUS_RANK: Record<string, number> = {
   starred: 0,
   applied: 1,
   interviewing: 2,
-  hired: 3,
+  accepted: 3,
   declined: 1,
 };
 
@@ -578,6 +699,10 @@ api.patch("/applications/:id", async (req, res) => {
         statusChanged,
       ],
     );
+    const resolution = applicationResolutionFromStatus(status);
+    if (statusChanged && resolution) {
+      await resolveThreadsForApplication(client, req.params.id, resolution);
+    }
     await client.query("COMMIT");
     res.json({ id: result.rows[0].id });
   } catch (error) {
@@ -590,6 +715,146 @@ api.patch("/applications/:id", async (req, res) => {
     throw error;
   } finally {
     client.release();
+  }
+});
+
+api.get("/interviews/picker-applications", async (_req, res) => {
+  try {
+    const applications = await listPickerApplications(pool);
+    res.json({ applications });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "Bad request" });
+  }
+});
+
+api.get("/interviews", async (req, res) => {
+  const view = req.query.view === "past" ? "past" : "active";
+  const data = await listInterviewThreads(pool, view);
+  res.json(data);
+});
+
+api.post("/interviews", async (req, res) => {
+  try {
+    const body = req.body as {
+      applicationIds?: string[];
+      primaryApplicationId?: string;
+      label?: string | null;
+      step?: {
+        kind?: string;
+        title?: string;
+        status?: string;
+        dueAt?: string | null;
+        scheduledAt?: string | null;
+        url?: string | null;
+        notes?: string | null;
+      };
+    };
+    if (!body.step?.title?.trim()) {
+      res.status(400).json({ error: "Step title is required" });
+      return;
+    }
+    const threadId = await createInterviewThread(pool, {
+      applicationIds: body.applicationIds ?? [],
+      primaryApplicationId: body.primaryApplicationId,
+      label: body.label,
+      step: {
+        kind: body.step.kind,
+        title: body.step.title,
+        status: body.step.status,
+        dueAt: body.step.dueAt,
+        scheduledAt: body.step.scheduledAt,
+        url: body.step.url,
+        notes: body.step.notes,
+      },
+    });
+    res.status(201).json({ id: threadId });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "Bad request" });
+  }
+});
+
+api.get("/interviews/:threadId", async (req, res) => {
+  const thread = await getInterviewThread(pool, req.params.threadId);
+  if (!thread) {
+    res.status(404).json({ error: "Interview thread not found" });
+    return;
+  }
+  res.json(thread);
+});
+
+api.patch("/interviews/:threadId", async (req, res) => {
+  try {
+    const body = req.body as {
+      primaryApplicationId?: string;
+      label?: string | null;
+      status?: string;
+      resolution?: string | null;
+      addApplicationIds?: string[];
+    };
+    if (body.addApplicationIds?.length) {
+      await addThreadMembers(pool, req.params.threadId, body.addApplicationIds);
+    }
+    await patchInterviewThread(pool, req.params.threadId, body);
+    res.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = message.includes("not found") ? 404 : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.post("/interviews/:threadId/steps", async (req, res) => {
+  try {
+    const body = req.body as {
+      kind?: string;
+      title?: string;
+      status?: string;
+      dueAt?: string | null;
+      scheduledAt?: string | null;
+      url?: string | null;
+      notes?: string | null;
+      prepNotes?: string | null;
+    };
+    if (!body.title?.trim()) {
+      res.status(400).json({ error: "Step title is required" });
+      return;
+    }
+    const stepId = await addInterviewStep(pool, req.params.threadId, {
+      kind: body.kind,
+      title: body.title,
+      status: body.status,
+      dueAt: body.dueAt,
+      scheduledAt: body.scheduledAt,
+      url: body.url,
+      notes: body.notes,
+      prepNotes: body.prepNotes,
+    });
+    res.status(201).json({ id: stepId });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = message.includes("not found") ? 404 : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
+  try {
+    const body = req.body as {
+      kind?: string;
+      title?: string;
+      status?: string;
+      dueAt?: string | null;
+      scheduledAt?: string | null;
+      url?: string | null;
+      notes?: string | null;
+      prepNotes?: string | null;
+    };
+    await patchInterviewStep(pool, req.params.threadId, req.params.stepId, body);
+    res.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = message.includes("not found") ? 404 : 400;
+    res.status(status).json({ error: message });
   }
 });
 
@@ -628,8 +893,8 @@ api.post("/applications/:id/documents", upload.single("file"), async (req, res) 
 });
 
 api.get("/applications/:id/documents/:docId", async (req, res) => {
-  const result = await pool.query<{ stored_name: string; original_name: string }>(
-    `SELECT stored_name, original_name FROM application_documents
+  const result = await pool.query<{ stored_name: string; original_name: string; mime_type: string | null }>(
+    `SELECT stored_name, original_name, mime_type FROM application_documents
      WHERE id = $1 AND application_id = $2`,
     [req.params.docId, req.params.id],
   );
@@ -637,10 +902,19 @@ api.get("/applications/:id/documents/:docId", async (req, res) => {
     res.status(404).json({ error: "Document not found" });
     return;
   }
-  res.download(
-    path.join(uploadDir, result.rows[0].stored_name),
-    result.rows[0].original_name,
-  );
+  const filePath = path.join(uploadDir, result.rows[0].stored_name);
+  const inline = req.query.view === "1" || req.query.inline === "1";
+  if (inline) {
+    const mime = result.rows[0].mime_type || "application/octet-stream";
+    res.setHeader("Content-Type", mime);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${result.rows[0].original_name.replace(/"/g, "")}"`,
+    );
+    res.sendFile(filePath);
+    return;
+  }
+  res.download(filePath, result.rows[0].original_name);
 });
 
 export async function ensureUploadDir(): Promise<void> {
