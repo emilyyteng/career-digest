@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="career-digest">
+  <rect width="32" height="32" rx="8" fill="#fdf2f7"/>
+  <rect x="5" y="6" width="22" height="16" rx="3" fill="#fffbfd" stroke="#e8a4bc" stroke-width="1.2"/>
+  <circle cx="8.5" cy="9.5" r="1.1" fill="#e8a4bc"/>
+  <circle cx="11.5" cy="9.5" r="1.1" fill="#7ba3c9"/>
+  <circle cx="14.5" cy="9.5" r="1.1" fill="#c9a8d8"/>
+  <path fill="#7ba3c9" d="M7.2 13.2 10.4 15.6 7.2 18v-1.4l2-1.4-2-1.4V13.2Z"/>
+  <rect x="11.2" y="16.8" width="5.2" height="1.4" rx="0.5" fill="#7ba3c9"/>
+  <circle cx="24" cy="22" r="5" fill="#e8a4bc"/>
+  <circle cx="24" cy="22" r="2.2" fill="#fffbfd"/>
+  <circle cx="22.2" cy="20.8" r="0.9" fill="#d489a8"/>
+  <circle cx="25.5" cy="20.2" r="0.7" fill="#d489a8"/>
+</svg>

@@ -1,27 +1,38 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Route, Routes } from "react-router-dom";
 import ApplicationDetail from "./pages/ApplicationDetail";
 import Applications from "./pages/Applications";
+import Home from "./pages/Home";
+import InterviewWorkspace from "./pages/InterviewWorkspace";
+import Interviews from "./pages/Interviews";
 import JobDetail from "./pages/JobDetail";
 import Jobs from "./pages/Jobs";
+import Status from "./pages/Status";
 
 export default function App() {
   return (
     <div className="shell">
       <header className="top">
-        <h1>career-digest</h1>
+        <Link to="/" className="top-brand" aria-label="career-digest home">
+          <h1>career-digest</h1>
+        </Link>
         <nav>
-          <NavLink to="/" end>
-            Jobs
-          </NavLink>
+          <NavLink to="/" end>Home</NavLink>
+          <NavLink to="/jobs">Jobs</NavLink>
           <NavLink to="/applications">Applications</NavLink>
+          <NavLink to="/interviews">Interviews</NavLink>
+          <NavLink to="/status">Status</NavLink>
         </nav>
       </header>
       <main>
         <Routes>
-          <Route path="/" element={<Jobs />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/applications/:id" element={<ApplicationDetail />} />
+          <Route path="/interviews" element={<Interviews />} />
+          <Route path="/interviews/:threadId" element={<InterviewWorkspace />} />
+          <Route path="/status" element={<Status />} />
         </Routes>
       </main>
     </div>
