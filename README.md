@@ -98,7 +98,7 @@ npm run dev:web
 |---------|---------|
 | `npm run migrate` | Apply SQL migrations |
 | `npm run discover-boards` | Diff Simplify ATS URLs vs `companies.ts` (`--write` to merge) |
-| `npm run merge-postings` | Collapse Simplify misc rows when Greenhouse has same `gh_jid` |
+| `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id |
 | `npm run ingest` | Pull ATS + Simplify listings |
 | `npm run scrape` | Fill blank Simplify descriptions |
 | `npm run rank` | Rank via OpenAI Batch API |
