@@ -1,14 +1,7 @@
-export type AppSection = "home" | "jobs" | "applications" | "interviews" | "status";
-
 export type GreetingPeriod = "morning" | "afternoon" | "evening";
 
-const HEADER_EMOJI: Record<AppSection, string> = {
-  home: "🌸",
-  jobs: "💼",
-  applications: "📝",
-  interviews: "🗓️",
-  status: "⚙️",
-};
+/** Brand mark beside the career-digest header — fixed on every page. */
+export const HEADER_BRAND_EMOJI = "🌸";
 
 const GREETING_EMOJI: Record<GreetingPeriod, string> = {
   morning: "🌤️",
@@ -21,20 +14,6 @@ const GREETING_LABEL: Record<GreetingPeriod, string> = {
   afternoon: "Good afternoon",
   evening: "Good evening",
 };
-
-/** Map the current route to a nav section for header theming. */
-export function sectionFromPathname(pathname: string): AppSection {
-  if (pathname === "/") return "home";
-  if (pathname.startsWith("/jobs")) return "jobs";
-  if (pathname.startsWith("/applications")) return "applications";
-  if (pathname.startsWith("/interviews")) return "interviews";
-  if (pathname.startsWith("/status")) return "status";
-  return "home";
-}
-
-export function headerEmojiForSection(section: AppSection): string {
-  return HEADER_EMOJI[section];
-}
 
 export function greetingPeriodFromHour(hour: number): GreetingPeriod {
   if (hour < 12) return "morning";
