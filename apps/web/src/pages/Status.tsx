@@ -152,193 +152,207 @@ export default function Status() {
       {error && <p className="error">{error}</p>}
 
       <div className="ops-grid">
-        <article className="card ops-card">
+        <article className="card ops-card ops-card-action">
           <h3 className="ops-card-heading">Board refresh</h3>
-          <p className="ops-card-status">
-            <StatusBadge
-              tone={
-                board.status === "error"
-                  ? "error"
-                  : board.status === "running"
-                    ? "active"
-                    : board.status === "ok"
-                      ? "ok"
-                      : "idle"
-              }
-            >
-              {board.status === "running"
-                ? `Running · ${board.phase ?? "…"}`
-                : board.status}
-            </StatusBadge>
-          </p>
-          <dl className="ops-meta">
-            <dt>Last finished</dt>
-            <dd>{formatWhen(board.finishedAt)}</dd>
-            <dt>Last success</dt>
-            <dd>{formatWhen(board.lastOkAt)}</dd>
-            {board.startedAt && board.status === "running" && (
-              <>
-                <dt>Started</dt>
-                <dd>{formatWhen(board.startedAt)}</dd>
-              </>
-            )}
-          </dl>
-          {board.error && <p className="error ops-card-error">{board.error}</p>}
-          <p className="muted ops-card-hint">
-            Ingest → scrape Simplify blanks → rank up to {ops.boardRankLimit} unranked/outdated
-            postings (live API, not batch).
-          </p>
-          <button
-            type="button"
-            className="secondary"
-            disabled={refreshBusy || board.status === "running"}
-            onClick={() => void triggerRefresh()}
-          >
-            {board.status === "running" ? "Refreshing…" : "Run board refresh"}
-          </button>
-        </article>
-
-        <article className="card ops-card">
-          <h3 className="ops-card-heading">OpenAI ranking</h3>
-          <p className="ops-card-status">
-            <StatusBadge
-              tone={
-                liveBacklog.status === "error" || rank.status === "error"
-                  ? "error"
-                  : rankActive
-                    ? "active"
-                    : liveBacklog.status === "ok" || rank.status === "ok"
-                      ? "ok"
-                      : "idle"
-              }
-            >
-              {liveBacklogActive
-                ? "Running · live backlog"
-                : rankBatchActive
-                  ? rank.openaiStatus ?? rank.status
-                  : liveBacklog.status === "ok"
-                    ? `Done · ${liveBacklog.rankedOk ?? 0} ranked`
-                    : rank.status}
-            </StatusBadge>
-          </p>
-          <dl className="ops-meta">
-            <dt>Prompt version</dt>
-            <dd>{ops.rankPromptVersion}</dd>
-            <dt>Model</dt>
-            <dd>{rankModel}</dd>
-            <dt>Last finished</dt>
-            <dd>{formatWhen(rankFinished)}</dd>
-            <dt>Last success</dt>
-            <dd>{formatWhen(rankLastOk)}</dd>
-            {rank.total != null && rankBatchActive && (
-              <>
-                <dt>Progress</dt>
-                <dd>
-                  {rank.completed ?? 0}/{rank.total}
-                  {rank.failed ? ` (${rank.failed} failed)` : ""}
-                </dd>
-              </>
-            )}
-            {liveBacklog.rankedOk != null && liveBacklog.status === "ok" && (
-              <>
-                <dt>Last backlog run</dt>
-                <dd>
-                  {liveBacklog.rankedOk} ranked
-                  {liveBacklog.rankedError ? `, ${liveBacklog.rankedError} failed` : ""}
-                  {liveBacklog.halted ? " (stopped early)" : ""}
-                </dd>
-              </>
-            )}
-            {rank.appliedOk != null && !rankActive && liveBacklog.status !== "ok" && (
-              <>
-                <dt>Applied scores</dt>
-                <dd>
-                  {rank.appliedOk} ok
-                  {rank.appliedError ? `, ${rank.appliedError} failed` : ""}
-                </dd>
-              </>
-            )}
-          </dl>
-          {liveBacklog.error && <p className="error ops-card-error">{liveBacklog.error}</p>}
-          {rank.error && !liveBacklog.error && <p className="error ops-card-error">{rank.error}</p>}
-          <p className="muted ops-card-hint">
-            Rank all unranked postings with descriptions, then refresh outdated scores — live API,
-            not batch.
-          </p>
-          <button
-            type="button"
-            className="secondary"
-            disabled={
-              rankBacklogBusy ||
-              liveBacklogActive ||
-              rankBatchActive ||
-              board.status === "running"
-            }
-            onClick={() => void triggerRankBacklog()}
-          >
-            {liveBacklogActive ? "Ranking backlog…" : "Rank full backlog"}
-          </button>
-        </article>
-
-        <article className="card ops-card">
-          <h3 className="ops-card-heading">Jobs board</h3>
-          <dl className="ops-meta ops-meta-counts">
-            <dt>
-              <Link to="/jobs">Ranked</Link>
-            </dt>
-            <dd>{ops.jobCounts.ranked}</dd>
-            <dt>
-              <Link to="/jobs?view=unranked">Unranked</Link>
-            </dt>
-            <dd>{ops.jobCounts.unranked}</dd>
-            <dt>
-              <Link to="/jobs?view=mismatches">Mismatches</Link>
-            </dt>
-            <dd>{ops.jobCounts.mismatches}</dd>
-            <dt>
-              <Link to="/jobs?view=needs-description">Needs description</Link>
-            </dt>
-            <dd>{ops.jobCounts.needsDescription}</dd>
-          </dl>
-          {ops.jobCounts.unranked > 0 && (
-            <p className="muted ops-card-hint">
-              {ops.jobCounts.unranked} unranked with descriptions — about{" "}
-              {Math.ceil(ops.jobCounts.unranked / ops.boardRankLimit)} daily refresh
-              run{Math.ceil(ops.jobCounts.unranked / ops.boardRankLimit) === 1 ? "" : "s"} at
-              {ops.boardRankLimit}/run.
-              {ops.unrankedBlank > 0 && (
-                <> {ops.unrankedBlank} unranked are waiting on descriptions.</>
-              )}
-            </p>
-          )}
-          {backupJob.status !== "idle" && (
+          <div className="ops-card-body">
             <p className="ops-card-status">
               <StatusBadge
                 tone={
-                  backupJob.status === "error"
+                  board.status === "error"
                     ? "error"
-                    : backupJob.status === "running"
+                    : board.status === "running"
                       ? "active"
-                      : "ok"
+                      : board.status === "ok"
+                        ? "ok"
+                        : "idle"
                 }
               >
-                {backupJob.status === "running"
-                  ? "Running · backup"
-                  : backupJob.status === "ok"
-                    ? "Backup succeeded"
-                    : "Backup failed"}
+                {board.status === "running"
+                  ? `Running · ${board.phase ?? "…"}`
+                  : board.status}
               </StatusBadge>
             </p>
-          )}
-          {backupJob.error && <p className="error ops-card-error">{backupJob.error}</p>}
-          <button
-            type="button"
-            className="secondary"
-            disabled={backupBusy || backupJob.status === "running"}
-            onClick={() => void triggerBackup()}
-          >
-            {backupJob.status === "running" ? "Backing up…" : "Backup data"}
-          </button>
+            <dl className="ops-meta">
+              <dt>Last finished</dt>
+              <dd>{formatWhen(board.finishedAt)}</dd>
+              <dt>Last success</dt>
+              <dd>{formatWhen(board.lastOkAt)}</dd>
+              {board.startedAt && board.status === "running" && (
+                <>
+                  <dt>Started</dt>
+                  <dd>{formatWhen(board.startedAt)}</dd>
+                </>
+              )}
+            </dl>
+            {board.error && <p className="error ops-card-error">{board.error}</p>}
+            <p className="muted ops-card-hint">
+              Ingest → scrape Simplify blanks → rank up to {ops.boardRankLimit} unranked/outdated
+              postings (live API, not batch).
+            </p>
+          </div>
+          <div className="ops-card-actions">
+            <button
+              type="button"
+              className="secondary"
+              disabled={refreshBusy || board.status === "running"}
+              onClick={() => void triggerRefresh()}
+            >
+              {board.status === "running" ? "Refreshing…" : "Run board refresh"}
+            </button>
+          </div>
+        </article>
+
+        <article className="card ops-card ops-card-action">
+          <h3 className="ops-card-heading">OpenAI ranking</h3>
+          <div className="ops-card-body">
+            <p className="ops-card-status">
+              <StatusBadge
+                tone={
+                  liveBacklog.status === "error" || rank.status === "error"
+                    ? "error"
+                    : rankActive
+                      ? "active"
+                      : liveBacklog.status === "ok" || rank.status === "ok"
+                        ? "ok"
+                        : "idle"
+                }
+              >
+                {liveBacklogActive
+                  ? "Running · live backlog"
+                  : rankBatchActive
+                    ? rank.openaiStatus ?? rank.status
+                    : liveBacklog.status === "ok"
+                      ? `Done · ${liveBacklog.rankedOk ?? 0} ranked`
+                      : rank.status}
+              </StatusBadge>
+            </p>
+            <dl className="ops-meta">
+              <dt>Prompt version</dt>
+              <dd>{ops.rankPromptVersion}</dd>
+              <dt>Model</dt>
+              <dd>{rankModel}</dd>
+              <dt>Last finished</dt>
+              <dd>{formatWhen(rankFinished)}</dd>
+              <dt>Last success</dt>
+              <dd>{formatWhen(rankLastOk)}</dd>
+              {rank.total != null && rankBatchActive && (
+                <>
+                  <dt>Progress</dt>
+                  <dd>
+                    {rank.completed ?? 0}/{rank.total}
+                    {rank.failed ? ` (${rank.failed} failed)` : ""}
+                  </dd>
+                </>
+              )}
+              {liveBacklog.rankedOk != null && liveBacklog.status === "ok" && (
+                <>
+                  <dt>Last backlog run</dt>
+                  <dd>
+                    {liveBacklog.rankedOk} ranked
+                    {liveBacklog.rankedError ? `, ${liveBacklog.rankedError} failed` : ""}
+                    {liveBacklog.halted ? " (stopped early)" : ""}
+                  </dd>
+                </>
+              )}
+              {rank.appliedOk != null && !rankActive && liveBacklog.status !== "ok" && (
+                <>
+                  <dt>Applied scores</dt>
+                  <dd>
+                    {rank.appliedOk} ok
+                    {rank.appliedError ? `, ${rank.appliedError} failed` : ""}
+                  </dd>
+                </>
+              )}
+            </dl>
+            {liveBacklog.error && <p className="error ops-card-error">{liveBacklog.error}</p>}
+            {rank.error && !liveBacklog.error && <p className="error ops-card-error">{rank.error}</p>}
+            <p className="muted ops-card-hint">
+              Rank all unranked postings with descriptions, then refresh outdated scores — live API,
+              not batch.
+            </p>
+          </div>
+          <div className="ops-card-actions">
+            <button
+              type="button"
+              className="secondary"
+              disabled={
+                rankBacklogBusy ||
+                liveBacklogActive ||
+                rankBatchActive ||
+                board.status === "running"
+              }
+              onClick={() => void triggerRankBacklog()}
+            >
+              {liveBacklogActive ? "Ranking backlog…" : "Rank full backlog"}
+            </button>
+          </div>
+        </article>
+
+        <article className="card ops-card ops-card-action">
+          <h3 className="ops-card-heading">Jobs board</h3>
+          <div className="ops-card-body">
+            <p className="ops-card-status">
+              {backupJob.status !== "idle" ? (
+                <StatusBadge
+                  tone={
+                    backupJob.status === "error"
+                      ? "error"
+                      : backupJob.status === "running"
+                        ? "active"
+                        : "ok"
+                  }
+                >
+                  {backupJob.status === "running"
+                    ? "Running · backup"
+                    : backupJob.status === "ok"
+                      ? "Backup succeeded"
+                      : "Backup failed"}
+                </StatusBadge>
+              ) : (
+                <StatusBadge tone="idle">Ready</StatusBadge>
+              )}
+            </p>
+            <dl className="ops-meta ops-meta-counts">
+              <dt>
+                <Link to="/jobs">Ranked</Link>
+              </dt>
+              <dd>{ops.jobCounts.ranked}</dd>
+              <dt>
+                <Link to="/jobs?view=unranked">Unranked</Link>
+              </dt>
+              <dd>{ops.jobCounts.unranked}</dd>
+              <dt>
+                <Link to="/jobs?view=mismatches">Mismatches</Link>
+              </dt>
+              <dd>{ops.jobCounts.mismatches}</dd>
+              <dt>
+                <Link to="/jobs?view=needs-description">Needs description</Link>
+              </dt>
+              <dd>{ops.jobCounts.needsDescription}</dd>
+            </dl>
+            {ops.jobCounts.unranked > 0 && (
+              <p className="muted ops-card-hint">
+                {ops.jobCounts.unranked} unranked with descriptions — about{" "}
+                {Math.ceil(ops.jobCounts.unranked / ops.boardRankLimit)} daily refresh
+                run{Math.ceil(ops.jobCounts.unranked / ops.boardRankLimit) === 1 ? "" : "s"} at
+                {ops.boardRankLimit}/run.
+                {ops.unrankedBlank > 0 && (
+                  <> {ops.unrankedBlank} unranked are waiting on descriptions.</>
+                )}
+              </p>
+            )}
+            {backupJob.error && <p className="error ops-card-error">{backupJob.error}</p>}
+          </div>
+          <div className="ops-card-actions">
+            <button
+              type="button"
+              className="secondary"
+              disabled={backupBusy || backupJob.status === "running"}
+              onClick={() => void triggerBackup()}
+            >
+              {backupJob.status === "running" ? "Backing up…" : "Backup data"}
+            </button>
+          </div>
         </article>
 
         <article className="card ops-card ops-card-wide">

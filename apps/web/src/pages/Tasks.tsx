@@ -11,6 +11,8 @@ import {
 import {
   combineApplyByDateTime,
   formatShortDate,
+  applyByLabel,
+  dueLabel,
   toDateInputValue,
   applyByTimeInputValue,
 } from "../formatDate";
@@ -278,6 +280,11 @@ export default function Tasks() {
         const application = isApplicationTask(row);
         const dueDraft = dueDraftFor(row);
         const linkLabel = application ? "Apply" : "Open link";
+        const deadlineLabel = row.dueAt
+          ? application
+            ? applyByLabel(row.dueAt)
+            : dueLabel(row.dueAt)
+          : null;
         return (
           <article key={row.id} className="card application-card task-card">
             {view === "open" && (
@@ -318,6 +325,9 @@ export default function Tasks() {
                 <h2 className="application-card-title">{row.title}</h2>
                 {view === "open" && row.dueAt && (
                   <div className="application-card-aside-countdown">
+                    {deadlineLabel && (
+                      <div className="task-card-deadline-label">{deadlineLabel}</div>
+                    )}
                     <InterviewCountdown target={row.dueAt} />
                   </div>
                 )}

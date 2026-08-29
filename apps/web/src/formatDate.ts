@@ -83,6 +83,12 @@ export function applyByLabel(value: string | null | undefined): string | null {
   return `Apply by: ${formatted}`;
 }
 
+export function dueLabel(value: string | null | undefined): string | null {
+  const formatted = formatDeadlineLong(value);
+  if (!formatted) return null;
+  return `Due: ${formatted}`;
+}
+
 /** Default apply-by time when none is set (end of day). */
 export const DEFAULT_APPLY_BY_TIME = "23:59";
 
