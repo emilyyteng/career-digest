@@ -145,11 +145,12 @@ export default function Home() {
                 {attention.tasks.map((row) => (
                   <li key={row.id} className="home-job-row home-interview-row">
                     <Link to="/tasks" className="home-job-main">
-                      <span className="home-job-title">
-                        {row.organization
-                          ? `${row.organization} · ${row.title}`
-                          : row.title}
-                      </span>
+                      <span className="home-job-title">{row.title}</span>
+                      {(row.organization || row.location) && (
+                        <span className="muted home-job-meta">
+                          {[row.organization, row.location].filter(Boolean).join(" · ")}
+                        </span>
+                      )}
                     </Link>
                     {row.dueIso && (
                       <div className="home-interview-deadline">

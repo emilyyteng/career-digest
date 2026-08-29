@@ -356,7 +356,7 @@ button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not
   border-radius: var(--radius-soft);
   box-shadow: var(--shadow-button);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(:disabled):hover {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(:disabled):hover {
   background: var(--accent-blue);
   border-color: var(--accent-blue);
   box-shadow: 0 3px 10px rgba(91, 124, 153, 0.28);

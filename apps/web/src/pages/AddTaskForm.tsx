@@ -12,6 +12,8 @@ import {
   toDateInputValue,
   applyByTimeInputValue,
 } from "../formatDate";
+import LocationSuggest from "../LocationSuggest";
+import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 
 type Props = {
   onCreated: (row: TaskRow) => void;
@@ -33,17 +35,23 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
   const [category, setCategory] = useState<TaskCategory>("school");
   const [title, setTitle] = useState("");
   const [organization, setOrganization] = useState("");
+  const [location, setLocation] = useState("");
   const [url, setUrl] = useState("");
   const [notes, setNotes] = useState("");
+  const [descriptionHtml, setDescriptionHtml] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState(DEFAULT_APPLY_BY_TIME);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
+  const isApplication = category === "application";
+
   const dirty =
     title.trim() !== "" ||
     organization.trim() !== "" ||
+    location.trim() !== "" ||
     url.trim() !== "" ||
     notes.trim() !== "" ||
+    !isEmptyRichHtml(descriptionHtml) ||
     category !== "school" ||
     dueDate !== "" ||
     dueTime !== DEFAULT_APPLY_BY_TIME;
@@ -82,9 +90,12 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
         category,
         title: title.trim(),
         organization:
-          category === "application" ? organization.trim() : organization.trim() || null,
+          isApplication ? organization.trim() : organization.trim() || null,
+        location: isApplication ? location.trim() || null : null,
         url: url.trim() || null,
         notes: notes.trim() || null,
+        descriptionHtml:
+          isApplication && !isEmptyRichHtml(descriptionHtml) ? descriptionHtml : null,
         dueAt,
       });
       onCreated(row);
@@ -118,15 +129,25 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
           />
         </label>
         <label>
-          {category === "application" ? "Company" : "Organization"}
+          {isApplication ? "Company" : "Organization"}
           <input
             type="text"
             value={organization}
-            required={category === "application"}
-            placeholder={category === "application" ? "Employer" : "School, employer, etc."}
+            required={isApplication}
+            placeholder={isApplication ? "Employer" : "School, employer, etc."}
             onChange={(event) => setOrganization(event.target.value)}
           />
         </label>
+        {isApplication && (
+          <label>
+            Location
+            <LocationSuggest
+              value={location}
+              onChange={setLocation}
+              placeholder="Location"
+            />
+          </label>
+        )}
         <label>
           Link
           <input
@@ -136,6 +157,17 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
             onChange={(event) => setUrl(event.target.value)}
           />
         </label>
+        {isApplication && (
+          <label>
+            Job description
+            <RichTextField
+              value={descriptionHtml}
+              onChange={setDescriptionHtml}
+              placeholder="Paste the job description — kept when you mark applied"
+              minHeight="8rem"
+            />
+          </label>
+        )}
         <label>
           Due date
           <input
@@ -161,7 +193,14 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
           <button type="button" className="secondary" onClick={requestClose} disabled={saving}>
             Cancel
           </button>
-          <button type="submit" disabled={saving || !title.trim() || (category === "application" && !organization.trim())}>
+          <button
+            type="submit"
+            disabled={
+              saving ||
+              !title.trim() ||
+              (isApplication && !organization.trim())
+            }
+          >
             {saving ? "Saving…" : "Add task"}
           </button>
         </div>

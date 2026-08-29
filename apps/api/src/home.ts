@@ -36,6 +36,7 @@ export type HomeTaskAttention = {
   id: string;
   title: string;
   organization: string | null;
+  location: string | null;
   category: string;
   dueLabel: string | null;
   dueIso: string | null;
@@ -218,6 +219,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
     id: row.id,
     title: row.title,
     organization: row.organization,
+    location: row.location,
     category: row.category,
     dueLabel: taskDueLabel(row.dueAt),
     dueIso: row.dueAt,

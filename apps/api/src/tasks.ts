@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { resolveThreadsForApplication } from "./interviews.js";
 import { applicationResolutionFromStatus } from "./interviewStatuses.js";
 
@@ -25,6 +26,7 @@ export type TaskRow = {
   applicationId: string | null;
   location: string | null;
   source: string | null;
+  descriptionHtml: string | null;
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -49,6 +51,7 @@ const taskListSelect = `
     t.application_id AS "applicationId",
     COALESCE(a.location, p.location) AS location,
     p.source,
+    a.description_html AS "descriptionHtml",
     t.completed_at AS "completedAt",
     t.created_at AS "createdAt",
     t.updated_at AS "updatedAt"
@@ -213,6 +216,7 @@ export type CreateTaskInput = {
   notes?: string | null;
   dueAt?: string | null;
   location?: string | null;
+  descriptionHtml?: string | null;
 };
 
 async function createManualApplicationTask(
@@ -226,9 +230,9 @@ async function createManualApplicationTask(
     if (client) await client.query("BEGIN");
     const appResult = await queryable.query<{ id: string }>(
       `INSERT INTO applications (
-         status, notes, company_name, title, location, url, due_at, status_changed_at
+         status, notes, company_name, title, location, url, due_at, description_html, status_changed_at
        )
-       VALUES ('todo', $1, $2, $3, $4, $5, $6, now())
+       VALUES ('todo', $1, $2, $3, $4, $5, $6, $7, now())
        RETURNING id`,
       [
         input.notes ?? null,
@@ -237,6 +241,7 @@ async function createManualApplicationTask(
         input.location ?? null,
         input.url ?? null,
         dueAt,
+        input.descriptionHtml ?? null,
       ],
     );
     const applicationId = appResult.rows[0]!.id;
@@ -404,6 +409,8 @@ export type PatchTaskInput = {
   url?: string | null;
   notes?: string | null;
   dueAt?: string | null;
+  location?: string | null;
+  descriptionHtml?: string | null;
   postingId?: string | null;
 };
 
@@ -468,14 +475,38 @@ export async function patchTask(
       ],
     );
 
-    if (
-      existing.category === "application" &&
-      existing.applicationId &&
-      patch.dueAt !== undefined
-    ) {
+    if (existing.category === "application" && existing.applicationId) {
+      const appTitle = title;
+      const appCompany = organization ?? null;
+      const appLocation =
+        patch.location !== undefined ? parseOptionalText(patch.location) ?? null : undefined;
+      const appDescription =
+        patch.descriptionHtml !== undefined
+          ? normalizeDescriptionHtml(patch.descriptionHtml)
+          : undefined;
       await queryable.query(
-        `UPDATE applications SET due_at = $2, updated_at = now() WHERE id = $1`,
-        [existing.applicationId, dueAt],
+        `UPDATE applications SET
+           title = $2,
+           company_name = $3,
+           url = $4,
+           notes = $5,
+           due_at = $6,
+           location = CASE WHEN $7::boolean THEN $8 ELSE location END,
+           description_html = CASE WHEN $9::boolean THEN $10 ELSE description_html END,
+           updated_at = now()
+         WHERE id = $1`,
+        [
+          existing.applicationId,
+          appTitle,
+          appCompany,
+          url,
+          notes,
+          dueAt,
+          patch.location !== undefined,
+          appLocation ?? null,
+          patch.descriptionHtml !== undefined,
+          appDescription ?? null,
+        ],
       );
     }
 
@@ -613,6 +644,12 @@ export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskIn
   }
 
   const location = parseOptionalText(body.location);
+  let descriptionHtml: string | null = null;
+  if (category === "application" && body.descriptionHtml !== undefined) {
+    descriptionHtml = normalizeDescriptionHtml(
+      typeof body.descriptionHtml === "string" ? body.descriptionHtml : null,
+    );
+  }
 
   return {
     category,
@@ -621,7 +658,8 @@ export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskIn
     url,
     notes: notes ?? null,
     dueAt,
-    location: location ?? null,
+    location: category === "application" ? (location ?? null) : null,
+    descriptionHtml: category === "application" ? descriptionHtml : null,
   };
 }
 
@@ -669,12 +707,24 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     patch.postingId = body.postingId === null ? null : body.postingId;
   }
 
+  if (body.location !== undefined) {
+    if (body.location !== null && typeof body.location !== "string") return null;
+    patch.location = parseOptionalText(body.location);
+  }
+
+  if (body.descriptionHtml !== undefined) {
+    if (body.descriptionHtml !== null && typeof body.descriptionHtml !== "string") return null;
+    patch.descriptionHtml = normalizeDescriptionHtml(body.descriptionHtml);
+  }
+
   if (
     patch.title === undefined &&
     patch.organization === undefined &&
     patch.notes === undefined &&
     patch.url === undefined &&
     patch.dueAt === undefined &&
+    patch.location === undefined &&
+    patch.descriptionHtml === undefined &&
     patch.postingId === undefined
   ) {
     return null;

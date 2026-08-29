@@ -12,6 +12,8 @@ import {
   toDateInputValue,
   applyByTimeInputValue,
 } from "../formatDate";
+import LocationSuggest from "../LocationSuggest";
+import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 
 type Props = {
   task: TaskRow;
@@ -31,8 +33,10 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [organization, setOrganization] = useState(task.organization ?? "");
+  const [location, setLocation] = useState(task.location ?? "");
   const [url, setUrl] = useState(task.url ?? "");
   const [notes, setNotes] = useState(task.notes ?? "");
+  const [descriptionHtml, setDescriptionHtml] = useState(task.descriptionHtml ?? "");
   const [dueDate, setDueDate] = useState(toDateInputValue(task.dueAt));
   const [dueTime, setDueTime] = useState(applyByTimeInputValue(task.dueAt));
   const [query, setQuery] = useState("");
@@ -40,11 +44,16 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
   const [linkFlash, setLinkFlash] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
+  const isApplication = task.category === "application";
+  const showDescription = isApplication && !task.postingId;
+
   const dirty =
     title.trim() !== task.title ||
     organization.trim() !== (task.organization ?? "") ||
+    location.trim() !== (task.location ?? "") ||
     url.trim() !== (task.url ?? "") ||
     notes.trim() !== (task.notes ?? "") ||
+    descriptionHtml !== (task.descriptionHtml ?? "") ||
     dueDate !== toDateInputValue(task.dueAt) ||
     dueTime !== applyByTimeInputValue(task.dueAt);
 
@@ -98,13 +107,20 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
     setError(null);
     try {
       const dueAt = dueDate ? combineApplyByDateTime(dueDate, dueTime) : null;
-      const row = await patchTask(task.id, {
+      const body: Record<string, unknown> = {
         title: title.trim(),
         organization: organization.trim() || null,
         url: url.trim() || null,
         notes: notes.trim() || null,
         dueAt,
-      });
+      };
+      if (isApplication) {
+        body.location = location.trim() || null;
+        if (showDescription) {
+          body.descriptionHtml = isEmptyRichHtml(descriptionHtml) ? null : descriptionHtml;
+        }
+      }
+      const row = await patchTask(task.id, body);
       onSaved(row);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save task");
@@ -129,13 +145,23 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
           />
         </label>
         <label>
-          Organization
+          {isApplication ? "Company" : "Organization"}
           <input
             type="text"
             value={organization}
             onChange={(event) => setOrganization(event.target.value)}
           />
         </label>
+        {isApplication && (
+          <label>
+            Location
+            <LocationSuggest
+              value={location}
+              onChange={setLocation}
+              placeholder="Location"
+            />
+          </label>
+        )}
         <label>
           Link
           <input
@@ -145,6 +171,17 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
             onChange={(event) => setUrl(event.target.value)}
           />
         </label>
+        {showDescription && (
+          <label>
+            Job description
+            <RichTextField
+              value={descriptionHtml}
+              onChange={setDescriptionHtml}
+              placeholder="Paste the job description — kept when you mark applied"
+              minHeight="8rem"
+            />
+          </label>
+        )}
         <label>
           Due date
           <input
@@ -182,6 +219,9 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
             <Link to={`/jobs/${task.postingId}`}>
               {task.organization ? `${task.organization} · ${task.title}` : task.title}
             </Link>
+          </p>
+          <p className="muted field-hint">
+            Job description comes from the linked digest posting.
           </p>
         </div>
       )}

@@ -245,6 +245,7 @@ export type HomeDashboard = {
       id: string;
       title: string;
       organization: string | null;
+      location: string | null;
       category: string;
       dueLabel: string | null;
       dueIso: string | null;
@@ -484,6 +485,7 @@ export type TaskRow = {
   applicationId: string | null;
   location: string | null;
   source: string | null;
+  descriptionHtml: string | null;
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
