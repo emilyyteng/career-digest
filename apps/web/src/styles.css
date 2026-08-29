@@ -822,8 +822,8 @@ a.external .ext-icon { font-size: 0.75rem; }
   padding-right: 4.25rem;
 }
 .task-category-pill {
-  font-size: 0.72rem;
   color: var(--text-muted);
+  font-size: inherit;
   text-transform: capitalize;
 }
 .task-category-lock {
