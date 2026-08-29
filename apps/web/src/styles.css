@@ -839,6 +839,41 @@ a.external .ext-icon { font-size: 0.75rem; }
 .task-card .application-card-top {
   padding-right: 4.25rem;
 }
+.task-card .application-card-layout {
+  gap: 0.1rem;
+}
+.task-card-title-row {
+  display: block;
+}
+.task-card-subrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  min-width: 0;
+}
+.task-card-subrow .application-card-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.task-card-subrow .application-card-aside-countdown {
+  flex: 0 0 auto;
+}
+@media (max-width: 40rem) {
+  .task-card-subrow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+  .task-card-subrow .application-card-aside-countdown {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .task-card-subrow .application-card-aside-countdown .interview-countdown {
+    justify-content: flex-start;
+  }
+}
 .task-category-pill {
   color: var(--text-muted);
   font-size: inherit;

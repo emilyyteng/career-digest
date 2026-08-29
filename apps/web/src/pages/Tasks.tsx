@@ -337,15 +337,20 @@ export default function Tasks() {
                 </button>
               </div>
             )}
-            <div
-              className={
-                application
-                  ? "application-card-layout application-card-layout-todo"
-                  : "application-card-layout"
-              }
-            >
-              <div className="application-card-top">
+            <div className="application-card-layout">
+              <div className="application-card-top task-card-title-row">
                 <h2 className="application-card-title">{row.title}</h2>
+              </div>
+              <div className="task-card-subrow">
+                <div className="meta application-card-meta">
+                  {row.organization && <span className="employer">{row.organization}</span>}
+                  {application && row.location && (
+                    <span className="location">{row.location}</span>
+                  )}
+                  {!application && (
+                    <span className="task-category-pill">{categoryLabel(row.category)}</span>
+                  )}
+                </div>
                 {view === "open" && row.dueAt && (
                   <div className="application-card-aside-countdown">
                     {deadlineLabel && (
@@ -353,15 +358,6 @@ export default function Tasks() {
                     )}
                     <InterviewCountdown target={row.dueAt} />
                   </div>
-                )}
-              </div>
-              <div className="meta application-card-meta">
-                {row.organization && <span className="employer">{row.organization}</span>}
-                {application && row.location && (
-                  <span className="location">{row.location}</span>
-                )}
-                {!application && (
-                  <span className="task-category-pill">{categoryLabel(row.category)}</span>
                 )}
               </div>
             </div>
