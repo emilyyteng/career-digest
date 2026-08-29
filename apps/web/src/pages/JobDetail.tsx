@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
+  addPostingToTasks,
   clearJobFeedback,
   createApplication,
-  deleteApplication,
   getJob,
   getRerankQueue,
   patchJob,
   queueJobRerank,
+  removePostingFromTasks,
   sendJobFeedback,
   type JobDetail,
   type RerankQueueSnapshot,
@@ -104,18 +105,21 @@ export default function JobDetail() {
     }
   }
 
-  async function toggleTodo() {
+  async function toggleTasks() {
     if (!job || pending) return;
     setPending(true);
+    const onTasks = job.onTasks || job.applicationStatus === "todo";
     try {
-      if (job.applicationStatus === "todo" && job.applicationId) {
-        await deleteApplication(job.applicationId);
+      if (onTasks) {
+        await removePostingFromTasks(job.id);
       } else {
-        await createApplication({ postingId: job.id, status: "todo" });
+        await addPostingToTasks(job.id);
       }
+      invalidateListCache("applications:");
+      invalidateListCache("tasks:");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update to-do");
+      setError(err instanceof Error ? err.message : "Could not update tasks");
     } finally {
       setPending(false);
     }
@@ -239,14 +243,16 @@ export default function JobDetail() {
         <button
           type="button"
           className={
-            job.applicationStatus === "todo"
+            job.onTasks || job.applicationStatus === "todo"
               ? "secondary todo-toggle on"
               : "secondary todo-toggle"
           }
           disabled={pending}
-          onClick={() => void toggleTodo()}
+          onClick={() => void toggleTasks()}
         >
-          To-do<span className="btn-icon" aria-hidden="true">★</span>
+          {job.onTasks || job.applicationStatus === "todo"
+            ? "Remove from tasks"
+            : "Add to tasks"}
         </button>
         <button type="button" className="secondary" disabled={pending} onClick={() => markApplied()}>
           Applied<span className="btn-icon" aria-hidden="true">✓</span>

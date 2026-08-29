@@ -1,13 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   completeTask,
   deleteTask,
   getTasks,
+  patchTask,
   type TaskRow,
   type TaskView,
 } from "../api";
-import { formatShortDate } from "../formatDate";
+import ApplicationMetaBadges from "../ApplicationMetaBadges";
+import {
+  combineApplyByDateTime,
+  formatShortDate,
+  toDateInputValue,
+  applyByTimeInputValue,
+} from "../formatDate";
 import InterviewCountdown from "../InterviewCountdown";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import StepActionConfirm from "../StepActionConfirm";
@@ -31,6 +38,10 @@ function categoryLabel(category: TaskRow["category"]): string {
   return category;
 }
 
+function isApplicationTask(row: TaskRow): boolean {
+  return row.category === "application";
+}
+
 export default function Tasks() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawView = searchParams.get("view") ?? "open";
@@ -48,6 +59,10 @@ export default function Tasks() {
   const [editing, setEditing] = useState<TaskRow | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<TaskRow | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
+  const [dueDrafts, setDueDrafts] = useState<
+    Record<string, { date: string; time: string }>
+  >({});
+  const [dueFlash, setDueFlash] = useState<Record<string, boolean>>({});
   const addFormRef = useRef<AddTaskFormHandle>(null);
   const editFormRef = useRef<EditTaskFormHandle>(null);
 
@@ -155,9 +170,58 @@ export default function Tasks() {
     try {
       await deleteTask(row.id);
       invalidateListCache("tasks:");
+      invalidateListCache("applications:");
+      invalidateListCache("jobs:");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete task");
       await load().catch(() => undefined);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  function dueDraftFor(row: TaskRow) {
+    const draft = dueDrafts[row.id];
+    if (draft) return draft;
+    return {
+      date: toDateInputValue(row.dueAt),
+      time: applyByTimeInputValue(row.dueAt),
+    };
+  }
+
+  function setDueDraft(rowId: string, patch: Partial<{ date: string; time: string }>) {
+    setDueDrafts((current) => {
+      const row = rows.find((item) => item.id === rowId);
+      const base = current[rowId] ?? {
+        date: toDateInputValue(row?.dueAt),
+        time: applyByTimeInputValue(row?.dueAt),
+      };
+      return { ...current, [rowId]: { ...base, ...patch } };
+    });
+  }
+
+  async function saveDueAt(event: FormEvent, row: TaskRow) {
+    event.preventDefault();
+    if (pendingId) return;
+    const draft = dueDraftFor(row);
+    const dueAt = draft.date ? combineApplyByDateTime(draft.date, draft.time) : null;
+    setPendingId(row.id);
+    try {
+      const updated = await patchTask(row.id, { dueAt });
+      setRows((current) =>
+        current.map((item) => (item.id === row.id ? updated : item)),
+      );
+      invalidateListCache("tasks:");
+      setDueFlash((current) => ({ ...current, [row.id]: true }));
+      window.setTimeout(() => {
+        setDueFlash((current) => {
+          const next = { ...current };
+          delete next[row.id];
+          return next;
+        });
+      }, 2200);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save due date");
     } finally {
       setPendingId(null);
     }
@@ -171,11 +235,12 @@ export default function Tasks() {
     setRows((current) => current.filter((item) => item.id !== row.id));
     setCounts((current) => ({
       open: Math.max(0, current.open - 1),
-      completed: current.completed + 1,
+      completed: isApplicationTask(row) ? current.completed : current.completed + 1,
     }));
     try {
       await completeTask(row.id);
       invalidateListCache("tasks:");
+      invalidateListCache("applications:");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not complete task");
       await load().catch(() => undefined);
@@ -211,6 +276,9 @@ export default function Tasks() {
       {loaded && rows.length === 0 && <p className="muted">Nothing in this tab yet.</p>}
       {rows.map((row) => {
         const completedLabel = formatShortDate(row.completedAt);
+        const application = isApplicationTask(row);
+        const dueDraft = dueDraftFor(row);
+        const linkLabel = application ? "Apply" : "Open link";
         return (
           <article key={row.id} className="card application-card task-card">
             {view === "open" && (
@@ -240,7 +308,13 @@ export default function Tasks() {
                 </button>
               </div>
             )}
-            <div className="application-card-layout application-card-layout-todo">
+            <div
+              className={
+                application
+                  ? "application-card-layout application-card-layout-todo"
+                  : "application-card-layout"
+              }
+            >
               <div className="application-card-top">
                 <h2 className="application-card-title">{row.title}</h2>
                 {view === "open" && row.dueAt && (
@@ -251,11 +325,59 @@ export default function Tasks() {
               </div>
               <div className="meta application-card-meta">
                 {row.organization && <span className="employer">{row.organization}</span>}
-                <span className="task-category-pill">{categoryLabel(row.category)}</span>
+                {application && row.location && (
+                  <span className="location">{row.location}</span>
+                )}
+                {application ? (
+                  <ApplicationMetaBadges
+                    status="todo"
+                    postingId={row.postingId}
+                    source={row.source}
+                  />
+                ) : (
+                  <span className="task-category-pill">{categoryLabel(row.category)}</span>
+                )}
               </div>
             </div>
             {(view === "open" || row.url || completedLabel) && (
               <div className="row-actions application-card-footer application-card-footer-todo">
+                {view === "open" && application && (
+                  <form
+                    className="application-card-apply-by"
+                    onSubmit={(event) => void saveDueAt(event, row)}
+                  >
+                    <label className="application-apply-by-field">
+                      <span className="application-apply-by-field-label">Apply by</span>
+                      <input
+                        type="date"
+                        value={dueDraft.date}
+                        disabled={pendingId === row.id}
+                        onChange={(event) => setDueDraft(row.id, { date: event.target.value })}
+                      />
+                    </label>
+                    <label className="application-apply-by-field">
+                      <span className="application-apply-by-field-label">Time</span>
+                      <input
+                        type="time"
+                        value={dueDraft.time}
+                        disabled={pendingId === row.id}
+                        onChange={(event) => setDueDraft(row.id, { time: event.target.value })}
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      className="secondary"
+                      disabled={pendingId === row.id || !dueDraft.date}
+                    >
+                      Save
+                    </button>
+                    {dueFlash[row.id] && (
+                      <span className="save-flash-inline" role="status" aria-live="polite">
+                        Saved!
+                      </span>
+                    )}
+                  </form>
+                )}
                 {view === "open" && (
                   <button
                     type="button"
@@ -263,7 +385,7 @@ export default function Tasks() {
                     disabled={pendingId === row.id}
                     onClick={() => setCompleteConfirm(row)}
                   >
-                    Complete
+                    {application ? "Mark applied" : "Complete"}
                   </button>
                 )}
                 {row.url && (
@@ -273,7 +395,7 @@ export default function Tasks() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open link
+                    {linkLabel}
                     <span className="ext-icon" aria-hidden="true">↗</span>
                   </a>
                 )}
@@ -345,9 +467,17 @@ export default function Tasks() {
         >
           <div className="modal" role="dialog" aria-modal="true">
             <StepActionConfirm
-              title="Mark task complete?"
-              description="This archives the task to Completed. You can still refer back to it there."
-              confirmLabel="Complete"
+              title={
+                isApplicationTask(completeConfirm)
+                  ? "Mark as applied?"
+                  : "Mark task complete?"
+              }
+              description={
+                isApplicationTask(completeConfirm)
+                  ? "This moves the application to Applied with today's date and removes the task from your open list."
+                  : "This archives the task to Completed. You can still refer back to it there."
+              }
+              confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
               onConfirm={() => void confirmComplete()}
               onCancel={() => setCompleteConfirm(null)}
             />

@@ -31,7 +31,9 @@ import {
 import {
   completeTask,
   createTask,
+  createTaskFromPosting,
   deleteTask,
+  deleteTaskByPostingId,
   isTaskView,
   listTasks,
   parseCreateTaskBody,
@@ -313,6 +315,12 @@ api.get("/jobs", async (req, res) => {
        p.scrape_status AS "scrapeStatus",
        a.id AS "applicationId",
        a.status AS "applicationStatus",
+       EXISTS (
+         SELECT 1 FROM tasks t
+         WHERE t.posting_id = p.id
+           AND t.status = 'open'
+           AND t.category = 'application'
+       ) AS "onTasks",
        f.kind AS "feedbackKind",
        COUNT(*) OVER()::int AS "totalCount"
      FROM postings p
@@ -358,6 +366,12 @@ api.get("/jobs/:id", async (req, res) => {
        p.rank_location_fit AS "rankLocationFit",
        a.id AS "applicationId",
        a.status AS "applicationStatus",
+       EXISTS (
+         SELECT 1 FROM tasks t
+         WHERE t.posting_id = p.id
+           AND t.status = 'open'
+           AND t.category = 'application'
+       ) AS "onTasks",
        a.notes AS "applicationNotes",
        f.kind AS "feedbackKind",
        f.note AS "feedbackNote"
@@ -1022,6 +1036,36 @@ api.get("/tasks", async (req, res) => {
   res.json(await listTasks(pool, view));
 });
 
+api.post("/tasks/from-posting", async (req, res) => {
+  const postingId = (req.body as { postingId?: string }).postingId;
+  if (!postingId || typeof postingId !== "string") {
+    res.status(400).json({ error: "postingId is required" });
+    return;
+  }
+  try {
+    const task = await createTaskFromPosting(pool, postingId);
+    res.status(201).json(task);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      message === "Posting not found"
+        ? 404
+        : message.includes("already has a tracker")
+          ? 409
+          : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.delete("/tasks/from-posting/:postingId", async (req, res) => {
+  const deleted = await deleteTaskByPostingId(pool, req.params.postingId);
+  if (!deleted) {
+    res.status(404).json({ error: "Open application task not found for posting" });
+    return;
+  }
+  res.json({ ok: true });
+});
+
 api.post("/tasks", async (req, res) => {
   const parsed = parseCreateTaskBody(req.body as Record<string, unknown>);
   if (!parsed) {
@@ -1038,12 +1082,18 @@ api.patch("/tasks/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid task update" });
     return;
   }
-  const task = await patchTask(pool, req.params.id, parsed);
-  if (!task) {
-    res.status(404).json({ error: "Task not found" });
-    return;
+  try {
+    const task = await patchTask(pool, req.params.id, parsed);
+    if (!task) {
+      res.status(404).json({ error: "Task not found" });
+      return;
+    }
+    res.json(task);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = message.includes("already linked") ? 409 : 400;
+    res.status(status).json({ error: message });
   }
-  res.json(task);
 });
 
 api.post("/tasks/:id/complete", async (req, res) => {

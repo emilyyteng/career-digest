@@ -11,6 +11,7 @@ export type JobCard = {
   firstSeenAt: string;
   applicationId: string | null;
   applicationStatus: string | null;
+  onTasks?: boolean;
   rankScore: number | null;
   rankEligible: boolean | null;
   rankReason: string | null;
@@ -446,6 +447,8 @@ export type TaskRow = {
   dueAt: string | null;
   postingId: string | null;
   applicationId: string | null;
+  location: string | null;
+  source: string | null;
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -484,3 +487,17 @@ export const completeTask = (id: string) =>
 
 export const deleteTask = (id: string) =>
   parse<{ ok: boolean }>(api(`/api/tasks/${id}`, { method: "DELETE" }));
+
+export const addPostingToTasks = (postingId: string) =>
+  parse<TaskRow>(
+    api("/api/tasks/from-posting", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postingId }),
+    }),
+  );
+
+export const removePostingFromTasks = (postingId: string) =>
+  parse<{ ok: boolean }>(
+    api(`/api/tasks/from-posting/${postingId}`, { method: "DELETE" }),
+  );

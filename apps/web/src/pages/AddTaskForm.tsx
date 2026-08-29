@@ -22,7 +22,7 @@ export type AddTaskFormHandle = {
   requestClose: () => void;
 };
 
-const CREATE_CATEGORIES: TaskCategory[] = ["school", "personal"];
+const CREATE_CATEGORIES: TaskCategory[] = ["school", "personal", "application"];
 
 const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
   { onCreated, onCancel },
@@ -81,7 +81,8 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
       const row = await createTask({
         category,
         title: title.trim(),
-        organization: organization.trim() || null,
+        organization:
+          category === "application" ? organization.trim() : organization.trim() || null,
         url: url.trim() || null,
         notes: notes.trim() || null,
         dueAt,
@@ -117,11 +118,12 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
           />
         </label>
         <label>
-          Organization
+          {category === "application" ? "Company" : "Organization"}
           <input
             type="text"
             value={organization}
-            placeholder="School, employer, etc."
+            required={category === "application"}
+            placeholder={category === "application" ? "Employer" : "School, employer, etc."}
             onChange={(event) => setOrganization(event.target.value)}
           />
         </label>
@@ -159,7 +161,7 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
           <button type="button" className="secondary" onClick={requestClose} disabled={saving}>
             Cancel
           </button>
-          <button type="submit" disabled={saving || !title.trim()}>
+          <button type="submit" disabled={saving || !title.trim() || (category === "application" && !organization.trim())}>
             {saving ? "Saving…" : "Add task"}
           </button>
         </div>

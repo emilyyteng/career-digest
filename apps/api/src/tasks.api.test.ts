@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { pool } from "./db.js";
 import { apiClient } from "./test/apiClient.js";
-import { seedTask } from "./test/dbHarness.js";
+import {
+  seedApplication,
+  seedCompany,
+  seedManualApplication,
+  seedRankedPosting,
+  seedTask,
+} from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
 
 describe.skipIf(!integrationReady)("tasks API", () => {
@@ -106,11 +112,104 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     expect(personal.body.title).toBe("Book flight");
   });
 
-  it("POST /api/tasks rejects application category in foundation slice", async () => {
-    await apiClient()
+  it("POST /api/tasks creates manual application tasks", async () => {
+    const res = await apiClient()
       .post("/api/tasks")
-      .send({ category: "application", title: "Apply later" })
-      .expect(400);
+      .send({
+        category: "application",
+        organization: "Stripe",
+        title: "Backend Intern",
+        url: "https://stripe.com/jobs/1",
+        notes: "Warm intro",
+        dueAt: "2025-10-15T17:00:00.000Z",
+      })
+      .expect(201);
+
+    expect(res.body).toMatchObject({
+      category: "application",
+      status: "open",
+      organization: "Stripe",
+      title: "Backend Intern",
+      url: "https://stripe.com/jobs/1",
+      notes: "Warm intro",
+      applicationId: expect.any(String),
+    });
+
+    const app = await pool.query(`SELECT status, due_at FROM applications WHERE id = $1`, [
+      res.body.applicationId,
+    ]);
+    expect(app.rows[0].status).toBe("todo");
+  });
+
+  it("POST /api/tasks/from-posting creates linked application task without due date", async () => {
+    const company = await seedCompany();
+    const posting = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "task-posting-1",
+      companyId: company.id,
+      url: "https://boards.greenhouse.io/acme/jobs/20",
+      title: "ML Intern",
+      location: "Remote",
+    });
+
+    const res = await apiClient()
+      .post("/api/tasks/from-posting")
+      .send({ postingId: posting.id })
+      .expect(201);
+
+    expect(res.body).toMatchObject({
+      category: "application",
+      status: "open",
+      postingId: posting.id,
+      title: "ML Intern",
+      location: "Remote",
+      dueAt: null,
+    });
+
+    const jobs = await apiClient().get("/api/jobs").expect(200);
+    const job = jobs.body.jobs.find((row: { id: string }) => row.id === posting.id);
+    expect(job?.onTasks).toBe(true);
+    expect(job?.applicationStatus).toBe("todo");
+  });
+
+  it("DELETE /api/tasks/from-posting/:postingId removes task and todo application", async () => {
+    const company = await seedCompany();
+    const posting = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "task-posting-2",
+      companyId: company.id,
+      url: "https://boards.greenhouse.io/acme/jobs/21",
+    });
+    await apiClient().post("/api/tasks/from-posting").send({ postingId: posting.id }).expect(201);
+
+    await apiClient().delete(`/api/tasks/from-posting/${posting.id}`).expect(200);
+
+    const apps = await pool.query(`SELECT id FROM applications WHERE posting_id = $1`, [posting.id]);
+    expect(apps.rows).toHaveLength(0);
+    const tasks = await pool.query(`SELECT id FROM tasks WHERE posting_id = $1`, [posting.id]);
+    expect(tasks.rows).toHaveLength(0);
+  });
+
+  it("POST /api/tasks/:id/complete on application task marks application applied", async () => {
+    const manual = await seedManualApplication({ status: "todo", company: "Figma", title: "PM Intern" });
+    const task = await seedTask({
+      category: "application",
+      title: "PM Intern",
+      organization: "Figma",
+      applicationId: manual.id,
+    });
+
+    await apiClient().post(`/api/tasks/${task.id}/complete`).expect(200);
+
+    const open = await apiClient().get("/api/tasks?view=open").expect(200);
+    expect(open.body.tasks.some((row: { id: string }) => row.id === task.id)).toBe(false);
+
+    const completed = await apiClient().get("/api/tasks?view=completed").expect(200);
+    expect(completed.body.tasks.some((row: { id: string }) => row.id === task.id)).toBe(false);
+
+    const app = await pool.query(`SELECT status, applied_at FROM applications WHERE id = $1`, [manual.id]);
+    expect(app.rows[0].status).toBe("applied");
+    expect(app.rows[0].applied_at).toBeTruthy();
   });
 
   it("PATCH /api/tasks/:id updates editable fields but not category", async () => {

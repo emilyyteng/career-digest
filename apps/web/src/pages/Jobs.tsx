@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
+  addPostingToTasks,
   clearJobFeedback,
   createApplication,
-  deleteApplication,
   getBoardRefresh,
   getJobs,
   getRankBatch,
   getRerankQueue,
   queueJobRerank,
+  removePostingFromTasks,
   sendJobFeedback,
   startBoardRefresh,
   type BoardRefreshStatus,
@@ -387,38 +388,32 @@ export default function Jobs() {
     }
   }
 
-  async function toggleTodo(job: JobCard) {
+  async function toggleTasks(job: JobCard) {
     if (pendingId) return;
     setPendingId(job.id);
-    const onTodo = job.applicationStatus === "todo";
+    const onTasks = job.onTasks || job.applicationStatus === "todo";
     setJobs((current) =>
       current.map((row) =>
         row.id === job.id
           ? {
               ...row,
-              applicationStatus: onTodo ? null : "todo",
-              applicationId: onTodo ? null : row.applicationId,
+              onTasks: !onTasks,
+              applicationStatus: onTasks ? null : "todo",
             }
           : row,
       ),
     );
     try {
-      if (onTodo) {
-        if (job.applicationId) await deleteApplication(job.applicationId);
+      if (onTasks) {
+        await removePostingFromTasks(job.id);
       } else {
-        const created = await createApplication({ postingId: job.id, status: "todo" });
-        setJobs((current) =>
-          current.map((row) =>
-            row.id === job.id
-              ? { ...row, applicationId: created.id, applicationStatus: "todo" }
-              : row,
-          ),
-        );
+        await addPostingToTasks(job.id);
       }
       invalidateListCache("applications:");
+      invalidateListCache("tasks:");
       await reload().catch(() => undefined);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update to-do");
+      setError(err instanceof Error ? err.message : "Could not update tasks");
       await reload().catch(() => undefined);
     } finally {
       setPendingId(null);
@@ -617,14 +612,16 @@ export default function Jobs() {
               <button
                 type="button"
                 className={
-                  job.applicationStatus === "todo"
+                  job.onTasks || job.applicationStatus === "todo"
                     ? "secondary todo-toggle on"
                     : "secondary todo-toggle"
                 }
                 disabled={pendingId === job.id}
-                onClick={() => toggleTodo(job)}
+                onClick={() => void toggleTasks(job)}
               >
-                To-do<span className="btn-icon" aria-hidden="true">★</span>
+                {job.onTasks || job.applicationStatus === "todo"
+                  ? "Remove from tasks"
+                  : "Add to tasks"}
               </button>
               <button
                 type="button"

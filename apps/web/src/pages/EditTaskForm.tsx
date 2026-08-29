@@ -5,7 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { patchTask, type TaskRow } from "../api";
+import { patchTask, getJobs, type JobCard, type TaskRow } from "../api";
 import {
   combineApplyByDateTime,
   toDateInputValue,
@@ -34,6 +34,9 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
   const [notes, setNotes] = useState(task.notes ?? "");
   const [dueDate, setDueDate] = useState(toDateInputValue(task.dueAt));
   const [dueTime, setDueTime] = useState(applyByTimeInputValue(task.dueAt));
+  const [query, setQuery] = useState("");
+  const [matches, setMatches] = useState<JobCard[]>([]);
+  const [linkFlash, setLinkFlash] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   const dirty =
@@ -67,6 +70,26 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [confirmDiscard]);
+
+  async function searchJobs() {
+    const data = await getJobs(query, 1, 40);
+    setMatches(data.jobs);
+  }
+
+  async function linkPosting(postingId: string) {
+    setSaving(true);
+    setError(null);
+    try {
+      const row = await patchTask(task.id, { postingId });
+      onSaved(row);
+      setLinkFlash(true);
+      window.setTimeout(() => setLinkFlash(false), 2200);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not link posting");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -151,6 +174,48 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
           </button>
         </div>
       </form>
+      {task.category === "application" && !task.postingId && (
+        <div className="task-edit-link-posting">
+          <h3>Link a digest posting</h3>
+          <p className="muted">
+            Search open jobs and associate this application task with a posting from the digest.
+          </p>
+          <div className="toolbar toolbar-search-end">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search open jobs"
+            />
+            <button type="button" className="secondary" onClick={() => void searchJobs()} disabled={saving}>
+              Search
+            </button>
+          </div>
+          {matches.map((job) => (
+            <div key={job.id} className="card">
+              <strong>{job.title}</strong>
+              <div className="meta">
+                <span className="employer">{job.company}</span>
+                <span className="location">{job.location ?? ""}</span>
+              </div>
+              <div className="save-inline-row">
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={saving}
+                  onClick={() => void linkPosting(job.id)}
+                >
+                  Associate
+                </button>
+                {linkFlash && (
+                  <span className="save-flash-inline" role="status" aria-live="polite">
+                    Linked!
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {confirmDiscard && (
         <div
           className="modal-backdrop modal-backdrop-nested"
