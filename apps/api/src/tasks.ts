@@ -570,6 +570,22 @@ export async function completeTask(db: Queryable, id: string): Promise<TaskRow |
   }
 }
 
+export async function reopenTask(db: Queryable, id: string): Promise<TaskRow | null> {
+  const existing = await getTaskById(db, id);
+  if (!existing || existing.status !== "completed") return null;
+  if (!isSchoolPersonalCategory(existing.category)) return null;
+
+  await db.query(
+    `UPDATE tasks
+     SET status = 'open',
+         completed_at = NULL,
+         updated_at = now()
+     WHERE id = $1`,
+    [id],
+  );
+  return await fetchTaskRow(db, id);
+}
+
 export async function deleteTask(db: Queryable, id: string): Promise<boolean> {
   const existing = await getTaskById(db, id);
   if (!existing) return false;

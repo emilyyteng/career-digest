@@ -42,6 +42,7 @@ import {
   parseCreateTaskBody,
   parsePatchTaskBody,
   patchTask,
+  reopenTask,
 } from "./tasks.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
@@ -1115,6 +1116,15 @@ api.post("/tasks/:id/complete", async (req, res) => {
   const task = await completeTask(pool, req.params.id);
   if (!task) {
     res.status(404).json({ error: "Task not found or cannot complete" });
+    return;
+  }
+  res.json(task);
+});
+
+api.post("/tasks/:id/reopen", async (req, res) => {
+  const task = await reopenTask(pool, req.params.id);
+  if (!task) {
+    res.status(404).json({ error: "Task not found or cannot reopen" });
     return;
   }
   res.json(task);

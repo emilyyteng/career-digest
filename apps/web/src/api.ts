@@ -522,6 +522,9 @@ export const patchTask = (id: string, body: Record<string, unknown>) =>
 export const completeTask = (id: string) =>
   parse<TaskRow>(api(`/api/tasks/${id}/complete`, { method: "POST" }));
 
+export const reopenTask = (id: string) =>
+  parse<TaskRow>(api(`/api/tasks/${id}/reopen`, { method: "POST" }));
+
 export const deleteTask = (id: string) =>
   parse<{ ok: boolean }>(api(`/api/tasks/${id}`, { method: "DELETE" }));
 

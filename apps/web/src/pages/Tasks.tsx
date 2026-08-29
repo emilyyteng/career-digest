@@ -5,6 +5,7 @@ import {
   deleteTask,
   getTasks,
   patchTask,
+  reopenTask,
   type TaskRow,
   type TaskView,
 } from "../api";
@@ -60,6 +61,7 @@ export default function Tasks() {
   const [editing, setEditing] = useState<TaskRow | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<TaskRow | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
+  const [reopenConfirm, setReopenConfirm] = useState<TaskRow | null>(null);
   const [dueDrafts, setDueDrafts] = useState<
     Record<string, { date: string; time: string }>
   >({});
@@ -250,6 +252,27 @@ export default function Tasks() {
     }
   }
 
+  async function confirmReopen() {
+    if (!reopenConfirm) return;
+    const row = reopenConfirm;
+    setReopenConfirm(null);
+    setPendingId(row.id);
+    setRows((current) => current.filter((item) => item.id !== row.id));
+    setCounts((current) => ({
+      open: current.open + 1,
+      completed: Math.max(0, current.completed - 1),
+    }));
+    try {
+      await reopenTask(row.id);
+      invalidateListCache("tasks:");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reopen task");
+      await load().catch(() => undefined);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   return (
     <section>
       <div className="tabs-row">
@@ -350,9 +373,7 @@ export default function Tasks() {
                     onSubmit={(event) => void saveDueAt(event, row)}
                   >
                     <label className="application-apply-by-field">
-                      <span className="application-apply-by-field-label">
-                        {application ? "Apply by" : "Due"}
-                      </span>
+                      <span className="application-apply-by-field-label">Date</span>
                       <input
                         type="date"
                         value={dueDraft.date}
@@ -384,16 +405,6 @@ export default function Tasks() {
                   </form>
                 )}
                 <div className="application-card-footer-actions">
-                  {view === "open" && (
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={pendingId === row.id}
-                      onClick={() => setCompleteConfirm(row)}
-                    >
-                      {application ? "Mark applied" : "Complete"}
-                    </button>
-                  )}
                   {row.url && (
                     <a
                       className="external application-card-apply-link"
@@ -404,6 +415,26 @@ export default function Tasks() {
                       {linkLabel}
                       <span className="ext-icon" aria-hidden="true">↗</span>
                     </a>
+                  )}
+                  {view === "open" && (
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={pendingId === row.id}
+                      onClick={() => setCompleteConfirm(row)}
+                    >
+                      {application ? "Mark applied" : "Complete"}
+                    </button>
+                  )}
+                  {view === "completed" && !application && (
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={pendingId === row.id}
+                      onClick={() => setReopenConfirm(row)}
+                    >
+                      Mark to-do
+                    </button>
                   )}
                   {view === "completed" && completedLabel && (
                     <span className="applied-date">Completed: {completedLabel}</span>
@@ -487,6 +518,24 @@ export default function Tasks() {
               confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
               onConfirm={() => void confirmComplete()}
               onCancel={() => setCompleteConfirm(null)}
+            />
+          </div>
+        </div>
+      )}
+      {reopenConfirm && (
+        <div
+          className="modal-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setReopenConfirm(null);
+          }}
+        >
+          <div className="modal" role="dialog" aria-modal="true">
+            <StepActionConfirm
+              title="Move back to open?"
+              description="This returns the task to your open list and clears the completed date."
+              confirmLabel="Mark to-do"
+              onConfirm={() => void confirmReopen()}
+              onCancel={() => setReopenConfirm(null)}
             />
           </div>
         </div>

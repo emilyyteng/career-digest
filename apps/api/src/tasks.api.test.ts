@@ -258,6 +258,27 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     expect(completed.body.tasks[0].completedAt).toBeTruthy();
   });
 
+  it("POST /api/tasks/:id/reopen moves school/personal tasks back to open", async () => {
+    const task = await seedTask({ category: "school", title: "Reopen me" });
+
+    await apiClient().post(`/api/tasks/${task.id}/complete`).expect(200);
+
+    const reopened = await apiClient().post(`/api/tasks/${task.id}/reopen`).expect(200);
+    expect(reopened.body).toMatchObject({
+      id: task.id,
+      status: "open",
+      title: "Reopen me",
+      completedAt: null,
+    });
+
+    const open = await apiClient().get("/api/tasks?view=open").expect(200);
+    expect(open.body.tasks).toHaveLength(1);
+    expect(open.body.tasks[0].id).toBe(task.id);
+
+    const completed = await apiClient().get("/api/tasks?view=completed").expect(200);
+    expect(completed.body.tasks).toHaveLength(0);
+  });
+
   it("DELETE /api/tasks/:id removes the task", async () => {
     const task = await seedTask({ category: "school", title: "Discard me" });
 
