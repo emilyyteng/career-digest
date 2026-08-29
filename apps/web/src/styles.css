@@ -334,11 +334,11 @@ button {
   font-weight: 500;
   font-family: var(--font-sans);
 }
-button:not(.star):not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss) {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss) {
   border-radius: var(--radius-soft);
   box-shadow: var(--shadow-button);
 }
-button:not(.star):not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(:disabled):hover {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(:disabled):hover {
   background: var(--accent-blue);
   border-color: var(--accent-blue);
   box-shadow: 0 3px 10px rgba(91, 124, 153, 0.28);
@@ -763,39 +763,6 @@ a.external .ext-icon { font-size: 0.75rem; }
 }
 .detail-title-row h2 {
   font-weight: 600;
-}
-
-button.star {
-  position: absolute;
-  top: 0.65rem;
-  right: 0.65rem;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  background: transparent;
-  display: grid;
-  place-items: center;
-}
-button.star:disabled { opacity: 0.55; }
-button.star svg {
-  width: 1.3rem;
-  height: 1.3rem;
-  fill: var(--surface);
-  stroke: var(--accent-pink);
-  stroke-width: 1.4;
-}
-button.star.on svg {
-  fill: var(--accent-yellow);
-  stroke: var(--accent-yellow-deep);
-}
-button.star:hover:not(.on):not(:disabled) svg {
-  fill: #fce8f0;
-  stroke: var(--accent-pink-deep);
-}
-button.star.on:hover:not(:disabled) svg {
-  fill: #f0d878;
-  stroke: #a88b40;
 }
 
 .job-feedback-actions {
