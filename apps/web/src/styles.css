@@ -816,7 +816,10 @@ a.external .ext-icon { font-size: 0.75rem; }
 }
 .task-edit-btn:hover:not(:disabled) {
   background: var(--surface-2);
-  border-color: var(--accent-blue);
+  border-color: var(--accent-pink);
+}
+.task-card .application-card-top {
+  padding-right: 4.25rem;
 }
 .task-category-pill {
   font-size: 0.72rem;
@@ -826,6 +829,18 @@ a.external .ext-icon { font-size: 0.75rem; }
 .task-category-lock {
   margin: 0;
   font-size: 0.85rem;
+}
+.task-linked-posting {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.task-linked-posting a {
+  color: var(--accent-blue-deep);
+  text-decoration: none;
+}
+.task-linked-posting a:hover {
+  text-decoration: underline;
 }
 .modal-backdrop-nested {
   z-index: 60;

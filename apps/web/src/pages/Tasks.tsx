@@ -8,7 +8,6 @@ import {
   type TaskRow,
   type TaskView,
 } from "../api";
-import ApplicationMetaBadges from "../ApplicationMetaBadges";
 import {
   combineApplyByDateTime,
   formatShortDate,
@@ -328,13 +327,7 @@ export default function Tasks() {
                 {application && row.location && (
                   <span className="location">{row.location}</span>
                 )}
-                {application ? (
-                  <ApplicationMetaBadges
-                    status="todo"
-                    postingId={row.postingId}
-                    source={row.source}
-                  />
-                ) : (
+                {!application && (
                   <span className="task-category-pill">{categoryLabel(row.category)}</span>
                 )}
               </div>

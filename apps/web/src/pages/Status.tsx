@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import {
   getOpsStatus,
   startBoardRefresh,
+  startBackup,
+  startLiveRankBacklog,
   type OpsStatus,
 } from "../api";
 import { formatStepWhen } from "../formatDate";
@@ -38,6 +40,8 @@ export default function Status() {
   const [ops, setOps] = useState<OpsStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshBusy, setRefreshBusy] = useState(false);
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [rankBacklogBusy, setRankBacklogBusy] = useState(false);
   const wasRefreshing = useRef(false);
 
   async function load() {
@@ -66,13 +70,24 @@ export default function Status() {
     const rerankActive = ops?.rerankQueue.items.some(
       (item) => item.status === "queued" || item.status === "running",
     );
-    if (!rankActive && !refreshActive && !rerankActive) return;
-    const ms = rankActive || refreshActive ? 2500 : 8000;
+    const backupActive = ops?.backupJob.status === "running";
+    const liveBacklogActive = ops?.liveRankBacklog.status === "running";
+    if (!rankActive && !refreshActive && !rerankActive && !backupActive && !liveBacklogActive) {
+      return;
+    }
+    const ms =
+      rankActive || refreshActive || liveBacklogActive ? 2500 : backupActive ? 2000 : 8000;
     const timer = window.setInterval(() => {
       load().catch(() => undefined);
     }, ms);
     return () => window.clearInterval(timer);
-  }, [ops?.boardRefresh.status, ops?.rankBatch.status, ops?.rerankQueue.items]);
+  }, [
+    ops?.boardRefresh.status,
+    ops?.rankBatch.status,
+    ops?.rerankQueue.items,
+    ops?.backupJob.status,
+    ops?.liveRankBacklog.status,
+  ]);
 
   async function triggerRefresh() {
     setRefreshBusy(true);
@@ -87,12 +102,42 @@ export default function Status() {
     }
   }
 
+  async function triggerBackup() {
+    setBackupBusy(true);
+    setError(null);
+    try {
+      await startBackup();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start backup");
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  async function triggerRankBacklog() {
+    setRankBacklogBusy(true);
+    setError(null);
+    try {
+      await startLiveRankBacklog();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start ranking");
+    } finally {
+      setRankBacklogBusy(false);
+    }
+  }
+
   if (error && !ops) return <p className="error">{error}</p>;
   if (!ops) return <p className="muted">Loading status…</p>;
 
   const board = ops.boardRefresh;
   const rank = ops.rankBatch;
-  const rankActive = rank.status === "running" || rank.status === "ready";
+  const backupJob = ops.backupJob;
+  const liveBacklog = ops.liveRankBacklog;
+  const liveBacklogActive = liveBacklog.status === "running";
+  const rankBatchActive = rank.status === "running" || rank.status === "ready";
+  const rankActive = rankBatchActive || liveBacklogActive;
   const rankModel = rank.model ?? ops.rankingModel;
   const rankFinished = rank.finishedAt ?? board.lastOkAt;
   const rankLastOk = rank.lastOkAt ?? board.lastOkAt;
@@ -158,16 +203,22 @@ export default function Status() {
           <p className="ops-card-status">
             <StatusBadge
               tone={
-                rank.status === "error"
+                liveBacklog.status === "error" || rank.status === "error"
                   ? "error"
                   : rankActive
                     ? "active"
-                    : rank.status === "ok"
+                    : liveBacklog.status === "ok" || rank.status === "ok"
                       ? "ok"
                       : "idle"
               }
             >
-              {rankActive ? rank.openaiStatus ?? rank.status : rank.status}
+              {liveBacklogActive
+                ? "Running · live backlog"
+                : rankBatchActive
+                  ? rank.openaiStatus ?? rank.status
+                  : liveBacklog.status === "ok"
+                    ? `Done · ${liveBacklog.rankedOk ?? 0} ranked`
+                    : rank.status}
             </StatusBadge>
           </p>
           <dl className="ops-meta">
@@ -179,7 +230,7 @@ export default function Status() {
             <dd>{formatWhen(rankFinished)}</dd>
             <dt>Last success</dt>
             <dd>{formatWhen(rankLastOk)}</dd>
-            {rank.total != null && rankActive && (
+            {rank.total != null && rankBatchActive && (
               <>
                 <dt>Progress</dt>
                 <dd>
@@ -188,7 +239,17 @@ export default function Status() {
                 </dd>
               </>
             )}
-            {rank.appliedOk != null && !rankActive && (
+            {liveBacklog.rankedOk != null && liveBacklog.status === "ok" && (
+              <>
+                <dt>Last backlog run</dt>
+                <dd>
+                  {liveBacklog.rankedOk} ranked
+                  {liveBacklog.rankedError ? `, ${liveBacklog.rankedError} failed` : ""}
+                  {liveBacklog.halted ? " (stopped early)" : ""}
+                </dd>
+              </>
+            )}
+            {rank.appliedOk != null && !rankActive && liveBacklog.status !== "ok" && (
               <>
                 <dt>Applied scores</dt>
                 <dd>
@@ -198,8 +259,25 @@ export default function Status() {
               </>
             )}
           </dl>
-          {rank.hint && <p className="muted ops-card-hint">{rank.hint}</p>}
-          {rank.error && <p className="error ops-card-error">{rank.error}</p>}
+          {liveBacklog.error && <p className="error ops-card-error">{liveBacklog.error}</p>}
+          {rank.error && !liveBacklog.error && <p className="error ops-card-error">{rank.error}</p>}
+          <p className="muted ops-card-hint">
+            Rank all unranked postings with descriptions, then refresh outdated scores — live API,
+            not batch.
+          </p>
+          <button
+            type="button"
+            className="secondary"
+            disabled={
+              rankBacklogBusy ||
+              liveBacklogActive ||
+              rankBatchActive ||
+              board.status === "running"
+            }
+            onClick={() => void triggerRankBacklog()}
+          >
+            {liveBacklogActive ? "Ranking backlog…" : "Rank full backlog"}
+          </button>
         </article>
 
         <article className="card ops-card">
@@ -233,6 +311,34 @@ export default function Status() {
               )}
             </p>
           )}
+          {backupJob.status !== "idle" && (
+            <p className="ops-card-status">
+              <StatusBadge
+                tone={
+                  backupJob.status === "error"
+                    ? "error"
+                    : backupJob.status === "running"
+                      ? "active"
+                      : "ok"
+                }
+              >
+                {backupJob.status === "running"
+                  ? "Running · backup"
+                  : backupJob.status === "ok"
+                    ? "Backup succeeded"
+                    : "Backup failed"}
+              </StatusBadge>
+            </p>
+          )}
+          {backupJob.error && <p className="error ops-card-error">{backupJob.error}</p>}
+          <button
+            type="button"
+            className="secondary"
+            disabled={backupBusy || backupJob.status === "running"}
+            onClick={() => void triggerBackup()}
+          >
+            {backupJob.status === "running" ? "Backing up…" : "Backup data"}
+          </button>
         </article>
 
         <article className="card ops-card ops-card-wide">
@@ -305,7 +411,7 @@ export default function Status() {
                   ]
                     .filter(Boolean)
                     .join(" · ")
-                : "None yet — run npm run backup"}
+                : "None yet — run Backup data below"}
             </dd>
           </dl>
           <p className="muted ops-card-hint">

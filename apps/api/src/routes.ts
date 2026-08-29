@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import multer from "multer";
 import { getBoardRefresh, startBoardRefresh } from "./boardRefresh.js";
+import { getBackupJob, startBackupJob } from "./backupJob.js";
+import { getLiveRankBacklogJob, startLiveRankBacklogJob } from "./liveRankBacklogJob.js";
 import { pool } from "./db.js";
 import { sanitizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { getHomeDashboard } from "./home.js";
@@ -176,6 +178,24 @@ api.get("/board/refresh", async (_req, res) => {
 
 api.post("/board/refresh", async (_req, res) => {
   const result = await startBoardRefresh();
+  res.status(result.started ? 202 : 409).json(result.snapshot);
+});
+
+api.get("/backup", async (_req, res) => {
+  res.json(await getBackupJob());
+});
+
+api.post("/backup", async (_req, res) => {
+  const result = await startBackupJob();
+  res.status(result.started ? 202 : 409).json(result.snapshot);
+});
+
+api.get("/rank/live-backlog", async (_req, res) => {
+  res.json(await getLiveRankBacklogJob());
+});
+
+api.post("/rank/live-backlog", async (_req, res) => {
+  const result = await startLiveRankBacklogJob();
   res.status(result.started ? 202 : 409).json(result.snapshot);
 });
 

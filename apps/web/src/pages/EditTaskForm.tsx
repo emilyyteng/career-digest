@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { patchTask, getJobs, type JobCard, type TaskRow } from "../api";
+import { Link } from "react-router-dom";
 import {
   combineApplyByDateTime,
   toDateInputValue,
@@ -174,6 +175,16 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
           </button>
         </div>
       </form>
+      {task.category === "application" && task.postingId && (
+        <div className="task-linked-posting">
+          <p className="muted">
+            Linked to:{" "}
+            <Link to={`/jobs/${task.postingId}`}>
+              {task.organization ? `${task.organization} · ${task.title}` : task.title}
+            </Link>
+          </p>
+        </div>
+      )}
       {task.category === "application" && !task.postingId && (
         <div className="task-edit-link-posting">
           <h3>Link a digest posting</h3>

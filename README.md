@@ -143,6 +143,6 @@ npm run test
 | `/applications` | Application tracker (pipeline statuses) |
 | `/tasks` | Unified action backlog (open / completed) |
 | `/interviews` | Interview pipelines |
-| `/status` | Ops dashboard (ingest, rank, scrape, backup) |
+| `/status` | Ops dashboard — board refresh, backup, rank backlog, scrape health |
 
 Jobs lists open digest roles that are not yet applied (postings with an open application task stay visible). **Tasks** is the action backlog; **Applications** is the tracker for roles you have already applied to or are past the “must apply” stage.

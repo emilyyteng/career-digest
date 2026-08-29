@@ -161,9 +161,48 @@ export type OpsStatus = {
     sizeBytes: number | null;
     backupCount: number;
   };
+  backupJob: {
+    status: "idle" | "running" | "ok" | "error";
+    startedAt: string | null;
+    finishedAt: string | null;
+    lastOkAt: string | null;
+    error: string | null;
+  };
+  liveRankBacklog: {
+    status: "idle" | "running" | "ok" | "error";
+    startedAt: string | null;
+    finishedAt: string | null;
+    lastOkAt: string | null;
+    error: string | null;
+    rankedOk: number | null;
+    rankedError: number | null;
+    halted: boolean | null;
+  };
 };
 
 export const getOpsStatus = () => parse<OpsStatus>(api("/api/ops"));
+
+export const startBackup = async () => {
+  const response = await api("/api/backup", { method: "POST" });
+  const body = (await response.json().catch(() => ({}))) as OpsStatus["backupJob"] & {
+    error?: string;
+  };
+  if (!response.ok && response.status !== 409) {
+    throw new Error(body.error || response.statusText);
+  }
+  return body;
+};
+
+export const startLiveRankBacklog = async () => {
+  const response = await api("/api/rank/live-backlog", { method: "POST" });
+  const body = (await response.json().catch(() => ({}))) as OpsStatus["liveRankBacklog"] & {
+    error?: string;
+  };
+  if (!response.ok && response.status !== 409) {
+    throw new Error(body.error || response.statusText);
+  }
+  return body;
+};
 
 export type HomeJobPick = {
   id: string;
