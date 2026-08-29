@@ -352,7 +352,7 @@ button {
   font-weight: 500;
   font-family: var(--font-sans);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss) {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss) {
   border-radius: var(--radius-soft);
   box-shadow: var(--shadow-button);
 }
@@ -778,6 +778,60 @@ a.external .ext-icon { font-size: 0.75rem; }
 .todo-remove-btn:hover:not(:disabled) {
   background: var(--surface-2);
   border-color: var(--accent-pink);
+}
+.task-card {
+  position: relative;
+}
+.task-card-toolbar {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: flex;
+  gap: 0.35rem;
+}
+.task-card-toolbar .todo-remove-btn,
+.task-card-toolbar .task-edit-btn {
+  position: static;
+}
+.task-edit-btn {
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-soft-box);
+}
+.task-edit-btn:disabled { opacity: 0.55; }
+.task-edit-btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: transparent;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.task-edit-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--accent-blue);
+}
+.task-category-pill {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+.task-category-lock {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.modal-backdrop-nested {
+  z-index: 60;
+}
+.modal-compact {
+  max-width: 24rem;
 }
 .detail-title-row h2 {
   font-weight: 600;

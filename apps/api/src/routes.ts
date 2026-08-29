@@ -28,6 +28,16 @@ import {
   patchInterviewThread,
   resolveThreadsForApplication,
 } from "./interviews.js";
+import {
+  completeTask,
+  createTask,
+  deleteTask,
+  isTaskView,
+  listTasks,
+  parseCreateTaskBody,
+  parsePatchTaskBody,
+  patchTask,
+} from "./tasks.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -377,7 +387,7 @@ api.patch("/jobs/:id", async (req, res) => {
     return;
   }
   const updated = await pool.query(
-    `UPDATE postings SET url = $2, updated_at = now() WHERE id = $1 RETURNING id`,
+    `UPDATE postings SET url = $2 WHERE id = $1 RETURNING id`,
     [req.params.id, url],
   );
   if (!updated.rows[0]) {
@@ -1001,6 +1011,57 @@ api.get("/applications/:id/documents/:docId", async (req, res) => {
     return;
   }
   res.download(filePath, result.rows[0].original_name);
+});
+
+api.get("/tasks", async (req, res) => {
+  const view = String(req.query.view ?? "open");
+  if (!isTaskView(view)) {
+    res.status(400).json({ error: "Invalid view" });
+    return;
+  }
+  res.json(await listTasks(pool, view));
+});
+
+api.post("/tasks", async (req, res) => {
+  const parsed = parseCreateTaskBody(req.body as Record<string, unknown>);
+  if (!parsed) {
+    res.status(400).json({ error: "Invalid task payload" });
+    return;
+  }
+  const task = await createTask(pool, parsed);
+  res.status(201).json(task);
+});
+
+api.patch("/tasks/:id", async (req, res) => {
+  const parsed = parsePatchTaskBody(req.body as Record<string, unknown>);
+  if (!parsed) {
+    res.status(400).json({ error: "Invalid task update" });
+    return;
+  }
+  const task = await patchTask(pool, req.params.id, parsed);
+  if (!task) {
+    res.status(404).json({ error: "Task not found" });
+    return;
+  }
+  res.json(task);
+});
+
+api.post("/tasks/:id/complete", async (req, res) => {
+  const task = await completeTask(pool, req.params.id);
+  if (!task) {
+    res.status(404).json({ error: "Task not found or cannot complete" });
+    return;
+  }
+  res.json(task);
+});
+
+api.delete("/tasks/:id", async (req, res) => {
+  const deleted = await deleteTask(pool, req.params.id);
+  if (!deleted) {
+    res.status(404).json({ error: "Task not found" });
+    return;
+  }
+  res.json({ ok: true });
 });
 
 export async function ensureUploadDir(): Promise<void> {

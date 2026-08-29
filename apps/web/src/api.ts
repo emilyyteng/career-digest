@@ -152,6 +152,14 @@ export type OpsStatus = {
       nextRetryAt: string | null;
     }>;
   };
+  backup: {
+    directory: string;
+    retentionDays: number;
+    lastAt: string | null;
+    lastFile: string | null;
+    sizeBytes: number | null;
+    backupCount: number;
+  };
 };
 
 export const getOpsStatus = () => parse<OpsStatus>(api("/api/ops"));
@@ -423,3 +431,56 @@ export const patchInterviewStep = (
       body: JSON.stringify(body),
     }),
   );
+
+export type TaskCategory = "application" | "school" | "personal";
+export type TaskView = "open" | "completed";
+
+export type TaskRow = {
+  id: string;
+  category: TaskCategory;
+  status: "open" | "completed";
+  title: string;
+  organization: string | null;
+  url: string | null;
+  notes: string | null;
+  dueAt: string | null;
+  postingId: string | null;
+  applicationId: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TasksPage = {
+  view: TaskView;
+  count: number;
+  counts: { open: number; completed: number };
+  tasks: TaskRow[];
+};
+
+export const getTasks = (view: TaskView = "open") =>
+  parse<TasksPage>(api(`/api/tasks?view=${encodeURIComponent(view)}`));
+
+export const createTask = (body: Record<string, unknown>) =>
+  parse<TaskRow>(
+    api("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const patchTask = (id: string, body: Record<string, unknown>) =>
+  parse<TaskRow>(
+    api(`/api/tasks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const completeTask = (id: string) =>
+  parse<TaskRow>(api(`/api/tasks/${id}/complete`, { method: "POST" }));
+
+export const deleteTask = (id: string) =>
+  parse<{ ok: boolean }>(api(`/api/tasks/${id}`, { method: "DELETE" }));
