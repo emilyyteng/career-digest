@@ -3,13 +3,12 @@ import { apiClient } from "./test/apiClient.js";
 import {
   seedApplication,
   seedCompany,
-  seedManualApplication,
   seedRankedPosting,
 } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
 
 describe.skipIf(!integrationReady)("home API", () => {
-  it("GET /api/home returns todo applications and job picks", async () => {
+  it("GET /api/home returns job picks without todo applications", async () => {
     const company = await seedCompany({ name: "Home Co" });
     const posting = await seedRankedPosting({
       source: "greenhouse",
@@ -20,16 +19,11 @@ describe.skipIf(!integrationReady)("home API", () => {
       rankScore: 95,
     });
     await seedApplication({ postingId: posting.id, status: "todo" });
-    await seedManualApplication({
-      status: "todo",
-      company: "Todo Home Co",
-      title: "Ops Intern",
-    });
 
     const res = await apiClient().get("/api/home").expect(200);
 
-    expect(res.body.todo.length).toBeGreaterThanOrEqual(2);
-    expect(res.body.todoTotal).toBeGreaterThanOrEqual(2);
+    expect(res.body.todo).toBeUndefined();
+    expect(res.body.todoTotal).toBeUndefined();
     expect(
       res.body.newAndTopPicks.topRanked.some((job: { id: string }) => job.id === posting.id),
     ).toBe(true);

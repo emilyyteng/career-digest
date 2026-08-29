@@ -9,13 +9,9 @@ import {
   type JobCard,
 } from "../api";
 import {
-  combineApplyByDateTime,
   formatShortDate,
   toDateInputValue,
-  applyByTimeInputValue,
-  DEFAULT_APPLY_BY_TIME,
 } from "../formatDate";
-import InterviewCountdown from "../InterviewCountdown";
 import ApplicationMetaBadges from "../ApplicationMetaBadges";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 import DocumentPreviewModal from "../DocumentPreviewModal";
@@ -23,7 +19,6 @@ import { invalidateListCache } from "../listCache";
 import { listReturnTo } from "../navigationReturn";
 
 const STATUSES = [
-  { id: "todo", label: "To-do", hint: "Planned to apply. Stays on Jobs." },
   { id: "applied", label: "Applied", hint: "Leaves the Jobs list." },
   { id: "interviewing", label: "Interviewing", hint: "Leaves the Jobs list." },
   { id: "accepted", label: "Accepted", hint: "Leaves the Jobs list." },
@@ -37,7 +32,6 @@ type FlashTarget =
   | "description"
   | "notes"
   | "appliedAt"
-  | "dueAt"
   | "url"
   | "upload"
   | "link";
@@ -49,8 +43,6 @@ export default function ApplicationDetail() {
   const [notes, setNotes] = useState("");
   const [descriptionHtml, setDescriptionHtml] = useState("");
   const [appliedAt, setAppliedAt] = useState("");
-  const [applyByDate, setApplyByDate] = useState("");
-  const [applyByTime, setApplyByTime] = useState(DEFAULT_APPLY_BY_TIME);
   const [url, setUrl] = useState("");
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<JobCard[]>([]);
@@ -86,8 +78,6 @@ export default function ApplicationDetail() {
     setNotes(data.notes ?? "");
     setDescriptionHtml(data.descriptionHtml ?? "");
     setAppliedAt(toDateInputValue(data.appliedAt));
-    setApplyByDate(toDateInputValue(data.dueAt));
-    setApplyByTime(applyByTimeInputValue(data.dueAt));
     setUrl(data.url ?? "");
   }
 
@@ -153,36 +143,6 @@ export default function ApplicationDetail() {
     }
   }
 
-  async function saveApplyBy(event: FormEvent) {
-    event.preventDefault();
-    if (!id || !row || row.status !== "todo") return;
-    setError(null);
-    try {
-      const dueAt = applyByDate ? combineApplyByDateTime(applyByDate, applyByTime) : null;
-      await patchApplication(id, { dueAt });
-      invalidateListCache("applications:");
-      await load();
-      showFlash("Saved!", "dueAt");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save apply-by date");
-    }
-  }
-
-  async function clearApplyBy() {
-    if (!id || !row || row.status !== "todo" || !row.dueAt) return;
-    setError(null);
-    try {
-      await patchApplication(id, { dueAt: null });
-      invalidateListCache("applications:");
-      setApplyByDate("");
-      setApplyByTime("");
-      await load();
-      showFlash("Cleared!", "dueAt");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not clear apply-by date");
-    }
-  }
-
   async function searchJobs() {
     const data = await getJobs(query, 1, 40);
     setMatches(data.jobs);
@@ -233,7 +193,10 @@ export default function ApplicationDetail() {
   if (!row && error) return <p className="error">{error}</p>;
   if (!row) return <p className="muted">Loading…</p>;
 
-  const current = STATUSES.find((item) => item.id === row.status);
+  const current =
+    row.status === "todo"
+      ? { id: "todo", label: "On Tasks", hint: "Apply backlog — manage on Tasks." }
+      : STATUSES.find((item) => item.id === row.status);
   const appliedLabel = formatShortDate(row.appliedAt);
 
   return (
@@ -242,11 +205,6 @@ export default function ApplicationDetail() {
         <p className="application-detail-back">
           <Link to={listReturnTo(location, "/applications")}>← Applications</Link>
         </p>
-        {row.status === "todo" && row.dueAt && (
-          <div className="application-detail-countdown-top">
-            <InterviewCountdown target={row.dueAt} />
-          </div>
-        )}
         <h2>{row.title}</h2>
         <div className="meta application-detail-meta">
           <span className="employer">{row.company}</span>
@@ -298,7 +256,7 @@ export default function ApplicationDetail() {
               target="_blank"
               rel="noreferrer"
             >
-              {row.status === "todo" ? "Open apply link" : "Open posting"}
+              Open posting
               <span className="ext-icon" aria-hidden="true">↗</span>
             </a>
           )}
@@ -307,6 +265,12 @@ export default function ApplicationDetail() {
           Current: <strong>{current?.label ?? row.status}</strong>. These buttons move this role
           between Applications tabs. They do not apply for you.
         </p>
+        {row.status === "todo" && (
+          <p className="muted">
+            This role is still on your <Link to="/tasks">Tasks</Link> backlog until you mark it
+            applied from Tasks or choose Applied below.
+          </p>
+        )}
         {flash?.target === "status" && (
           <p className="save-flash" role="status" aria-live="polite">
             {flash.message}
@@ -352,45 +316,6 @@ export default function ApplicationDetail() {
                   {flash.message}
                 </span>
               )}
-            </div>
-          </form>
-        )}
-        {row.status === "todo" && (
-          <form className="inline-date-form application-apply-by-form" onSubmit={saveApplyBy}>
-            <div className="application-detail-apply-by-row">
-              <div className="application-detail-datetime">
-                <label className="application-apply-by-field">
-                  <span className="application-apply-by-field-label">Apply by</span>
-                  <input
-                    type="date"
-                    value={applyByDate}
-                    onChange={(event) => setApplyByDate(event.target.value)}
-                  />
-                </label>
-                <label className="application-apply-by-field">
-                  <span className="application-apply-by-field-label">Time</span>
-                  <input
-                    type="time"
-                    value={applyByTime}
-                    onChange={(event) => setApplyByTime(event.target.value)}
-                  />
-                </label>
-              </div>
-              <div className="save-inline-row application-detail-apply-actions">
-                <button type="submit" className="secondary" disabled={!applyByDate}>
-                  Save
-                </button>
-                {row.dueAt && (
-                  <button type="button" className="secondary" onClick={() => void clearApplyBy()}>
-                    Clear
-                  </button>
-                )}
-                {flash?.target === "dueAt" && (
-                  <span className="save-flash-inline" role="status" aria-live="polite">
-                    {flash.message}
-                  </span>
-                )}
-              </div>
             </div>
           </form>
         )}
@@ -478,9 +403,9 @@ export default function ApplicationDetail() {
         <div>
           <h3>Link a digest posting</h3>
           <p className="muted">
-            If this is the same role the ingest later found (or a posting you already marked to-do), search
-            and associate it. Duplicate tracker rows for that posting are merged. Applied+ postings
-            then leave the Jobs list; to-do ones stay there until you mark applied.
+            If this is the same role the ingest later found (or a posting you already added to
+            Tasks), search and associate it. Duplicate tracker rows for that posting are merged.
+            Applied+ postings leave the Jobs list.
           </p>
           <div className="toolbar toolbar-search-end">
             <input

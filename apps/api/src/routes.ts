@@ -14,6 +14,7 @@ import { getRerankQueueSnapshot, queueRerank } from "./rankRerankQueue.js";
 import {
   APPLICATION_STATUSES,
   isApplicationStatus,
+  isLegacyApplicationBacklogStatus,
   normalizeApplicationStatus,
 } from "./statuses.js";
 import {
@@ -484,10 +485,13 @@ api.delete("/jobs/:id/feedback", async (req, res) => {
 });
 
 api.get("/applications", async (req, res) => {
-  const rawStatus = String(req.query.status ?? "all");
-  const status = rawStatus === "starred" ? "todo" : rawStatus;
+  const status = String(req.query.status ?? "all");
+  if (isLegacyApplicationBacklogStatus(status)) {
+    res.status(400).json({ error: "Use Tasks for apply backlog" });
+    return;
+  }
   const params: unknown[] = [];
-  let where = "";
+  let where = "WHERE a.status <> 'todo'";
   if (status !== "all") {
     if (!isApplicationStatus(status)) {
       res.status(400).json({ error: "Invalid status" });
@@ -500,29 +504,27 @@ api.get("/applications", async (req, res) => {
     status === "all"
       ? `ORDER BY
            CASE a.status
-             WHEN 'todo' THEN 0
-             WHEN 'interviewing' THEN 1
-             WHEN 'applied' THEN 2
-             WHEN 'accepted' THEN 3
-             WHEN 'declined' THEN 4
-             ELSE 5
+             WHEN 'interviewing' THEN 0
+             WHEN 'applied' THEN 1
+             WHEN 'accepted' THEN 2
+             WHEN 'declined' THEN 3
+             ELSE 4
            END,
-           CASE WHEN a.status = 'todo' THEN a.due_at ELSE a.applied_at END ASC NULLS LAST,
-           CASE WHEN a.status = 'todo' THEN a.status_changed_at ELSE NULL END DESC NULLS LAST,
+           a.applied_at DESC NULLS LAST,
            a.created_at DESC`
-      : status === "todo" || status === "starred"
-        ? `ORDER BY a.due_at ASC NULLS LAST, a.status_changed_at DESC, a.created_at DESC`
-        : `ORDER BY a.applied_at DESC NULLS LAST, a.created_at DESC`;
+      : `ORDER BY a.applied_at DESC NULLS LAST, a.created_at DESC`;
   const result = await pool.query(
     `${applicationSelect} ${where} ${orderBy}`,
     params,
   );
   const countsResult = await pool.query<{ status: string; count: string }>(
-    `SELECT status, COUNT(*)::text AS count FROM applications GROUP BY status`,
+    `SELECT status, COUNT(*)::text AS count
+     FROM applications
+     WHERE status <> 'todo'
+     GROUP BY status`,
   );
   const counts: Record<string, number> = {
     all: 0,
-    todo: 0,
     applied: 0,
     interviewing: 0,
     accepted: 0,
@@ -530,8 +532,7 @@ api.get("/applications", async (req, res) => {
   };
   for (const row of countsResult.rows) {
     const n = Number(row.count) || 0;
-    const key = row.status === "starred" ? "todo" : row.status;
-    if (key in counts) counts[key] = n;
+    if (row.status in counts) counts[row.status] = n;
     counts.all += n;
   }
   res.json({ count: result.rows.length, counts, applications: result.rows });
@@ -591,6 +592,10 @@ api.post("/applications", async (req, res) => {
     appliedAt?: string | null;
     dueAt?: string | null;
   };
+  if (body.status && isLegacyApplicationBacklogStatus(body.status)) {
+    res.status(400).json({ error: "Use Tasks for apply backlog" });
+    return;
+  }
   const status = normalizeApplicationStatus(body.status ?? "applied");
   if (!isApplicationStatus(status)) {
     res.status(400).json({ error: "Invalid status" });
@@ -603,13 +608,7 @@ api.post("/applications", async (req, res) => {
     explicit: body.appliedAt,
     explicitProvided,
   });
-  const dueProvided = Object.prototype.hasOwnProperty.call(body, "dueAt");
-  const dueAt =
-    status === "todo"
-      ? dueProvided
-        ? parseDueAt(body.dueAt)
-        : null
-      : null;
+  const dueAt = null;
 
   if (body.postingId) {
     const inserted = await pool.query(
@@ -695,6 +694,10 @@ api.patch("/applications/:id", async (req, res) => {
     description?: string;
     descriptionHtml?: string | null;
   };
+  if (body.status && isLegacyApplicationBacklogStatus(body.status)) {
+    res.status(400).json({ error: "Use Tasks for apply backlog" });
+    return;
+  }
   if (body.status && !isApplicationStatus(body.status)) {
     res.status(400).json({ error: "Invalid status" });
     return;
@@ -969,12 +972,26 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
 });
 
 api.delete("/applications/:id", async (req, res) => {
+  const taskResult = await pool.query<{ id: string }>(
+    `SELECT id FROM tasks
+     WHERE application_id = $1 AND status = 'open' AND category = 'application'`,
+    [req.params.id],
+  );
+  if (taskResult.rows[0]) {
+    const deleted = await deleteTask(pool, taskResult.rows[0].id);
+    if (!deleted) {
+      res.status(404).json({ error: "Application not found" });
+      return;
+    }
+    res.json({ ok: true });
+    return;
+  }
   const result = await pool.query(
     `DELETE FROM applications WHERE id = $1 AND status = 'todo' RETURNING id`,
     [req.params.id],
   );
   if (!result.rows[0]) {
-    res.status(404).json({ error: "To-do application not found" });
+    res.status(404).json({ error: "Application not found" });
     return;
   }
   res.json({ ok: true });

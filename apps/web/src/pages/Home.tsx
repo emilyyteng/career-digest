@@ -65,7 +65,6 @@ export default function Home() {
   const attention = data.needsAttention;
   const digestWhen = formatWhen(data.lastDigest.lastOkAt ?? data.lastDigest.finishedAt);
   const interviewTotal = attention.interviewActionCount;
-  const todoTotal = data.todoTotal;
   const greetingPeriod = currentGreetingPeriod();
 
   return (
@@ -136,38 +135,11 @@ export default function Home() {
         </div>
 
         <div className="home-attention-subsection">
-          <h4 className="home-subheading">Applications</h4>
-          {data.todo.length === 0 ? (
-            <p className="muted home-pick-empty">No to-do applications yet.</p>
-          ) : (
-            <>
-              <ul className="home-list">
-                {data.todo.map((row) => (
-                  <li key={row.id} className="home-job-row home-interview-row">
-                    <Link to={`/applications/${row.id}`} className="home-job-main">
-                      <span className="home-job-title">
-                        {row.company ?? "Unknown"} · {row.title ?? "Untitled"}
-                      </span>
-                      {row.location && (
-                        <span className="muted home-job-meta">{row.location}</span>
-                      )}
-                    </Link>
-                    {row.applyByIso && (
-                      <div className="home-interview-deadline">
-                        {row.applyByLabel && (
-                          <div className="home-interview-deadline-date">{row.applyByLabel}</div>
-                        )}
-                        <InterviewCountdown target={row.applyByIso} />
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              {todoTotal > ATTENTION_LIMIT && (
-                <SeeMore to="/applications?status=todo" label="See more →" />
-              )}
-            </>
-          )}
+          <h4 className="home-subheading">Tasks</h4>
+          <p className="muted home-pick-empty">
+            Open application tasks and deadlines live on{" "}
+            <Link to="/tasks">Tasks</Link>.
+          </p>
         </div>
       </section>
 

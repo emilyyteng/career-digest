@@ -22,24 +22,6 @@ export type HomeJobPick = {
   pickKind: "top" | "newly_ranked" | "new_to_digest";
 };
 
-export type HomeTodoApplication = {
-  id: string;
-  company: string | null;
-  title: string | null;
-  location: string | null;
-  url: string | null;
-  statusChangedAt: string | null;
-  applyByLabel: string | null;
-  applyByIso: string | null;
-};
-
-function applyByLabel(dueAt: string | null): string | null {
-  if (!dueAt) return null;
-  const formatted = formatDeadlineLong(dueAt);
-  if (!formatted) return null;
-  return `Apply by: ${formatted}`;
-}
-
 export type HomeInterviewAttention = {
   threadId: string;
   company: string | null;
@@ -94,8 +76,6 @@ export type HomeDashboard = {
     newlyRanked: HomeJobPick[];
     newToDigest: HomeJobPick[];
   };
-  todo: HomeTodoApplication[];
-  todoTotal: number;
   needsAttention: {
     interviews: HomeInterviewAttention[];
     interviewActionCount: number;
@@ -202,40 +182,6 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
     excludeNew,
   );
 
-  const todoCount = await pool.query<{ count: string }>(
-    `SELECT COUNT(*)::text AS count FROM applications WHERE status = 'todo'`,
-  );
-  const todoTotal = Number(todoCount.rows[0]?.count ?? 0) || 0;
-
-  const todo = await pool.query<{
-    id: string;
-    company: string | null;
-    title: string | null;
-    location: string | null;
-    url: string | null;
-    statusChangedAt: string | null;
-    dueAt: string | null;
-  }>(
-    `SELECT
-       a.id,
-       COALESCE(
-         a.company_name,
-         CASE WHEN p.source = 'simplify' THEN NULLIF(p.department, '') END,
-         c.name
-       ) AS company,
-       COALESCE(a.title, p.title) AS title,
-       COALESCE(a.location, p.location) AS location,
-       COALESCE(a.url, p.url) AS url,
-       a.status_changed_at AS "statusChangedAt",
-       a.due_at AS "dueAt"
-     FROM applications a
-     LEFT JOIN postings p ON p.id = a.posting_id
-     LEFT JOIN companies c ON c.id = p.company_id
-     WHERE a.status = 'todo'
-     ORDER BY a.due_at ASC NULLS LAST, a.status_changed_at DESC, a.created_at DESC
-     LIMIT ${HOME_ATTENTION_LIMIT}`,
-  );
-
   const interviewData = await listInterviewThreads(pool, "active");
   const interviews: HomeInterviewAttention[] = interviewData.actionRequired
     .slice(0, HOME_ATTENTION_LIMIT)
@@ -264,17 +210,6 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       newlyRanked: newlyRankedRows.map((r) => mapPick(r, "newly_ranked")),
       newToDigest: newToDigestRows.map((r) => mapPick(r, "new_to_digest")),
     },
-    todo: todo.rows.map((row) => ({
-      id: row.id,
-      company: row.company,
-      title: row.title,
-      location: row.location,
-      url: row.url,
-      statusChangedAt: row.statusChangedAt,
-      applyByLabel: row.dueAt ? applyByLabel(row.dueAt) : null,
-      applyByIso: row.dueAt ?? null,
-    })),
-    todoTotal,
     needsAttention: {
       interviews,
       interviewActionCount: interviewData.actionRequired.length,

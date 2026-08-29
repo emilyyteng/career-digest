@@ -6,7 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { createApplication, getApplication, type ApplicationRow } from "../api";
-import { combineApplyByDateTime, toDateInputValue, applyByTimeInputValue, DEFAULT_APPLY_BY_TIME } from "../formatDate";
+import { toDateInputValue } from "../formatDate";
 import LocationSuggest from "../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 
@@ -27,10 +27,8 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
   function AddApplicationForm({ onCreated, onCancel }, ref) {
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
-    const [status, setStatus] = useState("todo");
+    const [status, setStatus] = useState("applied");
     const [appliedAt, setAppliedAt] = useState(todayInput);
-    const [applyByDate, setApplyByDate] = useState("");
-    const [applyByTime, setApplyByTime] = useState(DEFAULT_APPLY_BY_TIME);
     const [location, setLocation] = useState("");
     const [descriptionHtml, setDescriptionHtml] = useState("");
     const [company, setCompany] = useState("");
@@ -38,8 +36,6 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
     const [url, setUrl] = useState("");
     const [notes, setNotes] = useState("");
     const [confirmDiscard, setConfirmDiscard] = useState(false);
-    const showAppliedAt = status !== "todo";
-    const showApplyBy = status === "todo";
 
     const dirty =
       company.trim() !== "" ||
@@ -48,9 +44,8 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
       url.trim() !== "" ||
       notes.trim() !== "" ||
       !isEmptyRichHtml(descriptionHtml) ||
-      status !== "todo" ||
-      (showAppliedAt && appliedAt !== todayInput()) ||
-      (showApplyBy && (applyByDate !== "" || applyByTime !== DEFAULT_APPLY_BY_TIME));
+      status !== "applied" ||
+      appliedAt !== todayInput();
 
     function requestClose() {
       if (!onCancel) return;
@@ -81,10 +76,6 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
       setSaving(true);
       setError(null);
       try {
-        const dueAt =
-          showApplyBy && applyByDate
-            ? combineApplyByDateTime(applyByDate, applyByTime)
-            : null;
         const created = await createApplication({
           status,
           company,
@@ -93,8 +84,7 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
           url,
           notes,
           descriptionHtml: isEmptyRichHtml(descriptionHtml) ? null : descriptionHtml,
-          appliedAt: showAppliedAt && appliedAt ? appliedAt : null,
-          dueAt,
+          appliedAt: appliedAt ? appliedAt : null,
         });
         const row = await getApplication(created.id);
         onCreated(row);
@@ -139,10 +129,9 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
             onChange={(event) => {
               const next = event.target.value;
               setStatus(next);
-              if (next !== "todo" && !appliedAt) setAppliedAt(todayInput());
+              if (!appliedAt) setAppliedAt(todayInput());
             }}
           >
-            <option value="todo">to-do</option>
             <option value="applied">applied</option>
             <option value="interviewing">interviewing</option>
             <option value="accepted">accepted</option>
@@ -174,7 +163,7 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
           <LocationSuggest value={location} onChange={setLocation} placeholder="Location" />
         </label>
         <label>
-          {showAppliedAt ? "Link to posting" : "Posting URL"}
+          Link to posting
           <input
             name="url"
             placeholder="https://…"
@@ -182,43 +171,15 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
             onChange={(event) => setUrl(event.target.value)}
           />
         </label>
-        {showAppliedAt && (
-          <label>
-            Date applied
-            <input
-              type="date"
-              name="appliedAt"
-              value={appliedAt}
-              onChange={(event) => setAppliedAt(event.target.value)}
-            />
-            <span className="field-hint muted">
-              Recorded when you applied. Cleared if you move back to to-do.
-            </span>
-          </label>
-        )}
-        {showApplyBy && (
-          <div className="interview-datetime-row">
-            <label>
-              Apply-by date
-              <input
-                type="date"
-                value={applyByDate}
-                onChange={(event) => setApplyByDate(event.target.value)}
-              />
-            </label>
-            <label>
-              Apply-by time
-              <input
-                type="time"
-                value={applyByTime}
-                onChange={(event) => setApplyByTime(event.target.value)}
-              />
-            </label>
-            <span className="field-hint muted">
-              Optional deadline for this to-do. Leave date blank if unknown.
-            </span>
-          </div>
-        )}
+        <label>
+          Date applied
+          <input
+            type="date"
+            name="appliedAt"
+            value={appliedAt}
+            onChange={(event) => setAppliedAt(event.target.value)}
+          />
+        </label>
         <label>
           Job description
           <RichTextField
