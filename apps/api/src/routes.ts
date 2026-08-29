@@ -8,7 +8,7 @@ import { getBoardRefresh, startBoardRefresh } from "./boardRefresh.js";
 import { getBackupJob, startBackupJob } from "./backupJob.js";
 import { getLiveRankBacklogJob, startLiveRankBacklogJob } from "./liveRankBacklogJob.js";
 import { pool } from "./db.js";
-import { sanitizeDescriptionHtml } from "./descriptionFromHtml.js";
+import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { getHomeDashboard } from "./home.js";
 import { getOpsStatus } from "./opsStatus.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
@@ -82,28 +82,6 @@ const applicationSelect = `
   LEFT JOIN postings p ON p.id = a.posting_id
   LEFT JOIN companies c ON c.id = p.company_id
 `;
-
-function plainTextToHtml(text: string | null | undefined): string | null {
-  const raw = text?.trim();
-  if (!raw) return null;
-  const escaped = raw
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return `<p>${escaped.replace(/\r\n|\r|\n/g, "<br>")}</p>`;
-}
-
-function normalizeDescriptionHtml(
-  html: string | null | undefined,
-  plain?: string | null,
-): string | null {
-  const fromHtml = html?.trim();
-  if (fromHtml) {
-    const cleaned = sanitizeDescriptionHtml(fromHtml);
-    return cleaned || null;
-  }
-  return plainTextToHtml(plain);
-}
 
 /** Parse YYYY-MM-DD as local noon, or accept full ISO. */
 function parseAppliedAt(value: unknown): Date | null {

@@ -273,3 +273,26 @@ export function descriptionFromHtml(
   if (textLength(picked) < MIN_TEXT_CHARS) return null;
   return picked;
 }
+
+function plainTextToHtml(text: string | null | undefined): string | null {
+  const raw = text?.trim();
+  if (!raw) return null;
+  const escaped = raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return `<p>${escaped.replace(/\r\n|\r|\n/g, "<br>")}</p>`;
+}
+
+/** Normalize manual paste (HTML or plain) into stored description HTML. */
+export function normalizeDescriptionHtml(
+  html: string | null | undefined,
+  plain?: string | null,
+): string | null {
+  const fromHtml = html?.trim();
+  if (fromHtml) {
+    const cleaned = sanitizeDescriptionHtml(fromHtml);
+    return cleaned || null;
+  }
+  return plainTextToHtml(plain);
+}
