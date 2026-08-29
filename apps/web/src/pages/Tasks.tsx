@@ -310,56 +310,52 @@ export default function Tasks() {
           : null;
         return (
           <article key={row.id} className="card application-card task-card">
-            {view === "open" && (
-              <div className="task-card-toolbar">
-                <button
-                  type="button"
-                  className="task-edit-btn"
-                  aria-label="Edit task"
-                  disabled={pendingId === row.id}
-                  onClick={() => setEditing(row)}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" />
-                    <path d="M13.5 6.5l3 3" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="todo-remove-btn"
-                  aria-label="Delete task"
-                  disabled={pendingId === row.id}
-                  onClick={() => setRemoveConfirm(row)}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" />
-                  </svg>
-                </button>
-              </div>
-            )}
-            <div className="application-card-layout">
-              <div className="application-card-top task-card-title-row">
-                <h2 className="application-card-title">{row.title}</h2>
-              </div>
-              <div className="task-card-subrow">
-                <div className="meta application-card-meta">
-                  {row.organization && <span className="employer">{row.organization}</span>}
-                  {application && row.location && (
-                    <span className="location">{row.location}</span>
-                  )}
-                  {!application && (
-                    <span className="task-category-pill">{categoryLabel(row.category)}</span>
-                  )}
-                </div>
-                {view === "open" && row.dueAt && (
-                  <div className="application-card-aside-countdown">
-                    {deadlineLabel && (
-                      <div className="task-card-deadline-label">{deadlineLabel}</div>
-                    )}
-                    <InterviewCountdown target={row.dueAt} />
-                  </div>
+            <div className="task-card-header">
+              <h2 className="application-card-title task-card-header-title">{row.title}</h2>
+              <div className="meta application-card-meta task-card-header-meta">
+                {row.organization && <span className="employer">{row.organization}</span>}
+                {application && row.location && (
+                  <span className="location">{row.location}</span>
+                )}
+                {!application && (
+                  <span className="task-category-pill">{categoryLabel(row.category)}</span>
                 )}
               </div>
+              {view === "open" && row.dueAt && (
+                <div className="application-card-aside-countdown task-card-header-aside">
+                  {deadlineLabel && (
+                    <div className="task-card-deadline-label">{deadlineLabel}</div>
+                  )}
+                  <InterviewCountdown target={row.dueAt} />
+                </div>
+              )}
+              {view === "open" && (
+                <div className="task-card-toolbar">
+                  <button
+                    type="button"
+                    className="task-edit-btn"
+                    aria-label="Edit task"
+                    disabled={pendingId === row.id}
+                    onClick={() => setEditing(row)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" />
+                      <path d="M13.5 6.5l3 3" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="todo-remove-btn"
+                    aria-label="Delete task"
+                    disabled={pendingId === row.id}
+                    onClick={() => setRemoveConfirm(row)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
             {(view === "open" || row.url || completedLabel) && (
               <div className="row-actions application-card-footer application-card-footer-todo">
