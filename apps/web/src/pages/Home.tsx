@@ -2,15 +2,18 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getHomeDashboard, type HomeDashboard, type HomeJobPick } from "../api";
 import InterviewCountdown from "../InterviewCountdown";
+import ThemeEmoji from "../ThemeEmoji";
 import { formatStepWhen } from "../formatDate";
+import {
+  greetingEmojiForPeriod,
+  greetingLabelForPeriod,
+  greetingPeriodFromHour,
+} from "../pageTheme";
 
 const ATTENTION_LIMIT = 4;
 
-function greetingPeriod(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+function currentGreetingPeriod() {
+  return greetingPeriodFromHour(new Date().getHours());
 }
 
 function formatWhen(value: string | null | undefined): string | null {
@@ -63,13 +66,20 @@ export default function Home() {
   const digestWhen = formatWhen(data.lastDigest.lastOkAt ?? data.lastDigest.finishedAt);
   const interviewTotal = attention.interviewActionCount;
   const todoTotal = data.todoTotal;
+  const greetingPeriod = currentGreetingPeriod();
 
   return (
     <section className="home-page">
       <header className="home-hero card">
         <div className="home-hero-main">
           <h2 className="home-greeting">
-            {greetingPeriod()}, {data.greetingName}
+            <span>
+              {greetingLabelForPeriod(greetingPeriod)}, {data.greetingName}
+            </span>
+            <ThemeEmoji
+              emoji={greetingEmojiForPeriod(greetingPeriod)}
+              className="theme-emoji theme-emoji-greeting"
+            />
           </h2>
           <p className="muted home-hero-sub">
             Your internship digest at a glance.

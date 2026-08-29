@@ -1,4 +1,4 @@
-import { Link, NavLink, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import ApplicationDetail from "./pages/ApplicationDetail";
 import Applications from "./pages/Applications";
 import Home from "./pages/Home";
@@ -7,13 +7,21 @@ import Interviews from "./pages/Interviews";
 import JobDetail from "./pages/JobDetail";
 import Jobs from "./pages/Jobs";
 import Status from "./pages/Status";
+import ThemeEmoji from "./ThemeEmoji";
+import { headerEmojiForSection, sectionFromPathname } from "./pageTheme";
 
 export default function App() {
+  const { pathname } = useLocation();
+  const headerEmoji = headerEmojiForSection(sectionFromPathname(pathname));
+
   return (
     <div className="shell">
       <header className="top">
         <Link to="/" className="top-brand" aria-label="career-digest home">
-          <h1>career-digest</h1>
+          <h1 className="top-brand-title">
+            <span>career-digest</span>
+            <ThemeEmoji emoji={headerEmoji} />
+          </h1>
         </Link>
         <nav>
           <NavLink to="/" end>Home</NavLink>

@@ -67,6 +67,11 @@ a:hover { color: var(--accent-purple-deep); }
 .top-brand:hover h1 {
   color: var(--accent-purple-deep);
 }
+.top-brand-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
 .top h1 {
   font-family: var(--font-mono);
   font-size: 1.15rem;
@@ -99,6 +104,19 @@ nav a.active {
   background: var(--surface);
   border-color: var(--accent-pink);
   box-shadow: 0 1px 0 var(--accent-pink);
+}
+
+.theme-emoji {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  opacity: 0.88;
+  filter: saturate(0.92);
+  transform: translateY(0.02em);
+}
+.theme-emoji-greeting {
+  font-size: 1.15em;
+  opacity: 0.9;
 }
 
 .toolbar {
@@ -2040,6 +2058,10 @@ textarea { min-height: 10rem; width: 100%; }
 }
 .home-greeting {
   margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
   font-family: var(--font-sans);
   font-size: 1.35rem;
   font-weight: 600;
