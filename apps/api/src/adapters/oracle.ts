@@ -242,13 +242,17 @@ export async function fetchOracleJobs(boardToken: string): Promise<NormalizedPos
 
 /** Probe total open jobs on a board (one list request). Used by discover-boards sizing. */
 export async function probeOracleBoardJobCount(boardToken: string): Promise<number | null> {
-  const { apiHost, siteNumber } = parseOracleBoardToken(boardToken);
-  const url = buildListUrl(apiHost, siteNumber, 0);
-  const response = await oracleFetch(url, apiHost);
-  if (!response.ok) return null;
-  const body = (await response.json()) as OracleListResponse;
-  const total = body.items?.[0]?.TotalJobsCount;
-  return typeof total === "number" && Number.isFinite(total) ? total : null;
+  try {
+    const { apiHost, siteNumber } = parseOracleBoardToken(boardToken);
+    const url = buildListUrl(apiHost, siteNumber, 0);
+    const response = await oracleFetch(url, apiHost);
+    if (!response.ok) return null;
+    const body = (await response.json()) as OracleListResponse;
+    const total = body.items?.[0]?.TotalJobsCount;
+    return typeof total === "number" && Number.isFinite(total) ? total : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchOracleJobDetails(

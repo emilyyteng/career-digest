@@ -3,6 +3,10 @@ import { fetchAshbyJobs } from "./ashby.js";
 import { fetchGreenhouseJobContent, fetchGreenhouseJobs } from "./greenhouse.js";
 import { fetchLeverJobs } from "./lever.js";
 import { fetchOracleJobDetails, fetchOracleJobs } from "./oracle.js";
+import {
+  fetchSmartrecruitersJobContent,
+  fetchSmartrecruitersJobs,
+} from "./smartrecruiters.js";
 
 export async function fetchBoardJobs(
   company: CompanyConfig,
@@ -16,6 +20,8 @@ export async function fetchBoardJobs(
       return fetchAshbyJobs(company.boardToken);
     case "oracle":
       return fetchOracleJobs(company.boardToken);
+    case "smartrecruiters":
+      return fetchSmartrecruitersJobs(company.boardToken);
     case "simplify":
       return [];
   }
@@ -31,6 +37,9 @@ export async function fetchMissingDescription(
   }
   if (company.source === "oracle") {
     return fetchOracleJobDetails(company.boardToken, posting.externalId);
+  }
+  if (company.source === "smartrecruiters") {
+    return fetchSmartrecruitersJobContent(company.boardToken, posting.externalId);
   }
   return posting.descriptionHtml;
 }

@@ -1,0 +1,54 @@
+[
+  {
+    "id": "misc-workday-1",
+    "company_name": "Custom Careers",
+    "title": "Operations Intern",
+    "url": "https://careers.customco.com/job/12345",
+    "locations": ["Chicago, IL"],
+    "date_posted": 1735689600,
+    "active": true
+  },
+  {
+    "id": "oracle-hybrid-1",
+    "company_name": "Deferred Oracle Tenant",
+    "title": "Analyst Intern",
+    "url": "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
+    "locations": ["Washington, DC"],
+    "date_posted": 1735689600,
+    "active": true
+  },
+  {
+    "id": "smartrecruiters-hybrid-1",
+    "company_name": "Western Digital",
+    "title": "Hardware Engineering Intern",
+    "url": "https://jobs.smartrecruiters.com/WesternDigital/744000140949875",
+    "locations": ["San Jose, CA"],
+    "date_posted": 1735689600,
+    "active": true
+  },
+  {
+    "id": "smartrecruiters-deferred-1",
+    "company_name": "Bosch Home Comfort",
+    "title": "Powertrain Controls Software Engineer Intern",
+    "url": "https://jobs.smartrecruiters.com/BoschGroup/744000100000001",
+    "locations": ["Farmington Hills, MI"],
+    "date_posted": 1735689600,
+    "active": true
+  },
+  {
+    "id": "greenhouse-skip-1",
+    "company_name": "Direct GH",
+    "title": "SWE Intern",
+    "url": "https://boards.greenhouse.io/acme/jobs/12345",
+    "locations": ["San Francisco, CA"],
+    "date_posted": 1735689600,
+    "active": true
+  },
+  {
+    "id": "inactive-1",
+    "company_name": "Inactive Co",
+    "title": "Old Intern",
+    "url": "https://careers.inactive.com/job/1",
+    "active": false
+  }
+]

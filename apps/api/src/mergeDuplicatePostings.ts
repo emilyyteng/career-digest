@@ -14,7 +14,7 @@ type DuplicatePair = {
   simplify_id: string;
   canonical_id: string;
   match_key: string;
-  source: "greenhouse" | "lever" | "ashby" | "oracle";
+  source: "greenhouse" | "lever" | "ashby" | "oracle" | "smartrecruiters";
 };
 
 type ApplicationRow = {
@@ -41,7 +41,6 @@ async function loadGreenhousePairs(client: PoolClient): Promise<DuplicatePair[]>
      FROM postings s
      JOIN postings g ON g.source = 'greenhouse'
      WHERE s.source = 'simplify'
-       AND s.removed_from_board_at IS NULL
        AND g.removed_from_board_at IS NULL
        AND (
          g.external_id = substring(s.url from '(?:^|[?&])gh_jid=([0-9]+)')
@@ -66,7 +65,6 @@ async function loadLeverPairs(client: PoolClient): Promise<DuplicatePair[]> {
      FROM postings s
      JOIN postings l ON l.source = 'lever'
      WHERE s.source = 'simplify'
-       AND s.removed_from_board_at IS NULL
        AND l.removed_from_board_at IS NULL
        AND (
          substring(s.url from 'jobs\\.lever\\.co/[^/]+/([^/?#]+)') = l.external_id
@@ -89,7 +87,6 @@ async function loadAshbyPairs(client: PoolClient): Promise<DuplicatePair[]> {
      FROM postings s
      JOIN postings a ON a.source = 'ashby'
      WHERE s.source = 'simplify'
-       AND s.removed_from_board_at IS NULL
        AND a.removed_from_board_at IS NULL
        AND (
          substring(s.url from 'jobs\\.ashbyhq\\.com/[^/]+/([^/?#]+)') = a.external_id
@@ -112,10 +109,25 @@ async function loadOraclePairs(client: PoolClient): Promise<DuplicatePair[]> {
      FROM postings s
      JOIN postings o ON o.source = 'oracle'
      WHERE s.source = 'simplify'
-       AND s.removed_from_board_at IS NULL
        AND o.removed_from_board_at IS NULL
        AND s.url ILIKE '%oraclecloud%'
        AND substring(s.url from '/job/([^/?#]+)') = o.external_id`,
+  );
+  return rows;
+}
+
+async function loadSmartrecruitersPairs(client: PoolClient): Promise<DuplicatePair[]> {
+  const { rows } = await client.query<DuplicatePair>(
+    `SELECT
+       s.id AS simplify_id,
+       sr.id AS canonical_id,
+       sr.external_id AS match_key,
+       'smartrecruiters'::text AS source
+     FROM postings s
+     JOIN postings sr ON sr.source = 'smartrecruiters'
+     WHERE s.source = 'simplify'
+       AND sr.removed_from_board_at IS NULL
+       AND substring(s.url from 'smartrecruiters\\.com/[^/]+/([0-9]+)') = sr.external_id`,
   );
   return rows;
 }
@@ -128,6 +140,20 @@ function mergeNotes(a: string | null, b: string | null): string | null {
   if (left.includes(right)) return left;
   if (right.includes(left)) return right;
   return `${left}\n\n${right}`;
+}
+
+const APPLICATION_STATUS_RANK: Record<string, number> = {
+  todo: 0,
+  applied: 1,
+  interviewing: 2,
+  accepted: 3,
+  declined: 1,
+};
+
+function pickMergedApplicationStatus(left: string, right: string): string {
+  const leftRank = APPLICATION_STATUS_RANK[left] ?? 0;
+  const rightRank = APPLICATION_STATUS_RANK[right] ?? 0;
+  return rightRank > leftRank ? right : left;
 }
 
 async function repointApplication(
@@ -153,13 +179,38 @@ async function repointApplication(
     return "moved";
   }
 
+  await client.query(
+    `UPDATE application_documents SET application_id = $1 WHERE application_id = $2`,
+    [canonicalApp.id, simplifyApp.id],
+  );
+  await client.query(
+    `UPDATE interview_threads SET primary_application_id = $1 WHERE primary_application_id = $2`,
+    [canonicalApp.id, simplifyApp.id],
+  );
+  const canonicalMember = await client.query(
+    `SELECT 1 FROM application_thread_members WHERE application_id = $1 LIMIT 1`,
+    [canonicalApp.id],
+  );
+  if (canonicalMember.rows.length > 0) {
+    await client.query(`DELETE FROM application_thread_members WHERE application_id = $1`, [
+      simplifyApp.id,
+    ]);
+  } else {
+    await client.query(
+      `UPDATE application_thread_members SET application_id = $1 WHERE application_id = $2`,
+      [canonicalApp.id, simplifyApp.id],
+    );
+  }
+
   const mergedNotes = mergeNotes(canonicalApp.notes, simplifyApp.notes);
+  const mergedStatus = pickMergedApplicationStatus(canonicalApp.status, simplifyApp.status);
   await client.query(
     `UPDATE applications
      SET notes = $2,
+         status = $3,
          updated_at = now()
      WHERE id = $1`,
-    [canonicalApp.id, mergedNotes],
+    [canonicalApp.id, mergedNotes, mergedStatus],
   );
   await client.query(`DELETE FROM applications WHERE id = $1`, [simplifyApp.id]);
   return "merged";
@@ -228,6 +279,7 @@ export type MergeDuplicateResult = {
   lever: MergeSourceStats;
   ashby: MergeSourceStats;
   oracle: MergeSourceStats;
+  smartrecruiters: MergeSourceStats;
   applicationsMoved: number;
   applicationsMerged: number;
 };
@@ -278,6 +330,7 @@ export async function runMergeDuplicatePostings(): Promise<MergeDuplicateResult>
   const lever: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
   const ashby: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
   const oracle: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
+  const smartrecruiters: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
   const applicationsMoved = { count: 0 };
   const applicationsMerged = { count: 0 };
   const seenSimplify = new Set<string>();
@@ -315,6 +368,14 @@ export async function runMergeDuplicatePostings(): Promise<MergeDuplicateResult>
       applicationsMerged,
       seenSimplify,
     );
+    await mergePairs(
+      client,
+      await loadSmartrecruitersPairs(client),
+      smartrecruiters,
+      applicationsMoved,
+      applicationsMerged,
+      seenSimplify,
+    );
   } finally {
     client.release();
   }
@@ -324,6 +385,7 @@ export async function runMergeDuplicatePostings(): Promise<MergeDuplicateResult>
     lever,
     ashby,
     oracle,
+    smartrecruiters,
     applicationsMoved: applicationsMoved.count,
     applicationsMerged: applicationsMerged.count,
   };
@@ -337,7 +399,7 @@ if (isMain) {
   try {
     const result = await runMergeDuplicatePostings();
     console.log(
-      `Done. greenhouse=${result.greenhouse.deletedSimplify}/${result.greenhouse.pairs} lever=${result.lever.deletedSimplify}/${result.lever.pairs} ashby=${result.ashby.deletedSimplify}/${result.ashby.pairs} oracle=${result.oracle.deletedSimplify}/${result.oracle.pairs} simplify rows removed; moved ${result.applicationsMoved} application(s), merged ${result.applicationsMerged} application(s).`,
+      `Done. greenhouse=${result.greenhouse.deletedSimplify}/${result.greenhouse.pairs} lever=${result.lever.deletedSimplify}/${result.lever.pairs} ashby=${result.ashby.deletedSimplify}/${result.ashby.pairs} oracle=${result.oracle.deletedSimplify}/${result.oracle.pairs} smartrecruiters=${result.smartrecruiters.deletedSimplify}/${result.smartrecruiters.pairs} simplify rows removed; moved ${result.applicationsMoved} application(s), merged ${result.applicationsMerged} application(s).`,
     );
   } finally {
     await pool.end();

@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "TotalJobsCount": 1,
+      "requisitionList": [
+        {
+          "Id": "1910",
+          "Title": "Summer Analyst Intern",
+          "PostedDate": "2025-01-15",
+          "PrimaryLocation": "Washington, DC"
+        }
+      ]
+    }
+  ]
+}

@@ -72,7 +72,7 @@ async function upsertPosting(
 }
 
 /** Drop listings that left the board unless they have an application/notes row. */
-async function reconcileRemovedFromBoard(
+export async function reconcileRemovedFromBoard(
   companyId: string,
   seenExternalIds: string[],
 ): Promise<{ deleted: number; retained: number }> {
@@ -100,7 +100,7 @@ async function reconcileRemovedFromBoard(
 }
 
 /** Full-time leftovers and expired intern terms, unless they have an application. */
-async function dropUntrackedRejected(companyId: string): Promise<number> {
+export async function dropUntrackedRejected(companyId: string): Promise<number> {
   const rows = await pool.query<{
     id: string;
     title: string;
@@ -192,9 +192,15 @@ export async function runIngest(): Promise<void> {
     boardToken: "listings",
   };
 
+  let simplifySeenIds: string[] | null = null;
+  let simplifyListed = 0;
+  let simplifyUpserted = 0;
+
   try {
     const companyId = await upsertCompany(simplifyCompany);
     const { postings, seenIds } = await fetchSimplifyMiscellaneousJobs();
+    simplifySeenIds = seenIds;
+    simplifyListed = postings.length;
     listed += postings.length;
     internships += postings.length;
 
@@ -209,16 +215,8 @@ export async function runIngest(): Promise<void> {
     for (const posting of toUpsert) {
       await upsertPosting(companyId, posting);
       upserted += 1;
+      simplifyUpserted += 1;
     }
-
-    const removed = await reconcileRemovedFromBoard(companyId, seenIds);
-    deleted += removed.deleted;
-    retainedClosed += removed.retained;
-    deleted += await dropUntrackedRejected(companyId);
-
-    console.log(
-      `simplify: ${postings.length} listed, ${toUpsert.length} upserted, ${removed.deleted} deleted (gone, no application), ${removed.retained} kept closed (applied)`,
-    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`simplify: FAILED ${message}`);
@@ -226,8 +224,25 @@ export async function runIngest(): Promise<void> {
 
   const merged = await runMergeDuplicatePostings();
   console.log(
-    `merge duplicates: greenhouse ${merged.greenhouse.deletedSimplify}/${merged.greenhouse.pairs}, lever ${merged.lever.deletedSimplify}/${merged.lever.pairs}, ashby ${merged.ashby.deletedSimplify}/${merged.ashby.pairs}, oracle ${merged.oracle.deletedSimplify}/${merged.oracle.pairs}; moved ${merged.applicationsMoved} application(s), merged ${merged.applicationsMerged} application(s).`,
+    `merge duplicates: greenhouse ${merged.greenhouse.deletedSimplify}/${merged.greenhouse.pairs}, lever ${merged.lever.deletedSimplify}/${merged.lever.pairs}, ashby ${merged.ashby.deletedSimplify}/${merged.ashby.pairs}, oracle ${merged.oracle.deletedSimplify}/${merged.oracle.pairs}, smartrecruiters ${merged.smartrecruiters.deletedSimplify}/${merged.smartrecruiters.pairs}; moved ${merged.applicationsMoved} application(s), merged ${merged.applicationsMerged} application(s).`,
   );
+
+  if (simplifySeenIds) {
+    try {
+      const companyId = await upsertCompany(simplifyCompany);
+      const removed = await reconcileRemovedFromBoard(companyId, simplifySeenIds);
+      deleted += removed.deleted;
+      retainedClosed += removed.retained;
+      deleted += await dropUntrackedRejected(companyId);
+
+      console.log(
+        `simplify: ${simplifyListed} listed, ${simplifyUpserted} upserted, ${removed.deleted} deleted (gone, no application), ${removed.retained} kept closed (applied)`,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`simplify reconcile: FAILED ${message}`);
+    }
+  }
 
   console.log(
     `Done. Listed ${listed}, intern-titled ${internships}, upserted ${upserted}, deleted ${deleted}, retained closed ${retainedClosed}.`,

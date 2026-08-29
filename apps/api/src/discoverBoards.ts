@@ -6,6 +6,11 @@ import {
   parseOracleBoardFromUrl,
   probeOracleBoardJobCount,
 } from "./adapters/oracle.js";
+import {
+  isSmartrecruitersAtsUrl,
+  parseSmartrecruitersBoardFromUrl,
+  probeSmartrecruitersBoardJobCount,
+} from "./adapters/smartrecruiters.js";
 import { companies as configuredCompanies } from "./config/companies.js";
 import { SIMPLIFY_LISTINGS_URL } from "./adapters/simplify.js";
 import type { CompanyConfig, Source } from "./types.js";
@@ -26,12 +31,19 @@ type DiscoveredBoard = {
   totalJobsCount?: number;
 };
 
-type DeferredOracleBoard = DiscoveredBoard & {
+type DeferredLargeBoard = DiscoveredBoard & {
   totalJobsCount: number;
 };
 
-const ATS_SOURCES: Source[] = ["greenhouse", "lever", "ashby", "oracle"];
+const ATS_SOURCES: Source[] = [
+  "greenhouse",
+  "lever",
+  "ashby",
+  "oracle",
+  "smartrecruiters",
+];
 const DEFAULT_ORACLE_DISCOVER_MAX_JOBS = 250;
+const DEFAULT_SMARTRECRUITERS_DISCOVER_MAX_JOBS = 250;
 const INVALID_TOKENS = new Set(["embed", "jobs", "job-board", "job_app"]);
 
 const DIRECT_PATTERNS: Array<{ source: Source; re: RegExp }> = [
@@ -116,6 +128,13 @@ function oracleDiscoverMaxJobs(): number {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_ORACLE_DISCOVER_MAX_JOBS;
 }
 
+function smartrecruitersDiscoverMaxJobs(): number {
+  const n = Number(process.env.SMARTRECRUITERS_DISCOVER_MAX_JOBS);
+  return Number.isFinite(n) && n > 0
+    ? Math.floor(n)
+    : DEFAULT_SMARTRECRUITERS_DISCOVER_MAX_JOBS;
+}
+
 async function fetchSimplifyListings(): Promise<SimplifyListing[]> {
   const response = await fetch(SIMPLIFY_LISTINGS_URL, {
     headers: { Accept: "application/json" },
@@ -183,8 +202,10 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
   newBoards: DiscoveredBoard[];
   unresolvedEmbed: Array<{ company: string; sampleUrl: string; ghJid: string; listings: number }>;
   skippedInvalid: Array<{ source: Source; boardToken: string; company: string; sampleUrl: string }>;
-  deferredLargeOracle: DeferredOracleBoard[];
+  deferredLargeOracle: DeferredLargeBoard[];
   skippedOracleProbe: Array<{ boardToken: string; company: string; sampleUrl: string }>;
+  deferredLargeSmartrecruiters: DeferredLargeBoard[];
+  skippedSmartrecruitersProbe: Array<{ boardToken: string; company: string; sampleUrl: string }>;
 }> {
   const listings = await fetchSimplifyListings();
   const active = listings.filter((row) => row.active && row.url?.trim());
@@ -192,6 +213,7 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
 
   const directCounts = new Map<string, { board: DiscoveredBoard; sampleUrl: string }>();
   const oracleCounts = new Map<string, { board: DiscoveredBoard; sampleUrl: string }>();
+  const smartrecruitersCounts = new Map<string, { board: DiscoveredBoard; sampleUrl: string }>();
   const embedByCompany = new Map<
     string,
     { company: string; sampleUrl: string; ghJid: string; count: number }
@@ -264,6 +286,29 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
       continue;
     }
 
+    if (isSmartrecruitersAtsUrl(url)) {
+      const boardToken = parseSmartrecruitersBoardFromUrl(url);
+      if (!boardToken) continue;
+      const id = key("smartrecruiters", boardToken);
+      if (known.has(id)) continue;
+      const existing = smartrecruitersCounts.get(id);
+      if (existing) {
+        existing.board.listingCount += 1;
+      } else {
+        smartrecruitersCounts.set(id, {
+          board: {
+            name: company,
+            source: "smartrecruiters",
+            boardToken,
+            method: "direct_url",
+            listingCount: 1,
+          },
+          sampleUrl: url,
+        });
+      }
+      continue;
+    }
+
     const embedJobId = parseGreenhouseEmbedJobId(url);
     if (embedJobId) {
       const embedKey = company.toLowerCase();
@@ -287,7 +332,7 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
     newBoards.push(board);
   }
 
-  const deferredLargeOracle: DeferredOracleBoard[] = [];
+  const deferredLargeOracle: DeferredLargeBoard[] = [];
   const skippedOracleProbe: Array<{
     boardToken: string;
     company: string;
@@ -309,6 +354,33 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
     board.totalJobsCount = totalJobsCount;
     if (totalJobsCount > oracleMaxJobs) {
       deferredLargeOracle.push({ ...board, totalJobsCount });
+      continue;
+    }
+    newBoards.push(board);
+  }
+
+  const deferredLargeSmartrecruiters: DeferredLargeBoard[] = [];
+  const skippedSmartrecruitersProbe: Array<{
+    boardToken: string;
+    company: string;
+    sampleUrl: string;
+  }> = [];
+  const smartrecruitersMaxJobs = smartrecruitersDiscoverMaxJobs();
+
+  for (const { board, sampleUrl } of smartrecruitersCounts.values()) {
+    board.sampleUrl = sampleUrl;
+    const totalJobsCount = await probeSmartrecruitersBoardJobCount(board.boardToken);
+    if (totalJobsCount == null) {
+      skippedSmartrecruitersProbe.push({
+        boardToken: board.boardToken,
+        company: board.name,
+        sampleUrl,
+      });
+      continue;
+    }
+    board.totalJobsCount = totalJobsCount;
+    if (totalJobsCount > smartrecruitersMaxJobs) {
+      deferredLargeSmartrecruiters.push({ ...board, totalJobsCount });
       continue;
     }
     newBoards.push(board);
@@ -373,6 +445,10 @@ async function discoverBoards(configured: CompanyConfig[]): Promise<{
     skippedInvalid,
     deferredLargeOracle: deferredLargeOracle.sort((a, b) => a.name.localeCompare(b.name)),
     skippedOracleProbe,
+    deferredLargeSmartrecruiters: deferredLargeSmartrecruiters.sort((a, b) =>
+      a.name.localeCompare(b.name),
+    ),
+    skippedSmartrecruitersProbe,
   };
 }
 
@@ -407,7 +483,7 @@ function writeCompaniesFile(companiesPath: string, toAdd: DiscoveredBoard[]): vo
 
 function parseCompaniesFile(content: string): CompanyConfig[] {
   const re =
-    /\{\s*name:\s*"((?:\\.|[^"\\])*)",\s*source:\s*"(greenhouse|lever|ashby|oracle)",\s*boardToken:\s*"((?:\\.|[^"\\])*)"\s*\}/g;
+    /\{\s*name:\s*"((?:\\.|[^"\\])*)",\s*source:\s*"(greenhouse|lever|ashby|oracle|smartrecruiters)",\s*boardToken:\s*"((?:\\.|[^"\\])*)"\s*\}/g;
   const out: CompanyConfig[] = [];
   for (const match of content.matchAll(re)) {
     out.push({
@@ -429,9 +505,12 @@ function printReport(
     skippedInvalid,
     deferredLargeOracle,
     skippedOracleProbe,
+    deferredLargeSmartrecruiters,
+    skippedSmartrecruitersProbe,
   } = result;
   const activeConfigured = configured.filter((c) => ATS_SOURCES.includes(c.source));
   const oracleMaxJobs = oracleDiscoverMaxJobs();
+  const smartrecruitersMaxJobs = smartrecruitersDiscoverMaxJobs();
 
   console.log("Simplify board discovery");
   console.log(`Configured ATS boards: ${activeConfigured.length}`);
@@ -439,9 +518,15 @@ function printReport(
   console.log(
     `Deferred large Oracle boards (>${oracleMaxJobs} jobs, keep Simplify hybrid): ${deferredLargeOracle.length}`,
   );
+  console.log(
+    `Deferred large SmartRecruiters boards (>${smartrecruitersMaxJobs} jobs, keep Simplify hybrid): ${deferredLargeSmartrecruiters.length}`,
+  );
   console.log(`Unresolved Greenhouse embeds (gh_jid): ${unresolvedEmbed.length}`);
   console.log(`Skipped invalid direct tokens: ${skippedInvalid.length}`);
   console.log(`Oracle boards with failed size probe: ${skippedOracleProbe.length}`);
+  console.log(
+    `SmartRecruiters boards with failed size probe: ${skippedSmartrecruitersProbe.length}`,
+  );
   console.log("");
 
   if (newBoards.length > 0) {
@@ -483,6 +568,27 @@ function printReport(
     console.log("");
   }
 
+  if (deferredLargeSmartrecruiters.length > 0) {
+    console.log(
+      `== Deferred SmartRecruiters boards (>${smartrecruitersMaxJobs} total jobs — use Simplify misc, not full ingest) ==`,
+    );
+    for (const board of deferredLargeSmartrecruiters) {
+      console.log(
+        `  smartrecruiters/${board.boardToken}  (${board.name})  simplifyListings=${board.listingCount}  boardJobs=${board.totalJobsCount}`,
+      );
+      if (board.sampleUrl) console.log(`    sample: ${board.sampleUrl}`);
+    }
+    console.log("");
+  }
+
+  if (skippedSmartrecruitersProbe.length > 0) {
+    console.log("== SmartRecruiters boards with failed size probe (not added) ==");
+    for (const row of skippedSmartrecruitersProbe) {
+      console.log(`  ${row.company}  ${row.boardToken}  ${row.sampleUrl}`);
+    }
+    console.log("");
+  }
+
   if (unresolvedEmbed.length > 0) {
     console.log("== Unresolved Greenhouse embeds (manual board token) ==");
     console.log(
@@ -515,7 +621,16 @@ function printReport(
     "  • Oracle boardToken format: {apiHost}|{siteNumber}. Boards over ORACLE_DISCOVER_MAX_JOBS",
   );
   console.log(
-    `    (default ${DEFAULT_ORACLE_DISCOVER_MAX_JOBS}) are deferred for Simplify hybrid ingest.`,
+    `    (default ${DEFAULT_ORACLE_DISCOVER_MAX_JOBS}) are deferred; active Simplify listings still ingest as simplify until the board is configured.`,
+  );
+  console.log(
+    "  • SmartRecruiters boardToken is the company slug from jobs.smartrecruiters.com/{token}/…. Boards over SMARTRECRUITERS_DISCOVER_MAX_JOBS",
+  );
+  console.log(
+    `    (default ${DEFAULT_SMARTRECRUITERS_DISCOVER_MAX_JOBS}) are deferred; active Simplify listings still ingest as simplify until the board is configured.`,
+  );
+  console.log(
+    "  • Configured large SmartRecruiters boards ingest with q=intern; unconfigured boards rely on active Simplify listings.",
   );
   console.log(
     "  • Custom-domain Greenhouse embeds (gh_jid=) are probed via company slug, domain, fly+domain, and same-name boards.",

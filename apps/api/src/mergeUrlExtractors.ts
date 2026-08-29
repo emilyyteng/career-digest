@@ -4,6 +4,10 @@ import { extractOracleJobIdFromUrl } from "./adapters/oracle.js";
 export function extractGreenhouseJobId(url: string): string | null {
   const ghJid = url.match(/(?:^|[?&])gh_jid=(\d+)/i);
   if (ghJid?.[1]) return ghJid[1];
+  const boardsJob = url.match(
+    /(?:boards|job-boards)\.greenhouse\.io\/[^/]+\/jobs\/(\d+)/i,
+  );
+  if (boardsJob?.[1]) return boardsJob[1];
   if (/boards\.greenhouse\.io\/embed\/job_app/i.test(url)) {
     const token = url.match(/[?&]token=(\d+)/i);
     if (token?.[1]) return token[1];
@@ -34,4 +38,10 @@ export function extractAshbyPostingId(url: string): string | null {
 /** Oracle requisition id from Candidate Experience job URLs. */
 export function extractOracleJobId(url: string): string | null {
   return extractOracleJobIdFromUrl(url);
+}
+
+/** SmartRecruiters posting id from jobs.smartrecruiters.com URLs. */
+export function extractSmartrecruitersPostingId(url: string): string | null {
+  const direct = url.match(/smartrecruiters\.com\/[^/?#]+\/(\d+)/i);
+  return direct?.[1] ?? null;
 }

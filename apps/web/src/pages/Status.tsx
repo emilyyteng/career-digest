@@ -16,6 +16,12 @@ function formatWhen(value: string | null | undefined): string {
   return formatStepWhen(value) ?? value;
 }
 
+function formatBackupSize(bytes: number | null): string | null {
+  if (bytes == null) return null;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 const SCRAPE_STATUS_HINT: Record<string, string> = {
   never: "Not scraped yet — will try on next board refresh.",
   empty: "Page fetched but no description extracted (may be genuinely empty).",
@@ -287,11 +293,25 @@ export default function Status() {
             </dd>
             <dt>Next scheduled run</dt>
             <dd>{formatWhen(ops.schedule.nextBoardRefreshAt)}</dd>
+            <dt>Last database backup</dt>
+            <dd>
+              {ops.backup.lastAt
+                ? [
+                    formatWhen(ops.backup.lastAt),
+                    formatBackupSize(ops.backup.sizeBytes),
+                    ops.backup.backupCount > 0
+                      ? `${ops.backup.backupCount} retained`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                : "None yet — run npm run backup"}
+            </dd>
           </dl>
           <p className="muted ops-card-hint">
             {ops.schedule.cronInstalled
-              ? "Requires your Mac to be awake at the scheduled time."
-              : "Install the LaunchAgent for automatic daily ingest, scrape, and light rank."}
+              ? "Requires your Mac to be awake at the scheduled time. Board refresh runs a backup first."
+              : "Install the LaunchAgent for automatic daily backup, ingest, scrape, and light rank."}
           </p>
           <ol className="ops-schedule-steps">
             {ops.schedule.steps.map((step) => (

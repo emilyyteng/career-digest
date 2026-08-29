@@ -1,4 +1,8 @@
 import type { NormalizedPosting } from "../types.js";
+import type { Source } from "../types.js";
+import { companies } from "../config/companies.js";
+import { parseOracleBoardFromUrl } from "./oracle.js";
+import { parseSmartrecruitersBoardFromUrl } from "./smartrecruiters.js";
 
 export const SIMPLIFY_LISTINGS_URL =
   "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json";
@@ -15,13 +19,65 @@ type SimplifyListing = {
   active?: boolean;
 };
 
-function atsFamily(url: string): "greenhouse" | "lever" | "ashby" | "oracle" | null {
+function atsFamily(
+  url: string,
+): "greenhouse" | "lever" | "ashby" | "oracle" | "smartrecruiters" | null {
   const lower = url.toLowerCase();
   if (lower.includes("greenhouse.io")) return "greenhouse";
   if (lower.includes("lever.co")) return "lever";
   if (lower.includes("ashbyhq.com")) return "ashby";
   if (lower.includes("oraclecloud.com")) return "oracle";
+  if (lower.includes("smartrecruiters.com")) return "smartrecruiters";
   return null;
+}
+
+const CONFIGURED_BOARD_KEYS = new Set(
+  companies.map((company) => `${company.source}:${company.boardToken.toLowerCase()}`),
+);
+
+function decodeToken(token: string): string {
+  try {
+    return decodeURIComponent(token);
+  } catch {
+    return token;
+  }
+}
+
+/** Map a direct ATS apply URL to a companies.ts board key when parseable. */
+export function boardConfigKeyFromAtsUrl(url: string): string | null {
+  const family = atsFamily(url);
+  if (!family) return null;
+
+  if (family === "oracle") {
+    const board = parseOracleBoardFromUrl(url);
+    return board ? `oracle:${board.boardToken.toLowerCase()}` : null;
+  }
+
+  if (family === "smartrecruiters") {
+    const boardToken = parseSmartrecruitersBoardFromUrl(url);
+    return boardToken ? `smartrecruiters:${boardToken.toLowerCase()}` : null;
+  }
+
+  const patterns: Array<{ source: Source; re: RegExp }> = [
+    { source: "greenhouse", re: /(?:boards|job-boards)\.greenhouse\.io\/([^/?#]+)/i },
+    { source: "lever", re: /jobs\.lever\.co\/([^/?#]+)/i },
+    { source: "ashby", re: /jobs\.ashbyhq\.com\/([^/?#]+)/i },
+  ];
+
+  for (const { source, re } of patterns) {
+    const match = url.match(re);
+    if (!match?.[1]) continue;
+    const boardToken = decodeToken(match[1]).trim();
+    if (!boardToken) continue;
+    return `${source}:${boardToken.toLowerCase()}`;
+  }
+
+  return null;
+}
+
+export function isConfiguredAtsBoardUrl(url: string): boolean {
+  const key = boardConfigKeyFromAtsUrl(url);
+  return key != null && CONFIGURED_BOARD_KEYS.has(key);
 }
 
 function parseUnix(value: number | undefined): Date | null {
@@ -31,7 +87,7 @@ function parseUnix(value: number | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** True when the apply URL is not a known ATS host (Workday, custom careers pages, etc.). */
+/** True when the apply URL is not a known ATS host (Workday, custom careers, Greenhouse gh_jid on custom domains). */
 export function isMiscellaneousApplyUrl(url: string): boolean {
   return Boolean(url) && atsFamily(url) === null;
 }
@@ -85,10 +141,9 @@ export async function fetchSimplifyListings(): Promise<{
 }
 
 /**
- * Ingest path: non-ATS apply URLs only (Workday, custom careers, Greenhouse gh_jid on custom domains).
- * Skips direct greenhouse.io / lever.co / ashbyhq.com / oraclecloud.com links (board ingest or hybrid).
- * Oraclecloud listing ids still appear in seenIds so deferred large-tenant rows survive reconcile
- * until merge removes duplicates for configured oracle boards.
+ * Ingest path: Workday/custom careers + any active Simplify listing not covered by board ingest.
+ * Direct ATS URLs are ingested from Simplify when the board is not in companies.ts; configured
+ * boards rely on adapter ingest and only contribute listing ids to seenIds until merge dedupes.
  */
 export async function fetchSimplifyMiscellaneousJobs(): Promise<{
   postings: NormalizedPosting[];
@@ -101,15 +156,13 @@ export async function fetchSimplifyMiscellaneousJobs(): Promise<{
   for (const listing of listings) {
     if (!listing.id || !listing.title || !listing.url) continue;
     if (!listing.active) continue;
-    if (!isMiscellaneousApplyUrl(listing.url)) {
-      // Hybrid Oracle tenants (no full-board ingest): keep simplify row on the board.
-      if (atsFamily(listing.url) === "oracle") {
-        seenIds.push(listing.id);
-      }
-      continue;
-    }
+
+    const coveredByBoardIngest =
+      !isMiscellaneousApplyUrl(listing.url) && isConfiguredAtsBoardUrl(listing.url);
 
     seenIds.push(listing.id);
+    if (coveredByBoardIngest) continue;
+
     postings.push(listingToPosting(listing));
   }
 

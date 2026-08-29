@@ -8,7 +8,7 @@ Ingests public ATS job boards (plus Simplify URLs), scrapes missing descriptions
 
 - Backend: Node.js + TypeScript + Express
 - Database: PostgreSQL (Postgres.app locally; Docker Compose optional)
-- Job boards: Greenhouse, Lever, Ashby, Simplify
+- Job boards: Greenhouse, Lever, Ashby, Simplify (+ SmartRecruiters boards in config)
 - Ranking: OpenAI API (`gpt-4o-mini` by default; Batch + live)
 - UI: React (Vite), local only
 
@@ -20,13 +20,13 @@ Pull internship listings from Greenhouse, Lever, Ashby, and Simplify into Postgr
 
 - Multi-ATS adapters and verified company list
 - `npm run discover-boards` scans Simplify ATS URLs (Greenhouse/Lever/Ashby/Oracle) against `companies.ts`; Oracle boards over 250 jobs are deferred for Simplify hybrid (`ORACLE_DISCOVER_MAX_JOBS`; `--write` to append)
-- Simplify ingest for **miscellaneous** apply URLs only (skips direct `greenhouse.io` / `lever.co` / `ashbyhq.com` / `oraclecloud.com` links; oracle hybrid rows stay on Simplify until merge)
+- Simplify ingest for **miscellaneous** apply URLs only (skips direct ATS host links; oracle hybrid rows stay on Simplify until merge)
 - After ingest, merge collapses duplicates when an ATS board has the same job id (`gh_jid` embeds, Oracle `/job/{id}`; `npm run merge-postings`)
-- `GET /jobs` for open internships (not yet applied; to-do stays visible)
+- `GET /jobs` for open internships (not yet applied; open **application tasks** stay visible)
 
 ### Milestone 2 — Local tracker UI
 
-A React app to browse the digest board and run a personal application tracker alongside it—mark to-do, mark applied, add manual Handshake/LinkedIn entries, link postings, notes, and file uploads.
+A React app to browse the digest board and run a personal application tracker alongside it.
 
 - Jobs list and Applications list with status tabs
 - Application detail with documents and optional posting link
@@ -34,7 +34,7 @@ A React app to browse the digest board and run a personal application tracker al
 
 ### Milestone 3 — Descriptions & scraping
 
-Fill missing job descriptions for Simplify miscellaneous URLs by scraping apply pages, with sanitized HTML extraction and retry backoff so ranking only runs on postings with real JD text. Scrape uses the same host check as misc ingest; ATS URLs in the Simplify table are marked `skipped_ats` (defense in depth — JDs come from board JSON at ingest).
+Fill missing job descriptions for Simplify miscellaneous URLs by scraping apply pages, with sanitized HTML extraction and retry backoff so ranking only runs on postings with real JD text.
 
 - `scrape_status` tracking and host-specific retry windows
 - Skip blank descriptions during rank (saves OpenAI tokens)
@@ -56,13 +56,13 @@ Score and sort roles with OpenAI using your feedback and tracker history as pref
 
 Polish the tracker for day-to-day use: pipeline statuses, rich job descriptions, document preview, and UI details that make applying and reviewing materials faster.
 
-- **To-do** tab with apply-by deadlines, countdown timers, and remove-from-to-do on cards
+- Applications **to-do** tab (legacy; migrating to **Tasks** — see below)
 - Status badges (to-do / applied / interviewing / accepted / declined) plus source on every card
-- Apply-by time defaults to 11:59 PM; same-tab navigation preserves list tab, sort, and search
+- Apply-by deadlines and countdown timers on to-do / application-task cards
 - Status tabs including accepted and declined; date applied; status-change ordering
 - Rich-text JD paste, scroll-box descriptions, location autocomplete
 - In-browser PDF/image preview for uploaded materials
-- Modal add-application form (defaults to to-do); save/upload flash confirmations
+- Modal add-application form; save/upload flash confirmations
 
 ### Milestone 6 — Interviews, home, and ops dashboards
 
@@ -71,14 +71,25 @@ Track interview pipelines per company, see what needs attention at a glance, and
 - Interview threads with linear steps, countdown timers, workspace, and resolve flow
 - Home dashboard: greeting, last digest, interviews and to-do applications attention, new & top picks
 - Pipeline Status page (`/status`) and `GET /api/ops` / `GET /api/home`
-- Sakura-terminal UI theme, favicon, nav routing (`/` home, `/jobs` board)
+- Sakura-terminal UI theme, favicon, nav routing
+
+### Milestone 7 — Unified Tasks backlog (in progress)
+
+Separate **what you need to do** from the **Applications tracker**.
+
+- **Tasks** page (`/tasks`): **open** and **completed** tabs for school, personal, and application tasks
+- **Add to tasks** / **Remove from tasks** on Jobs (replaces to-do star); completing an application task marks **Applied**
+- School/personal tasks archive to **completed**; application tasks do not
+- Manual application tasks and link-to-posting from the edit modal
+- Planned: migrate legacy application to-dos, Applications tracker-only UI, Home **Tasks** attention section
 
 ## Setup
 
 ```bash
 cp .env.example .env
 # Add OPENAI_API_KEY for ranking / board light-rank
-createdb career_digest   # or: docker compose up -d
+createdb career_digest
+createdb career_digest_test   # integration tests only
 npm install
 npm run migrate
 npm run ingest
@@ -98,8 +109,10 @@ npm run dev:web
 |---------|---------|
 | `npm run migrate` | Apply SQL migrations |
 | `npm run discover-boards` | Diff Simplify ATS URLs vs `companies.ts` (Oracle size probe; `--write` to append) |
-| `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id (gh_jid, Oracle job id, slip-throughs) |
-| `npm run test` | Run API unit tests (Vitest) |
+| `npm run merge-postings` | Collapse Simplify misc rows when ATS board has same job id |
+| `npm run test` | API unit + integration tests (Vitest; needs `TEST_DATABASE_URL`) |
+| `npm run backup` | Logical `pg_dump` to `backups/` |
+| `npm run restore` | Restore from `backups/` (see script help; stop dev servers first) |
 | `npm run ingest` | Pull ATS boards + Simplify miscellaneous listings (merge runs at end) |
 | `npm run scrape` | Fill blank Simplify descriptions |
 | `npm run rank` | Rank via OpenAI Batch API |
@@ -107,5 +120,28 @@ npm run dev:web
 | `npm run rank:live-backlog` | One-shot unranked + outdated rerank |
 | `npm run board-refresh` | Ingest + scrape + light live rank |
 | `npm run cron:install` | Install 5pm daily board refresh (macOS) |
+| `npm run cron:install-backup` | Install daily DB backup (macOS) |
 
-Jobs lists open digest roles that are not yet applied (to-do stays visible). Applications is the tracker (including Handshake/LinkedIn rows you add yourself). Link a digest posting from an application detail page to merge the two.
+### Testing
+
+- **Unit tests** run without a live database (adapter fixtures, filters, merge helpers).
+- **Integration tests** (`*.api.test.ts`, `*.integration.test.ts`) require Postgres and `TEST_DATABASE_URL` pointing at a **separate** `*_test` database — never `career_digest`.
+- GitHub Actions runs the full API test suite against Postgres 16 on every push to `main`.
+
+```bash
+export TEST_DATABASE_URL=postgres://YOUR_USER@localhost:5432/career_digest_test
+npm run test
+```
+
+## Nav
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Home — digest status, needs attention, job picks |
+| `/jobs` | Ranked digest board (Add to tasks, Applied, feedback) |
+| `/applications` | Application tracker (pipeline statuses) |
+| `/tasks` | Unified action backlog (open / completed) |
+| `/interviews` | Interview pipelines |
+| `/status` | Ops dashboard (ingest, rank, scrape, backup) |
+
+Jobs lists open digest roles that are not yet applied (postings with an open application task stay visible). **Tasks** is the action backlog; **Applications** is the tracker for roles you have already applied to or are past the “must apply” stage.

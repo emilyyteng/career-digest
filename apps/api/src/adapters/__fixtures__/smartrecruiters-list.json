@@ -1,0 +1,31 @@
+{
+  "totalFound": 2,
+  "content": [
+    {
+      "id": "744000143171017",
+      "name": "Summer 2027 Intern - Software Engineering",
+      "refNumber": "REF33901P",
+      "releasedDate": "2026-07-31T15:44:17.247Z",
+      "location": {
+        "city": "San Jose",
+        "region": "CA",
+        "country": "us",
+        "fullLocation": "San Jose, CA, United States"
+      },
+      "postingUrl": "https://jobs.smartrecruiters.com/WesternDigital/744000143171017"
+    },
+    {
+      "id": "744000140949875",
+      "name": "Summer 2027 Intern - Hardware Engineering",
+      "refNumber": "REF33802P",
+      "releasedDate": "2026-07-31T15:05:33.000Z",
+      "location": {
+        "city": "San Jose",
+        "region": "CA",
+        "country": "us",
+        "fullLocation": "San Jose, CA, United States"
+      },
+      "postingUrl": "https://jobs.smartrecruiters.com/WesternDigital/744000140949875"
+    }
+  ]
+}

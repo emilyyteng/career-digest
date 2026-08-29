@@ -1,0 +1,14 @@
+{
+  "jobs": [
+    {
+      "id": 12345,
+      "title": "Software Engineer Intern",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/12345",
+      "content": "<p>Build cool things.</p>",
+      "first_published": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-02T00:00:00Z",
+      "location": { "name": "San Francisco, CA" },
+      "departments": [{ "name": "Engineering" }]
+    }
+  ]
+}

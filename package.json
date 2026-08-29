@@ -16,6 +16,9 @@
     "migrate": "npm run migrate -w @career-digest/api",
     "discover-boards": "npm run discover-boards -w @career-digest/api --",
     "merge-postings": "npm run merge-postings -w @career-digest/api",
+    "backup": "bash scripts/backup-db.sh",
+    "restore": "bash scripts/restore-db.sh",
+    "cron:install-backup": "bash scripts/install-daily-backup.sh",
     "test": "npm run test -w @career-digest/api",
     "test:watch": "npm run test:watch -w @career-digest/api"
   }

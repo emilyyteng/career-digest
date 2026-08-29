@@ -1,4 +1,10 @@
-export type Source = "greenhouse" | "lever" | "ashby" | "oracle" | "simplify";
+export type Source =
+  | "greenhouse"
+  | "lever"
+  | "ashby"
+  | "oracle"
+  | "smartrecruiters"
+  | "simplify";
 
 export type CompanyConfig = {
   name: string;

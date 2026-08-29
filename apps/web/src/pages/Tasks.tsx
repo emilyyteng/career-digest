@@ -262,7 +262,7 @@ export default function Tasks() {
               aria-label={`${tab}, ${counts[tab]} task${counts[tab] === 1 ? "" : "s"}`}
               onClick={() => setSearchParams(tab === "open" ? {} : { view: tab })}
             >
-              <span className="tab-label">{tab === "open" ? "Open" : "Completed"}</span>
+              <span className="tab-label">{tab === "open" ? "open" : "completed"}</span>
               <span className="tab-count">{counts[tab]}</span>
             </button>
           ))}

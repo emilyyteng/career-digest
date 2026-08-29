@@ -21,6 +21,14 @@ describe("extractGreenhouseJobId", () => {
     ).toBe("999");
   });
 
+  it("extracts id from job-boards.greenhouse.io URLs", () => {
+    expect(
+      extractGreenhouseJobId(
+        "https://job-boards.greenhouse.io/acme/jobs/4242",
+      ),
+    ).toBe("4242");
+  });
+
   it("returns null when no greenhouse id is present", () => {
     expect(extractGreenhouseJobId("https://example.com/jobs/1")).toBeNull();
   });

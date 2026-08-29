@@ -1,0 +1,14 @@
+{
+  "jobs": [
+    {
+      "id": "software-engineer-intern",
+      "title": "Software Engineer Intern",
+      "department": "Engineering",
+      "location": "Remote",
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-02T00:00:00Z",
+      "jobUrl": "https://jobs.ashbyhq.com/acme/software-engineer-intern",
+      "descriptionHtml": "<p>Ashby internship</p>"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { access, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { getBackupStatus } from "./backupStatus.js";
 import { pool } from "./db.js";
 import { getBoardRefresh } from "./boardRefresh.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
@@ -103,6 +104,7 @@ export type OpsStatusSnapshot = {
       nextRetryAt: string | null;
     }>;
   };
+  backup: Awaited<ReturnType<typeof getBackupStatus>>;
 };
 
 export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
@@ -276,6 +278,7 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
   const cron = await readCronSchedule();
   const nextBoard = nextDailyLocalTime(cron.hour, cron.minute);
   const limit = boardRankLimit();
+  const backup = await getBackupStatus();
 
   return {
     boardRefresh: await getBoardRefresh(),
@@ -309,6 +312,7 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
       cronTimeLocal: formatLocalTime(cron.hour, cron.minute),
       nextBoardRefreshAt: nextBoard.toISOString(),
       steps: [
+        `pg_dump snapshot to backups/ (${backup.retentionDays}-day retention)`,
         "Ingest company boards (Ashby / Greenhouse / Lever JSON) + Simplify miscellaneous links",
         "Scrape Simplify miscellaneous apply pages for missing descriptions",
         `Light rank up to ${limit} unranked or outdated postings (live OpenAI, ${defaultRankingModel()})`,
@@ -321,5 +325,6 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
         nextRetryAt: r.next_retry_at,
       })),
     },
+    backup,
   };
 }
