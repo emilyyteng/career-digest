@@ -344,13 +344,15 @@ export default function Tasks() {
             </div>
             {(view === "open" || row.url || completedLabel) && (
               <div className="row-actions application-card-footer application-card-footer-todo">
-                {view === "open" && application && (
+                {view === "open" && (
                   <form
                     className="application-card-apply-by"
                     onSubmit={(event) => void saveDueAt(event, row)}
                   >
                     <label className="application-apply-by-field">
-                      <span className="application-apply-by-field-label">Apply by</span>
+                      <span className="application-apply-by-field-label">
+                        {application ? "Apply by" : "Due"}
+                      </span>
                       <input
                         type="date"
                         value={dueDraft.date}
@@ -381,30 +383,32 @@ export default function Tasks() {
                     )}
                   </form>
                 )}
-                {view === "open" && (
-                  <button
-                    type="button"
-                    className="secondary"
-                    disabled={pendingId === row.id}
-                    onClick={() => setCompleteConfirm(row)}
-                  >
-                    {application ? "Mark applied" : "Complete"}
-                  </button>
-                )}
-                {row.url && (
-                  <a
-                    className="external application-card-apply-link"
-                    href={row.url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {linkLabel}
-                    <span className="ext-icon" aria-hidden="true">↗</span>
-                  </a>
-                )}
-                {view === "completed" && completedLabel && (
-                  <span className="applied-date">Completed: {completedLabel}</span>
-                )}
+                <div className="application-card-footer-actions">
+                  {view === "open" && (
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={pendingId === row.id}
+                      onClick={() => setCompleteConfirm(row)}
+                    >
+                      {application ? "Mark applied" : "Complete"}
+                    </button>
+                  )}
+                  {row.url && (
+                    <a
+                      className="external application-card-apply-link"
+                      href={row.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {linkLabel}
+                      <span className="ext-icon" aria-hidden="true">↗</span>
+                    </a>
+                  )}
+                  {view === "completed" && completedLabel && (
+                    <span className="applied-date">Completed: {completedLabel}</span>
+                  )}
+                </div>
               </div>
             )}
           </article>

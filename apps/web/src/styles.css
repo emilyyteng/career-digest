@@ -632,7 +632,7 @@ a.external .ext-icon { font-size: 0.75rem; }
   font-size: 0.68rem;
   line-height: 1.35;
   color: var(--text-muted);
-  max-width: 11rem;
+  white-space: nowrap;
 }
 .application-card-aside-countdown .interview-countdown {
   justify-content: flex-end;
@@ -747,8 +747,15 @@ a.external .ext-icon { font-size: 0.75rem; }
   justify-content: space-between;
   gap: 0.5rem 0.75rem;
 }
-.application-card-footer:not(:has(.application-card-apply-by)) .external {
-  margin-left: auto;
+.application-card-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  flex-shrink: 0;
+}
+.application-card-footer-actions .external {
+  margin-left: 0;
 }
 .application-card-apply-by {
   display: flex;
