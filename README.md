@@ -69,11 +69,11 @@ Polish the tracker for day-to-day use: pipeline statuses, rich job descriptions,
 Track interview pipelines per company, see what needs attention at a glance, and monitor ingest/rank/scrape health without digging through logs.
 
 - Interview threads with linear steps, countdown timers, workspace, and resolve flow
-- Home dashboard: greeting, last digest, interviews and to-do applications attention, new & top picks
+- Home dashboard: greeting, last digest, interviews and tasks attention, new & top picks
 - Pipeline Status page (`/status`) and `GET /api/ops` / `GET /api/home`
 - Sakura-terminal UI theme, favicon, nav routing
 
-### Milestone 7 — Unified Tasks backlog (in progress)
+### Milestone 7 — Unified Tasks backlog
 
 Separate **what you need to do** from the **Applications tracker**.
 
@@ -81,7 +81,8 @@ Separate **what you need to do** from the **Applications tracker**.
 - **Add to tasks** / **Remove from tasks** on Jobs (replaces to-do star); completing an application task marks **Applied**
 - School/personal tasks archive to **completed**; application tasks do not
 - Manual application tasks and link-to-posting from the edit modal
-- Planned: migrate legacy application to-dos, Applications tracker-only UI, Home **Tasks** attention section
+- Legacy application to-dos migrated to open application tasks; Applications tracker is pipeline-only (no to-do tab)
+- Home **Needs attention** shows **Interviews** then **Tasks** (up to four open tasks, sorted by due date)
 
 ## Setup
 
@@ -137,7 +138,7 @@ npm run test
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Home — digest status, needs attention, job picks |
+| `/` | Home — digest status, needs attention (interviews + tasks), job picks |
 | `/jobs` | Ranked digest board (Add to tasks, Applied, feedback) |
 | `/applications` | Application tracker (pipeline statuses) |
 | `/tasks` | Unified action backlog (open / completed) |

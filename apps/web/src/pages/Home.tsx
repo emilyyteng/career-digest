@@ -65,6 +65,7 @@ export default function Home() {
   const attention = data.needsAttention;
   const digestWhen = formatWhen(data.lastDigest.lastOkAt ?? data.lastDigest.finishedAt);
   const interviewTotal = attention.interviewActionCount;
+  const taskTotal = attention.taskTotal;
   const greetingPeriod = currentGreetingPeriod();
 
   return (
@@ -136,10 +137,36 @@ export default function Home() {
 
         <div className="home-attention-subsection">
           <h4 className="home-subheading">Tasks</h4>
-          <p className="muted home-pick-empty">
-            Open application tasks and deadlines live on{" "}
-            <Link to="/tasks">Tasks</Link>.
-          </p>
+          {attention.tasks.length === 0 ? (
+            <p className="muted home-pick-empty">No open tasks.</p>
+          ) : (
+            <>
+              <ul className="home-list">
+                {attention.tasks.map((row) => (
+                  <li key={row.id} className="home-job-row home-interview-row">
+                    <Link to="/tasks" className="home-job-main">
+                      <span className="home-job-title">
+                        {row.organization
+                          ? `${row.organization} · ${row.title}`
+                          : row.title}
+                      </span>
+                    </Link>
+                    {row.dueIso && (
+                      <div className="home-interview-deadline">
+                        {row.dueLabel && (
+                          <div className="home-interview-deadline-date">{row.dueLabel}</div>
+                        )}
+                        <InterviewCountdown target={row.dueIso} />
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {taskTotal > ATTENTION_LIMIT && (
+                <SeeMore to="/tasks" label="See more →" />
+              )}
+            </>
+          )}
         </div>
       </section>
 

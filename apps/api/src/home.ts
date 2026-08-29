@@ -1,6 +1,7 @@
 import { pool } from "./db.js";
 import { getBoardRefresh } from "./boardRefresh.js";
 import { listInterviewThreads } from "./interviews.js";
+import { listOpenTasksForHome } from "./tasks.js";
 
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
@@ -30,6 +31,22 @@ export type HomeInterviewAttention = {
   deadlineLabel: string | null;
   deadlineIso: string | null;
 };
+
+export type HomeTaskAttention = {
+  id: string;
+  title: string;
+  organization: string | null;
+  category: string;
+  dueLabel: string | null;
+  dueIso: string | null;
+};
+
+function taskDueLabel(dueAt: string | null): string | null {
+  if (!dueAt) return null;
+  const formatted = formatDeadlineLong(dueAt);
+  if (!formatted) return null;
+  return `Due: ${formatted}`;
+}
 
 function formatDeadlineLong(value: string): string | null {
   const date = new Date(value);
@@ -79,6 +96,8 @@ export type HomeDashboard = {
   needsAttention: {
     interviews: HomeInterviewAttention[];
     interviewActionCount: number;
+    tasks: HomeTaskAttention[];
+    taskTotal: number;
   };
 };
 
@@ -194,6 +213,16 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       deadlineIso: interviewDeadlineIso(row.nextStep),
     }));
 
+  const openTasks = await listOpenTasksForHome(pool, HOME_ATTENTION_LIMIT);
+  const tasks: HomeTaskAttention[] = openTasks.tasks.map((row) => ({
+    id: row.id,
+    title: row.title,
+    organization: row.organization,
+    category: row.category,
+    dueLabel: taskDueLabel(row.dueAt),
+    dueIso: row.dueAt,
+  }));
+
   const greetingName =
     process.env.DIGEST_GREETING_NAME?.trim() || "Emily";
 
@@ -213,6 +242,8 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
     needsAttention: {
       interviews,
       interviewActionCount: interviewData.actionRequired.length,
+      tasks,
+      taskTotal: openTasks.total,
     },
   };
 }

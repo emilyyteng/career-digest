@@ -202,6 +202,15 @@ export type HomeDashboard = {
       deadlineIso: string | null;
     }>;
     interviewActionCount: number;
+    tasks: Array<{
+      id: string;
+      title: string;
+      organization: string | null;
+      category: string;
+      dueLabel: string | null;
+      dueIso: string | null;
+    }>;
+    taskTotal: number;
   };
 };
 

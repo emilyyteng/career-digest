@@ -186,6 +186,21 @@ export async function listTasks(db: Queryable, view: TaskView): Promise<{
   return { view, count: rows.length, counts, tasks: rows };
 }
 
+export async function listOpenTasksForHome(
+  db: Queryable,
+  limit: number,
+): Promise<{ tasks: TaskRow[]; total: number }> {
+  const counts = await countTasks(db);
+  const { rows } = await db.query<TaskRow>(
+    `${taskListSelect}
+     WHERE t.status = 'open'
+     ORDER BY t.due_at ASC NULLS LAST, t.created_at DESC
+     LIMIT $1`,
+    [limit],
+  );
+  return { tasks: rows, total: counts.open };
+}
+
 export async function getTaskById(db: Queryable, id: string): Promise<TaskRow | null> {
   return fetchTaskRow(db, id);
 }
