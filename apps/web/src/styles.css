@@ -2731,7 +2731,18 @@ textarea { min-height: 10rem; width: 100%; }
   margin: 0 0 0.65rem 0.85rem;
 }
 .progress-log-panel > .progress-section-title {
-  margin: 0 0 0.45rem;
+  margin: 0;
+}
+.progress-compose-block {
+  clear: both;
+  margin-top: 0.55rem;
+  width: 100%;
+}
+.progress-compose-block .progress-compose {
+  width: 100%;
+}
+.progress-compose-block .progress-compose textarea {
+  width: 100%;
 }
 .progress-log-panel-head {
   display: flex;

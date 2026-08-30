@@ -267,7 +267,7 @@ export default function Progress() {
                 />
               </div>
               <h3 className="progress-section-title">Log today</h3>
-              <div className="progress-log-block">
+              <div className="progress-log-block progress-compose-block">
                 <ReflectionCompose
                   lane={composeLane}
                   onLaneChange={setComposeLane}
