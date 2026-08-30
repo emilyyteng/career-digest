@@ -41,7 +41,7 @@ function stepIsActionable(step: InterviewStep): boolean {
   return step.status === "pending" || step.status === "scheduled";
 }
 
-type StepConfirmAction = "submitted" | "complete" | "reopen";
+type StepConfirmAction = "complete" | "reopen";
 
 export default function InterviewWorkspace() {
   const { threadId } = useParams();
@@ -148,9 +148,7 @@ export default function InterviewWorkspace() {
       void updateStep(stepConfirm.stepId, { status: "pending" });
       return;
     }
-    void updateStep(stepConfirm.stepId, {
-      status: stepConfirm.action === "submitted" ? "awaiting_employer" : "completed",
-    });
+    void updateStep(stepConfirm.stepId, { status: "completed" });
   }
 
   if (!thread && error) return <p className="error">{error}</p>;
@@ -233,13 +231,6 @@ export default function InterviewWorkspace() {
               <button
                 type="button"
                 className="secondary"
-                onClick={() => confirmStepAction(nextStep.id, "submitted")}
-              >
-                Mark submitted
-              </button>
-              <button
-                type="button"
-                className="secondary"
                 onClick={() => confirmStepAction(nextStep.id, "complete")}
               >
                 Mark complete
@@ -300,7 +291,7 @@ export default function InterviewWorkspace() {
           <h3 className="interview-section-heading">Add next step</h3>
           {!canAddStep && (
             <p className="muted interview-add-step-hint">
-              Mark the current step submitted or complete before adding another.
+              Mark the current step complete before adding another.
             </p>
           )}
           {canAddStep && addingStep ? (
@@ -347,25 +338,15 @@ export default function InterviewWorkspace() {
           <div className="modal" role="dialog" aria-modal="true">
             <StepActionConfirm
               title={
-                stepConfirm.action === "submitted"
-                  ? "Mark as submitted?"
-                  : stepConfirm.action === "complete"
-                    ? "Mark step complete?"
-                    : "Reopen this step?"
+                stepConfirm.action === "complete" ? "Mark step complete?" : "Reopen this step?"
               }
               description={
-                stepConfirm.action === "submitted"
-                  ? "This moves the step to waiting on the employer. You can reopen it later from Previous steps."
-                  : stepConfirm.action === "complete"
-                    ? "This closes the current round. You can reopen it later from Previous steps."
-                    : "This makes the step active again so you can update it or take action."
+                stepConfirm.action === "complete"
+                  ? "This closes the current round. You can reopen it later from Previous steps."
+                  : "This makes the step active again so you can update it or take action."
               }
               confirmLabel={
-                stepConfirm.action === "submitted"
-                  ? "Mark submitted"
-                  : stepConfirm.action === "complete"
-                    ? "Mark complete"
-                    : "Reopen step"
+                stepConfirm.action === "complete" ? "Mark complete" : "Reopen step"
               }
               onCancel={() => setStepConfirm(null)}
               onConfirm={runConfirmedAction}

@@ -23,7 +23,6 @@ const VIEW_TABS = ["active", "past"] as const;
 type StepConfirm = {
   threadId: string;
   stepId: string;
-  action: "submitted" | "complete";
 };
 
 type ThreadCardProps = {
@@ -77,19 +76,7 @@ function ThreadCard({
               type="button"
               className="secondary"
               disabled={busy}
-              onClick={() =>
-                onAction({ threadId: row.id, stepId: step.id, action: "submitted" })
-              }
-            >
-              Mark submitted
-            </button>
-            <button
-              type="button"
-              className="secondary"
-              disabled={busy}
-              onClick={() =>
-                onAction({ threadId: row.id, stepId: step.id, action: "complete" })
-              }
+              onClick={() => onAction({ threadId: row.id, stepId: step.id })}
             >
               Mark complete
             </button>
@@ -165,7 +152,7 @@ export default function Interviews() {
     setError(null);
     try {
       await patchInterviewStep(confirm.threadId, confirm.stepId, {
-        status: confirm.action === "submitted" ? "awaiting_employer" : "completed",
+        status: "completed",
       });
       setStepConfirm(null);
       await load();
@@ -254,19 +241,9 @@ export default function Interviews() {
         <div className="modal-backdrop">
           <div className="modal" role="dialog" aria-modal="true">
             <StepActionConfirm
-              title={
-                stepConfirm.action === "submitted"
-                  ? "Mark as submitted?"
-                  : "Mark step complete?"
-              }
-              description={
-                stepConfirm.action === "submitted"
-                  ? "This moves the step to waiting on the employer. You can reopen it from the interview page if needed."
-                  : "This closes the current round. You can reopen it from the interview page if needed."
-              }
-              confirmLabel={
-                stepConfirm.action === "submitted" ? "Mark submitted" : "Mark complete"
-              }
+              title="Mark step complete?"
+              description="This closes the current round. You can reopen it from the interview page if needed."
+              confirmLabel="Mark complete"
               onCancel={() => setStepConfirm(null)}
               onConfirm={() => void runStepAction(stepConfirm)}
             />
