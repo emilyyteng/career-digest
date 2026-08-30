@@ -126,7 +126,7 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
            AND p.rank_eligible IS NOT FALSE
        )::text AS ranked,
        COUNT(*) FILTER (
-         WHERE ${HAS_DESCRIPTION} AND p.rank_eligible IS FALSE
+         WHERE p.rank_eligible IS FALSE
        )::text AS mismatches,
        COUNT(*) FILTER (
          WHERE ${HAS_DESCRIPTION}

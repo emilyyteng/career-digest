@@ -160,6 +160,36 @@ describe.skipIf(!integrationReady)("jobs API", () => {
     expect(row?.rank_eligible).toBe(false);
   });
 
+  it("POST /api/jobs/:id/feedback dismiss on needs-description appears in mismatches", async () => {
+    const company = await seedCompany({ name: "No JD Co" });
+    const posting = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "job-no-jd-dismiss",
+      companyId: company.id,
+      title: "Mystery Intern",
+      url: "https://boards.greenhouse.io/nojd/jobs/1",
+      descriptionHtml: "",
+      rankScore: null,
+      rankedAt: null,
+      rankEligible: null,
+    });
+
+    await apiClient()
+      .post(`/api/jobs/${posting.id}/feedback`)
+      .send({ kind: "dismiss", note: "Not SWE" })
+      .expect(201);
+
+    const mismatches = await apiClient().get("/api/jobs?view=mismatches").expect(200);
+    expect(mismatches.body.count).toBe(1);
+    expect(mismatches.body.jobs[0].id).toBe(posting.id);
+    expect(mismatches.body.counts.mismatches).toBe(1);
+
+    const needsDescription = await apiClient()
+      .get("/api/jobs?view=needs-description")
+      .expect(200);
+    expect(needsDescription.body.count).toBe(0);
+  });
+
   it("DELETE /api/jobs/:id/feedback removes feedback", async () => {
     const company = await seedCompany();
     const posting = await seedRankedPosting({

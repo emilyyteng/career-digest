@@ -261,7 +261,7 @@ const BLANK_DESCRIPTION = `(p.description_html IS NULL OR btrim(p.description_ht
 function jobViewFilter(view: JobView): string {
   switch (view) {
     case "mismatches":
-      return `AND p.rank_eligible IS FALSE AND ${HAS_DESCRIPTION}`;
+      return `AND p.rank_eligible IS FALSE`;
     case "unranked":
       return `AND ${HAS_DESCRIPTION} AND p.ranked_at IS NULL AND p.rank_eligible IS NOT FALSE`;
     case "needs-description":
@@ -285,7 +285,7 @@ async function jobTabCounts(): Promise<Record<JobView, number>> {
            AND p.rank_eligible IS NOT FALSE
        )::text AS ranked,
        COUNT(*) FILTER (
-         WHERE ${HAS_DESCRIPTION} AND p.rank_eligible IS FALSE
+         WHERE p.rank_eligible IS FALSE
        )::text AS mismatches,
        COUNT(*) FILTER (
          WHERE ${HAS_DESCRIPTION}

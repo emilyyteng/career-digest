@@ -19,7 +19,7 @@ const COPY: Record<Kind, { heading: string; lede: string; confirm: string; note:
   },
   dismiss: {
     heading: "Mark as mismatch?",
-    lede: "Marks this as a mismatch and saves your note for future rankings. Review mismatches on the Mismatches tab.",
+    lede: "Marks this as a mismatch and moves it to the Mismatches tab. Your note is saved for future rankings and re-ingest won't re-rank it.",
     confirm: "Mark mismatch",
     note: "Why doesn't this fit? (optional)",
   },
