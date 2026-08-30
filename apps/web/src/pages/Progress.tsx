@@ -302,13 +302,11 @@ export default function Progress() {
           )}
 
           <section className="card progress-log-panel progress-history-detail">
-            <div className="progress-log-panel-head">
-              <div>
-                <p className="muted progress-kicker">Selected day</p>
-                <h3 className="progress-history-date">
-                  {selectedHistory ? formatLong(selectedHistory) : "—"}
-                </h3>
-              </div>
+            <p className="muted progress-kicker">Selected day</p>
+            <div className="progress-history-title-row">
+              <h3 className="progress-history-date">
+                {selectedHistory ? formatLong(selectedHistory) : "—"}
+              </h3>
               <label className="progress-edit-toggle">
                 <input
                   type="checkbox"
