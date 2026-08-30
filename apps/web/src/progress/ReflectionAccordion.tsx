@@ -137,9 +137,11 @@ export function LaneSelect({
 
 export function ReflectionCompose({
   lane,
+  onLaneChange,
   onSubmit,
 }: {
   lane: ProgressLane;
+  onLaneChange: (lane: ProgressLane) => void;
   onSubmit: (lane: ProgressLane, body: string) => Promise<void>;
 }) {
   const [body, setBody] = useState("");
@@ -162,6 +164,7 @@ export function ReflectionCompose({
         })();
       }}
     >
+      <LaneSelect value={lane} onChange={onLaneChange} disabled={busy} />
       <textarea
         rows={4}
         placeholder="What did you work through?"

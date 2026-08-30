@@ -18,7 +18,6 @@ import HistoryCalendar, { type CalendarDayMark } from "../progress/HistoryCalend
 import LeetcodeStepper from "../progress/LeetcodeStepper";
 import ProgressHeatmap from "../progress/ProgressHeatmap";
 import ReflectionAccordion, {
-  LaneSelect,
   ReflectionCompose,
 } from "../progress/ReflectionAccordion";
 
@@ -261,10 +260,7 @@ export default function Progress() {
 
             <aside className="card progress-log-panel">
               <div className="progress-log-panel-head">
-                <div className="progress-log-title-row">
-                  <h3 className="progress-section-title">Log today</h3>
-                  <LaneSelect value={composeLane} onChange={setComposeLane} />
-                </div>
+                <h3 className="progress-section-title">Log today</h3>
                 <div className="card progress-lc-card">
                   <h4 className="progress-section-title">LeetCode</h4>
                   <LeetcodeStepper
@@ -276,10 +272,11 @@ export default function Progress() {
               <div className="progress-log-block">
                 <ReflectionCompose
                   lane={composeLane}
+                  onLaneChange={setComposeLane}
                   onSubmit={(lane, body) => addReflection(lane, body)}
                 />
               </div>
-              <div className="progress-log-block">
+              <div className="progress-log-block progress-notes-block">
                 <span className="progress-kicker">Today&apos;s notes</span>
                 <ReflectionAccordion
                   reflections={todayDetail?.reflections ?? []}
@@ -328,52 +325,48 @@ export default function Progress() {
               <p className="muted">Loading day…</p>
             ) : (
               <>
-                <div className="progress-history-flow">
-                  <div className="card progress-lc-card">
-                    <h4 className="progress-section-title">LeetCode</h4>
-                    {editingDay ? (
-                      <LeetcodeStepper
-                        value={historyLc}
-                        onCommit={(count) => setLeetcode(count, selectedHistory!)}
-                      />
-                    ) : (
-                      <p className="progress-lc-readonly">
-                        {historyDetail.leetcode.raw} solved ·{" "}
-                        {historyDetail.leetcode.earned}/5
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="progress-log-block">
-                    <span className="progress-kicker">Apps</span>
-                    <p className="progress-apps-summary">
-                      {historyDetail.applications.raw} logged ·{" "}
-                      {historyDetail.applications.earned}/5 earned
+                <div className="card progress-lc-card">
+                  <h4 className="progress-section-title">LeetCode</h4>
+                  {editingDay ? (
+                    <LeetcodeStepper
+                      value={historyLc}
+                      onCommit={(count) => setLeetcode(count, selectedHistory!)}
+                    />
+                  ) : (
+                    <p className="progress-lc-readonly">
+                      {historyDetail.leetcode.raw} solved ·{" "}
+                      {historyDetail.leetcode.earned}/5
                     </p>
-                    {historyDetail.applicationRows.length > 0 ? (
-                      <ul className="progress-app-list">
-                        {historyDetail.applicationRows.map((app) => (
-                          <li key={app.id}>
-                            <Link to={`/applications/${app.id}`}>
-                              {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="muted">No applications logged this day.</p>
-                    )}
-                  </div>
+                  )}
+                </div>
+
+                <div className="progress-log-block">
+                  <span className="progress-kicker">Apps</span>
+                  <p className="progress-apps-summary">
+                    {historyDetail.applications.raw} logged ·{" "}
+                    {historyDetail.applications.earned}/5 earned
+                  </p>
+                  {historyDetail.applicationRows.length > 0 ? (
+                    <ul className="progress-app-list">
+                      {historyDetail.applicationRows.map((app) => (
+                        <li key={app.id}>
+                          <Link to={`/applications/${app.id}`}>
+                            {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted">No applications logged this day.</p>
+                  )}
                 </div>
 
                 {editingDay && (
                   <div className="progress-log-block">
-                    <div className="progress-log-title-row">
-                      <span className="progress-kicker">Add reflection</span>
-                      <LaneSelect value={historyLane} onChange={setHistoryLane} />
-                    </div>
+                    <span className="progress-kicker">Add reflection</span>
                     <ReflectionCompose
                       lane={historyLane}
+                      onLaneChange={setHistoryLane}
                       onSubmit={(lane, body) =>
                         addReflection(lane, body, selectedHistory!)
                       }
@@ -381,7 +374,7 @@ export default function Progress() {
                   </div>
                 )}
 
-                <div className="progress-log-block">
+                <div className="progress-log-block progress-notes-block">
                   <span className="progress-kicker">Notes</span>
                   <ReflectionAccordion
                     reflections={historyDetail.reflections}
