@@ -63,3 +63,11 @@ _Avoid_: Application sent (ambiguous timing), apply event
 **Reflection log**:
 A user-written Effort entry scoped to Application prep or Technical prep—not required to link to a specific application. Distinct from Application notes on the tracker (form answers, apply metadata).
 _Avoid_: Deep work task, targeted application
+
+**Today tab** (Progress):
+Primary Progress tab: today strip, week/month Outcome, dual stacked heatmaps (overview only), and log-today (LC stepper + reflection compose). Happy path for deep work; not a day browser.
+_Avoid_: Applications tab (old heatmap-lane tabs), Progress home
+
+**History tab** (Progress):
+Progress tab for granular day records: calendar day picker, view-first day detail, accordion notes; Edit this day unlocks backfill/edits. Not a second Progress page.
+_Avoid_: Archive, calendar page
