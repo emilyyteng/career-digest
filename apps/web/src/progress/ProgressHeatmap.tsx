@@ -112,6 +112,7 @@ export default function ProgressHeatmap({
           ))}
         </div>
       </div>
+      <ProgressHeatLegend />
     </section>
   );
 }
