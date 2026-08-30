@@ -57,6 +57,7 @@ import {
   parseLocalDate,
   resolveTimezone,
   setLeetcodeDaily,
+  updateReflectionLog,
 } from "./progress.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
@@ -1278,7 +1279,7 @@ api.patch("/progress/leetcode", async (req, res) => {
     res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
     return;
   }
-  const body = req.body as { count?: number; delta?: number };
+  const body = req.body as { count?: number; delta?: number; date?: string };
   try {
     res.json(await setLeetcodeDaily(pool, tz, body));
   } catch (err) {
@@ -1292,6 +1293,8 @@ api.post("/progress/reflections", async (req, res) => {
     lane?: string;
     body?: string;
     applicationId?: string | null;
+    localDate?: string | null;
+    tz?: string | null;
   };
   const lane = body.lane ?? "";
   if (!isProgressLane(lane)) {
@@ -1307,12 +1310,33 @@ api.post("/progress/reflections", async (req, res) => {
       lane,
       body: body.body,
       applicationId: body.applicationId ?? null,
+      localDate: body.localDate ?? null,
+      tz: body.tz ?? (typeof req.query.tz === "string" ? req.query.tz : null),
     });
     res.status(201).json(row);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
     const status = message === "Application not found" ? 404 : 400;
     res.status(status).json({ error: message });
+  }
+});
+
+api.patch("/progress/reflections/:id", async (req, res) => {
+  const body = req.body as { body?: string };
+  if (!body.body || typeof body.body !== "string") {
+    res.status(400).json({ error: "body is required" });
+    return;
+  }
+  try {
+    const row = await updateReflectionLog(pool, req.params.id, body.body);
+    if (!row) {
+      res.status(404).json({ error: "Reflection not found" });
+      return;
+    }
+    res.json(row);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    res.status(400).json({ error: message });
   }
 });
 

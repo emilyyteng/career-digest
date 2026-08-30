@@ -86,12 +86,13 @@ Separate **what you need to do** from the **Applications tracker**.
 
 ### Milestone 8 — Progress tracker (in progress)
 
-Activity / Effort / Outcome APIs for internship search motivation (UI in follow-up tickets).
+Activity / Effort / Outcome for internship search motivation.
 
 - `leetcode_daily` and `reflection_logs` tables
-- `GET /api/progress/today`, `/heatmap`, `/outcome`, `/day/:date` (requires `tz` IANA param)
-- `PATCH /api/progress/leetcode` (`count` or `delta`), `POST /api/progress/reflections`
+- Progress APIs (`/api/progress/*`) including dated LeetCode + reflection edit
+- **Progress** page (`/progress`): **Today** (strip, week/month Outcome, dual heatmaps, log) and **History** (calendar dig-in, view-first edit)
 - Application activity derived from `applications.applied_at` (local calendar date)
+- Home today strip still pending (ticket 3)
 
 ## Setup
 
@@ -152,6 +153,7 @@ npm run test
 | `/applications` | Application tracker (pipeline statuses) |
 | `/tasks` | Unified action backlog (open / completed) |
 | `/interviews` | Interview pipelines |
+| `/progress` | Progress — Today log + heatmaps; History calendar dig-in |
 | `/status` | Ops dashboard — board refresh, backup, rank backlog, scrape health |
 
 Jobs lists open digest roles that are not yet applied (postings with an open application task stay visible). **Tasks** is the action backlog; **Applications** is the tracker for roles you have already applied to or are past the “must apply” stage.

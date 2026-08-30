@@ -645,7 +645,7 @@ export const getProgressDay = (tz: string, date: string) =>
 
 export const patchProgressLeetcode = (
   tz: string,
-  body: { count?: number; delta?: number },
+  body: { count?: number; delta?: number; date?: string },
 ) =>
   parse<{ localDate: string; count: number }>(
     api(`/api/progress/leetcode?${progressTz(tz)}`, {
@@ -659,11 +659,22 @@ export const createProgressReflection = (body: {
   lane: ProgressLane;
   body: string;
   applicationId?: string | null;
+  localDate?: string | null;
+  tz?: string | null;
 }) =>
   parse<ProgressReflection>(
     api("/api/progress/reflections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+    }),
+  );
+
+export const patchProgressReflection = (id: string, body: string) =>
+  parse<ProgressReflection>(
+    api(`/api/progress/reflections/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
     }),
   );

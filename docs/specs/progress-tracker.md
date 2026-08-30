@@ -120,7 +120,7 @@ Ticket 1 shipped the read model + today-only LeetCode create + reflection create
 |---|--------|--------|
 | 0 | Mark applied + notes | Jobs/Job detail modal with optional notes → `applications.notes` ✅ |
 | 1 | Progress data + API | Tables, LeetCode log, reflections, aggregates from `applied_at` ✅ |
-| 2 | Progress page | Today + History tabs per UI model above; wire APIs; add reflection PATCH + dated LeetCode if missing |
+| 2 | Progress page | Today + History tabs per UI model above; wire APIs; add reflection PATCH + dated LeetCode if missing ✅ |
 | 3 | Home today strip | Daily row wired to API |
 | 4 | Effort visual | **Locked:** centered pink checkmark on heatmap effort days (no further prototype required unless checkmark fails in real cells) |
 

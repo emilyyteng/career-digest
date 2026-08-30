@@ -179,4 +179,58 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body.applicationRows).toHaveLength(1);
     expect(res.body.reflections).toHaveLength(1);
   });
+
+  it("PATCH /api/progress/leetcode accepts a past localDate for History backfill", async () => {
+    const res = await apiClient()
+      .patch("/api/progress/leetcode")
+      .query({ tz: TZ })
+      .send({ count: 4, date: "2025-08-05" })
+      .expect(200);
+
+    expect(res.body).toMatchObject({ localDate: "2025-08-05", count: 4 });
+
+    const day = await apiClient()
+      .get("/api/progress/day/2025-08-05")
+      .query({ tz: TZ })
+      .expect(200);
+    expect(day.body.leetcode).toMatchObject({ raw: 4, earned: 4 });
+  });
+
+  it("POST /api/progress/reflections accepts localDate for History backfill", async () => {
+    const res = await apiClient()
+      .post("/api/progress/reflections")
+      .send({
+        lane: "technical",
+        body: "Backfilled graphs note",
+        localDate: "2025-08-05",
+        tz: TZ,
+      })
+      .expect(201);
+
+    expect(res.body).toMatchObject({
+      lane: "technical",
+      body: "Backfilled graphs note",
+    });
+
+    const day = await apiClient()
+      .get("/api/progress/day/2025-08-05")
+      .query({ tz: TZ })
+      .expect(200);
+    expect(day.body.reflections).toHaveLength(1);
+    expect(day.body.effortTechnical).toBe(true);
+  });
+
+  it("PATCH /api/progress/reflections/:id updates note body", async () => {
+    const created = await apiClient()
+      .post("/api/progress/reflections")
+      .send({ lane: "application", body: "Draft note" })
+      .expect(201);
+
+    const updated = await apiClient()
+      .patch(`/api/progress/reflections/${created.body.id}`)
+      .send({ body: "Edited note with more detail" })
+      .expect(200);
+
+    expect(updated.body.body).toBe("Edited note with more detail");
+  });
 });

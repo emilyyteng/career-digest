@@ -434,9 +434,16 @@ export async function getProgressDay(
 export async function setLeetcodeDaily(
   pool: Pool,
   tz: string,
-  input: { count?: number; delta?: number },
+  input: { count?: number; delta?: number; date?: string },
 ): Promise<{ localDate: string; count: number }> {
-  const localDate = localDateInTimezone(new Date(), tz);
+  const localDate =
+    input.date != null
+      ? (() => {
+          const parsed = parseLocalDate(input.date);
+          if (!parsed) throw new Error("Invalid date");
+          return parsed;
+        })()
+      : localDateInTimezone(new Date(), tz);
   if (input.count != null) {
     if (!Number.isFinite(input.count) || input.count < 0) {
       throw new Error("count must be a non-negative number");
@@ -477,6 +484,8 @@ export async function createReflectionLog(
     lane: ProgressLane;
     body: string;
     applicationId?: string | null;
+    localDate?: string | null;
+    tz?: string | null;
   },
 ): Promise<ProgressReflection> {
   const body = input.body.trim();
@@ -487,18 +496,56 @@ export async function createReflectionLog(
     ]);
     if (!exists.rows[0]) throw new Error("Application not found");
   }
+
+  let createdAt: Date | null = null;
+  if (input.localDate) {
+    const parsed = parseLocalDate(input.localDate);
+    if (!parsed) throw new Error("Invalid date");
+    const tz = input.tz?.trim();
+    if (!tz || !isValidTimezone(tz)) {
+      throw new Error("tz is required when localDate is set");
+    }
+    const { rows: atRows } = await pool.query<{ created_at: Date }>(
+      `SELECT (($1::text || ' 12:00:00')::timestamp AT TIME ZONE $2) AS created_at`,
+      [parsed, tz],
+    );
+    createdAt = atRows[0]?.created_at ?? null;
+  }
+
   const { rows } = await pool.query<ProgressReflection>(
-    `INSERT INTO reflection_logs (lane, body, application_id)
-     VALUES ($1, $2, $3)
+    `INSERT INTO reflection_logs (lane, body, application_id, created_at)
+     VALUES ($1, $2, $3, COALESCE($4, now()))
      RETURNING
        id,
        lane,
        body,
        application_id AS "applicationId",
        created_at AS "createdAt"`,
-    [input.lane, body, input.applicationId ?? null],
+    [input.lane, body, input.applicationId ?? null, createdAt],
   );
   return rows[0]!;
+}
+
+export async function updateReflectionLog(
+  pool: Pool,
+  id: string,
+  bodyRaw: string,
+): Promise<ProgressReflection | null> {
+  const body = bodyRaw.trim();
+  if (!body) throw new Error("body is required");
+  const { rows } = await pool.query<ProgressReflection>(
+    `UPDATE reflection_logs
+     SET body = $2
+     WHERE id = $1
+     RETURNING
+       id,
+       lane,
+       body,
+       application_id AS "applicationId",
+       created_at AS "createdAt"`,
+    [id, body],
+  );
+  return rows[0] ?? null;
 }
 
 export function parseAnchorDate(raw: string | undefined, tz: string): string {
