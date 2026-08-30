@@ -18,8 +18,8 @@ import { isBlankJobDescription, isMismatch, RankBadges, RankNote } from "../Rank
 import JobFeedbackButtons from "../JobFeedbackButtons";
 import FeedbackDialog from "./FeedbackDialog";
 import { listReturnTo } from "../navigationReturn";
+import MarkAppliedDialog from "../MarkAppliedDialog";
 import RerankDialog from "./RerankDialog";
-import StepActionConfirm from "../StepActionConfirm";
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -125,11 +125,15 @@ export default function JobDetail() {
     }
   }
 
-  async function confirmApplied() {
+  async function confirmApplied(notes: string) {
     if (!job) return;
     setAppliedConfirm(false);
     try {
-      const result = await createApplication({ postingId: job.id, status: "applied" });
+      const result = await createApplication({
+        postingId: job.id,
+        status: "applied",
+        ...(notes ? { notes } : {}),
+      });
       navigate(`/applications/${result.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not mark applied");
@@ -309,22 +313,12 @@ export default function JobDetail() {
         />
       )}
       {appliedConfirm && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setAppliedConfirm(false);
-          }}
-        >
-          <div className="modal" role="dialog" aria-modal="true">
-            <StepActionConfirm
-              title="Mark as applied?"
-              description="This removes the role from your Jobs list and moves it to Applications."
-              confirmLabel="Mark applied"
-              onConfirm={() => void confirmApplied()}
-              onCancel={() => setAppliedConfirm(false)}
-            />
-          </div>
-        </div>
+        <MarkAppliedDialog
+          title={`${job.company} — ${job.title}`}
+          pending={pending}
+          onCancel={() => setAppliedConfirm(false)}
+          onConfirm={(notes) => void confirmApplied(notes)}
+        />
       )}
     </article>
   );

@@ -21,9 +21,9 @@ import {
 import { isMismatch, RankBadges, RankNote } from "../RankMark";
 import JobFeedbackButtons from "../JobFeedbackButtons";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
+import MarkAppliedDialog from "../MarkAppliedDialog";
 import FeedbackDialog from "./FeedbackDialog";
 import RerankDialog from "./RerankDialog";
-import StepActionConfirm from "../StepActionConfirm";
 import { listLinkState } from "../navigationReturn";
 import LocationFilterChips from "../LocationFilterChips";
 
@@ -444,12 +444,16 @@ export default function Jobs() {
     }
   }
 
-  async function confirmApplied() {
+  async function confirmApplied(notes: string) {
     if (!appliedConfirm) return;
     const job = appliedConfirm;
     setAppliedConfirm(null);
     try {
-      await createApplication({ postingId: job.id, status: "applied" });
+      await createApplication({
+        postingId: job.id,
+        status: "applied",
+        ...(notes ? { notes } : {}),
+      });
       invalidateListCache("applications:");
       const data = await reload();
       if (data.jobs.length === 0 && page > 1) {
@@ -756,22 +760,12 @@ export default function Jobs() {
         />
       )}
       {appliedConfirm && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setAppliedConfirm(null);
-          }}
-        >
-          <div className="modal" role="dialog" aria-modal="true">
-            <StepActionConfirm
-              title="Mark as applied?"
-              description="This removes the role from your Jobs list and moves it to Applications."
-              confirmLabel="Mark applied"
-              onConfirm={() => void confirmApplied()}
-              onCancel={() => setAppliedConfirm(null)}
-            />
-          </div>
-        </div>
+        <MarkAppliedDialog
+          title={`${appliedConfirm.company} — ${appliedConfirm.title}`}
+          pending={pendingId === appliedConfirm.id}
+          onCancel={() => setAppliedConfirm(null)}
+          onConfirm={(notes) => void confirmApplied(notes)}
+        />
       )}
     </section>
   );
