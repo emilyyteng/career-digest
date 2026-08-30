@@ -2601,21 +2601,18 @@ textarea { min-height: 10rem; width: 100%; }
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.9fr);
   gap: 0.75rem;
-  align-items: stretch;
+  align-items: start;
 }
 .progress-heat-stack {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
   min-width: 0;
-  height: 100%;
 }
 .progress-heat-card {
   overflow: hidden;
-  flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 .progress-heat-title {
   margin: 0 0 0.45rem;
@@ -2624,9 +2621,7 @@ textarea { min-height: 10rem; width: 100%; }
 .progress-heat {
   display: flex;
   gap: 5px;
-  align-items: stretch;
-  flex: 1;
-  min-height: 0;
+  align-items: flex-start;
   width: 100%;
 }
 .progress-heat-dow {
@@ -2637,13 +2632,14 @@ textarea { min-height: 10rem; width: 100%; }
   color: var(--text-subtle);
   line-height: 1;
   flex: 0 0 auto;
-  justify-content: space-between;
-  padding: 0.05rem 0;
 }
 .progress-heat-dow span {
   display: flex;
   align-items: center;
-  flex: 1;
+  justify-content: flex-end;
+  width: 0.7rem;
+  aspect-ratio: 1;
+  height: auto;
 }
 .progress-heat-weeks {
   display: flex;
@@ -2664,8 +2660,9 @@ textarea { min-height: 10rem; width: 100%; }
   align-items: center;
   justify-content: center;
   width: 100%;
-  flex: 1 1 0;
-  min-height: 14px;
+  aspect-ratio: 1;
+  height: auto;
+  flex: 0 0 auto;
   border-radius: 3px;
   position: relative;
   box-sizing: border-box;
@@ -2692,8 +2689,8 @@ textarea { min-height: 10rem; width: 100%; }
   gap: 4px;
   font-size: 0.75rem;
   flex: 0 0 auto;
-  margin-top: 0.45rem;
-  padding: 0.1rem 0.15rem;
+  margin-top: 0.85rem;
+  padding: 0.1rem 0.15rem 0.05rem;
 }
 .progress-heat-swatch {
   display: inline-block;
@@ -2704,37 +2701,21 @@ textarea { min-height: 10rem; width: 100%; }
 .progress-heat-legend-note {
   margin-left: 0.55rem;
 }
-.progress-log-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  min-width: 0;
-  height: 100%;
-}
-.progress-log-stack > .progress-log-panel {
-  flex: 1 1 auto;
-}
 .progress-lc-card {
-  padding: 0.7rem 0.85rem;
-  flex: 0 0 auto;
+  padding: 0.55rem 0.7rem;
+  width: fit-content;
+  max-width: 100%;
+  box-shadow: none;
 }
 .progress-lc-card .progress-section-title {
-  margin-bottom: 0.4rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
 }
 .progress-log-panel {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-.progress-history-detail.progress-log-panel {
-  height: 100%;
-}
-.progress-history-detail .progress-lc-card {
-  /* nested bordered LC block inside the day panel */
-  box-shadow: none;
-  margin: 0;
+  min-width: 0;
 }
 .progress-log-panel-head {
   display: flex;
@@ -2745,6 +2726,10 @@ textarea { min-height: 10rem; width: 100%; }
 }
 .progress-log-panel-head .progress-section-title {
   margin: 0;
+}
+.progress-history-detail .progress-lc-card {
+  align-self: flex-end;
+  margin-left: auto;
 }
 .progress-lc-readonly {
   margin: 0;
@@ -2860,15 +2845,12 @@ button.secondary.progress-note-edit {
   display: grid;
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
   gap: 0.75rem;
-  align-items: stretch;
+  align-items: start;
 }
 .progress-cal {
   width: 100%;
   max-width: none;
   margin-bottom: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 .progress-cal-head {
   display: flex;
@@ -2949,22 +2931,5 @@ button.progress-cal-cell.effort::after {
   .progress-today-band,
   .progress-history {
     grid-template-columns: 1fr;
-  }
-  .progress-heat-card {
-    flex: 0 0 auto;
-  }
-  .progress-heat-cell {
-    min-height: 12px;
-    aspect-ratio: 1;
-    flex: 0 0 auto;
-    height: auto;
-  }
-  .progress-heat-dow {
-    justify-content: flex-start;
-    gap: 2px;
-  }
-  .progress-heat-dow span {
-    height: 12px;
-    flex: 0 0 auto;
   }
 }
