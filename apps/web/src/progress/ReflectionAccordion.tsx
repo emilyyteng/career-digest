@@ -137,33 +137,31 @@ export function ReflectionCompose({
         })();
       }}
     >
-      <div className="progress-compose-row">
-        <div className="tabs progress-compose-lanes">
-          <button
-            type="button"
-            className={`tab ${lane === "application" ? "on" : ""}`}
-            disabled={busy}
-            onClick={() => setLane("application")}
-          >
-            Application
-          </button>
-          <button
-            type="button"
-            className={`tab ${lane === "technical" ? "on" : ""}`}
-            disabled={busy}
-            onClick={() => setLane("technical")}
-          >
-            Technical
-          </button>
-        </div>
-        <textarea
-          rows={4}
-          placeholder="What did you work through?"
-          value={body}
+      <div className="tabs progress-compose-lanes">
+        <button
+          type="button"
+          className={`tab ${lane === "application" ? "on" : ""}`}
           disabled={busy}
-          onChange={(event) => setBody(event.target.value)}
-        />
+          onClick={() => setLane("application")}
+        >
+          application
+        </button>
+        <button
+          type="button"
+          className={`tab ${lane === "technical" ? "on" : ""}`}
+          disabled={busy}
+          onClick={() => setLane("technical")}
+        >
+          technical
+        </button>
       </div>
+      <textarea
+        rows={4}
+        placeholder="What did you work through?"
+        value={body}
+        disabled={busy}
+        onChange={(event) => setBody(event.target.value)}
+      />
       <button type="submit" disabled={busy || !body.trim()}>
         Add reflection
       </button>

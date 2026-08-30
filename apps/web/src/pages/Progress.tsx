@@ -21,8 +21,21 @@ import ReflectionAccordion, {
   ReflectionCompose,
 } from "../progress/ReflectionAccordion";
 
+/** ~16 weeks — fits beside the log without horizontal scroll (variant B density). */
+const HEATMAP_DAYS = 112;
+
 function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+}
+
+function formatShort(date: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function formatLong(date: string): string {
@@ -81,8 +94,8 @@ export default function Progress() {
       getProgressToday(tz),
       getProgressOutcome(tz, "week"),
       getProgressOutcome(tz, "month"),
-      getProgressHeatmap(tz, "application", 365),
-      getProgressHeatmap(tz, "technical", 365),
+      getProgressHeatmap(tz, "application", 400),
+      getProgressHeatmap(tz, "technical", 400),
     ]);
     setToday(todayRow);
     setWeek(weekRow);
@@ -174,32 +187,27 @@ export default function Progress() {
   if (!loaded || !today || !week || !month) return <p className="muted">Loading…</p>;
 
   const marks = buildMarks(appHeat, techHeat);
+  const heatWindow = appHeat.slice(-HEATMAP_DAYS);
+  const techWindow = techHeat.slice(-HEATMAP_DAYS);
   const historyLc = historyDetail?.leetcode.raw ?? 0;
+  const deepWorkLabel = today.deepWork ? "deep work ✓" : "no deep work";
 
   return (
     <section className="progress-page">
-      <header className="progress-page-head">
-        <h2>Progress</h2>
-        <p className="muted">
-          Application and technical prep — not interview pipeline.{" "}
-          <Link to="/">Back to Home</Link>
-        </p>
-      </header>
-
       <div className="tabs">
         <button
           type="button"
           className={`tab ${tab === "today" ? "on" : ""}`}
           onClick={() => setTab("today")}
         >
-          Today
+          today
         </button>
         <button
           type="button"
           className={`tab ${tab === "history" ? "on" : ""}`}
           onClick={() => setTab("history")}
         >
-          History
+          history
         </button>
       </div>
 
@@ -208,14 +216,12 @@ export default function Progress() {
       {tab === "today" ? (
         <>
           <header className="card progress-today-head">
-            <div>
-              <p className="muted progress-kicker">Today</p>
-              <h3>{formatLong(today.localDate)}</h3>
-            </div>
+            <p className="progress-today-label">
+              Today · {formatShort(today.localDate)}
+            </p>
             <p className="progress-today-strip">
               {today.applications.earned}/{today.applications.cap} apps ·{" "}
-              {today.leetcode.earned}/{today.leetcode.cap} LC
-              {today.deepWork ? " · deep work ✓" : ""}
+              {today.leetcode.earned}/{today.leetcode.cap} LC · {deepWorkLabel}
             </p>
           </header>
 
@@ -237,45 +243,46 @@ export default function Progress() {
           </div>
 
           <div className="progress-today-band">
-            <div className="progress-heatmaps card">
-              <p className="muted progress-heat-intro">
-                Heatmaps show earned credit (capped at 5). Hover for the day — they are
-                not date pickers.
-              </p>
+            <div className="progress-heat-stack">
               <ProgressHeatmap
                 title="Application prep"
-                days={appHeat}
+                days={heatWindow}
                 today={today.localDate}
               />
               <ProgressHeatmap
                 title="Technical prep"
-                days={techHeat}
+                days={techWindow}
                 today={today.localDate}
+                showLegend
               />
             </div>
 
-            <aside className="card progress-log">
-              <h3 className="progress-section-title">Log today</h3>
-              <div className="progress-log-block">
-                <span className="progress-kicker">LeetCode</span>
+            <div className="progress-log-stack">
+              <aside className="card progress-lc-card">
+                <h3 className="progress-section-title">LeetCode</h3>
                 <LeetcodeStepper
                   value={today.leetcode.raw}
                   onCommit={(count) => setLeetcode(count)}
                 />
-              </div>
-              <div className="progress-log-block">
-                <span className="progress-kicker">Reflection</span>
-                <ReflectionCompose onSubmit={(lane, body) => addReflection(lane, body)} />
-              </div>
-              <div className="progress-log-block">
-                <span className="progress-kicker">Today&apos;s notes</span>
-                <ReflectionAccordion
-                  reflections={todayDetail?.reflections ?? []}
-                  canEdit
-                  onSave={(id, body) => saveReflection(id, body, today.localDate)}
-                />
-              </div>
-            </aside>
+              </aside>
+
+              <aside className="card progress-log">
+                <h3 className="progress-section-title">Log today</h3>
+                <div className="progress-log-block">
+                  <ReflectionCompose
+                    onSubmit={(lane, body) => addReflection(lane, body)}
+                  />
+                </div>
+                <div className="progress-log-block">
+                  <span className="progress-kicker">Today&apos;s notes</span>
+                  <ReflectionAccordion
+                    reflections={todayDetail?.reflections ?? []}
+                    canEdit
+                    onSave={(id, body) => saveReflection(id, body, today.localDate)}
+                  />
+                </div>
+              </aside>
+            </div>
           </div>
         </>
       ) : (
@@ -314,49 +321,47 @@ export default function Progress() {
               <p className="muted">Loading day…</p>
             ) : (
               <>
-                <dl className="progress-day-stats">
-                  <div>
-                    <dt>Apps</dt>
-                    <dd>
+                <div className="progress-history-stats-row">
+                  <div className="progress-history-stat">
+                    <span className="progress-kicker">Apps</span>
+                    <p>
                       {historyDetail.applications.raw} logged ·{" "}
                       {historyDetail.applications.earned}/5 earned
-                    </dd>
+                    </p>
+                    {historyDetail.applicationRows.length > 0 ? (
+                      <ul className="progress-app-list">
+                        {historyDetail.applicationRows.map((app) => (
+                          <li key={app.id}>
+                            <Link to={`/applications/${app.id}`}>
+                              {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="muted">No applications logged this day.</p>
+                    )}
                   </div>
-                  <div>
-                    <dt>LeetCode</dt>
-                    <dd>
-                      {editingDay ? (
-                        <LeetcodeStepper
-                          value={historyLc}
-                          onCommit={(count) => setLeetcode(count, selectedHistory!)}
-                        />
-                      ) : (
-                        <>
-                          {historyDetail.leetcode.raw} solves ·{" "}
-                          {historyDetail.leetcode.earned}/5 earned
-                        </>
-                      )}
-                    </dd>
-                  </div>
-                </dl>
 
-                {historyDetail.applicationRows.length > 0 ? (
-                  <ul className="progress-app-list">
-                    {historyDetail.applicationRows.map((app) => (
-                      <li key={app.id}>
-                        <Link to={`/applications/${app.id}`}>
-                          {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="muted">No applications logged this day.</p>
-                )}
+                  <div className="card progress-lc-card progress-history-lc">
+                    <span className="progress-kicker">LeetCode</span>
+                    {editingDay ? (
+                      <LeetcodeStepper
+                        value={historyLc}
+                        onCommit={(count) => setLeetcode(count, selectedHistory!)}
+                      />
+                    ) : (
+                      <p>
+                        {historyDetail.leetcode.raw} solves ·{" "}
+                        {historyDetail.leetcode.earned}/5 earned
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 {editingDay && (
-                  <div className="progress-log-block">
-                    <span className="progress-kicker">Add reflection</span>
+                  <div className="card progress-log">
+                    <h3 className="progress-section-title">Add reflection</h3>
                     <ReflectionCompose
                       onSubmit={(lane, body) =>
                         addReflection(lane, body, selectedHistory!)
