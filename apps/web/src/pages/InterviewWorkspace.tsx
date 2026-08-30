@@ -18,6 +18,9 @@ import {
   threadHasOpenStep,
 } from "../interviewStepUi";
 import { formatDeadlineLong } from "../formatDate";
+import FinishInterviewStepModal, {
+  type FinishStepResult,
+} from "../FinishInterviewStepModal";
 import StepActionConfirm from "../StepActionConfirm";
 
 const STEP_STATUS_LABEL: Record<string, string> = {
@@ -41,7 +44,7 @@ function stepIsActionable(step: InterviewStep): boolean {
   return step.status === "pending" || step.status === "scheduled";
 }
 
-type StepConfirmAction = "complete" | "reopen";
+type StepConfirmAction = "reopen";
 
 export default function InterviewWorkspace() {
   const { threadId } = useParams();
@@ -56,6 +59,11 @@ export default function InterviewWorkspace() {
     stepId: string;
     action: StepConfirmAction;
   } | null>(null);
+  const [finishStepTarget, setFinishStepTarget] = useState<{
+    stepId: string;
+    stepTitle: string;
+  } | null>(null);
+  const [finishBusy, setFinishBusy] = useState(false);
 
   async function load() {
     if (!threadId) return;
@@ -142,13 +150,28 @@ export default function InterviewWorkspace() {
     setStepConfirm({ stepId, action });
   }
 
+  async function runFinishStep(result: FinishStepResult) {
+    if (!threadId || !finishStepTarget) return;
+    setFinishBusy(true);
+    setError(null);
+    try {
+      const status = result.outcome === "waiting" ? "awaiting_employer" : "completed";
+      await patchInterviewStep(threadId, finishStepTarget.stepId, { status });
+      if (result.outcome === "round_done" && result.nextStep) {
+        await addInterviewStep(threadId, result.nextStep);
+      }
+      setFinishStepTarget(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not finish step");
+    } finally {
+      setFinishBusy(false);
+    }
+  }
+
   function runConfirmedAction() {
     if (!stepConfirm) return;
-    if (stepConfirm.action === "reopen") {
-      void updateStep(stepConfirm.stepId, { status: "pending" });
-      return;
-    }
-    void updateStep(stepConfirm.stepId, { status: "completed" });
+    void updateStep(stepConfirm.stepId, { status: "pending" });
   }
 
   if (!thread && error) return <p className="error">{error}</p>;
@@ -231,9 +254,14 @@ export default function InterviewWorkspace() {
               <button
                 type="button"
                 className="secondary"
-                onClick={() => confirmStepAction(nextStep.id, "complete")}
+                onClick={() =>
+                  setFinishStepTarget({
+                    stepId: nextStep.id,
+                    stepTitle: nextStep.title,
+                  })
+                }
               >
-                Mark complete
+                Finish step
               </button>
             </div>
           </div>
@@ -291,7 +319,7 @@ export default function InterviewWorkspace() {
           <h3 className="interview-section-heading">Add next step</h3>
           {!canAddStep && (
             <p className="muted interview-add-step-hint">
-              Mark the current step complete before adding another.
+              Finish the current step before adding another.
             </p>
           )}
           {canAddStep && addingStep ? (
@@ -333,21 +361,26 @@ export default function InterviewWorkspace() {
         </form>
       )}
 
+      {finishStepTarget && (
+        <div className="modal-backdrop">
+          <div className="modal modal-finish-step" role="dialog" aria-modal="true">
+            <FinishInterviewStepModal
+              stepTitle={finishStepTarget.stepTitle}
+              busy={finishBusy}
+              onCancel={() => setFinishStepTarget(null)}
+              onFinish={runFinishStep}
+            />
+          </div>
+        </div>
+      )}
+
       {stepConfirm && (
         <div className="modal-backdrop">
           <div className="modal" role="dialog" aria-modal="true">
             <StepActionConfirm
-              title={
-                stepConfirm.action === "complete" ? "Mark step complete?" : "Reopen this step?"
-              }
-              description={
-                stepConfirm.action === "complete"
-                  ? "This closes the current round. You can reopen it later from Previous steps."
-                  : "This makes the step active again so you can update it or take action."
-              }
-              confirmLabel={
-                stepConfirm.action === "complete" ? "Mark complete" : "Reopen step"
-              }
+              title="Reopen this step?"
+              description="This makes the step active again so you can update it or take action."
+              confirmLabel="Reopen step"
               onCancel={() => setStepConfirm(null)}
               onConfirm={runConfirmedAction}
             />

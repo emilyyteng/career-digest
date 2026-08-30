@@ -508,34 +508,59 @@ export async function patchInterviewThread(
       body.resolution && isThreadResolution(body.resolution) ? body.resolution : null;
   }
 
-  await db.query(
-    `UPDATE interview_threads SET
-       primary_application_id = COALESCE($2, primary_application_id),
-       label = CASE WHEN $3::boolean THEN $4 ELSE label END,
-       status = COALESCE($5, status),
-       resolution = CASE
-         WHEN $6::boolean THEN $7
-         WHEN $5 = 'resolved' AND resolution IS NULL THEN resolution
-         WHEN $5 = 'active' THEN NULL
-         ELSE resolution
-       END,
-       resolved_at = CASE
-         WHEN $5 = 'resolved' THEN COALESCE(resolved_at, now())
-         WHEN $5 = 'active' THEN NULL
-         ELSE resolved_at
-       END,
-       updated_at = now()
-     WHERE id = $1`,
-    [
-      threadId,
-      body.primaryApplicationId ?? null,
-      body.label !== undefined,
-      body.label?.trim() || null,
-      body.status ?? null,
-      resolution !== undefined,
-      resolution,
-    ],
-  );
+  const resolving = body.status === "resolved";
+  const client = resolving && "connect" in db ? await db.connect() : null;
+  const queryable = client ?? db;
+  try {
+    if (client) await client.query("BEGIN");
+
+    if (resolving) {
+      await queryable.query(
+        `UPDATE application_steps
+         SET status = 'completed',
+             completed_at = CASE WHEN completed_at IS NULL THEN now() ELSE completed_at END,
+             updated_at = now()
+         WHERE thread_id = $1 AND status IN ('pending', 'scheduled', 'awaiting_employer')`,
+        [threadId],
+      );
+    }
+
+    await queryable.query(
+      `UPDATE interview_threads SET
+         primary_application_id = COALESCE($2, primary_application_id),
+         label = CASE WHEN $3::boolean THEN $4 ELSE label END,
+         status = COALESCE($5, status),
+         resolution = CASE
+           WHEN $6::boolean THEN $7
+           WHEN $5 = 'resolved' AND resolution IS NULL THEN resolution
+           WHEN $5 = 'active' THEN NULL
+           ELSE resolution
+         END,
+         resolved_at = CASE
+           WHEN $5 = 'resolved' THEN COALESCE(resolved_at, now())
+           WHEN $5 = 'active' THEN NULL
+           ELSE resolved_at
+         END,
+         updated_at = now()
+       WHERE id = $1`,
+      [
+        threadId,
+        body.primaryApplicationId ?? null,
+        body.label !== undefined,
+        body.label?.trim() || null,
+        body.status ?? null,
+        resolution !== undefined,
+        resolution,
+      ],
+    );
+
+    if (client) await client.query("COMMIT");
+  } catch (error) {
+    if (client) await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    if (client) client.release();
+  }
 }
 
 export async function addInterviewStep(

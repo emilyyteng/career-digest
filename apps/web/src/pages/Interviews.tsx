@@ -6,6 +6,9 @@ import {
   patchInterviewStep,
   type InterviewThreadListItem,
 } from "../api";
+import FinishInterviewStepModal, {
+  type FinishStepResult,
+} from "../FinishInterviewStepModal";
 import InterviewCountdown from "../InterviewCountdown";
 import {
   formatLinkedRoles,
@@ -15,21 +18,21 @@ import {
   stepOpenLinkLabel,
 } from "../interviewStepUi";
 import { formatStepWhen } from "../formatDate";
-import StepActionConfirm from "../StepActionConfirm";
 import AddInterviewModal, { type AddInterviewModalHandle } from "./AddInterviewModal";
 
 const VIEW_TABS = ["active", "past"] as const;
 
-type StepConfirm = {
+type FinishStepTarget = {
   threadId: string;
   stepId: string;
+  stepTitle: string;
 };
 
 type ThreadCardProps = {
   row: InterviewThreadListItem;
   showQuickActions: boolean;
   showAddStep: boolean;
-  onAction: (confirm: StepConfirm) => void;
+  onFinishStep: (target: FinishStepTarget) => void;
   onAddStep: (threadId: string) => void;
   pendingAction: string | null;
 };
@@ -38,7 +41,7 @@ function ThreadCard({
   row,
   showQuickActions,
   showAddStep,
-  onAction,
+  onFinishStep,
   onAddStep,
   pendingAction,
 }: ThreadCardProps) {
@@ -76,9 +79,15 @@ function ThreadCard({
               type="button"
               className="secondary"
               disabled={busy}
-              onClick={() => onAction({ threadId: row.id, stepId: step.id })}
+              onClick={() =>
+                onFinishStep({
+                  threadId: row.id,
+                  stepId: step.id,
+                  stepTitle: step.title,
+                })
+              }
             >
-              Mark complete
+              Finish step
             </button>
           </div>
           {step.url && (
@@ -120,7 +129,7 @@ export default function Interviews() {
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [stepConfirm, setStepConfirm] = useState<StepConfirm | null>(null);
+  const [finishStepTarget, setFinishStepTarget] = useState<FinishStepTarget | null>(null);
   const addFormRef = useRef<AddInterviewModalHandle>(null);
 
   async function load() {
@@ -147,17 +156,20 @@ export default function Interviews() {
     addFormRef.current?.requestClose();
   }
 
-  async function runStepAction(confirm: StepConfirm) {
-    setPendingAction(confirm.threadId);
+  async function runFinishStep(result: FinishStepResult) {
+    if (!finishStepTarget) return;
+    setPendingAction(finishStepTarget.threadId);
     setError(null);
     try {
-      await patchInterviewStep(confirm.threadId, confirm.stepId, {
-        status: "completed",
-      });
-      setStepConfirm(null);
+      const status = result.outcome === "waiting" ? "awaiting_employer" : "completed";
+      await patchInterviewStep(finishStepTarget.threadId, finishStepTarget.stepId, { status });
+      if (result.outcome === "round_done" && result.nextStep) {
+        await addInterviewStep(finishStepTarget.threadId, result.nextStep);
+      }
+      setFinishStepTarget(null);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update step");
+      setError(err instanceof Error ? err.message : "Could not finish step");
     } finally {
       setPendingAction(null);
     }
@@ -198,7 +210,7 @@ export default function Interviews() {
               showQuickActions
               showAddStep={false}
               pendingAction={pendingAction}
-              onAction={setStepConfirm}
+              onFinishStep={setFinishStepTarget}
               onAddStep={openAddStep}
             />
           ))}
@@ -214,7 +226,7 @@ export default function Interviews() {
               showQuickActions={false}
               showAddStep={row.canAddStep}
               pendingAction={pendingAction}
-              onAction={setStepConfirm}
+              onFinishStep={setFinishStepTarget}
               onAddStep={openAddStep}
             />
           ))}
@@ -237,15 +249,14 @@ export default function Interviews() {
           ))}
         </>
       )}
-      {stepConfirm && (
+      {finishStepTarget && (
         <div className="modal-backdrop">
-          <div className="modal" role="dialog" aria-modal="true">
-            <StepActionConfirm
-              title="Mark step complete?"
-              description="This closes the current round. You can reopen it from the interview page if needed."
-              confirmLabel="Mark complete"
-              onCancel={() => setStepConfirm(null)}
-              onConfirm={() => void runStepAction(stepConfirm)}
+          <div className="modal modal-finish-step" role="dialog" aria-modal="true">
+            <FinishInterviewStepModal
+              stepTitle={finishStepTarget.stepTitle}
+              busy={pendingAction === finishStepTarget.threadId}
+              onCancel={() => setFinishStepTarget(null)}
+              onFinish={runFinishStep}
             />
           </div>
         </div>

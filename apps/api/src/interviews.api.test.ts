@@ -76,4 +76,32 @@ describe.skipIf(!integrationReady)("interviews API", () => {
       true,
     );
   });
+
+  it("PATCH /api/interviews/:threadId resolves thread and completes open steps", async () => {
+    const application = await seedManualApplication({ status: "interviewing" });
+
+    const createRes = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [application.id],
+        step: { title: "Phone screen", kind: "phone" },
+      })
+      .expect(201);
+
+    const threadId = createRes.body.id as string;
+    const detailBefore = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    const stepId = detailBefore.body.steps[0].id as string;
+
+    await apiClient()
+      .patch(`/api/interviews/${threadId}`)
+      .send({ status: "resolved", resolution: "declined" })
+      .expect(200);
+
+    const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    expect(detail.body.status).toBe("resolved");
+    expect(detail.body.resolution).toBe("declined");
+    const closedStep = detail.body.steps.find((step: { id: string }) => step.id === stepId);
+    expect(closedStep?.status).toBe("completed");
+    expect(closedStep?.completedAt).toBeTruthy();
+  });
 });
