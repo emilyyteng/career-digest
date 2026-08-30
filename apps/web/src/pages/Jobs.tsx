@@ -25,6 +25,7 @@ import FeedbackDialog from "./FeedbackDialog";
 import RerankDialog from "./RerankDialog";
 import StepActionConfirm from "../StepActionConfirm";
 import { listLinkState } from "../navigationReturn";
+import LocationFilterChips from "../LocationFilterChips";
 
 const PAGE_SIZE = 25;
 
@@ -32,6 +33,7 @@ type JobsListSnapshot = {
   jobs: JobCard[];
   count: number;
   counts: Record<JobView, number>;
+  locationCounts?: Record<string, number>;
 };
 
 function jobsListCacheKey(
@@ -39,8 +41,9 @@ function jobsListCacheKey(
   page: number,
   view: JobView,
   sort: JobSort,
+  loc: string | null,
 ): string {
-  return `jobs:${view}:${sort}:${page}:${query}`;
+  return `jobs:${view}:${sort}:${loc ?? ""}:${page}:${query}`;
 }
 
 const TABS: { id: JobView; label: string }[] = [
@@ -154,12 +157,16 @@ export default function Jobs() {
   const view = parseView(params.get("view"));
   const sort = parseSort(params.get("sort"), view);
   const page = Math.max(1, Number(params.get("page") || 1));
-  const initialCacheKey = jobsListCacheKey(query, page, view, sort);
+  const locationFilter = view === "ranked" ? params.get("loc") : null;
+  const initialCacheKey = jobsListCacheKey(query, page, view, sort, locationFilter);
   const initialSnapshot = readListCache<JobsListSnapshot>(initialCacheKey);
   const [jobs, setJobs] = useState<JobCard[]>(() => initialSnapshot?.jobs ?? []);
   const [count, setCount] = useState(() => initialSnapshot?.count ?? 0);
   const [counts, setCounts] = useState<Record<JobView, number>>(
     () => initialSnapshot?.counts ?? EMPTY_COUNTS,
+  );
+  const [locationCounts, setLocationCounts] = useState<Record<string, number>>(
+    () => initialSnapshot?.locationCounts ?? {},
   );
   const [loading, setLoading] = useState(() => !initialSnapshot);
   const [error, setError] = useState<string | null>(null);
@@ -186,6 +193,7 @@ export default function Jobs() {
     nextView = view,
     nextQuery = query,
     nextSort = sort,
+    nextLoc = locationFilter,
   ) {
     const nextParams = new URLSearchParams();
     if (nextQuery) nextParams.set("q", nextQuery);
@@ -194,6 +202,7 @@ export default function Jobs() {
     if (nextSort !== defaultSort) {
       nextParams.set("sort", nextSort);
     }
+    if (nextView === "ranked" && nextLoc) nextParams.set("loc", nextLoc);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
     return nextParams;
   }
@@ -203,16 +212,22 @@ export default function Jobs() {
       jobs: data.jobs,
       count: data.count,
       counts: { ...EMPTY_COUNTS, ...data.counts },
+      locationCounts: data.locationCounts,
     };
     writeListCache(cacheKey, snapshot);
     setJobs(snapshot.jobs);
     setCount(snapshot.count);
     setCounts(snapshot.counts);
+    if (data.locationCounts) setLocationCounts(data.locationCounts);
   }
 
   async function reload(nextPage = page) {
-    const cacheKey = jobsListCacheKey(query, nextPage, view, sort);
-    const data = await getJobs(query, nextPage, PAGE_SIZE, { view, sort });
+    const cacheKey = jobsListCacheKey(query, nextPage, view, sort, locationFilter);
+    const data = await getJobs(query, nextPage, PAGE_SIZE, {
+      view,
+      sort,
+      loc: locationFilter,
+    });
     applyJobsData(data, cacheKey);
     return data;
   }
@@ -232,18 +247,19 @@ export default function Jobs() {
 
   useEffect(() => {
     let cancelled = false;
-    const cacheKey = jobsListCacheKey(query, page, view, sort);
+    const cacheKey = jobsListCacheKey(query, page, view, sort, locationFilter);
     const cached = readListCache<JobsListSnapshot>(cacheKey);
     if (cached) {
       setJobs(cached.jobs);
       setCount(cached.count);
       setCounts(cached.counts);
+      if (cached.locationCounts) setLocationCounts(cached.locationCounts);
       setLoading(false);
     } else {
       setLoading(true);
     }
 
-    getJobs(query, page, PAGE_SIZE, { view, sort })
+    getJobs(query, page, PAGE_SIZE, { view, sort, loc: locationFilter })
       .then((data) => {
         if (cancelled) return;
         applyJobsData(data, cacheKey);
@@ -258,7 +274,7 @@ export default function Jobs() {
     return () => {
       cancelled = true;
     };
-  }, [query, page, view, sort]);
+  }, [query, page, view, sort, locationFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -365,7 +381,7 @@ export default function Jobs() {
   function setView(next: JobView) {
     const nextSort =
       next === "ranked" ? "rank" : sort === "rank" ? "published" : sort;
-    setParams(jobsParams(1, next, query, nextSort));
+    setParams(jobsParams(1, next, query, nextSort, next === "ranked" ? locationFilter : null));
   }
 
   function setSort(next: JobSort) {
@@ -375,6 +391,14 @@ export default function Jobs() {
   function setPage(next: number) {
     setParams(jobsParams(next));
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function setLocationFilter(next: string | null) {
+    const nextParams = new URLSearchParams(params);
+    if (!next) nextParams.delete("loc");
+    else nextParams.set("loc", next);
+    nextParams.delete("page");
+    setParams(nextParams, { replace: true });
   }
 
   async function refreshBoard() {
@@ -523,6 +547,15 @@ export default function Jobs() {
           {refreshLabel(refresh)}
         </button>
       </div>
+
+      {view === "ranked" && (
+        <LocationFilterChips
+          active={locationFilter}
+          counts={locationCounts}
+          total={counts.ranked}
+          onSelect={setLocationFilter}
+        />
+      )}
 
       <div className="jobs-search-row">
         <input

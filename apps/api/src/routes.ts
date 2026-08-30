@@ -12,6 +12,7 @@ import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { getHomeDashboard } from "./home.js";
 import { getOpsStatus } from "./opsStatus.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
+import { LOCATION_FITS } from "./rankPrompt.js";
 import { getRerankQueueSnapshot, queueRerank } from "./rankRerankQueue.js";
 import {
   APPLICATION_STATUSES,
@@ -202,6 +203,53 @@ function parseJobView(raw: string): JobView {
   return "ranked";
 }
 
+function parseLocationFitFilter(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (trimmed === "unset") return "unset";
+  if ((LOCATION_FITS as readonly string[]).includes(trimmed)) return trimmed;
+  return null;
+}
+
+function jobLocationFitFilter(loc: string | null, params: unknown[]): string {
+  if (!loc) return "";
+  if (loc === "unset") return "AND p.rank_location_fit IS NULL";
+  params.push(loc);
+  return `AND p.rank_location_fit = $${params.length}`;
+}
+
+async function jobRankedLocationCounts(q: string): Promise<Record<string, number>> {
+  const params: unknown[] = [];
+  let search = "";
+  if (q) {
+    params.push(`%${q}%`);
+    search = `AND (
+      p.title ILIKE $1
+      OR c.name ILIKE $1
+      OR COALESCE(p.department, '') ILIKE $1
+      OR COALESCE(p.location, '') ILIKE $1
+    )`;
+  }
+  const result = await pool.query<{ fit: string; count: number }>(
+    `SELECT
+       COALESCE(p.rank_location_fit, 'unset') AS fit,
+       COUNT(*)::int AS count
+     FROM postings p
+     JOIN companies c ON c.id = p.company_id
+     LEFT JOIN applications a ON a.posting_id = p.id
+     WHERE ${JOBS_LIST_BASE}
+       ${jobViewFilter("ranked")}
+       ${search}
+     GROUP BY COALESCE(p.rank_location_fit, 'unset')`,
+    params,
+  );
+  const counts: Record<string, number> = {};
+  for (const row of result.rows) {
+    counts[row.fit] = row.count;
+  }
+  return counts;
+}
+
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
   AND (a.id IS NULL OR a.status = 'todo')
@@ -269,6 +317,8 @@ api.get("/jobs", async (req, res) => {
   const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || 25));
   const page = Math.max(1, Number(req.query.page) || 1);
   const offset = (page - 1) * pageSize;
+  const locationFit =
+    view === "ranked" ? parseLocationFitFilter(String(req.query.loc ?? "")) : null;
   const params: unknown[] = [];
   let search = "";
   if (q) {
@@ -280,6 +330,7 @@ api.get("/jobs", async (req, res) => {
       OR COALESCE(p.location, '') ILIKE $1
     )`;
   }
+  const locationFilterSql = jobLocationFitFilter(locationFit, params);
   const effectiveSort = view === "ranked" ? sort : sort === "rank" ? "published" : sort;
   const orderBy =
     effectiveSort === "published"
@@ -330,6 +381,7 @@ api.get("/jobs", async (req, res) => {
      WHERE ${JOBS_LIST_BASE}
        ${jobViewFilter(view)}
        ${search}
+       ${locationFilterSql}
      ORDER BY
        ${orderBy}
      LIMIT ${limitPh} OFFSET ${offsetPh}`,
@@ -338,7 +390,8 @@ api.get("/jobs", async (req, res) => {
   const count = result.rows[0]?.totalCount ?? 0;
   const jobs = result.rows.map(({ totalCount: _total, ...job }) => job);
   const counts = await jobTabCounts();
-  res.json({ count, page, pageSize, view, counts, jobs });
+  const locationCounts = view === "ranked" ? await jobRankedLocationCounts(q) : undefined;
+  res.json({ count, page, pageSize, view, counts, locationCounts, jobs });
 });
 
 api.get("/jobs/:id", async (req, res) => {

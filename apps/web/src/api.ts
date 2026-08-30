@@ -65,6 +65,7 @@ export type JobsPage = {
   pageSize: number;
   view: JobView;
   counts: Record<JobView, number>;
+  locationCounts?: Record<string, number>;
   jobs: JobCard[];
 };
 
@@ -72,7 +73,11 @@ export const getJobs = (
   q = "",
   page = 1,
   pageSize = 25,
-  opts?: { view?: JobView; sort?: "rank" | "published" | "updated" },
+  opts?: {
+    view?: JobView;
+    sort?: "rank" | "published" | "updated";
+    loc?: string | null;
+  },
 ) => {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
@@ -80,6 +85,7 @@ export const getJobs = (
   params.set("pageSize", String(pageSize));
   if (opts?.view && opts.view !== "ranked") params.set("view", opts.view);
   if (opts?.sort && opts.sort !== "rank") params.set("sort", opts.sort);
+  if (opts?.loc) params.set("loc", opts.loc);
   return parse<JobsPage>(api(`/api/jobs?${params}`));
 };
 

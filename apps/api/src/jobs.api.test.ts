@@ -32,6 +32,34 @@ describe.skipIf(!integrationReady)("jobs API", () => {
     });
   });
 
+  it("GET /api/jobs filters ranked postings by location fit", async () => {
+    const company = await seedCompany({ name: "Loc Co" });
+    const bay = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "job-loc-bay",
+      companyId: company.id,
+      title: "Bay Role",
+      url: "https://boards.greenhouse.io/loc/jobs/1",
+      rankScore: 90,
+      rankLocationFit: "bay",
+    });
+    await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "job-loc-nyc",
+      companyId: company.id,
+      title: "NYC Role",
+      url: "https://boards.greenhouse.io/loc/jobs/2",
+      rankScore: 85,
+      rankLocationFit: "nyc",
+    });
+
+    const bayOnly = await apiClient().get("/api/jobs?loc=bay").expect(200);
+    expect(bayOnly.body.count).toBe(1);
+    expect(bayOnly.body.jobs).toHaveLength(1);
+    expect(bayOnly.body.jobs[0].id).toBe(bay.id);
+    expect(bayOnly.body.locationCounts).toMatchObject({ bay: 1, nyc: 1 });
+  });
+
   it("GET /api/jobs/:id returns posting detail", async () => {
     const company = await seedCompany();
     const posting = await seedRankedPosting({

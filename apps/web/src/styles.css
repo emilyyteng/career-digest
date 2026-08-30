@@ -2507,3 +2507,53 @@ textarea { min-height: 10rem; width: 100%; }
 .ops-schedule-steps li + li {
   margin-top: 0.25rem;
 }
+
+/* Jobs ranked tab — location fit chip filter */
+.jobs-loc-filter {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+}
+.jobs-loc-filter-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 0.35rem;
+}
+.jobs-loc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+}
+.jobs-loc-chip {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+.jobs-loc-chip:hover {
+  border-color: var(--accent-pink);
+  color: var(--text);
+}
+.jobs-loc-chip.on {
+  background: var(--accent-blue-deep);
+  border-color: var(--accent-blue-deep);
+  color: var(--on-primary);
+}
+.jobs-loc-chip-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
