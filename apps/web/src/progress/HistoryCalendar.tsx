@@ -1,4 +1,4 @@
-import { creditFill, addDays, dowSunday } from "./ProgressHeatmap";
+import { ProgressHeatLegend, creditFill, addDays, dowSunday } from "./ProgressHeatmap";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -113,9 +113,7 @@ export default function HistoryCalendar({
           );
         })}
       </div>
-      <p className="muted progress-cal-note">
-        Color = max earned credit across lanes. Pink ✓ = deep work that day.
-      </p>
+      <ProgressHeatLegend />
     </section>
   );
 }

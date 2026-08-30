@@ -111,12 +111,37 @@ export default function ReflectionAccordion({
   );
 }
 
+export function LaneSelect({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: ProgressLane;
+  onChange: (lane: ProgressLane) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="progress-lane-select">
+      <span className="visually-hidden">Reflection lane</span>
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value as ProgressLane)}
+      >
+        <option value="application">application</option>
+        <option value="technical">technical</option>
+      </select>
+    </label>
+  );
+}
+
 export function ReflectionCompose({
+  lane,
   onSubmit,
 }: {
+  lane: ProgressLane;
   onSubmit: (lane: ProgressLane, body: string) => Promise<void>;
 }) {
-  const [lane, setLane] = useState<ProgressLane>("application");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -137,24 +162,6 @@ export function ReflectionCompose({
         })();
       }}
     >
-      <div className="tabs progress-compose-lanes">
-        <button
-          type="button"
-          className={`tab ${lane === "application" ? "on" : ""}`}
-          disabled={busy}
-          onClick={() => setLane("application")}
-        >
-          application
-        </button>
-        <button
-          type="button"
-          className={`tab ${lane === "technical" ? "on" : ""}`}
-          disabled={busy}
-          onClick={() => setLane("technical")}
-        >
-          technical
-        </button>
-      </div>
       <textarea
         rows={4}
         placeholder="What did you work through?"
