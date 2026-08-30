@@ -43,16 +43,32 @@ function padHeatmap(days: ProgressHeatmapDay[], today: string): ProgressHeatmapD
   return padded.filter((cell) => cell.date <= lastVisible);
 }
 
+export function ProgressHeatLegend() {
+  return (
+    <div className="progress-heat-legend">
+      <span className="muted">Less</span>
+      {CREDIT_COLORS.map((color, i) => (
+        <span
+          key={color}
+          className="progress-heat-swatch"
+          style={{ background: color }}
+          title={`${i}/5`}
+        />
+      ))}
+      <span className="muted">More</span>
+      <span className="muted progress-heat-legend-note">✓ = deep work</span>
+    </div>
+  );
+}
+
 export default function ProgressHeatmap({
   title,
   days,
   today,
-  showLegend = false,
 }: {
   title: string;
   days: ProgressHeatmapDay[];
   today: string;
-  showLegend?: boolean;
 }) {
   const padded = padHeatmap(days, today);
   const weeks: ProgressHeatmapDay[][] = [];
@@ -96,21 +112,6 @@ export default function ProgressHeatmap({
           ))}
         </div>
       </div>
-      {showLegend && (
-        <div className="progress-heat-legend">
-          <span className="muted">Less</span>
-          {CREDIT_COLORS.map((color, i) => (
-            <span
-              key={color}
-              className="progress-heat-cell"
-              style={{ background: color }}
-              title={`${i}/5`}
-            />
-          ))}
-          <span className="muted">More</span>
-          <span className="muted progress-heat-legend-note">✓ = deep work</span>
-        </div>
-      )}
     </section>
   );
 }
