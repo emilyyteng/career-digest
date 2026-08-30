@@ -259,16 +259,14 @@ export default function Progress() {
             </div>
 
             <aside className="card progress-log-panel">
-              <div className="progress-log-panel-head">
-                <h3 className="progress-section-title">Log today</h3>
-                <div className="card progress-lc-card">
-                  <h4 className="progress-section-title">LeetCode</h4>
-                  <LeetcodeStepper
-                    value={today.leetcode.raw}
-                    onCommit={(count) => setLeetcode(count)}
-                  />
-                </div>
+              <div className="card progress-lc-card">
+                <h4 className="progress-section-title">LeetCode</h4>
+                <LeetcodeStepper
+                  value={today.leetcode.raw}
+                  onCommit={(count) => setLeetcode(count)}
+                />
               </div>
+              <h3 className="progress-section-title">Log today</h3>
               <div className="progress-log-block">
                 <ReflectionCompose
                   lane={composeLane}
@@ -325,40 +323,42 @@ export default function Progress() {
               <p className="muted">Loading day…</p>
             ) : (
               <>
-                <div className="card progress-lc-card">
-                  <h4 className="progress-section-title">LeetCode</h4>
-                  {editingDay ? (
-                    <LeetcodeStepper
-                      value={historyLc}
-                      onCommit={(count) => setLeetcode(count, selectedHistory!)}
-                    />
-                  ) : (
-                    <p className="progress-lc-readonly">
-                      {historyDetail.leetcode.raw} solved ·{" "}
-                      {historyDetail.leetcode.earned}/5
-                    </p>
-                  )}
-                </div>
+                <div className="progress-history-flow">
+                  <div className="card progress-lc-card">
+                    <h4 className="progress-section-title">LeetCode</h4>
+                    {editingDay ? (
+                      <LeetcodeStepper
+                        value={historyLc}
+                        onCommit={(count) => setLeetcode(count, selectedHistory!)}
+                      />
+                    ) : (
+                      <p className="progress-lc-readonly">
+                        {historyDetail.leetcode.raw} solved ·{" "}
+                        {historyDetail.leetcode.earned}/5
+                      </p>
+                    )}
+                  </div>
 
-                <div className="progress-log-block">
-                  <span className="progress-kicker">Apps</span>
-                  <p className="progress-apps-summary">
-                    {historyDetail.applications.raw} logged ·{" "}
-                    {historyDetail.applications.earned}/5 earned
-                  </p>
-                  {historyDetail.applicationRows.length > 0 ? (
-                    <ul className="progress-app-list">
-                      {historyDetail.applicationRows.map((app) => (
-                        <li key={app.id}>
-                          <Link to={`/applications/${app.id}`}>
-                            {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="muted">No applications logged this day.</p>
-                  )}
+                  <div className="progress-log-block">
+                    <span className="progress-kicker">Apps</span>
+                    <p className="progress-apps-summary">
+                      {historyDetail.applications.raw} logged ·{" "}
+                      {historyDetail.applications.earned}/5 earned
+                    </p>
+                    {historyDetail.applicationRows.length > 0 ? (
+                      <ul className="progress-app-list">
+                        {historyDetail.applicationRows.map((app) => (
+                          <li key={app.id}>
+                            <Link to={`/applications/${app.id}`}>
+                              {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="muted">No applications logged this day.</p>
+                    )}
+                  </div>
                 </div>
 
                 {editingDay && (
