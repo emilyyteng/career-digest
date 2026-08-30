@@ -1,13 +1,14 @@
 import { extractOracleJobIdFromUrl } from "./adapters/oracle.js";
+import {
+  extractGreenhouseJobIdFromBoardsUrl,
+} from "./greenhouseUrls.js";
 
 /** Greenhouse job id embedded in Simplify misc URLs or embed links. */
 export function extractGreenhouseJobId(url: string): string | null {
   const ghJid = url.match(/(?:^|[?&])gh_jid=(\d+)/i);
   if (ghJid?.[1]) return ghJid[1];
-  const boardsJob = url.match(
-    /(?:boards|job-boards)\.greenhouse\.io\/[^/]+\/jobs\/(\d+)/i,
-  );
-  if (boardsJob?.[1]) return boardsJob[1];
+  const boardsJob = extractGreenhouseJobIdFromBoardsUrl(url);
+  if (boardsJob) return boardsJob;
   if (/boards\.greenhouse\.io\/embed\/job_app/i.test(url)) {
     const token = url.match(/[?&]token=(\d+)/i);
     if (token?.[1]) return token[1];

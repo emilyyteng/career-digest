@@ -112,9 +112,18 @@ describe("boardConfigKeyFromAtsUrl", () => {
       "greenhouse:acme",
     );
     expect(
+      boardConfigKeyFromAtsUrl("https://job-boards.eu.greenhouse.io/imc/jobs/4780585101"),
+    ).toBe("greenhouse:imc");
+    expect(
       boardConfigKeyFromAtsUrl(
         "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
       ),
     ).toBe("oracle:elxb.fa.us2.oraclecloud.com|cx");
+  });
+
+  it("treats regional greenhouse boards as covered when configured", () => {
+    expect(
+      isConfiguredAtsBoardUrl("https://job-boards.eu.greenhouse.io/imc/jobs/4780585101"),
+    ).toBe(true);
   });
 });

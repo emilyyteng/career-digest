@@ -47,7 +47,7 @@ const DEFAULT_SMARTRECRUITERS_DISCOVER_MAX_JOBS = 250;
 const INVALID_TOKENS = new Set(["embed", "jobs", "job-board", "job_app"]);
 
 const DIRECT_PATTERNS: Array<{ source: Source; re: RegExp }> = [
-  { source: "greenhouse", re: /boards\.greenhouse\.io\/([^/?#]+)/i },
+  { source: "greenhouse", re: /(?:boards|job-boards)(?:\.[a-z0-9-]+)?\.greenhouse\.io\/([^/?#]+)/i },
   { source: "lever", re: /jobs\.lever\.co\/([^/?#]+)/i },
   { source: "ashby", re: /jobs\.ashbyhq\.com\/([^/?#]+)/i },
 ];

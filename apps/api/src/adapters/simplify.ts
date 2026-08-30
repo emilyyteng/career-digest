@@ -3,6 +3,7 @@ import type { Source } from "../types.js";
 import { companies } from "../config/companies.js";
 import { parseOracleBoardFromUrl } from "./oracle.js";
 import { parseSmartrecruitersBoardFromUrl } from "./smartrecruiters.js";
+import { extractGreenhouseBoardToken } from "../greenhouseUrls.js";
 
 export const SIMPLIFY_LISTINGS_URL =
   "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json";
@@ -59,7 +60,6 @@ export function boardConfigKeyFromAtsUrl(url: string): string | null {
   }
 
   const patterns: Array<{ source: Source; re: RegExp }> = [
-    { source: "greenhouse", re: /(?:boards|job-boards)\.greenhouse\.io\/([^/?#]+)/i },
     { source: "lever", re: /jobs\.lever\.co\/([^/?#]+)/i },
     { source: "ashby", re: /jobs\.ashbyhq\.com\/([^/?#]+)/i },
   ];
@@ -71,6 +71,9 @@ export function boardConfigKeyFromAtsUrl(url: string): string | null {
     if (!boardToken) continue;
     return `${source}:${boardToken.toLowerCase()}`;
   }
+
+  const greenhouseToken = extractGreenhouseBoardToken(url);
+  if (greenhouseToken) return `greenhouse:${greenhouseToken.toLowerCase()}`;
 
   return null;
 }

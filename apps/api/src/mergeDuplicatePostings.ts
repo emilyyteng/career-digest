@@ -46,6 +46,8 @@ async function loadGreenhousePairs(client: PoolClient): Promise<DuplicatePair[]>
          g.external_id = substring(s.url from '(?:^|[?&])gh_jid=([0-9]+)')
          OR g.external_id = substring(s.url from 'boards\\.greenhouse\\.io/[^/]+/jobs/([0-9]+)')
          OR g.external_id = substring(s.url from 'job-boards\\.greenhouse\\.io/[^/]+/jobs/([0-9]+)')
+         OR g.external_id = substring(s.url from 'boards\\.[a-z0-9-]+\\.greenhouse\\.io/[^/]+/jobs/([0-9]+)')
+         OR g.external_id = substring(s.url from 'job-boards\\.[a-z0-9-]+\\.greenhouse\\.io/[^/]+/jobs/([0-9]+)')
          OR (
            s.url ~ 'boards\\.greenhouse\\.io/embed'
            AND g.external_id = substring(s.url from '[?&]token=([0-9]+)')

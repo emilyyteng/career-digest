@@ -41,6 +41,28 @@ describe.skipIf(!integrationReady)("runMergeDuplicatePostings", () => {
     expect(await postingExists(canonical.id)).toBe(true);
   });
 
+  it("merges regional greenhouse simplify rows into canonical greenhouse postings", async () => {
+    const company = await seedCompany({ source: "greenhouse", boardToken: "imc" });
+    const canonical = await seedPosting({
+      source: "greenhouse",
+      externalId: "4780585101",
+      companyId: company.id,
+      url: "https://boards.greenhouse.io/imc/jobs/4780585101",
+    });
+    const simplify = await seedPosting({
+      source: "simplify",
+      externalId: "simp-gh-eu",
+      companyId: company.id,
+      url: "https://job-boards.eu.greenhouse.io/imc/jobs/4780585101",
+    });
+
+    const result = await runMergeDuplicatePostings();
+
+    expect(result.greenhouse.pairs).toBeGreaterThanOrEqual(1);
+    expect(await postingExists(simplify.id)).toBe(false);
+    expect(await postingExists(canonical.id)).toBe(true);
+  });
+
   it("merges oracle simplify rows by /job/{id} match", async () => {
     const company = await seedCompany({
       source: "oracle",

@@ -29,6 +29,14 @@ describe("extractGreenhouseJobId", () => {
     ).toBe("4242");
   });
 
+  it("extracts id from regional job-boards.eu.greenhouse.io URLs", () => {
+    expect(
+      extractGreenhouseJobId(
+        "https://job-boards.eu.greenhouse.io/imc/jobs/4780585101",
+      ),
+    ).toBe("4780585101");
+  });
+
   it("returns null when no greenhouse id is present", () => {
     expect(extractGreenhouseJobId("https://example.com/jobs/1")).toBeNull();
   });
