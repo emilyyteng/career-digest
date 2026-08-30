@@ -73,8 +73,8 @@ Happy path is always **today**. No arbitrary-day dig on this tab.
 ### Home
 
 - Row under “Your internship digest at a glance,” peer to “Pipeline status →”:
-  - `Today: 3/5 apps · 2/5 LC · deep work ✓` (deep work only if Effort earned today)
-- Links to Progress (Today tab). No week line on Home.
+  - `Today: 3/5 apps · 2/5 LC · deep work ✓` or `… · no deep work` (same strip wording as Progress Today)
+- No separate Progress link on the strip (nav already has Progress). No week line on Home.
 
 ### Logging UX
 

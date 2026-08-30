@@ -34,8 +34,8 @@ function formatWhen(value: string | null | undefined): string | null {
 function formatTodayStrip(today: ProgressToday): string {
   const apps = `${today.applications.earned}/${today.applications.cap} apps`;
   const lc = `${today.leetcode.earned}/${today.leetcode.cap} LC`;
-  if (today.deepWork) return `Today: ${apps} · ${lc} · deep work ✓`;
-  return `Today: ${apps} · ${lc}`;
+  const deepWork = today.deepWork ? "deep work ✓" : "no deep work";
+  return `Today: ${apps} · ${lc} · ${deepWork}`;
 }
 
 function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
@@ -106,12 +106,7 @@ export default function Home() {
             Your internship digest at a glance.
           </p>
           {progress && (
-            <div className="home-progress-row">
-              <p className="home-progress-strip">{formatTodayStrip(progress)}</p>
-              <Link to="/progress" className="home-section-link">
-                Progress →
-              </Link>
-            </div>
+            <p className="home-progress-strip">{formatTodayStrip(progress)}</p>
           )}
         </div>
         <div className="home-last-digest">

@@ -92,7 +92,7 @@ Activity / Effort / Outcome for internship search motivation.
 - Progress APIs (`/api/progress/*`) including dated LeetCode + reflection edit
 - **Progress** page (`/progress`): **Today** (strip, week/month Outcome, dual heatmaps, log) and **History** (calendar dig-in, view-first edit)
 - Application activity derived from `applications.applied_at` (local calendar date)
-- Home today strip (`Today: n/5 apps · n/5 LC · deep work ✓`) linking to Progress
+- Home today strip (`Today: n/5 apps · n/5 LC · deep work ✓` / `no deep work`)
 
 ## Setup
 
