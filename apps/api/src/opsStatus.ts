@@ -5,6 +5,7 @@ import { getBackupStatus } from "./backupStatus.js";
 import { getBackupJob } from "./backupJob.js";
 import { pool } from "./db.js";
 import { getBoardRefresh } from "./boardRefresh.js";
+import { HYBRID_SCRAPE_URL_SQL, SCRAPE_DUE_NOW_SQL } from "./scrape.js";
 import { getLiveRankBacklogJob } from "./liveRankBacklogJob.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
 import { RANK_PROMPT_VERSION } from "./rankPrompt.js";
@@ -154,26 +155,9 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
        AND ${BLANK_DESCRIPTION}
        AND (
          scrape_status IS DISTINCT FROM 'skipped_ats'
-         OR url ILIKE '%oraclecloud.com%'
-         OR url ILIKE '%smartrecruiters.com%'
+         OR ${HYBRID_SCRAPE_URL_SQL}
        )
-       AND (
-         scraped_at IS NULL
-         OR scrape_status IS NULL
-         OR (
-           scrape_status IN ('timeout', 'error')
-           AND scraped_at < now() - interval '6 hours'
-         )
-         OR (
-           scrape_status IN ('empty', 'too_large')
-           AND scraped_at < now() - interval '24 hours'
-           AND COALESCE(source_updated_at, last_seen_at) > scraped_at
-         )
-         OR (
-           scrape_status = 'blocked'
-           AND scraped_at < now() - interval '48 hours'
-         )
-       )`,
+       AND ${SCRAPE_DUE_NOW_SQL}`,
   );
 
   const deferred = await pool.query<{ count: string }>(
@@ -184,25 +168,9 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
        AND scraped_at IS NOT NULL
        AND (
          scrape_status IS DISTINCT FROM 'skipped_ats'
-         OR url ILIKE '%oraclecloud.com%'
-         OR url ILIKE '%smartrecruiters.com%'
+         OR ${HYBRID_SCRAPE_URL_SQL}
        )
-       AND NOT (
-         scrape_status IS NULL
-         OR (
-           scrape_status IN ('timeout', 'error')
-           AND scraped_at < now() - interval '6 hours'
-         )
-         OR (
-           scrape_status IN ('empty', 'too_large')
-           AND scraped_at < now() - interval '24 hours'
-           AND COALESCE(source_updated_at, last_seen_at) > scraped_at
-         )
-         OR (
-           scrape_status = 'blocked'
-           AND scraped_at < now() - interval '48 hours'
-         )
-       )`,
+       AND NOT ${SCRAPE_DUE_NOW_SQL}`,
   );
 
   const simplifyBlank = await pool.query<{ count: string }>(

@@ -20,6 +20,34 @@ type ScrapeStatus =
   | "too_large"
   | "skipped_ats";
 
+/** Simplify hybrid rows that were previously skipped_ats but should be scraped now. */
+export const HYBRID_SCRAPE_URL_SQL = `(
+  url ILIKE '%oraclecloud.com%'
+  OR url ILIKE '%smartrecruiters.com%'
+)`;
+
+export const SCRAPE_DUE_NOW_SQL = `(
+  scraped_at IS NULL
+  OR scrape_status IS NULL
+  OR (
+    scrape_status IN ('timeout', 'error')
+    AND scraped_at < now() - interval '6 hours'
+  )
+  OR (
+    scrape_status IN ('empty', 'too_large')
+    AND scraped_at < now() - interval '24 hours'
+    AND COALESCE(source_updated_at, last_seen_at) > scraped_at
+  )
+  OR (
+    scrape_status = 'blocked'
+    AND scraped_at < now() - interval '48 hours'
+  )
+  OR (
+    scrape_status = 'skipped_ats'
+    AND ${HYBRID_SCRAPE_URL_SQL}
+  )
+)`;
+
 type BlankPosting = {
   id: string;
   url: string;
@@ -169,26 +197,9 @@ export async function runScrape(): Promise<void> {
        AND (description_html IS NULL OR btrim(description_html) = '')
        AND (
          scrape_status IS DISTINCT FROM 'skipped_ats'
-         OR url ILIKE '%oraclecloud.com%'
-         OR url ILIKE '%smartrecruiters.com%'
+         OR ${HYBRID_SCRAPE_URL_SQL}
        )
-       AND (
-         scraped_at IS NULL
-         OR scrape_status IS NULL
-         OR (
-           scrape_status IN ('timeout', 'error')
-           AND scraped_at < now() - interval '6 hours'
-         )
-         OR (
-           scrape_status IN ('empty', 'too_large')
-           AND scraped_at < now() - interval '24 hours'
-           AND COALESCE(source_updated_at, last_seen_at) > scraped_at
-         )
-         OR (
-           scrape_status = 'blocked'
-           AND scraped_at < now() - interval '48 hours'
-         )
-       )
+       AND ${SCRAPE_DUE_NOW_SQL}
      ORDER BY last_seen_at DESC`,
   );
 
@@ -200,18 +211,9 @@ export async function runScrape(): Promise<void> {
        AND scraped_at IS NOT NULL
        AND (
          scrape_status IS DISTINCT FROM 'skipped_ats'
-         OR url ILIKE '%oraclecloud.com%'
-         OR url ILIKE '%smartrecruiters.com%'
+         OR ${HYBRID_SCRAPE_URL_SQL}
        )
-       AND NOT (
-         (scrape_status IN ('timeout', 'error') AND scraped_at < now() - interval '6 hours')
-         OR (
-           scrape_status IN ('empty', 'too_large')
-           AND scraped_at < now() - interval '24 hours'
-           AND COALESCE(source_updated_at, last_seen_at) > scraped_at
-         )
-         OR (scrape_status = 'blocked' AND scraped_at < now() - interval '48 hours')
-       )`,
+       AND NOT ${SCRAPE_DUE_NOW_SQL}`,
   );
   const deferredCount = Number(deferred.rows[0]?.count ?? 0) || 0;
 

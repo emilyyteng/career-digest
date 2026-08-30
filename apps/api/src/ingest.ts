@@ -33,6 +33,23 @@ async function existingExternalIds(companyId: string): Promise<Set<string>> {
   return new Set(result.rows.map((row) => row.external_id));
 }
 
+/** Oracle/SmartRecruiters list APIs omit JD text — backfill via detail API when still blank in DB. */
+async function blankDescriptionExternalIds(
+  companyId: string,
+  source: CompanyConfig["source"],
+): Promise<Set<string>> {
+  if (source !== "oracle" && source !== "smartrecruiters") return new Set();
+  const result = await pool.query<{ external_id: string }>(
+    `SELECT external_id
+     FROM postings
+     WHERE company_id = $1
+       AND source = $2
+       AND (description_html IS NULL OR btrim(description_html) = '')`,
+    [companyId, source],
+  );
+  return new Set(result.rows.map((row) => row.external_id));
+}
+
 async function upsertPosting(
   companyId: string,
   posting: NormalizedPosting,
@@ -155,6 +172,7 @@ export async function runIngest(): Promise<void> {
       internships += postings.filter((p) => p.isInternship).length;
 
       const knownIds = await existingExternalIds(companyId);
+      const blankIds = await blankDescriptionExternalIds(companyId, company.source);
       const toUpsert = postings.filter((posting) => {
         const known = knownIds.has(posting.externalId);
         if (known) return shouldKeepExistingOnBoard(posting.title, posting.location);
@@ -162,7 +180,9 @@ export async function runIngest(): Promise<void> {
       });
 
       for (const posting of toUpsert) {
-        if (!knownIds.has(posting.externalId)) {
+        const needsDetail =
+          !knownIds.has(posting.externalId) || blankIds.has(posting.externalId);
+        if (needsDetail) {
           posting.descriptionHtml = await fetchMissingDescription(company, posting);
         }
         await upsertPosting(companyId, posting);
