@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getHomeDashboard, type HomeDashboard, type HomeJobPick } from "../api";
+import {
+  getHomeDashboard,
+  getProgressToday,
+  type HomeDashboard,
+  type HomeJobPick,
+  type ProgressToday,
+} from "../api";
 import InterviewCountdown from "../InterviewCountdown";
 import ThemeEmoji from "../ThemeEmoji";
 import { formatStepWhen } from "../formatDate";
@@ -12,6 +18,10 @@ import {
 
 const ATTENTION_LIMIT = 4;
 
+function browserTz(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+}
+
 function currentGreetingPeriod() {
   return greetingPeriodFromHour(new Date().getHours());
 }
@@ -19,6 +29,13 @@ function currentGreetingPeriod() {
 function formatWhen(value: string | null | undefined): string | null {
   if (!value) return null;
   return formatStepWhen(value);
+}
+
+function formatTodayStrip(today: ProgressToday): string {
+  const apps = `${today.applications.earned}/${today.applications.cap} apps`;
+  const lc = `${today.leetcode.earned}/${today.leetcode.cap} LC`;
+  if (today.deepWork) return `Today: ${apps} · ${lc} · deep work ✓`;
+  return `Today: ${apps} · ${lc}`;
 }
 
 function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
@@ -53,10 +70,14 @@ function SeeMore({ to, label }: { to: string; label: string }) {
 
 export default function Home() {
   const [data, setData] = useState<HomeDashboard | null>(null);
+  const [progress, setProgress] = useState<ProgressToday | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getHomeDashboard().then(setData).catch((err: Error) => setError(err.message));
+    getProgressToday(browserTz())
+      .then(setProgress)
+      .catch(() => setProgress(null));
   }, []);
 
   if (error && !data) return <p className="error">{error}</p>;
@@ -84,6 +105,14 @@ export default function Home() {
           <p className="muted home-hero-sub">
             Your internship digest at a glance.
           </p>
+          {progress && (
+            <div className="home-progress-row">
+              <p className="home-progress-strip">{formatTodayStrip(progress)}</p>
+              <Link to="/progress" className="home-section-link">
+                Progress →
+              </Link>
+            </div>
+          )}
         </div>
         <div className="home-last-digest">
           <span className="home-last-digest-label">Last digest</span>

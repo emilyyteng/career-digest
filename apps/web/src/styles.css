@@ -2330,6 +2330,20 @@ textarea { min-height: 10rem; width: 100%; }
   margin: 0.3rem 0 0;
   font-size: 0.9rem;
 }
+.home-progress-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.85rem;
+  margin-top: 0.55rem;
+}
+.home-progress-strip {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
 .home-last-digest {
   display: grid;
   gap: 0.2rem;

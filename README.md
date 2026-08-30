@@ -84,7 +84,7 @@ Separate **what you need to do** from the **Applications tracker**.
 - Legacy application to-dos migrated to open application tasks; Applications tracker is pipeline-only (no to-do tab)
 - Home **Needs attention** shows **Interviews** then **Tasks** (up to four open tasks, sorted by due date)
 
-### Milestone 8 — Progress tracker (in progress)
+### Milestone 8 — Progress tracker
 
 Activity / Effort / Outcome for internship search motivation.
 
@@ -92,7 +92,7 @@ Activity / Effort / Outcome for internship search motivation.
 - Progress APIs (`/api/progress/*`) including dated LeetCode + reflection edit
 - **Progress** page (`/progress`): **Today** (strip, week/month Outcome, dual heatmaps, log) and **History** (calendar dig-in, view-first edit)
 - Application activity derived from `applications.applied_at` (local calendar date)
-- Home today strip still pending (ticket 3)
+- Home today strip (`Today: n/5 apps · n/5 LC · deep work ✓`) linking to Progress
 
 ## Setup
 
@@ -148,7 +148,7 @@ npm run test
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Home — digest status, needs attention (interviews + tasks), job picks |
+| `/` | Home — digest status, today progress strip, needs attention (interviews + tasks), job picks |
 | `/jobs` | Ranked digest board (Add to tasks, Applied, feedback) |
 | `/applications` | Application tracker (pipeline statuses) |
 | `/tasks` | Unified action backlog (open / completed) |
