@@ -70,6 +70,17 @@ Shown on Progress page (week summary required; month on same page). **Not** inte
 
 API aggregates: today strip, heatmap series (earned credit + effort flags), Outcome summaries.
 
+### API (`tz` = IANA timezone, required on reads)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/progress/today` | Today strip: app/LC earned credit, `deepWork` |
+| GET | `/api/progress/heatmap?lane=application\|technical&days=365` | Per-day `raw`, `earned`, `effort` |
+| GET | `/api/progress/outcome?period=day\|week\|month&date=` | Period totals |
+| GET | `/api/progress/day/:date` | Drill-down: apps, LC, reflections |
+| PATCH | `/api/progress/leetcode` | Body `{ count }` or `{ delta }` for today in `tz` |
+| POST | `/api/progress/reflections` | Body `{ lane, body, applicationId? }` |
+
 ## Delivery phases
 
 | # | Ticket | Scope |

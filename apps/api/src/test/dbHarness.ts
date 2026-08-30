@@ -33,6 +33,7 @@ export type SeedApplicationInput = {
   postingId: string;
   status?: string;
   notes?: string | null;
+  appliedAt?: Date | null;
 };
 
 export type SeedFeedbackInput = {
@@ -46,6 +47,8 @@ export async function truncateAll(client?: PoolClient): Promise<void> {
   assertTestDatabaseMutationAllowed();
   const sql = `
     TRUNCATE TABLE
+      reflection_logs,
+      leetcode_daily,
       tasks,
       application_steps,
       application_thread_members,
@@ -134,11 +137,18 @@ export async function seedPosting(input: SeedPostingInput): Promise<{ id: string
 }
 
 export async function seedApplication(input: SeedApplicationInput): Promise<{ id: string }> {
+  const status = input.status ?? "applied";
+  const appliedAt =
+    input.appliedAt !== undefined
+      ? input.appliedAt
+      : status !== "todo"
+        ? new Date()
+        : null;
   const { rows } = await pool.query<{ id: string }>(
-    `INSERT INTO applications (posting_id, status, notes)
-     VALUES ($1, $2, $3)
+    `INSERT INTO applications (posting_id, status, notes, applied_at, status_changed_at)
+     VALUES ($1, $2, $3, $4, now())
      RETURNING id`,
-    [input.postingId, input.status ?? "applied", input.notes ?? null],
+    [input.postingId, status, input.notes ?? null, appliedAt],
   );
   return { id: rows[0]!.id };
 }
@@ -312,4 +322,35 @@ export async function interviewThreadExists(threadId: string): Promise<boolean> 
     [threadId],
   );
   return rows[0]?.exists ?? false;
+}
+
+export async function seedLeetcodeDaily(
+  localDate: string,
+  count: number,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO leetcode_daily (local_date, count) VALUES ($1::date, $2)
+     ON CONFLICT (local_date) DO UPDATE SET count = EXCLUDED.count`,
+    [localDate, count],
+  );
+}
+
+export async function seedReflectionLog(input: {
+  lane: "application" | "technical";
+  body: string;
+  applicationId?: string | null;
+  createdAt?: Date;
+}): Promise<{ id: string }> {
+  const { rows } = await pool.query<{ id: string }>(
+    `INSERT INTO reflection_logs (lane, body, application_id, created_at)
+     VALUES ($1, $2, $3, COALESCE($4, now()))
+     RETURNING id`,
+    [
+      input.lane,
+      input.body,
+      input.applicationId ?? null,
+      input.createdAt ?? null,
+    ],
+  );
+  return { id: rows[0]!.id };
 }

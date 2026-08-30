@@ -45,6 +45,19 @@ import {
   patchTask,
   reopenTask,
 } from "./tasks.js";
+import {
+  createReflectionLog,
+  getProgressDay,
+  getProgressHeatmap,
+  getProgressOutcome,
+  getProgressToday,
+  isProgressLane,
+  isProgressPeriod,
+  parseAnchorDate,
+  parseLocalDate,
+  resolveTimezone,
+  setLeetcodeDaily,
+} from "./progress.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -1190,6 +1203,117 @@ api.delete("/tasks/:id", async (req, res) => {
     return;
   }
   res.json({ ok: true });
+});
+
+api.get("/progress/today", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  res.json(await getProgressToday(pool, tz));
+});
+
+api.get("/progress/heatmap", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const lane = String(req.query.lane ?? "application");
+  if (!isProgressLane(lane)) {
+    res.status(400).json({ error: "lane must be application or technical" });
+    return;
+  }
+  const rawDays = Number(req.query.days);
+  const days = Number.isFinite(rawDays) ? rawDays : 365;
+  res.json(await getProgressHeatmap(pool, lane, tz, days));
+});
+
+api.get("/progress/outcome", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const period = String(req.query.period ?? "");
+  if (!isProgressPeriod(period)) {
+    res.status(400).json({ error: "period must be day, week, or month" });
+    return;
+  }
+  try {
+    const anchorDate = parseAnchorDate(
+      typeof req.query.date === "string" ? req.query.date : undefined,
+      tz,
+    );
+    const outcome = await getProgressOutcome(pool, period, tz, anchorDate);
+    if (!outcome) {
+      res.status(400).json({ error: "Invalid date" });
+      return;
+    }
+    res.json(outcome);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    res.status(400).json({ error: message });
+  }
+});
+
+api.get("/progress/day/:date", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const date = parseLocalDate(req.params.date);
+  if (!date) {
+    res.status(400).json({ error: "Invalid date" });
+    return;
+  }
+  res.json(await getProgressDay(pool, tz, date));
+});
+
+api.patch("/progress/leetcode", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const body = req.body as { count?: number; delta?: number };
+  try {
+    res.json(await setLeetcodeDaily(pool, tz, body));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    res.status(400).json({ error: message });
+  }
+});
+
+api.post("/progress/reflections", async (req, res) => {
+  const body = req.body as {
+    lane?: string;
+    body?: string;
+    applicationId?: string | null;
+  };
+  const lane = body.lane ?? "";
+  if (!isProgressLane(lane)) {
+    res.status(400).json({ error: "lane must be application or technical" });
+    return;
+  }
+  if (!body.body || typeof body.body !== "string") {
+    res.status(400).json({ error: "body is required" });
+    return;
+  }
+  try {
+    const row = await createReflectionLog(pool, {
+      lane,
+      body: body.body,
+      applicationId: body.applicationId ?? null,
+    });
+    res.status(201).json(row);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = message === "Application not found" ? 404 : 400;
+    res.status(status).json({ error: message });
+  }
 });
 
 export async function ensureUploadDir(): Promise<void> {

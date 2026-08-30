@@ -84,6 +84,15 @@ Separate **what you need to do** from the **Applications tracker**.
 - Legacy application to-dos migrated to open application tasks; Applications tracker is pipeline-only (no to-do tab)
 - Home **Needs attention** shows **Interviews** then **Tasks** (up to four open tasks, sorted by due date)
 
+### Milestone 8 — Progress tracker (in progress)
+
+Activity / Effort / Outcome APIs for internship search motivation (UI in follow-up tickets).
+
+- `leetcode_daily` and `reflection_logs` tables
+- `GET /api/progress/today`, `/heatmap`, `/outcome`, `/day/:date` (requires `tz` IANA param)
+- `PATCH /api/progress/leetcode` (`count` or `delta`), `POST /api/progress/reflections`
+- Application activity derived from `applications.applied_at` (local calendar date)
+
 ## Setup
 
 ```bash

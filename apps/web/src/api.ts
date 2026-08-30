@@ -548,3 +548,122 @@ export const removePostingFromTasks = (postingId: string) =>
   parse<{ ok: boolean }>(
     api(`/api/tasks/from-posting/${postingId}`, { method: "DELETE" }),
   );
+
+export type ActivityCredit = {
+  raw: number;
+  earned: number;
+  cap: number;
+};
+
+export type ProgressLane = "application" | "technical";
+export type ProgressPeriod = "day" | "week" | "month";
+
+export type ProgressToday = {
+  tz: string;
+  localDate: string;
+  applications: ActivityCredit;
+  leetcode: ActivityCredit;
+  deepWork: boolean;
+};
+
+export type ProgressHeatmapDay = {
+  date: string;
+  raw: number;
+  earned: number;
+  effort: boolean;
+};
+
+export type ProgressOutcome = {
+  period: ProgressPeriod;
+  tz: string;
+  anchorDate: string;
+  startDate: string;
+  endDate: string;
+  applicationsLogged: number;
+  leetcodeSolves: number;
+  deepWorkUnits: number;
+};
+
+export type ProgressReflection = {
+  id: string;
+  lane: ProgressLane;
+  body: string;
+  applicationId: string | null;
+  createdAt: string;
+};
+
+export type ProgressDayDetail = {
+  tz: string;
+  date: string;
+  applications: ActivityCredit;
+  leetcode: ActivityCredit;
+  effortApplication: boolean;
+  effortTechnical: boolean;
+  deepWork: boolean;
+  applicationRows: Array<{
+    id: string;
+    company: string | null;
+    title: string | null;
+    appliedAt: string;
+  }>;
+  reflections: ProgressReflection[];
+};
+
+const progressTz = (tz: string) =>
+  new URLSearchParams({ tz }).toString();
+
+export const getProgressToday = (tz: string) =>
+  parse<ProgressToday>(api(`/api/progress/today?${progressTz(tz)}`));
+
+export const getProgressHeatmap = (
+  tz: string,
+  lane: ProgressLane,
+  days = 365,
+) => {
+  const params = new URLSearchParams({ tz, lane, days: String(days) });
+  return parse<{
+    lane: ProgressLane;
+    tz: string;
+    startDate: string;
+    endDate: string;
+    days: ProgressHeatmapDay[];
+  }>(api(`/api/progress/heatmap?${params}`));
+};
+
+export const getProgressOutcome = (
+  tz: string,
+  period: ProgressPeriod,
+  anchorDate?: string,
+) => {
+  const params = new URLSearchParams({ tz, period });
+  if (anchorDate) params.set("date", anchorDate);
+  return parse<ProgressOutcome>(api(`/api/progress/outcome?${params}`));
+};
+
+export const getProgressDay = (tz: string, date: string) =>
+  parse<ProgressDayDetail>(api(`/api/progress/day/${date}?${progressTz(tz)}`));
+
+export const patchProgressLeetcode = (
+  tz: string,
+  body: { count?: number; delta?: number },
+) =>
+  parse<{ localDate: string; count: number }>(
+    api(`/api/progress/leetcode?${progressTz(tz)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const createProgressReflection = (body: {
+  lane: ProgressLane;
+  body: string;
+  applicationId?: string | null;
+}) =>
+  parse<ProgressReflection>(
+    api("/api/progress/reflections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
