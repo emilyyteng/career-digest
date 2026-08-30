@@ -122,7 +122,7 @@ export function LaneSelect({
 }) {
   return (
     <label className="progress-lane-select">
-      <span className="visually-hidden">Reflection lane</span>
+      <span className="progress-lane-label">LOG</span>
       <select
         value={value}
         disabled={disabled}
@@ -172,9 +172,15 @@ export function ReflectionCompose({
         disabled={busy}
         onChange={(event) => setBody(event.target.value)}
       />
-      <button type="submit" disabled={busy || !body.trim()}>
-        Add reflection
-      </button>
+      <div className="progress-compose-actions">
+        <button
+          type="submit"
+          className="secondary"
+          disabled={busy || !body.trim()}
+        >
+          Add reflection
+        </button>
+      </div>
     </form>
   );
 }

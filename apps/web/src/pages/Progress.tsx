@@ -266,7 +266,9 @@ export default function Progress() {
                   onCommit={(count) => setLeetcode(count)}
                 />
               </div>
-              <h3 className="progress-section-title">Log today</h3>
+              <h3 className="progress-section-title progress-daily-title">
+                Daily progress
+              </h3>
               <div className="progress-log-block progress-compose-block">
                 <ReflectionCompose
                   lane={composeLane}
@@ -302,11 +304,8 @@ export default function Progress() {
           )}
 
           <section className="card progress-log-panel progress-history-detail">
-            <p className="muted progress-kicker">Selected day</p>
-            <div className="progress-history-title-row">
-              <h3 className="progress-history-date">
-                {selectedHistory ? formatLong(selectedHistory) : "—"}
-              </h3>
+            <div className="progress-history-kicker-row">
+              <p className="muted progress-kicker">Selected day</p>
               <label className="progress-edit-toggle">
                 <input
                   type="checkbox"
@@ -316,6 +315,9 @@ export default function Progress() {
                 Edit this day
               </label>
             </div>
+            <h3 className="progress-history-date">
+              {selectedHistory ? formatLong(selectedHistory) : "—"}
+            </h3>
 
             {!historyDetail ? (
               <p className="muted">Loading day…</p>

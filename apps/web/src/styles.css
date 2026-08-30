@@ -2726,23 +2726,39 @@ textarea { min-height: 10rem; width: 100%; }
   min-width: 0;
   overflow: auto;
 }
-.progress-log-panel > .progress-lc-card {
-  float: right;
-  margin: 0 0 0.65rem 0.85rem;
+/* Today: "Daily progress" beside LC; log row + textarea full-width under LC. */
+.progress-log-panel:not(.progress-history-detail) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title lc"
+    "compose compose"
+    "notes notes";
+  column-gap: 0.85rem;
+  row-gap: 0.5rem;
+  align-items: start;
 }
-.progress-log-panel > .progress-section-title {
+.progress-log-panel:not(.progress-history-detail) > .progress-lc-card {
+  grid-area: lc;
   margin: 0;
 }
-.progress-compose-block {
-  clear: both;
-  margin-top: 0.55rem;
-  width: 100%;
+.progress-log-panel:not(.progress-history-detail) > .progress-daily-title {
+  grid-area: title;
+  margin: 0;
+  align-self: start;
 }
-.progress-compose-block .progress-compose {
-  width: 100%;
+.progress-log-panel:not(.progress-history-detail) > .progress-compose-block {
+  display: contents;
 }
-.progress-compose-block .progress-compose textarea {
+.progress-compose-block > .progress-compose {
+  grid-area: compose;
   width: 100%;
+  min-width: 0;
+}
+.progress-log-panel:not(.progress-history-detail) > .progress-notes-block {
+  grid-area: notes;
+  clear: none;
+  margin-top: 0.2rem;
 }
 .progress-log-panel-head {
   display: flex;
@@ -2756,8 +2772,19 @@ textarea { min-height: 10rem; width: 100%; }
   margin: 0;
 }
 .progress-lane-select {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   width: fit-content;
+}
+.progress-lane-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  line-height: 1;
 }
 .progress-lane-select select {
   font-family: var(--font-mono);
@@ -2786,22 +2813,29 @@ textarea { min-height: 10rem; width: 100%; }
 }
 .progress-history-flow {
   overflow: auto;
-  margin-top: 0.35rem;
-  margin-bottom: 0.15rem;
+  margin-top: 0.7rem;
+  margin-bottom: 1.15rem;
 }
 .progress-history-flow .progress-lc-card {
   float: right;
   margin: 0 0 0.55rem 0.85rem;
 }
-.progress-history-detail > .progress-kicker {
-  margin: 0 0 0.15rem;
+.progress-history-detail > .progress-log-block {
+  margin-bottom: 1.15rem;
 }
-.progress-history-title-row {
+.progress-history-detail > .progress-log-block:last-child {
+  margin-bottom: 0;
+}
+.progress-history-kicker-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  margin-bottom: 0.1rem;
+}
+.progress-history-kicker-row > .progress-kicker {
+  margin: 0;
 }
 .progress-history-date {
   margin: 0;
@@ -2811,9 +2845,9 @@ textarea { min-height: 10rem; width: 100%; }
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  line-height: 1.2;
+  line-height: 1;
   flex-shrink: 0;
 }
 .progress-lc-readonly {
@@ -2839,6 +2873,9 @@ textarea { min-height: 10rem; width: 100%; }
   margin-top: 0.7rem;
   gap: 0.35rem;
 }
+.progress-history-detail > .progress-notes-block {
+  margin-top: 0;
+}
 .progress-notes-block > .muted,
 .progress-notes-block > .progress-note-list {
   margin: 0;
@@ -2861,10 +2898,12 @@ textarea { min-height: 10rem; width: 100%; }
 .progress-compose {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.45rem;
 }
-.progress-compose textarea {
+.progress-compose-actions {
+  display: flex;
+  justify-content: flex-end;
   width: 100%;
 }
 .progress-compose textarea,
