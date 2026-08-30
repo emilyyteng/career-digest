@@ -7,6 +7,7 @@ import {
   fetchSimplifyMiscellaneousJobs,
   isConfiguredAtsBoardUrl,
   isMiscellaneousApplyUrl,
+  shouldScrapeSimplifyApplyUrl,
   SIMPLIFY_LISTINGS_URL,
 } from "./simplify.js";
 
@@ -81,6 +82,28 @@ describe("isMiscellaneousApplyUrl", () => {
   it("treats custom careers pages as miscellaneous", () => {
     expect(isMiscellaneousApplyUrl("https://careers.customco.com/job/12345")).toBe(true);
     expect(isMiscellaneousApplyUrl("https://zipline.com/careers?gh_jid=12345")).toBe(true);
+  });
+});
+
+describe("shouldScrapeSimplifyApplyUrl", () => {
+  it("scrapes miscellaneous and hybrid Oracle/SmartRecruiters URLs", () => {
+    expect(shouldScrapeSimplifyApplyUrl("https://careers.customco.com/job/12345")).toBe(true);
+    expect(
+      shouldScrapeSimplifyApplyUrl(
+        "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
+      ),
+    ).toBe(true);
+    expect(
+      shouldScrapeSimplifyApplyUrl(
+        "https://jobs.smartrecruiters.com/BoschGroup/744000100000001",
+      ),
+    ).toBe(true);
+  });
+
+  it("skips Greenhouse/Lever/Ashby ATS hosts on Simplify", () => {
+    expect(shouldScrapeSimplifyApplyUrl("https://boards.greenhouse.io/acme/jobs/1")).toBe(false);
+    expect(shouldScrapeSimplifyApplyUrl("https://jobs.lever.co/acme/uuid")).toBe(false);
+    expect(shouldScrapeSimplifyApplyUrl("https://jobs.ashbyhq.com/acme/job")).toBe(false);
   });
 });
 

@@ -152,7 +152,11 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
      FROM postings
      WHERE source = 'simplify'
        AND ${BLANK_DESCRIPTION}
-       AND scrape_status IS DISTINCT FROM 'skipped_ats'
+       AND (
+         scrape_status IS DISTINCT FROM 'skipped_ats'
+         OR url ILIKE '%oraclecloud.com%'
+         OR url ILIKE '%smartrecruiters.com%'
+       )
        AND (
          scraped_at IS NULL
          OR scrape_status IS NULL
@@ -178,7 +182,11 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
      WHERE source = 'simplify'
        AND ${BLANK_DESCRIPTION}
        AND scraped_at IS NOT NULL
-       AND scrape_status IS DISTINCT FROM 'skipped_ats'
+       AND (
+         scrape_status IS DISTINCT FROM 'skipped_ats'
+         OR url ILIKE '%oraclecloud.com%'
+         OR url ILIKE '%smartrecruiters.com%'
+       )
        AND NOT (
          scrape_status IS NULL
          OR (
@@ -322,7 +330,7 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
         `Light rank up to ${limit} unranked or outdated postings (live OpenAI, ${defaultRankingModel()})`,
       ],
       scrapeRetryNote:
-        "Scrape retries: timeout/error after 6h; empty/too_large after 24h if posting updated; blocked after 48h. Ashby/Lever/Greenhouse descriptions come from board JSON at ingest — scrape skipped_ats only applies to Simplify miscellaneous URLs.",
+        "Scrape retries: timeout/error after 6h; empty/too_large after 24h if posting updated; blocked after 48h. Ashby/Lever/Greenhouse descriptions come from board JSON at ingest — scrape skipped_ats only for those ATS hosts on Simplify. Oracle/SmartRecruiters hybrid Simplify rows are scraped from apply URLs.",
       scrapeNextRetries: scrapeRetries.rows.map((r) => ({
         status: r.status,
         count: Number(r.count) || 0,

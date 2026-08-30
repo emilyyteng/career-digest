@@ -95,6 +95,19 @@ export function isMiscellaneousApplyUrl(url: string): boolean {
   return Boolean(url) && atsFamily(url) === null;
 }
 
+/**
+ * Whether a Simplify posting's apply URL should be scraped for a missing JD.
+ * Greenhouse/Lever/Ashby ATS links rely on board JSON ingest + merge; Oracle and
+ * SmartRecruiters hybrid rows stay on Simplify until merge (often indefinitely when
+ * boards are deferred), so scrape those apply pages.
+ */
+export function shouldScrapeSimplifyApplyUrl(url: string): boolean {
+  if (!url) return false;
+  if (isMiscellaneousApplyUrl(url)) return true;
+  const family = atsFamily(url);
+  return family === "oracle" || family === "smartrecruiters";
+}
+
 function listingToPosting(listing: SimplifyListing): NormalizedPosting {
   const location = (listing.locations ?? []).filter(Boolean).join(" | ") || null;
   const published = parseUnix(listing.date_posted);

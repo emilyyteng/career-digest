@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { isMiscellaneousApplyUrl } from "./adapters/simplify.js";
+import { shouldScrapeSimplifyApplyUrl } from "./adapters/simplify.js";
 import { migrate, pool } from "./db.js";
 import { descriptionFromHtml } from "./descriptionFromHtml.js";
 
@@ -98,7 +98,7 @@ async function scrapeOne(
   posting: BlankPosting,
   gate: HostGate,
 ): Promise<ScrapeStatus> {
-  if (!isMiscellaneousApplyUrl(posting.url)) return "skipped_ats";
+  if (!shouldScrapeSimplifyApplyUrl(posting.url)) return "skipped_ats";
   const host = hostnameOf(posting.url);
   if (!host) return "error";
 
@@ -160,13 +160,18 @@ async function mapPool(
 export async function runScrape(): Promise<void> {
   await migrate();
   // Never-scraped blanks always retry. Failed attempts back off so board refresh
-  // does not hammer blocked hosts every run. skipped_ats never yields a JD here.
+  // does not hammer blocked hosts every run. skipped_ats applies only to GH/Lever/Ashby
+  // on Simplify; Oracle/SmartRecruiters hybrid rows are scraped (and may retry from skipped_ats).
   const { rows } = await pool.query<BlankPosting>(
     `SELECT id, url
      FROM postings
      WHERE source = 'simplify'
        AND (description_html IS NULL OR btrim(description_html) = '')
-       AND (scrape_status IS DISTINCT FROM 'skipped_ats')
+       AND (
+         scrape_status IS DISTINCT FROM 'skipped_ats'
+         OR url ILIKE '%oraclecloud.com%'
+         OR url ILIKE '%smartrecruiters.com%'
+       )
        AND (
          scraped_at IS NULL
          OR scrape_status IS NULL
@@ -193,7 +198,11 @@ export async function runScrape(): Promise<void> {
      WHERE source = 'simplify'
        AND (description_html IS NULL OR btrim(description_html) = '')
        AND scraped_at IS NOT NULL
-       AND scrape_status IS DISTINCT FROM 'skipped_ats'
+       AND (
+         scrape_status IS DISTINCT FROM 'skipped_ats'
+         OR url ILIKE '%oraclecloud.com%'
+         OR url ILIKE '%smartrecruiters.com%'
+       )
        AND NOT (
          (scrape_status IN ('timeout', 'error') AND scraped_at < now() - interval '6 hours')
          OR (
