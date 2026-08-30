@@ -2099,6 +2099,23 @@ textarea { min-height: 10rem; width: 100%; }
   font-size: 0.85rem;
 }
 
+.finish-step-awaiting-lede {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.interview-awaiting-hero {
+  border-color: var(--accent-yellow-deep);
+}
+.interview-awaiting-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  max-width: 36rem;
+}
+.interview-card-actions-awaiting {
+  border-top: 1px solid var(--border);
+}
+
 .interview-workspace-header {
   display: flex;
   justify-content: space-between;

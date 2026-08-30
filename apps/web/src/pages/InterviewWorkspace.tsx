@@ -19,6 +19,7 @@ import {
 } from "../interviewStepUi";
 import { formatDeadlineLong } from "../formatDate";
 import FinishInterviewStepModal, {
+  type FinishStepMode,
   type FinishStepResult,
 } from "../FinishInterviewStepModal";
 import StepActionConfirm from "../StepActionConfirm";
@@ -62,6 +63,7 @@ export default function InterviewWorkspace() {
   const [finishStepTarget, setFinishStepTarget] = useState<{
     stepId: string;
     stepTitle: string;
+    mode: FinishStepMode;
   } | null>(null);
   const [finishBusy, setFinishBusy] = useState(false);
 
@@ -178,6 +180,7 @@ export default function InterviewWorkspace() {
   if (!thread) return <p className="muted">Loading…</p>;
 
   const nextStep = thread.steps.find(stepIsActionable);
+  const awaitingStep = thread.awaitingStep;
   const previousSteps = thread.steps.filter((s) => !stepIsActionable(s));
   const linkedRoles = formatLinkedRoles(thread);
   const deadlineLabel = nextStep ? stepDeadlineLabel(nextStep) : null;
@@ -258,6 +261,7 @@ export default function InterviewWorkspace() {
                   setFinishStepTarget({
                     stepId: nextStep.id,
                     stepTitle: nextStep.title,
+                    mode: "actionable",
                   })
                 }
               >
@@ -276,6 +280,34 @@ export default function InterviewWorkspace() {
               <span className="ext-icon" aria-hidden="true">↗</span>
             </a>
           )}
+        </div>
+      )}
+
+      {!nextStep && awaitingStep && thread.status === "active" && (
+        <div className="interview-next-hero interview-awaiting-hero">
+          <div className="interview-next-hero-main">
+            <h3 className="interview-section-heading">Waiting on them</h3>
+            <p className="interview-next-title">{awaitingStep.title}</p>
+            <p className="muted interview-awaiting-hint">
+              You finished your part on this step. When the employer responds, close it and
+              add the next round.
+            </p>
+            <div className="interview-next-actions">
+              <button
+                type="button"
+                className="secondary"
+                onClick={() =>
+                  setFinishStepTarget({
+                    stepId: awaitingStep.id,
+                    stepTitle: awaitingStep.title,
+                    mode: "awaiting_response",
+                  })
+                }
+              >
+                They responded
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -366,6 +398,7 @@ export default function InterviewWorkspace() {
           <div className="modal modal-finish-step" role="dialog" aria-modal="true">
             <FinishInterviewStepModal
               stepTitle={finishStepTarget.stepTitle}
+              mode={finishStepTarget.mode}
               busy={finishBusy}
               onCancel={() => setFinishStepTarget(null)}
               onFinish={runFinishStep}

@@ -11,6 +11,8 @@ const KIND_OPTIONS = [
 
 export type FinishStepOutcome = "waiting" | "round_done";
 
+export type FinishStepMode = "actionable" | "awaiting_response";
+
 export type FinishStepResult = {
   outcome: FinishStepOutcome;
   nextStep?: { title: string; kind: string };
@@ -18,6 +20,7 @@ export type FinishStepResult = {
 
 type Props = {
   stepTitle: string;
+  mode?: FinishStepMode;
   onCancel: () => void;
   onFinish: (result: FinishStepResult) => void | Promise<void>;
   busy?: boolean;
@@ -25,21 +28,25 @@ type Props = {
 
 export default function FinishInterviewStepModal({
   stepTitle,
+  mode = "actionable",
   onCancel,
   onFinish,
   busy = false,
 }: Props) {
+  const awaitingResponse = mode === "awaiting_response";
   const [outcome, setOutcome] = useState<FinishStepOutcome>("round_done");
-  const [addNextStep, setAddNextStep] = useState(false);
+  const [addNextStep, setAddNextStep] = useState(awaitingResponse);
   const [nextTitle, setNextTitle] = useState("");
   const [nextKind, setNextKind] = useState<string>("technical");
 
-  const nextStepInvalid = outcome === "round_done" && addNextStep && !nextTitle.trim();
+  const nextStepInvalid =
+    (awaitingResponse || outcome === "round_done") && addNextStep && !nextTitle.trim();
 
   async function submit() {
     if (nextStepInvalid) return;
-    const result: FinishStepResult = { outcome };
-    if (outcome === "round_done" && addNextStep && nextTitle.trim()) {
+    const resolvedOutcome: FinishStepOutcome = awaitingResponse ? "round_done" : outcome;
+    const result: FinishStepResult = { outcome: resolvedOutcome };
+    if (resolvedOutcome === "round_done" && addNextStep && nextTitle.trim()) {
       result.nextStep = { title: nextTitle.trim(), kind: nextKind };
     }
     await onFinish(result);
@@ -52,55 +59,64 @@ export default function FinishInterviewStepModal({
       aria-labelledby="finish-step-title"
       aria-describedby="finish-step-desc"
     >
-      <h3 id="finish-step-title">Finish step</h3>
+      <h3 id="finish-step-title">
+        {awaitingResponse ? "They responded?" : "Finish step"}
+      </h3>
       <p id="finish-step-desc" className="muted finish-step-context">
         <strong>{stepTitle}</strong>
       </p>
-      <fieldset className="finish-step-options">
-        <legend className="finish-step-legend">What happens next?</legend>
-        <label
-          className={`finish-step-option${outcome === "waiting" ? " selected" : ""}`}
-        >
-          <input
-            type="radio"
-            name="finish-step-outcome"
-            value="waiting"
-            checked={outcome === "waiting"}
-            disabled={busy}
-            onChange={() => {
-              setOutcome("waiting");
-              setAddNextStep(false);
-            }}
-          />
-          <span className="finish-step-option-text">
-            <span className="finish-step-option-label">Waiting on them</span>
-            <span className="muted finish-step-option-hint">
-              You finished your part (e.g. submitted an assessment). The employer needs to
-              respond before the next round.
+      {awaitingResponse ? (
+        <p className="muted finish-step-awaiting-lede">
+          Close this waiting step and move the process forward. You can add the next round
+          now or finish without scheduling yet.
+        </p>
+      ) : (
+        <fieldset className="finish-step-options">
+          <legend className="finish-step-legend">What happens next?</legend>
+          <label
+            className={`finish-step-option${outcome === "waiting" ? " selected" : ""}`}
+          >
+            <input
+              type="radio"
+              name="finish-step-outcome"
+              value="waiting"
+              checked={outcome === "waiting"}
+              disabled={busy}
+              onChange={() => {
+                setOutcome("waiting");
+                setAddNextStep(false);
+              }}
+            />
+            <span className="finish-step-option-text">
+              <span className="finish-step-option-label">Waiting on them</span>
+              <span className="muted finish-step-option-hint">
+                You finished your part (e.g. submitted an assessment). The employer needs to
+                respond before the next round.
+              </span>
             </span>
-          </span>
-        </label>
-        <label
-          className={`finish-step-option${outcome === "round_done" ? " selected" : ""}`}
-        >
-          <input
-            type="radio"
-            name="finish-step-outcome"
-            value="round_done"
-            checked={outcome === "round_done"}
-            disabled={busy}
-            onChange={() => setOutcome("round_done")}
-          />
-          <span className="finish-step-option-text">
-            <span className="finish-step-option-label">Round done</span>
-            <span className="muted finish-step-option-hint">
-              This round is finished and you&apos;re ready to move on (e.g. recruiter call
-              went well).
+          </label>
+          <label
+            className={`finish-step-option${outcome === "round_done" ? " selected" : ""}`}
+          >
+            <input
+              type="radio"
+              name="finish-step-outcome"
+              value="round_done"
+              checked={outcome === "round_done"}
+              disabled={busy}
+              onChange={() => setOutcome("round_done")}
+            />
+            <span className="finish-step-option-text">
+              <span className="finish-step-option-label">Round done</span>
+              <span className="muted finish-step-option-hint">
+                This round is finished and you&apos;re ready to move on (e.g. recruiter call
+                went well).
+              </span>
             </span>
-          </span>
-        </label>
-      </fieldset>
-      {outcome === "round_done" && (
+          </label>
+        </fieldset>
+      )}
+      {(awaitingResponse || outcome === "round_done") && (
         <div className="finish-step-add-block">
           <label className="finish-step-add-toggle">
             <input
@@ -148,7 +164,11 @@ export default function FinishInterviewStepModal({
           disabled={busy || nextStepInvalid}
           onClick={() => void submit()}
         >
-          {busy ? "Saving…" : "Finish step"}
+          {busy
+            ? "Saving…"
+            : awaitingResponse
+              ? "Close step"
+              : "Finish step"}
         </button>
       </div>
     </div>

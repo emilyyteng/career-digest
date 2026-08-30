@@ -7,6 +7,7 @@ import {
   type InterviewThreadListItem,
 } from "../api";
 import FinishInterviewStepModal, {
+  type FinishStepMode,
   type FinishStepResult,
 } from "../FinishInterviewStepModal";
 import InterviewCountdown from "../InterviewCountdown";
@@ -26,11 +27,13 @@ type FinishStepTarget = {
   threadId: string;
   stepId: string;
   stepTitle: string;
+  mode: FinishStepMode;
 };
 
 type ThreadCardProps = {
   row: InterviewThreadListItem;
   showQuickActions: boolean;
+  showAwaitingFollowUp: boolean;
   showAddStep: boolean;
   onFinishStep: (target: FinishStepTarget) => void;
   onAddStep: (threadId: string) => void;
@@ -40,6 +43,7 @@ type ThreadCardProps = {
 function ThreadCard({
   row,
   showQuickActions,
+  showAwaitingFollowUp,
   showAddStep,
   onFinishStep,
   onAddStep,
@@ -47,6 +51,7 @@ function ThreadCard({
 }: ThreadCardProps) {
   const linked = formatLinkedRoles(row);
   const step = row.nextStep;
+  const awaitingStep = row.awaitingStep;
   const deadlineLabel = stepDeadlineLabel(step);
   const deadlineIso = stepDeadlineIso(step);
   const busy = pendingAction === row.id;
@@ -64,13 +69,19 @@ function ThreadCard({
             {stepActionLabel(step)}
           </p>
         )}
+        {awaitingStep && !step && (
+          <p className="interview-active-step">
+            <span className="interview-active-step-label">Waiting on them</span>
+            {stepActionLabel(awaitingStep)}
+          </p>
+        )}
         {deadlineLabel && (
           <div className="interview-deadline-block">
             <div className="interview-deadline-date">{deadlineLabel}</div>
             {deadlineIso && showQuickActions && <InterviewCountdown target={deadlineIso} />}
           </div>
         )}
-        {!step && <p className="muted">No active step</p>}
+        {!step && !awaitingStep && <p className="muted">No active step</p>}
       </div>
       {showQuickActions && step && (
         <div className="interview-card-actions">
@@ -84,6 +95,7 @@ function ThreadCard({
                   threadId: row.id,
                   stepId: step.id,
                   stepTitle: step.title,
+                  mode: "actionable",
                 })
               }
             >
@@ -101,6 +113,27 @@ function ThreadCard({
               <span className="ext-icon" aria-hidden="true">↗</span>
             </a>
           )}
+        </div>
+      )}
+      {showAwaitingFollowUp && awaitingStep && (
+        <div className="interview-card-actions interview-card-actions-awaiting">
+          <div className="interview-card-actions-group">
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy}
+              onClick={() =>
+                onFinishStep({
+                  threadId: row.id,
+                  stepId: awaitingStep.id,
+                  stepTitle: awaitingStep.title,
+                  mode: "awaiting_response",
+                })
+              }
+            >
+              They responded
+            </button>
+          </div>
         </div>
       )}
       {showAddStep && (
@@ -208,6 +241,7 @@ export default function Interviews() {
               key={row.id}
               row={row}
               showQuickActions
+              showAwaitingFollowUp={false}
               showAddStep={false}
               pendingAction={pendingAction}
               onFinishStep={setFinishStepTarget}
@@ -224,6 +258,7 @@ export default function Interviews() {
               key={row.id}
               row={row}
               showQuickActions={false}
+              showAwaitingFollowUp={!!row.awaitingStep}
               showAddStep={row.canAddStep}
               pendingAction={pendingAction}
               onFinishStep={setFinishStepTarget}
@@ -254,6 +289,7 @@ export default function Interviews() {
           <div className="modal modal-finish-step" role="dialog" aria-modal="true">
             <FinishInterviewStepModal
               stepTitle={finishStepTarget.stepTitle}
+              mode={finishStepTarget.mode}
               busy={pendingAction === finishStepTarget.threadId}
               onCancel={() => setFinishStepTarget(null)}
               onFinish={runFinishStep}

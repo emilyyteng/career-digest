@@ -49,6 +49,7 @@ export type InterviewThreadListItem = {
   memberCount: number;
   members: InterviewApplicationSummary[];
   nextStep: InterviewStepRow | null;
+  awaitingStep: InterviewStepRow | null;
   canAddStep: boolean;
   updatedAt: string;
 };
@@ -139,6 +140,12 @@ function pickNextStep(steps: InterviewStepRow[]): InterviewStepRow | null {
   return sorted[0] ?? null;
 }
 
+function pickAwaitingStep(steps: InterviewStepRow[]): InterviewStepRow | null {
+  const awaiting = steps.filter((s) => s.status === "awaiting_employer");
+  if (awaiting.length === 0) return null;
+  return [...awaiting].sort((a, b) => b.sortOrder - a.sortOrder)[0];
+}
+
 function threadProgressScore(steps: InterviewStepRow[]): number {
   const completed = steps.filter((s) => s.status === "completed").length;
   const awaiting = steps.filter((s) => s.status === "awaiting_employer").length;
@@ -199,6 +206,7 @@ async function loadThreadListItem(
     memberCount: Number(row.memberCount) || members.length,
     members,
     nextStep: pickNextStep(steps),
+    awaitingStep: pickAwaitingStep(steps),
     canAddStep: !steps.some((s) => isOpenStepStatus(s.status)),
     updatedAt: row.updatedAt,
   };

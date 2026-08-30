@@ -406,6 +406,7 @@ export type InterviewThreadListItem = {
   memberCount: number;
   members: InterviewPickerApplication[];
   nextStep: InterviewStep | null;
+  awaitingStep: InterviewStep | null;
   canAddStep: boolean;
   updatedAt: string;
 };
