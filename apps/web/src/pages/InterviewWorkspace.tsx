@@ -22,6 +22,7 @@ import FinishInterviewStepModal, {
   type FinishStepMode,
   type FinishStepResult,
 } from "../FinishInterviewStepModal";
+import ModalLayer from "../ModalLayer";
 import StepActionConfirm from "../StepActionConfirm";
 
 const STEP_STATUS_LABEL: Record<string, string> = {
@@ -394,31 +395,33 @@ export default function InterviewWorkspace() {
       )}
 
       {finishStepTarget && (
-        <div className="modal-backdrop">
-          <div className="modal modal-finish-step" role="dialog" aria-modal="true">
-            <FinishInterviewStepModal
-              stepTitle={finishStepTarget.stepTitle}
-              mode={finishStepTarget.mode}
-              busy={finishBusy}
-              onCancel={() => setFinishStepTarget(null)}
-              onFinish={runFinishStep}
-            />
-          </div>
-        </div>
+        <ModalLayer
+          className="modal modal-finish-step"
+          onClose={() => {
+            if (finishBusy) return;
+            setFinishStepTarget(null);
+          }}
+        >
+          <FinishInterviewStepModal
+            stepTitle={finishStepTarget.stepTitle}
+            mode={finishStepTarget.mode}
+            busy={finishBusy}
+            onCancel={() => setFinishStepTarget(null)}
+            onFinish={runFinishStep}
+          />
+        </ModalLayer>
       )}
 
       {stepConfirm && (
-        <div className="modal-backdrop">
-          <div className="modal" role="dialog" aria-modal="true">
-            <StepActionConfirm
-              title="Reopen this step?"
-              description="This makes the step active again so you can update it or take action."
-              confirmLabel="Reopen step"
-              onCancel={() => setStepConfirm(null)}
-              onConfirm={runConfirmedAction}
-            />
-          </div>
-        </div>
+        <ModalLayer className="modal" onClose={() => setStepConfirm(null)}>
+          <StepActionConfirm
+            title="Reopen this step?"
+            description="This makes the step active again so you can update it or take action."
+            confirmLabel="Reopen step"
+            onCancel={() => setStepConfirm(null)}
+            onConfirm={runConfirmedAction}
+          />
+        </ModalLayer>
       )}
     </article>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ProgressLane, ProgressReflection } from "../api";
 
 function truncate(body: string, max = 72): string {
@@ -139,13 +139,23 @@ export function ReflectionCompose({
   lane,
   onLaneChange,
   onSubmit,
+  onDirtyChange,
 }: {
   lane: ProgressLane;
   onLaneChange: (lane: ProgressLane) => void;
   onSubmit: (lane: ProgressLane, body: string) => Promise<void>;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    onDirtyChange?.(body.trim().length > 0);
+  }, [body, onDirtyChange]);
+
+  useEffect(() => {
+    return () => onDirtyChange?.(false);
+  }, [onDirtyChange]);
 
   return (
     <form

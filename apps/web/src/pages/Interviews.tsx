@@ -11,6 +11,7 @@ import FinishInterviewStepModal, {
   type FinishStepResult,
 } from "../FinishInterviewStepModal";
 import InterviewCountdown from "../InterviewCountdown";
+import ModalLayer from "../ModalLayer";
 import {
   formatLinkedRoles,
   stepDeadlineIso,
@@ -285,17 +286,21 @@ export default function Interviews() {
         </>
       )}
       {finishStepTarget && (
-        <div className="modal-backdrop">
-          <div className="modal modal-finish-step" role="dialog" aria-modal="true">
-            <FinishInterviewStepModal
-              stepTitle={finishStepTarget.stepTitle}
-              mode={finishStepTarget.mode}
-              busy={pendingAction === finishStepTarget.threadId}
-              onCancel={() => setFinishStepTarget(null)}
-              onFinish={runFinishStep}
-            />
-          </div>
-        </div>
+        <ModalLayer
+          className="modal modal-finish-step"
+          onClose={() => {
+            if (pendingAction === finishStepTarget.threadId) return;
+            setFinishStepTarget(null);
+          }}
+        >
+          <FinishInterviewStepModal
+            stepTitle={finishStepTarget.stepTitle}
+            mode={finishStepTarget.mode}
+            busy={pendingAction === finishStepTarget.threadId}
+            onCancel={() => setFinishStepTarget(null)}
+            onFinish={runFinishStep}
+          />
+        </ModalLayer>
       )}
       {adding && (
         <div

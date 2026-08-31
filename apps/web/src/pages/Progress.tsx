@@ -21,6 +21,9 @@ import ReflectionAccordion, {
   ReflectionCompose,
 } from "../progress/ReflectionAccordion";
 import TodayStrip from "../progress/TodayStrip";
+import ModalLayer from "../ModalLayer";
+import StepActionConfirm from "../StepActionConfirm";
+import { useUnsavedDraftGuard } from "../useUnsavedDraftGuard";
 
 /** ~26 weeks — fills the left column when cells stretch to card width. */
 const HEATMAP_DAYS = 182;
@@ -87,10 +90,48 @@ export default function Progress() {
   const [editingDay, setEditingDay] = useState(false);
   const [composeLane, setComposeLane] = useState<ProgressLane>("application");
   const [historyLane, setHistoryLane] = useState<ProgressLane>("application");
+  const [composeDirty, setComposeDirty] = useState(false);
+  const [pendingLeave, setPendingLeave] = useState<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   const selectedHistory = historyDate ?? today?.localDate ?? null;
+  const composeActive = tab === "today" || (tab === "history" && editingDay);
+  const guardDraft = composeDirty && composeActive;
+  const leaveBlocker = useUnsavedDraftGuard(guardDraft);
+  const leaveConfirmOpen = leaveBlocker.state === "blocked" || pendingLeave !== null;
+
+  const handleComposeDirtyChange = useCallback((dirty: boolean) => {
+    setComposeDirty(dirty);
+  }, []);
+
+  const guardedAction = useCallback(
+    (action: () => void) => {
+      if (guardDraft) {
+        setPendingLeave(() => action);
+        return;
+      }
+      action();
+    },
+    [guardDraft],
+  );
+
+  function cancelLeave() {
+    if (leaveBlocker.state === "blocked") leaveBlocker.reset();
+    setPendingLeave(null);
+  }
+
+  function confirmLeave() {
+    setComposeDirty(false);
+    if (leaveBlocker.state === "blocked") {
+      leaveBlocker.proceed();
+      setPendingLeave(null);
+      return;
+    }
+    const action = pendingLeave;
+    setPendingLeave(null);
+    action?.();
+  }
 
   const reloadOverview = useCallback(async () => {
     const [todayRow, weekRow, monthRow, appRow, techRow] = await Promise.all([
@@ -150,10 +191,12 @@ export default function Progress() {
   }, [selectedHistory, reloadHistoryDay]);
 
   function setTab(next: "today" | "history") {
-    const params = new URLSearchParams(searchParams);
-    if (next === "today") params.delete("tab");
-    else params.set("tab", "history");
-    setSearchParams(params, { replace: true });
+    guardedAction(() => {
+      const params = new URLSearchParams(searchParams);
+      if (next === "today") params.delete("tab");
+      else params.set("tab", "history");
+      setSearchParams(params, { replace: true });
+    });
   }
 
   async function refreshAfterWrite(date: string) {
@@ -270,6 +313,7 @@ export default function Progress() {
                 <ReflectionCompose
                   lane={composeLane}
                   onLaneChange={setComposeLane}
+                  onDirtyChange={handleComposeDirtyChange}
                   onSubmit={(lane, body) => addReflection(lane, body)}
                 />
               </div>
@@ -294,8 +338,10 @@ export default function Progress() {
               marks={marks}
               onMonthChange={(next) => setMonthAnchor(next)}
               onSelectDate={(date) => {
-                setHistoryDate(date);
-                setEditingDay(false);
+                guardedAction(() => {
+                  setHistoryDate(date);
+                  setEditingDay(false);
+                });
               }}
             />
           )}
@@ -307,7 +353,14 @@ export default function Progress() {
                 <input
                   type="checkbox"
                   checked={editingDay}
-                  onChange={(event) => setEditingDay(event.target.checked)}
+                  onChange={(event) => {
+                    const next = event.target.checked;
+                    if (!next) {
+                      guardedAction(() => setEditingDay(false));
+                      return;
+                    }
+                    setEditingDay(true);
+                  }}
                 />
                 Edit this day
               </label>
@@ -364,6 +417,7 @@ export default function Progress() {
                     <ReflectionCompose
                       lane={historyLane}
                       onLaneChange={setHistoryLane}
+                      onDirtyChange={handleComposeDirtyChange}
                       onSubmit={(lane, body) =>
                         addReflection(lane, body, selectedHistory!)
                       }
@@ -385,6 +439,17 @@ export default function Progress() {
             )}
           </section>
         </div>
+      )}
+      {leaveConfirmOpen && (
+        <ModalLayer className="modal modal-compact" onClose={cancelLeave}>
+          <StepActionConfirm
+            title="Leave this page?"
+            description="Your reflection draft will be lost if you leave now."
+            confirmLabel="Leave"
+            onCancel={cancelLeave}
+            onConfirm={confirmLeave}
+          />
+        </ModalLayer>
       )}
     </section>
   );
