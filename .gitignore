@@ -16,3 +16,10 @@ config/rank-profile.md
 data/**
 !data/.gitkeep
 !data/README.md
+
+# Local agent skills / Cursor tooling (not part of the app)
+.agents/
+AGENTS.md
+CLAUDE.md
+skills-lock.json
+docs/agents/
