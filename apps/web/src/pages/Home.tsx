@@ -8,6 +8,7 @@ import {
   type ProgressToday,
 } from "../api";
 import InterviewCountdown from "../InterviewCountdown";
+import TodayStrip from "../progress/TodayStrip";
 import ThemeEmoji from "../ThemeEmoji";
 import { formatStepWhen } from "../formatDate";
 import {
@@ -29,13 +30,6 @@ function currentGreetingPeriod() {
 function formatWhen(value: string | null | undefined): string | null {
   if (!value) return null;
   return formatStepWhen(value);
-}
-
-function formatTodayStrip(today: ProgressToday): string {
-  const apps = `${today.applications.earned}/${today.applications.cap} apps`;
-  const lc = `${today.leetcode.earned}/${today.leetcode.cap} LC`;
-  const deepWork = today.deepWork ? "deep work ✓" : "no deep work";
-  return `Today: ${apps} · ${lc} · ${deepWork}`;
 }
 
 function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
@@ -120,7 +114,11 @@ export default function Home() {
         </div>
         {progress && (
           <div className="home-progress-row">
-            <p className="home-progress-strip">{formatTodayStrip(progress)}</p>
+            <TodayStrip
+              today={progress}
+              prefix="Today: "
+              className="home-progress-strip"
+            />
             <Link to="/progress" className="home-section-link">
               Update progress →
             </Link>

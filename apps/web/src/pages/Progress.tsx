@@ -20,6 +20,7 @@ import ProgressHeatmap from "../progress/ProgressHeatmap";
 import ReflectionAccordion, {
   ReflectionCompose,
 } from "../progress/ReflectionAccordion";
+import TodayStrip from "../progress/TodayStrip";
 
 /** ~26 weeks — fills the left column when cells stretch to card width. */
 const HEATMAP_DAYS = 182;
@@ -192,7 +193,6 @@ export default function Progress() {
   const heatWindow = appHeat.slice(-HEATMAP_DAYS);
   const techWindow = techHeat.slice(-HEATMAP_DAYS);
   const historyLc = historyDetail?.leetcode.raw ?? 0;
-  const deepWorkLabel = today.deepWork ? "deep work ✓" : "no deep work";
 
   return (
     <section className="progress-page">
@@ -221,10 +221,7 @@ export default function Progress() {
             <p className="progress-today-label">
               Today · {formatShort(today.localDate)}
             </p>
-            <p className="progress-today-strip">
-              {today.applications.earned}/{today.applications.cap} apps ·{" "}
-              {today.leetcode.earned}/{today.leetcode.cap} LC · {deepWorkLabel}
-            </p>
+            <TodayStrip today={today} />
           </header>
 
           <div className="progress-outcome-row">
