@@ -1,6 +1,6 @@
 import { Link, NavLink, Route, Routes } from "react-router-dom";
-import ApplicationDetail from "./pages/ApplicationDetail";
-import Applications from "./pages/Applications";
+import ApplicationDetail from "./features/applications/ApplicationDetailPage";
+import Applications from "./features/applications/ApplicationsPage";
 import Home from "./pages/Home";
 import InterviewWorkspace from "./features/interviews/InterviewWorkspacePage";
 import Interviews from "./features/interviews/InterviewsPage";

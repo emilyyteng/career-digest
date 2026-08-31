@@ -23,3 +23,8 @@ AGENTS.md
 CLAUDE.md
 skills-lock.json
 docs/agents/
+
+# Local dev spikes and scratch tickets (not needed to run the app)
+docs/specs/tickets/
+scripts/spike-*.py
+scripts/ats-survey.py

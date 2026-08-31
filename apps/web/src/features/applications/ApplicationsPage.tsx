@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { getApplications, type ApplicationRow } from "../api";
-import { formatShortDate } from "../formatDate";
-import ApplicationMetaBadges from "../ApplicationMetaBadges";
-import { invalidateListCache, readListCache, writeListCache } from "../listCache";
-import { listLinkState } from "../navigationReturn";
+import { getApplications, type ApplicationRow } from "../../api";
+import { formatShortDate } from "../../formatDate";
+import ApplicationMetaBadges from "./ApplicationMetaBadges";
+import { invalidateListCache, readListCache, writeListCache } from "../../listCache";
+import { listLinkState } from "../../navigationReturn";
 import AddApplicationForm, { type AddApplicationFormHandle } from "./AddApplicationForm";
 
 const TABS = ["all", "applied", "interviewing", "accepted", "declined"] as const;

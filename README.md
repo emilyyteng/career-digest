@@ -80,7 +80,7 @@ npm run test
 - [docs/SETUP.md](./docs/SETUP.md) — cold-clone setup and verification checklist
 - [CONTEXT.md](./CONTEXT.md) — domain glossary (Task, Needs attention, Activity, …)
 - [docs/CHANGELOG.md](./docs/CHANGELOG.md) — milestone development history
-- [docs/specs/](./docs/specs/) — feature specs
+- [docs/specs/](./docs/specs/) — feature specs ([README](./docs/specs/README.md))
 
 ## License
 

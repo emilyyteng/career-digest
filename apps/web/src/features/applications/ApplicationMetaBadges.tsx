@@ -1,4 +1,4 @@
-import type { ApplicationRow } from "./api";
+import type { ApplicationRow } from "../../api";
 
 export function applicationStatusBadgeLabel(status: string): string {
   return status === "todo" ? "to-do" : status;

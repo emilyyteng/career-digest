@@ -155,9 +155,11 @@ These paths are gitignored and created at runtime:
 | `data/` | Uploads, rank batch state, cron logs — see `data/README.md` |
 | `backups/` | `pg_dump` output from `npm run backup` |
 | `.agents/` | Local Cursor agent skills |
+| `scripts/spike-*.py`, `scripts/ats-survey.py` | Local ATS research spikes |
+| `docs/specs/tickets/` | Local implementation tickets |
 
 ## Related docs
 
 - [README.md](../README.md) — overview, routes, command table
 - [CONTEXT.md](../CONTEXT.md) — domain glossary
-- [CHANGELOG.md](./CHANGELOG.md) — milestone history
+- [docs/specs/README.md](./specs/README.md) — which specs are tracked vs local-only

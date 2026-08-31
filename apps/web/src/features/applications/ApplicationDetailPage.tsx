@@ -7,16 +7,16 @@ import {
   uploadDocument,
   type ApplicationRow,
   type JobCard,
-} from "../api";
+} from "../../api";
 import {
   formatShortDate,
   toDateInputValue,
-} from "../formatDate";
-import ApplicationMetaBadges from "../ApplicationMetaBadges";
-import RichTextField, { isEmptyRichHtml } from "../RichTextField";
-import DocumentPreviewModal from "../DocumentPreviewModal";
-import { invalidateListCache } from "../listCache";
-import { listReturnTo } from "../navigationReturn";
+} from "../../formatDate";
+import ApplicationMetaBadges from "./ApplicationMetaBadges";
+import RichTextField, { isEmptyRichHtml } from "../../RichTextField";
+import DocumentPreviewModal from "./DocumentPreviewModal";
+import { invalidateListCache } from "../../listCache";
+import { listReturnTo } from "../../navigationReturn";
 
 const STATUSES = [
   { id: "applied", label: "Applied", hint: "Leaves the Jobs list." },
