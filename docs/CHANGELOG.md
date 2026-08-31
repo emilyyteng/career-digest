@@ -1,6 +1,6 @@
 # Changelog
 
-Development history for Career Digest. For domain terms, see [CONTEXT.md](../CONTEXT.md). For setup, see [README.md](../README.md).
+Development history for Career Digest. For domain terms, see [CONTEXT.md](../CONTEXT.md). For setup, see [docs/SETUP.md](./SETUP.md).
 
 ## Milestone 8 — Progress tracker
 

@@ -25,36 +25,17 @@ Personal internship digest and application tracker. Ingests public ATS job board
 
 ## Quickstart
 
-**Prerequisites:** Node 20+, PostgreSQL (Postgres.app or Docker Compose), and an OpenAI API key for ranking.
+**Prerequisites:** Node 20+, PostgreSQL, and (for ranking) an OpenAI API key.
 
 ```bash
 git clone https://github.com/emilyyteng/career-digest.git
-cd career-digest
-npm install
-
-cp .env.example .env
-# Set DATABASE_URL, TEST_DATABASE_URL (separate *_test DB), and OPENAI_API_KEY
-
-cp config/rank-profile.example.md config/rank-profile.md
-# Edit config/rank-profile.md — required for npm run rank / board light-rank
-
-createdb career_digest
-createdb career_digest_test   # integration tests only
-
-npm run migrate
-npm run dev:api    # http://localhost:3000
-npm run dev:web    # http://localhost:5173
+cd career-digest && npm install
+cp .env.example .env && cp config/rank-profile.example.md config/rank-profile.md
+# Create DBs, set DATABASE_URL + TEST_DATABASE_URL, then:
+npm run migrate && npm run dev:api & npm run dev:web
 ```
 
-With an empty database the UI loads; run the digest pipeline when you're ready for ranked jobs:
-
-```bash
-npm run ingest      # pull boards (see apps/api/src/config/companies.ts)
-npm run scrape      # fill blank Simplify descriptions
-npm run rank        # OpenAI batch rank (or: npm run rank:live)
-```
-
-**Optional `.env` keys:** `DIGEST_GREETING_NAME` (Home greeting), `RANK_PROFILE_PATH` (override rank profile path). See [.env.example](./.env.example).
+Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verification checklist): **[docs/SETUP.md](./docs/SETUP.md)**.
 
 ## Routes
 
@@ -87,7 +68,7 @@ Cron helpers (`npm run cron:install`, `cron:install-backup`) target macOS launch
 
 ## Testing
 
-Integration tests need `TEST_DATABASE_URL` pointing at a **separate** `*_test` database — never `career_digest`. GitHub Actions runs the full API suite on every push to `main`.
+Integration and unit tests both require `TEST_DATABASE_URL` pointing at a **separate** `*_test` database — never `career_digest`. GitHub Actions runs the full API suite on every push to `main`.
 
 ```bash
 export TEST_DATABASE_URL=postgres://YOUR_USER@localhost:5432/career_digest_test
@@ -96,6 +77,7 @@ npm run test
 
 ## Docs
 
+- [docs/SETUP.md](./docs/SETUP.md) — cold-clone setup and verification checklist
 - [CONTEXT.md](./CONTEXT.md) — domain glossary (Task, Needs attention, Activity, …)
 - [docs/CHANGELOG.md](./docs/CHANGELOG.md) — milestone development history
 - [docs/specs/](./docs/specs/) — feature specs
