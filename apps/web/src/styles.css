@@ -2607,10 +2607,9 @@ textarea { min-height: 10rem; width: 100%; }
   font-family: var(--font-mono);
   font-size: 0.92rem;
 }
-.progress-strip-met {
-  /* Deeper than accent-mint-deep: success cue without a bright mint flash. */
+.progress-strip-check {
   color: #3f6b5c;
-  font-weight: 500;
+  font-weight: 600;
 }
 .progress-outcome-row {
   display: grid;

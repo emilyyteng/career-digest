@@ -1,19 +1,15 @@
-import type { ReactNode } from "react";
 import type { ProgressToday } from "../api";
 
-function Segment({
-  met,
-  children,
-}: {
-  met: boolean;
-  children: ReactNode;
-}) {
+function MetCheck() {
   return (
-    <span className={met ? "progress-strip-met" : undefined}>{children}</span>
+    <span className="progress-strip-check" aria-hidden="true">
+      {" "}
+      ✓
+    </span>
   );
 }
 
-/** Shared Home / Progress today strip: colors a segment when that daily goal is met. */
+/** Shared Home / Progress today strip; sage ✓ marks each met daily goal. */
 export default function TodayStrip({
   today,
   prefix,
@@ -29,17 +25,26 @@ export default function TodayStrip({
   return (
     <p className={className}>
       {prefix}
-      <Segment met={appsMet}>
+      <span>
         {today.applications.earned}/{today.applications.cap} apps
-      </Segment>
+        {appsMet ? <MetCheck /> : null}
+      </span>
       {" · "}
-      <Segment met={lcMet}>
+      <span>
         {today.leetcode.earned}/{today.leetcode.cap} LC
-      </Segment>
+        {lcMet ? <MetCheck /> : null}
+      </span>
       {" · "}
-      <Segment met={today.deepWork}>
-        {today.deepWork ? "deep work ✓" : "no deep work"}
-      </Segment>
+      <span>
+        {today.deepWork ? (
+          <>
+            deep work
+            <MetCheck />
+          </>
+        ) : (
+          "no deep work"
+        )}
+      </span>
     </p>
   );
 }
