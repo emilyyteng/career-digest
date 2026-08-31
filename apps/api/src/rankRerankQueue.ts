@@ -11,7 +11,6 @@ import { hasPendingRankBatch } from "./rankBatchStatus.js";
 import {
   RANK_JSON_SCHEMA,
   RANK_PROMPT_VERSION,
-  SYSTEM_PROMPT,
   FEEDBACK_EXAMPLE_LIMIT,
   TRACKER_EXAMPLE_LIMIT,
   buildRerankUserPrompt,
@@ -19,6 +18,7 @@ import {
   type RankContext,
   type RankExample,
 } from "./rankPrompt.js";
+import { getRankSystemPrompt } from "./rankProfile.js";
 
 const JD_MAX_CHARS = 6000;
 const MAX_COMPLETION_TOKENS = 400;
@@ -84,7 +84,7 @@ function completionBody(model: string, user: string) {
       json_schema: RANK_JSON_SCHEMA,
     },
     messages: [
-      { role: "system" as const, content: SYSTEM_PROMPT },
+      { role: "system" as const, content: getRankSystemPrompt() },
       { role: "user" as const, content: user },
     ],
   };
@@ -203,7 +203,7 @@ async function rerankOne(
     wasUserDismissed,
   });
   const estimated =
-    estimateTokens(SYSTEM_PROMPT) + estimateTokens(user) + MAX_COMPLETION_TOKENS + 400;
+    estimateTokens(getRankSystemPrompt()) + estimateTokens(user) + MAX_COMPLETION_TOKENS + 400;
 
   let lastError: unknown;
   for (let attempt = 1; attempt <= RANK_ATTEMPTS; attempt++) {
@@ -238,6 +238,7 @@ async function executeRerank(postingId: string, note: string): Promise<void> {
   await migrate();
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY is not set");
+  getRankSystemPrompt();
 
   const trimmed = note.trim();
   if (!trimmed) throw new Error("Rerank note is required");

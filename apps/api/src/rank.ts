@@ -21,7 +21,6 @@ import {
 import {
   RANK_JSON_SCHEMA,
   RANK_PROMPT_VERSION,
-  SYSTEM_PROMPT,
   FEEDBACK_EXAMPLE_LIMIT,
   TRACKER_EXAMPLE_LIMIT,
   buildUserPrompt,
@@ -29,6 +28,7 @@ import {
   type RankContext,
   type RankExample,
 } from "./rankPrompt.js";
+import { getRankSystemPrompt } from "./rankProfile.js";
 
 export { getRankBatchStatus, hasPendingRankBatch } from "./rankBatchStatus.js";
 
@@ -178,7 +178,7 @@ function completionBody(model: string, user: string) {
       json_schema: RANK_JSON_SCHEMA,
     },
     messages: [
-      { role: "system" as const, content: SYSTEM_PROMPT },
+      { role: "system" as const, content: getRankSystemPrompt() },
       { role: "user" as const, content: user },
     ],
   };
@@ -264,7 +264,7 @@ async function rankOne(
 ): Promise<void> {
   const user = promptFor(row, context);
   const estimated =
-    estimateTokens(SYSTEM_PROMPT) + estimateTokens(user) + MAX_COMPLETION_TOKENS + 400;
+    estimateTokens(getRankSystemPrompt()) + estimateTokens(user) + MAX_COMPLETION_TOKENS + 400;
 
   let lastError: unknown;
   for (let attempt = 1; attempt <= RANK_ATTEMPTS; attempt++) {
@@ -331,7 +331,8 @@ function chunkRows(rows: RankRow[], context: RankContext): RankRow[][] {
   let current: RankRow[] = [];
   let tokens = 0;
   for (const row of rows) {
-    const promptTokens = estimateTokens(SYSTEM_PROMPT) + estimateTokens(promptFor(row, context));
+    const promptTokens =
+      estimateTokens(getRankSystemPrompt()) + estimateTokens(promptFor(row, context));
     if (
       current.length > 0 &&
       (tokens + promptTokens > BATCH_PROMPT_TOKEN_BUDGET || current.length >= 50_000)
@@ -625,6 +626,7 @@ export async function runLiveRank(opts?: {
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not set. Add it to .env");
   }
+  getRankSystemPrompt();
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
   const force = opts?.force === true;
   const phase = opts?.phase ?? "any";
@@ -682,6 +684,7 @@ export async function runLiveRankBacklog(): Promise<{
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not set. Add it to .env");
   }
+  getRankSystemPrompt();
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
   const client = new OpenAI({ apiKey });
   await abandonPendingBatch(client);
@@ -844,6 +847,7 @@ async function rank(): Promise<void> {
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not set. Add it to .env");
   }
+  getRankSystemPrompt();
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
   const live = process.argv.includes("--live");
   const backlog = process.argv.includes("--backlog");

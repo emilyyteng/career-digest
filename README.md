@@ -98,6 +98,9 @@ Activity / Effort / Outcome for internship search motivation.
 
 ```bash
 cp .env.example .env
+cp config/rank-profile.example.md config/rank-profile.md
+# Edit config/rank-profile.md with your background and internship preferences (required for ranking).
+# Optional: set DIGEST_GREETING_NAME in .env for the Home greeting.
 # Add OPENAI_API_KEY for ranking / board light-rank
 createdb career_digest
 createdb career_digest_test   # integration tests only

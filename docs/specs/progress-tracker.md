@@ -2,7 +2,7 @@
 
 ## Problem
 
-Emily wants daily motivation for internship search work without Goodhart-ing easy applies. She needs visible **Activity** (volume), **Effort** (deep work), and **Outcome** (period totals)—separate from interview pipeline status and Needs attention.
+The user wants daily motivation for internship search work without Goodhart-ing easy applies. They need visible **Activity** (volume), **Effort** (deep work), and **Outcome** (period totals)—separate from interview pipeline status and Needs attention.
 
 ## Solution (v1)
 

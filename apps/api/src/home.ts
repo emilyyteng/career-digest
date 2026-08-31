@@ -225,8 +225,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
     dueIso: row.dueAt,
   }));
 
-  const greetingName =
-    process.env.DIGEST_GREETING_NAME?.trim() || "Emily";
+  const greetingName = process.env.DIGEST_GREETING_NAME?.trim() ?? "";
 
   return {
     greetingName,

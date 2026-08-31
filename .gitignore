@@ -11,11 +11,8 @@ coverage/
 .vscode/
 *.swp
 *.tsbuildinfo
-data/uploads/
-data/openai-rate.json
-data/rank-batch.json
-data/rank-status.json
-data/board-refresh.json
-data/cron.log
 backups/
-data/backup.log
+config/rank-profile.md
+data/**
+!data/.gitkeep
+!data/README.md

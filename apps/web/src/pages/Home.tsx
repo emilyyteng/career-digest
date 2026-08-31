@@ -90,7 +90,8 @@ export default function Home() {
           <div className="home-hero-main">
             <h2 className="home-greeting">
               <span>
-                {greetingLabelForPeriod(greetingPeriod)}, {data.greetingName}
+                {greetingLabelForPeriod(greetingPeriod)}
+                {data.greetingName ? `, ${data.greetingName}` : ""}
               </span>
               <ThemeEmoji
                 emoji={greetingEmojiForPeriod(greetingPeriod)}
