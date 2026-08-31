@@ -7,8 +7,8 @@ import {
   patchInterviewThread,
   type InterviewStep,
   type InterviewThreadDetail,
-} from "../api";
-import InterviewCountdown from "../InterviewCountdown";
+} from "../../api";
+import InterviewCountdown from "./InterviewCountdown";
 import {
   currentNotesStep,
   formatLinkedRoles,
@@ -16,14 +16,14 @@ import {
   stepDeadlineLabel,
   stepOpenLinkLabel,
   threadHasOpenStep,
-} from "../interviewStepUi";
-import { formatDeadlineLong } from "../formatDate";
+} from "./interviewStepUi";
+import { formatDeadlineLong } from "../../formatDate";
 import FinishInterviewStepModal, {
   type FinishStepMode,
   type FinishStepResult,
-} from "../FinishInterviewStepModal";
-import ModalLayer from "../ModalLayer";
-import StepActionConfirm from "../StepActionConfirm";
+} from "./FinishInterviewStepModal";
+import ModalLayer from "../../ModalLayer";
+import StepActionConfirm from "../../StepActionConfirm";
 
 const STEP_STATUS_LABEL: Record<string, string> = {
   pending: "To do",

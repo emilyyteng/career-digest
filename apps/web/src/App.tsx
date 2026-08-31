@@ -2,13 +2,13 @@ import { Link, NavLink, Route, Routes } from "react-router-dom";
 import ApplicationDetail from "./pages/ApplicationDetail";
 import Applications from "./pages/Applications";
 import Home from "./pages/Home";
-import InterviewWorkspace from "./pages/InterviewWorkspace";
-import Interviews from "./pages/Interviews";
-import JobDetail from "./pages/JobDetail";
-import Jobs from "./pages/Jobs";
+import InterviewWorkspace from "./features/interviews/InterviewWorkspacePage";
+import Interviews from "./features/interviews/InterviewsPage";
+import JobDetail from "./features/jobs/JobDetailPage";
+import Jobs from "./features/jobs/JobsPage";
 import Status from "./pages/Status";
 import Tasks from "./pages/Tasks";
-import Progress from "./pages/Progress";
+import Progress from "./features/progress/ProgressPage";
 import ThemeEmoji from "./ThemeEmoji";
 import { HEADER_BRAND_EMOJI } from "./pageTheme";
 

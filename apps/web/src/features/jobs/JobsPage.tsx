@@ -17,15 +17,15 @@ import {
   type JobView,
   type RankBatchStatus,
   type RerankQueueSnapshot,
-} from "../api";
-import { isMismatch, RankBadges, RankNote } from "../RankMark";
-import JobFeedbackButtons from "../JobFeedbackButtons";
-import { invalidateListCache, readListCache, writeListCache } from "../listCache";
-import MarkAppliedDialog from "../MarkAppliedDialog";
+} from "../../api";
+import { isMismatch, RankBadges, RankNote } from "./RankMark";
+import JobFeedbackButtons from "./JobFeedbackButtons";
+import { invalidateListCache, readListCache, writeListCache } from "../../listCache";
+import MarkAppliedDialog from "./MarkAppliedDialog";
 import FeedbackDialog from "./FeedbackDialog";
 import RerankDialog from "./RerankDialog";
-import { listLinkState } from "../navigationReturn";
-import LocationFilterChips from "../LocationFilterChips";
+import { listLinkState } from "../../navigationReturn";
+import LocationFilterChips from "./LocationFilterChips";
 
 const PAGE_SIZE = 25;
 

@@ -13,17 +13,17 @@ import {
   type ProgressLane,
   type ProgressOutcome,
   type ProgressToday,
-} from "../api";
-import HistoryCalendar, { type CalendarDayMark } from "../progress/HistoryCalendar";
-import LeetcodeStepper from "../progress/LeetcodeStepper";
-import ProgressHeatmap from "../progress/ProgressHeatmap";
+} from "../../api";
+import HistoryCalendar, { type CalendarDayMark } from "./HistoryCalendar";
+import LeetcodeStepper from "./LeetcodeStepper";
+import ProgressHeatmap from "./ProgressHeatmap";
 import ReflectionAccordion, {
   ReflectionCompose,
-} from "../progress/ReflectionAccordion";
-import TodayStrip from "../progress/TodayStrip";
-import ModalLayer from "../ModalLayer";
-import StepActionConfirm from "../StepActionConfirm";
-import { useBeforeUnloadDraftGuard } from "../useUnsavedDraftGuard";
+} from "./ReflectionAccordion";
+import TodayStrip from "./TodayStrip";
+import ModalLayer from "../../ModalLayer";
+import StepActionConfirm from "../../StepActionConfirm";
+import { useBeforeUnloadDraftGuard } from "../../useUnsavedDraftGuard";
 
 /** ~26 weeks — fills the left column when cells stretch to card width. */
 const HEATMAP_DAYS = 182;

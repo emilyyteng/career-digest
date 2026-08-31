@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ProgressLane, ProgressReflection } from "../api";
+import type { ProgressLane, ProgressReflection } from "../../api";
 
 function truncate(body: string, max = 72): string {
   const oneLine = body.replace(/\s+/g, " ").trim();

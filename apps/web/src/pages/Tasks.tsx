@@ -17,7 +17,7 @@ import {
   toDateInputValue,
   applyByTimeInputValue,
 } from "../formatDate";
-import InterviewCountdown from "../InterviewCountdown";
+import InterviewCountdown from "../features/interviews/InterviewCountdown";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import StepActionConfirm from "../StepActionConfirm";
 import AddTaskForm, { type AddTaskFormHandle } from "./AddTaskForm";

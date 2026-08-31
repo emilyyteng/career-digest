@@ -1,4 +1,4 @@
-import type { ProgressToday } from "../api";
+import type { ProgressToday } from "../../api";
 
 function SegmentMark({ met }: { met: boolean }) {
   return (

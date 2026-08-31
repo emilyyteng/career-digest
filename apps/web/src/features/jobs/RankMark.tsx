@@ -1,5 +1,5 @@
-import type { JobCard } from "./api";
-import PostingDates from "./PostingDates";
+import type { JobCard } from "../../api";
+import PostingDates from "../../PostingDates";
 
 const LOCATION_LABEL: Record<string, string> = {
   la: "Los Angeles",

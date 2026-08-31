@@ -12,13 +12,13 @@ import {
   sendJobFeedback,
   type JobDetail,
   type RerankQueueSnapshot,
-} from "../api";
-import { invalidateListCache } from "../listCache";
-import { isBlankJobDescription, isMismatch, RankBadges, RankNote } from "../RankMark";
-import JobFeedbackButtons from "../JobFeedbackButtons";
+} from "../../api";
+import { invalidateListCache } from "../../listCache";
+import { isBlankJobDescription, isMismatch, RankBadges, RankNote } from "./RankMark";
+import JobFeedbackButtons from "./JobFeedbackButtons";
 import FeedbackDialog from "./FeedbackDialog";
-import { listReturnTo } from "../navigationReturn";
-import MarkAppliedDialog from "../MarkAppliedDialog";
+import { listReturnTo } from "../../navigationReturn";
+import MarkAppliedDialog from "./MarkAppliedDialog";
 import RerankDialog from "./RerankDialog";
 
 export default function JobDetail() {

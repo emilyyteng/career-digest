@@ -1,4 +1,4 @@
-import type { ProgressHeatmapDay } from "../api";
+import type { ProgressHeatmapDay } from "../../api";
 
 const CREDIT_COLORS = [
   "var(--surface-2)",

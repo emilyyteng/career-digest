@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCountdownParts } from "./formatDate";
+import { getCountdownParts } from "../../formatDate";
 
 function CountdownSegment({ value, unit }: { value: string; unit: string }) {
   return (

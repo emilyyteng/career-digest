@@ -7,8 +7,8 @@ import {
   type HomeJobPick,
   type ProgressToday,
 } from "../api";
-import InterviewCountdown from "../InterviewCountdown";
-import TodayStrip from "../progress/TodayStrip";
+import InterviewCountdown from "../features/interviews/InterviewCountdown";
+import TodayStrip from "../features/progress/TodayStrip";
 import ThemeEmoji from "../ThemeEmoji";
 import { formatStepWhen } from "../formatDate";
 import {

@@ -1,4 +1,4 @@
-import type { InterviewStep, InterviewThreadListItem } from "./api";
+import type { InterviewStep, InterviewThreadListItem } from "../../api";
 
 const OPEN_STEP_STATUSES = new Set(["pending", "scheduled", "awaiting_employer"]);
 
@@ -15,7 +15,7 @@ export function currentNotesStep(steps: InterviewStep[]): InterviewStep | null {
   if (awaiting.length === 0) return null;
   return awaiting[awaiting.length - 1];
 }
-import { formatDeadlineLong, stepDeadlineAt } from "./formatDate";
+import { formatDeadlineLong, stepDeadlineAt } from "../../formatDate";
 
 export function formatLinkedRoles(row: InterviewThreadListItem): string | null {
   if (row.memberCount <= 1) return null;

@@ -5,21 +5,21 @@ import {
   getInterviews,
   patchInterviewStep,
   type InterviewThreadListItem,
-} from "../api";
+} from "../../api";
 import FinishInterviewStepModal, {
   type FinishStepMode,
   type FinishStepResult,
-} from "../FinishInterviewStepModal";
-import InterviewCountdown from "../InterviewCountdown";
-import ModalLayer from "../ModalLayer";
+} from "./FinishInterviewStepModal";
+import InterviewCountdown from "./InterviewCountdown";
+import ModalLayer from "../../ModalLayer";
 import {
   formatLinkedRoles,
   stepDeadlineIso,
   stepDeadlineLabel,
   stepActionLabel,
   stepOpenLinkLabel,
-} from "../interviewStepUi";
-import { formatStepWhen } from "../formatDate";
+} from "./interviewStepUi";
+import { formatStepWhen } from "../../formatDate";
 import AddInterviewModal, { type AddInterviewModalHandle } from "./AddInterviewModal";
 
 const VIEW_TABS = ["active", "past"] as const;
