@@ -50,12 +50,13 @@ export default function TodayStrip({
         <SegmentMark met={lcMet} />
       </span>
       {" · "}
-      <span className="progress-strip-deep-work">
+      <span className={`progress-strip-deep-work${anyDeepWork ? " is-active" : ""}`}>
         {anyDeepWork ? "deep work" : "no deep work"}
         {" "}
-        <LaneMark met={today.effortApplication} />
-        {anyDeepWork ? null : " "}
-        <LaneMark met={today.effortTechnical} />
+        <span className="progress-strip-lane-marks">
+          <LaneMark met={today.effortApplication} />
+          <LaneMark met={today.effortTechnical} />
+        </span>
       </span>
     </p>
   );

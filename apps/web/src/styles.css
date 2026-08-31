@@ -2622,6 +2622,14 @@ textarea { min-height: 10rem; width: 100%; }
   color: var(--text-subtle);
   font-weight: 500;
 }
+.progress-strip-lane-marks {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.14em;
+}
+.progress-strip-deep-work.is-active .progress-strip-lane-marks {
+  gap: 0;
+}
 .progress-outcome-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
