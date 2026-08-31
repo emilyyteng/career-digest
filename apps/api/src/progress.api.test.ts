@@ -48,6 +48,8 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body.localDate).toBe("2025-08-10");
     expect(res.body.applications).toMatchObject({ raw: 1, earned: 1, cap: 5 });
     expect(res.body.leetcode).toMatchObject({ raw: 2, earned: 2, cap: 5 });
+    expect(res.body.effortApplication).toBe(false);
+    expect(res.body.effortTechnical).toBe(true);
     expect(res.body.deepWork).toBe(true);
   });
 

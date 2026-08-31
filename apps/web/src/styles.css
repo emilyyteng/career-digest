@@ -2618,6 +2618,10 @@ textarea { min-height: 10rem; width: 100%; }
   color: #3f6b5c;
   font-weight: 600;
 }
+.progress-strip-miss {
+  color: var(--text-subtle);
+  font-weight: 500;
+}
 .progress-outcome-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

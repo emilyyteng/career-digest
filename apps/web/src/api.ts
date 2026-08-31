@@ -563,6 +563,8 @@ export type ProgressToday = {
   localDate: string;
   applications: ActivityCredit;
   leetcode: ActivityCredit;
+  effortApplication: boolean;
+  effortTechnical: boolean;
   deepWork: boolean;
 };
 

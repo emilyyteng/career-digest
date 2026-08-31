@@ -19,6 +19,8 @@ export type ProgressToday = {
   localDate: string;
   applications: ActivityCredit;
   leetcode: ActivityCredit;
+  effortApplication: boolean;
+  effortTechnical: boolean;
   deepWork: boolean;
 };
 
@@ -292,6 +294,8 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
     localDate,
     applications: activityCredit(appRaw),
     leetcode: activityCredit(lcRaw),
+    effortApplication: effortApp.size > 0,
+    effortTechnical: effortTech.size > 0,
     deepWork: effortApp.size > 0 || effortTech.size > 0,
   };
 }
