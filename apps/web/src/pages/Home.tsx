@@ -92,33 +92,40 @@ export default function Home() {
   return (
     <section className="home-page">
       <header className="home-hero card">
-        <div className="home-hero-main">
-          <h2 className="home-greeting">
-            <span>
-              {greetingLabelForPeriod(greetingPeriod)}, {data.greetingName}
+        <div className="home-hero-top">
+          <div className="home-hero-main">
+            <h2 className="home-greeting">
+              <span>
+                {greetingLabelForPeriod(greetingPeriod)}, {data.greetingName}
+              </span>
+              <ThemeEmoji
+                emoji={greetingEmojiForPeriod(greetingPeriod)}
+                className="theme-emoji theme-emoji-greeting"
+              />
+            </h2>
+            <p className="muted home-hero-sub">
+              Your internship digest at a glance.
+            </p>
+          </div>
+          <div className="home-last-digest">
+            <span className="home-last-digest-label">Last digest</span>
+            <span className="home-last-digest-value">
+              {digestWhen ?? "Not run yet"}
             </span>
-            <ThemeEmoji
-              emoji={greetingEmojiForPeriod(greetingPeriod)}
-              className="theme-emoji theme-emoji-greeting"
-            />
-          </h2>
-          <p className="muted home-hero-sub">
-            Your internship digest at a glance.
-          </p>
-          {progress && (
+            {data.lastDigest.status === "error" && data.lastDigest.error && (
+              <span className="error home-digest-error">{data.lastDigest.error}</span>
+            )}
+            <Link to="/status" className="home-section-link">Pipeline status →</Link>
+          </div>
+        </div>
+        {progress && (
+          <div className="home-progress-row">
             <p className="home-progress-strip">{formatTodayStrip(progress)}</p>
-          )}
-        </div>
-        <div className="home-last-digest">
-          <span className="home-last-digest-label">Last digest</span>
-          <span className="home-last-digest-value">
-            {digestWhen ?? "Not run yet"}
-          </span>
-          {data.lastDigest.status === "error" && data.lastDigest.error && (
-            <span className="error home-digest-error">{data.lastDigest.error}</span>
-          )}
-          <Link to="/status" className="home-section-link">Pipeline status →</Link>
-        </div>
+            <Link to="/progress" className="home-section-link">
+              Update progress →
+            </Link>
+          </div>
+        )}
       </header>
 
       <section className="card home-section home-attention-card">
