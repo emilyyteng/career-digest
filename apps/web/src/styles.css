@@ -2608,7 +2608,7 @@ textarea { min-height: 10rem; width: 100%; }
   font-size: 0.92rem;
 }
 .progress-strip-met {
-  color: var(--accent-mint-deep);
+  color: var(--accent-pink-deep);
   font-weight: 600;
 }
 .progress-outcome-row {
