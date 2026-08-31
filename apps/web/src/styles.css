@@ -2984,6 +2984,10 @@ button.secondary.progress-note-edit {
   padding: 0.45rem 0.65rem;
   background: transparent;
 }
+.progress-note-edit-icon {
+  display: inline-block;
+  transform: scaleX(-1);
+}
 .progress-note-body {
   border-top: 1px solid var(--border);
   padding: 0.65rem 0.75rem 0.75rem;

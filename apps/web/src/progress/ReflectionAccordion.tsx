@@ -57,7 +57,9 @@ export default function ReflectionAccordion({
                     setDraft(row.body);
                   }}
                 >
-                  ✎
+                  <span className="progress-note-edit-icon" aria-hidden="true">
+                    ✎
+                  </span>
                 </button>
               )}
             </div>
