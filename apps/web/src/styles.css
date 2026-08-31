@@ -1912,6 +1912,13 @@ textarea { min-height: 10rem; width: 100%; }
   color: var(--danger-deep);
   opacity: 0.85;
 }
+.interview-countdown.urgent .interview-countdown-digits {
+  color: var(--accent-pink-deep);
+}
+.interview-countdown.urgent .interview-countdown-unit {
+  color: var(--accent-pink-deep);
+  opacity: 0.9;
+}
 
 .interview-card-actions {
   display: flex;

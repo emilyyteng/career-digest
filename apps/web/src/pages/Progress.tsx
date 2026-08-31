@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   createProgressReflection,
   getProgressDay,
@@ -23,7 +23,7 @@ import ReflectionAccordion, {
 import TodayStrip from "../progress/TodayStrip";
 import ModalLayer from "../ModalLayer";
 import StepActionConfirm from "../StepActionConfirm";
-import { useUnsavedDraftGuard } from "../useUnsavedDraftGuard";
+import { useBeforeUnloadDraftGuard } from "../useUnsavedDraftGuard";
 
 /** ~26 weeks — fills the left column when cells stretch to card width. */
 const HEATMAP_DAYS = 182;
@@ -75,6 +75,7 @@ function buildMarks(
 
 export default function Progress() {
   const tz = useMemo(() => browserTz(), []);
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") === "history" ? "history" : "today";
 
@@ -98,8 +99,42 @@ export default function Progress() {
   const selectedHistory = historyDate ?? today?.localDate ?? null;
   const composeActive = tab === "today" || (tab === "history" && editingDay);
   const guardDraft = composeDirty && composeActive;
-  const leaveBlocker = useUnsavedDraftGuard(guardDraft);
-  const leaveConfirmOpen = leaveBlocker.state === "blocked" || pendingLeave !== null;
+  const leaveConfirmOpen = pendingLeave !== null;
+
+  useBeforeUnloadDraftGuard(guardDraft);
+
+  useEffect(() => {
+    if (!guardDraft) return;
+    function onClick(event: MouseEvent) {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = (event.target as Element | null)?.closest("a[href]") as
+        | HTMLAnchorElement
+        | null;
+      if (!anchor) return;
+      if (anchor.target && anchor.target !== "_self") return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+        return;
+      }
+      let url: URL;
+      try {
+        url = new URL(href, window.location.origin);
+      } catch {
+        return;
+      }
+      if (url.origin !== window.location.origin) return;
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (next === current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setPendingLeave(() => () => navigate(next));
+    }
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [guardDraft, navigate]);
 
   const handleComposeDirtyChange = useCallback((dirty: boolean) => {
     setComposeDirty(dirty);
@@ -117,17 +152,11 @@ export default function Progress() {
   );
 
   function cancelLeave() {
-    if (leaveBlocker.state === "blocked") leaveBlocker.reset();
     setPendingLeave(null);
   }
 
   function confirmLeave() {
     setComposeDirty(false);
-    if (leaveBlocker.state === "blocked") {
-      leaveBlocker.proceed();
-      setPendingLeave(null);
-      return;
-    }
     const action = pendingLeave;
     setPendingLeave(null);
     action?.();

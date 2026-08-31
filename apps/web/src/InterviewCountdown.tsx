@@ -26,7 +26,13 @@ export default function InterviewCountdown({ target }: { target: string }) {
 
   return (
     <div
-      className={`interview-countdown ${parts.overdue ? "overdue" : ""}`}
+      className={[
+        "interview-countdown",
+        parts.overdue ? "overdue" : "",
+        parts.urgent ? "urgent" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       role="timer"
       aria-live="polite"
     >

@@ -51,6 +51,7 @@ export type CountdownParts = {
   minutes: number;
   seconds: number;
   overdue: boolean;
+  urgent: boolean;
 };
 
 export function getCountdownParts(target: string | null | undefined): CountdownParts | null {
@@ -60,12 +61,13 @@ export function getCountdownParts(target: string | null | undefined): CountdownP
   let diff = end - Date.now();
   const overdue = diff < 0;
   if (overdue) diff = -diff;
+  const urgent = !overdue && diff < 24 * 60 * 60 * 1000;
   const totalSeconds = Math.floor(diff / 1000);
   const days = Math.floor(totalSeconds / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return { days, hours, minutes, seconds, overdue };
+  return { days, hours, minutes, seconds, overdue, urgent };
 }
 
 /** Combine local date + optional time into ISO for API. */

@@ -1,15 +1,7 @@
 import { useEffect } from "react";
-import { useBlocker } from "react-router-dom";
 
-/** Block route changes and tab close while a draft is unsaved. */
-export function useUnsavedDraftGuard(when: boolean) {
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      when &&
-      (currentLocation.pathname !== nextLocation.pathname ||
-        currentLocation.search !== nextLocation.search),
-  );
-
+/** Warn before closing or refreshing the tab while a draft is unsaved. */
+export function useBeforeUnloadDraftGuard(when: boolean) {
   useEffect(() => {
     if (!when) return;
     function onBeforeUnload(event: BeforeUnloadEvent) {
@@ -19,6 +11,4 @@ export function useUnsavedDraftGuard(when: boolean) {
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [when]);
-
-  return blocker;
 }
