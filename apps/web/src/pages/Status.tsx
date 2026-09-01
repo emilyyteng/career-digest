@@ -183,10 +183,37 @@ export default function Status() {
                   <dd>{formatWhen(board.startedAt)}</dd>
                 </>
               )}
+              {board.lastRun && board.lastRun.leftBoard > 0 && (
+                <>
+                  <dt>Left board</dt>
+                  <dd>
+                    −{board.lastRun.leftBoard}
+                    {board.lastRun.leftBoardRetained > 0 && (
+                      <span className="muted">
+                        {" "}
+                        ({board.lastRun.leftBoardDeleted} removed ·{" "}
+                        {board.lastRun.leftBoardRetained} kept for application)
+                      </span>
+                    )}
+                  </dd>
+                </>
+              )}
+              {board.lastRun && board.lastRun.mergeDeduped > 0 && (
+                <>
+                  <dt>Deduped</dt>
+                  <dd>−{board.lastRun.mergeDeduped} duplicate Simplify rows</dd>
+                </>
+              )}
+              {board.lastRun && board.lastRun.rankedProcessed > 0 && (
+                <>
+                  <dt>Light rank</dt>
+                  <dd>{board.lastRun.rankedProcessed} unranked processed</dd>
+                </>
+              )}
             </dl>
             {board.error && <p className="error ops-card-error">{board.error}</p>}
             <p className="muted ops-card-hint">
-              Ingest → scrape Simplify blanks → rank up to {ops.boardRankLimit} unranked/outdated
+              Ingest → scrape Simplify blanks → rank up to {ops.boardRankLimit} unranked
               postings (live API, not batch).
             </p>
           </div>

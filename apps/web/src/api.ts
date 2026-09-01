@@ -89,6 +89,14 @@ export const getJobs = (
   return parse<JobsPage>(api(`/api/jobs?${params}`));
 };
 
+export type BoardRefreshLastRun = {
+  leftBoard: number;
+  leftBoardDeleted: number;
+  leftBoardRetained: number;
+  mergeDeduped: number;
+  rankedProcessed: number;
+};
+
 export type BoardRefreshStatus = {
   status: "idle" | "running" | "ok" | "error";
   phase: "ingest" | "scrape" | "rank" | null;
@@ -96,6 +104,7 @@ export type BoardRefreshStatus = {
   finishedAt: string | null;
   lastOkAt: string | null;
   error: string | null;
+  lastRun: BoardRefreshLastRun | null;
 };
 
 export type RankBatchStatus = {

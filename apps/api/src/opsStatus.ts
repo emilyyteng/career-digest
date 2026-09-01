@@ -295,7 +295,7 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
         `pg_dump snapshot to backups/ (${backup.retentionDays}-day retention)`,
         "Ingest company boards (Ashby / Greenhouse / Lever JSON) + Simplify miscellaneous links",
         "Scrape Simplify miscellaneous apply pages for missing descriptions",
-        `Light rank up to ${limit} unranked or outdated postings (live OpenAI, ${defaultRankingModel()})`,
+        `Light rank up to ${limit} unranked postings only (live OpenAI, ${defaultRankingModel()})`,
       ],
       scrapeRetryNote:
         "Scrape retries: timeout/error after 6h; empty/too_large after 24h if posting updated; blocked after 48h. Ashby/Lever/Greenhouse descriptions come from board JSON at ingest — scrape skipped_ats only for those ATS hosts on Simplify. Oracle/SmartRecruiters hybrid Simplify rows are scraped from apply URLs.",

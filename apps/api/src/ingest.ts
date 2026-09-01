@@ -147,7 +147,17 @@ function simplifyFilterTitle(posting: NormalizedPosting): string {
   return [posting.title, ...terms].join(" ");
 }
 
-export async function runIngest(): Promise<void> {
+export type IngestStats = {
+  /** Postings removed from the open board and deleted (no application row). */
+  leftBoardDeleted: number;
+  /** Postings no longer on the board but kept because an application exists. */
+  leftBoardRetained: number;
+  /** Simplify misc rows deleted after matching an ATS board duplicate. */
+  mergeDeduped: number;
+  upserted: number;
+};
+
+export async function runIngest(): Promise<IngestStats> {
   await migrate();
 
   let listed = 0;
@@ -243,6 +253,12 @@ export async function runIngest(): Promise<void> {
   }
 
   const merged = await runMergeDuplicatePostings();
+  const mergeDeduped =
+    merged.greenhouse.deletedSimplify +
+    merged.lever.deletedSimplify +
+    merged.ashby.deletedSimplify +
+    merged.oracle.deletedSimplify +
+    merged.smartrecruiters.deletedSimplify;
   console.log(
     `merge duplicates: greenhouse ${merged.greenhouse.deletedSimplify}/${merged.greenhouse.pairs}, lever ${merged.lever.deletedSimplify}/${merged.lever.pairs}, ashby ${merged.ashby.deletedSimplify}/${merged.ashby.pairs}, oracle ${merged.oracle.deletedSimplify}/${merged.oracle.pairs}, smartrecruiters ${merged.smartrecruiters.deletedSimplify}/${merged.smartrecruiters.pairs}; moved ${merged.applicationsMoved} application(s), merged ${merged.applicationsMerged} application(s).`,
   );
@@ -267,6 +283,13 @@ export async function runIngest(): Promise<void> {
   console.log(
     `Done. Listed ${listed}, intern-titled ${internships}, upserted ${upserted}, deleted ${deleted}, retained closed ${retainedClosed}.`,
   );
+
+  return {
+    leftBoardDeleted: deleted,
+    leftBoardRetained: retainedClosed,
+    mergeDeduped,
+    upserted,
+  };
 }
 
 const isMain =

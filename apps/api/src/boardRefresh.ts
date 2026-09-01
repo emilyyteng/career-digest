@@ -13,6 +13,15 @@ const DEFAULT_BOARD_RANK_LIMIT = 40;
 
 export type BoardRefreshPhase = "ingest" | "scrape" | "rank";
 
+/** Summary of the most recent successful board refresh ingest phase. */
+export type BoardRefreshLastRun = {
+  leftBoard: number;
+  leftBoardDeleted: number;
+  leftBoardRetained: number;
+  mergeDeduped: number;
+  rankedProcessed: number;
+};
+
 export type BoardRefreshSnapshot = {
   status: "idle" | "running" | "ok" | "error";
   phase: BoardRefreshPhase | null;
@@ -20,6 +29,7 @@ export type BoardRefreshSnapshot = {
   finishedAt: string | null;
   lastOkAt: string | null;
   error: string | null;
+  lastRun: BoardRefreshLastRun | null;
 };
 
 function blank(): BoardRefreshSnapshot {
@@ -30,6 +40,7 @@ function blank(): BoardRefreshSnapshot {
     finishedAt: null,
     lastOkAt: null,
     error: null,
+    lastRun: null,
   };
 }
 
@@ -45,6 +56,34 @@ let loaded = false;
 async function persist(): Promise<void> {
   await mkdir(path.dirname(STATE_PATH), { recursive: true });
   await writeFile(STATE_PATH, `${JSON.stringify(state)}\n`);
+}
+
+function parseLastRun(raw: unknown): BoardRefreshLastRun | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Partial<BoardRefreshLastRun>;
+  const leftBoardDeleted = Number(row.leftBoardDeleted);
+  const leftBoardRetained = Number(row.leftBoardRetained);
+  const mergeDeduped = Number(row.mergeDeduped);
+  const rankedProcessed = Number(row.rankedProcessed);
+  if (
+    !Number.isFinite(leftBoardDeleted) ||
+    !Number.isFinite(leftBoardRetained) ||
+    !Number.isFinite(mergeDeduped) ||
+    !Number.isFinite(rankedProcessed)
+  ) {
+    return null;
+  }
+  const leftBoard =
+    Number.isFinite(Number(row.leftBoard)) && row.leftBoard != null
+      ? Number(row.leftBoard)
+      : leftBoardDeleted + leftBoardRetained;
+  return {
+    leftBoard,
+    leftBoardDeleted,
+    leftBoardRetained,
+    mergeDeduped,
+    rankedProcessed,
+  };
 }
 
 async function ensureLoaded(): Promise<void> {
@@ -69,6 +108,7 @@ async function ensureLoaded(): Promise<void> {
           : typeof raw.error === "string"
             ? raw.error
             : null,
+      lastRun: parseLastRun(raw.lastRun),
     };
     if (raw.status === "running") await persist();
   } catch {
@@ -80,24 +120,26 @@ async function executeBoardRefresh(): Promise<void> {
   console.log("board refresh: ingest starting");
   state = { ...state, phase: "ingest" };
   await persist();
-  await runIngest();
+  const ingest = await runIngest();
 
   console.log("board refresh: scrape starting");
   state = { ...state, phase: "scrape" };
   await persist();
   await runScrape();
 
+  let rankedProcessed = 0;
   if (await hasPendingRankBatch()) {
     console.log("board refresh: skipping light rank (batch ranking still in progress)");
   } else if (!process.env.OPENAI_API_KEY?.trim()) {
     console.log("board refresh: skipping light rank (OPENAI_API_KEY not set)");
   } else {
-    console.log("board refresh: light rank starting");
+    console.log("board refresh: light rank starting (unranked only)");
     state = { ...state, phase: "rank" };
     await persist();
     try {
       const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
-      const result = await runLiveRank({ limit: boardRankLimit() });
+      const result = await runLiveRank({ limit: boardRankLimit(), phase: "unranked" });
+      rankedProcessed = result.ok;
       await recordRankBatchSuccess({
         model,
         appliedOk: result.ok,
@@ -120,6 +162,13 @@ async function executeBoardRefresh(): Promise<void> {
     finishedAt,
     lastOkAt: finishedAt,
     error: null,
+    lastRun: {
+      leftBoard: ingest.leftBoardDeleted + ingest.leftBoardRetained,
+      leftBoardDeleted: ingest.leftBoardDeleted,
+      leftBoardRetained: ingest.leftBoardRetained,
+      mergeDeduped: ingest.mergeDeduped,
+      rankedProcessed,
+    },
   };
   console.log("board refresh: done");
 }
@@ -145,6 +194,7 @@ export async function startBoardRefresh(): Promise<{
     finishedAt: null,
     lastOkAt: state.lastOkAt,
     error: null,
+    lastRun: state.lastRun,
   };
   await persist();
 
@@ -160,6 +210,7 @@ export async function startBoardRefresh(): Promise<{
         finishedAt: new Date().toISOString(),
         lastOkAt: state.lastOkAt,
         error: message,
+        lastRun: state.lastRun,
       };
       console.error(`board refresh failed: ${message}`);
     } finally {
