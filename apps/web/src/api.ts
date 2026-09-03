@@ -334,12 +334,38 @@ export const deleteApplication = (id: string) =>
     api(`/api/applications/${id}`, { method: "DELETE" }),
   );
 
-export const sendJobFeedback = (jobId: string, kind: "like" | "dismiss", note = "") =>
-  parse<{ id: string; kind: string; note: string | null }>(
+export const sendJobFeedback = (
+  jobId: string,
+  kind: "like" | "dismiss",
+  note = "",
+  teach = true,
+) =>
+  parse<{ id: string; kind: string; note: string | null; teach: boolean }>(
     api(`/api/jobs/${jobId}/feedback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, note: note || null }),
+      body: JSON.stringify({ kind, note: note || null, teach }),
+    }),
+  );
+
+export type BoardSibling = {
+  id: string;
+  title: string;
+  company: string;
+  feedbackKind: string | null;
+};
+
+export const getBoardSiblings = (jobId: string) =>
+  parse<{ employer: string; jobs: BoardSibling[] }>(
+    api(`/api/jobs/${jobId}/board-siblings`),
+  );
+
+export const hideJobsFromBoard = (postingIds: string[]) =>
+  parse<{ hidden: number }>(
+    api(`/api/jobs/hide-from-board`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postingIds }),
     }),
   );
 

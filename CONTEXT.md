@@ -71,3 +71,23 @@ _Avoid_: Applications tab (old heatmap-lane tabs), Progress home
 **History tab** (Progress):
 Progress tab for granular day records: calendar day picker, view-first day detail, accordion notes; Edit this day unlocks backfill/edits. Not a second Progress page.
 _Avoid_: Archive, calendar page
+
+**Mismatches** (Jobs tab):
+The Jobs tab for postings that left the ranked board—whether by **Mark as mismatch** or **Hide from board**. One destination; two different intents.
+_Avoid_: Hidden tab, dismissed tab, junk
+
+**Mark as mismatch**:
+A teaching dismiss: remove a posting from the ranked board and treat it as a ranking preference signal (notes are for the LLM). Distinct from Hide from board.
+_Avoid_: Dismiss (ambiguous), downvote, reject
+
+**Hide from board**:
+A quiet remove: take posting(s) off the ranked board into Mismatches without teaching the ranker. Notes do not apply. Single posting: Mark as mismatch with teaching off. Company: one-shot hide of current **ranked** postings for a **display employer** (liked included; user can drop keepers in the confirm list); offered on job detail only when that employer has at least one other ranked sibling. Future roles can still appear. Return to Ranked is via **Rerank**—not a separate undo.
+_Avoid_: Mute company, block company, soft dismiss, quiet mismatch
+
+**Display employer**:
+The company name shown in the UI for a posting—Simplify `department` when present, otherwise the board company name. Used to group “hide this company’s current roles,” not the raw board identity (e.g. not the literal Simplify board).
+_Avoid_: Company (alone—ambiguous with ATS board row), board
+
+**Rerank**:
+A user-requested re-score of one posting (with a correction note). If the model marks it eligible again, it leaves Mismatches and returns to the ranked board—including after Hide from board or Mark as mismatch.
+_Avoid_: Undismiss, restore, unhide

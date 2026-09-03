@@ -354,6 +354,26 @@ export default function Progress() {
                   onSave={(id, body) => saveReflection(id, body, today.localDate)}
                 />
               </div>
+              <div className="progress-log-block progress-apps-block">
+                <span className="progress-kicker">Apps</span>
+                <p className="progress-apps-summary">
+                  {(todayDetail?.applications ?? today.applications).raw} logged ·{" "}
+                  {(todayDetail?.applications ?? today.applications).earned}/5 earned
+                </p>
+                {(todayDetail?.applicationRows.length ?? 0) > 0 ? (
+                  <ul className="progress-app-list">
+                    {todayDetail!.applicationRows.map((app) => (
+                      <li key={app.id}>
+                        <Link to={`/applications/${app.id}`}>
+                          {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="muted">No applications logged today.</p>
+                )}
+              </div>
             </aside>
           </div>
         </>

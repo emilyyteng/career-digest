@@ -4,12 +4,15 @@ import {
   addPostingToTasks,
   clearJobFeedback,
   createApplication,
+  getBoardSiblings,
   getJob,
   getRerankQueue,
+  hideJobsFromBoard,
   patchJob,
   queueJobRerank,
   removePostingFromTasks,
   sendJobFeedback,
+  type BoardSibling,
   type JobDetail,
   type RerankQueueSnapshot,
 } from "../../api";
@@ -17,6 +20,7 @@ import { invalidateListCache } from "../../listCache";
 import { isBlankJobDescription, isMismatch, RankBadges, RankNote } from "./RankMark";
 import JobFeedbackButtons from "./JobFeedbackButtons";
 import FeedbackDialog from "./FeedbackDialog";
+import HideFromBoardDialog from "./HideFromBoardDialog";
 import { listReturnTo } from "../../navigationReturn";
 import MarkAppliedDialog from "./MarkAppliedDialog";
 import RerankDialog from "./RerankDialog";
@@ -34,6 +38,11 @@ export default function JobDetail() {
   const [rerankQueue, setRerankQueue] = useState<RerankQueueSnapshot["items"]>([]);
   const [urlDraft, setUrlDraft] = useState("");
   const [urlFlash, setUrlFlash] = useState<string | null>(null);
+  const [siblingCount, setSiblingCount] = useState(0);
+  const [hideDialog, setHideDialog] = useState<{
+    employer: string;
+    jobs: BoardSibling[];
+  } | null>(null);
   const wasReranking = useRef(false);
   const urlFlashTimer = useRef<number | null>(null);
 
@@ -42,6 +51,16 @@ export default function JobDetail() {
     const data = await getJob(id);
     setJob(data);
     setUrlDraft(data.url);
+    if (!isMismatch(data) && !isBlankJobDescription(data.descriptionHtml)) {
+      try {
+        const siblings = await getBoardSiblings(data.id);
+        setSiblingCount(siblings.jobs.length);
+      } catch {
+        setSiblingCount(0);
+      }
+    } else {
+      setSiblingCount(0);
+    }
   }
 
   useEffect(() => {
@@ -144,7 +163,7 @@ export default function JobDetail() {
     setAppliedConfirm(true);
   }
 
-  async function confirmFeedback(note: string) {
+  async function confirmFeedback(result: { note: string; teach: boolean }) {
     if (!job || !dialog) return;
     setPending(true);
     try {
@@ -152,12 +171,41 @@ export default function JobDetail() {
         await clearJobFeedback(job.id);
         await load();
       } else {
-        await sendJobFeedback(job.id, dialog, note);
+        await sendJobFeedback(job.id, dialog, result.note, result.teach);
         await load();
       }
       setDialog(null);
+      invalidateListCache("jobs:");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save feedback");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function openHideFromBoard() {
+    if (!job || pending) return;
+    setPending(true);
+    try {
+      const siblings = await getBoardSiblings(job.id);
+      setHideDialog(siblings);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load employer roles");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function confirmHideFromBoard(postingIds: string[]) {
+    if (!job) return;
+    setPending(true);
+    try {
+      await hideJobsFromBoard(postingIds);
+      setHideDialog(null);
+      invalidateListCache("jobs:");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not hide from board");
     } finally {
       setPending(false);
     }
@@ -184,6 +232,7 @@ export default function JobDetail() {
 
   const mismatch = isMismatch(job);
   const needsDescription = isBlankJobDescription(job.descriptionHtml);
+  const showCompanyHide = !mismatch && !needsDescription && siblingCount >= 2;
   const rerank = rerankQueue.find((item) => item.postingId === job.id);
   const rerankBusy =
     rerank?.status === "queued" || rerank?.status === "running" || pending;
@@ -261,6 +310,16 @@ export default function JobDetail() {
         <button type="button" className="secondary" disabled={pending} onClick={() => markApplied()}>
           Applied<span className="btn-icon" aria-hidden="true">✓</span>
         </button>
+        {showCompanyHide && (
+          <button
+            type="button"
+            className="secondary"
+            disabled={pending}
+            onClick={() => void openHideFromBoard()}
+          >
+            Hide {job.company} from board
+          </button>
+        )}
         {!needsDescription &&
           mismatch && (
             <button
@@ -301,7 +360,16 @@ export default function JobDetail() {
           title={`${job.company} — ${job.title}`}
           pending={pending}
           onCancel={() => setDialog(null)}
-          onConfirm={(note) => void confirmFeedback(note)}
+          onConfirm={(result) => void confirmFeedback(result)}
+        />
+      )}
+      {hideDialog && (
+        <HideFromBoardDialog
+          employer={hideDialog.employer}
+          jobs={hideDialog.jobs}
+          pending={pending}
+          onCancel={() => setHideDialog(null)}
+          onConfirm={(postingIds) => void confirmHideFromBoard(postingIds)}
         />
       )}
       {rerankOpen && (

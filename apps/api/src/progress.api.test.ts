@@ -179,7 +179,38 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body.leetcode).toMatchObject({ raw: 4, earned: 4 });
     expect(res.body.deepWork).toBe(true);
     expect(res.body.applicationRows).toHaveLength(1);
+    expect(res.body.applicationRows[0]).toMatchObject({
+      company: "Prog Co",
+      title: "Intern",
+    });
     expect(res.body.reflections).toHaveLength(1);
+  });
+
+  it("GET /api/progress/day uses Simplify posting department as company name", async () => {
+    const company = await seedCompany({ name: "Simplify", source: "simplify" });
+    const posting = await seedRankedPosting({
+      source: "simplify",
+      externalId: "prog-simplify-google",
+      companyId: company.id,
+      department: "Google",
+      title: "Software Engineer Intern",
+      url: "https://simplify.jobs/p/google-intern",
+    });
+    await seedApplication({
+      postingId: posting.id,
+      appliedAt: new Date("2025-08-12T18:00:00.000Z"),
+    });
+
+    const res = await apiClient()
+      .get("/api/progress/day/2025-08-12")
+      .query({ tz: TZ })
+      .expect(200);
+
+    expect(res.body.applicationRows).toHaveLength(1);
+    expect(res.body.applicationRows[0]).toMatchObject({
+      company: "Google",
+      title: "Software Engineer Intern",
+    });
   });
 
   it("PATCH /api/progress/leetcode accepts a past localDate for History backfill", async () => {

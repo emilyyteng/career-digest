@@ -25,7 +25,9 @@ import {
   assertJobRerankable,
   deleteJobFeedback,
   getJobById,
+  hideFromBoard,
   listJobs,
+  listRankedBoardSiblings,
   patchJobUrl,
   upsertJobFeedback,
 } from "./jobs.js";
@@ -131,6 +133,21 @@ api.get("/jobs/rerank-queue", async (_req, res) => {
   res.json(getRerankQueueSnapshot());
 });
 
+api.post("/jobs/hide-from-board", async (req, res) => {
+  const postingIds = (req.body as { postingIds?: unknown }).postingIds;
+  if (!Array.isArray(postingIds) || !postingIds.every((id) => typeof id === "string")) {
+    res.status(400).json({ error: "postingIds must be an array of strings" });
+    return;
+  }
+  try {
+    res.json(await hideFromBoard(postingIds));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const status = message.includes("not found") ? 404 : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
 api.get("/jobs", async (req, res) => {
   res.json(
     await listJobs({
@@ -153,6 +170,16 @@ api.get("/jobs/:id", async (req, res) => {
   res.json(job);
 });
 
+api.get("/jobs/:id/board-siblings", async (req, res) => {
+  try {
+    res.json(await listRankedBoardSiblings(req.params.id));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const status = message === "Job not found" ? 404 : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
 api.patch("/jobs/:id", async (req, res) => {
   const body = req.body as { url?: string };
   if (!Object.prototype.hasOwnProperty.call(body, "url")) {
@@ -173,10 +200,12 @@ api.patch("/jobs/:id", async (req, res) => {
 });
 
 api.post("/jobs/:id/feedback", async (req, res) => {
-  const kind = String((req.body as { kind?: string }).kind ?? "");
-  const note = String((req.body as { note?: string }).note ?? "").trim() || null;
+  const body = req.body as { kind?: string; note?: string; teach?: unknown };
+  const kind = String(body.kind ?? "");
+  const note = String(body.note ?? "").trim() || null;
+  const teach = body.teach === false ? false : true;
   try {
-    const row = await upsertJobFeedback(req.params.id, kind, note);
+    const row = await upsertJobFeedback(req.params.id, kind, note, teach);
     res.status(201).json(row);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

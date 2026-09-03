@@ -2,6 +2,15 @@
 
 Development history for Career Digest. For domain terms, see [CONTEXT.md](../CONTEXT.md). For setup, see [docs/SETUP.md](./SETUP.md).
 
+## Milestone 9 — Hide from board vs Mark as mismatch
+
+Quiet board cleanup without teaching the ranker, while keeping one **Mismatches** tab.
+
+- `posting_feedback.teach` — dismissals with `teach=false` stay off Ranked but are omitted from rank prompts
+- Mark as mismatch dialog: **Use as ranking feedback** toggle (default on); off hides notes and does not teach
+- Job detail: **Hide {employer} from board** when ≥2 ranked siblings (display employer); confirm list with X-to-keep
+- Progress History/Today: correct Simplify display employer; Apps list on Today tab
+
 ## Milestone 8 — Progress tracker
 
 Activity / Effort / Outcome for internship search motivation.

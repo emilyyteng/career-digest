@@ -190,6 +190,124 @@ describe.skipIf(!integrationReady)("jobs API", () => {
     expect(needsDescription.body.count).toBe(0);
   });
 
+  it("POST /api/jobs/:id/feedback dismiss with teach false hides without teaching signal", async () => {
+    const company = await seedCompany();
+    const posting = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "job-quiet-dismiss",
+      companyId: company.id,
+      url: "https://boards.greenhouse.io/acme/jobs/quiet-1",
+    });
+
+    const res = await apiClient()
+      .post(`/api/jobs/${posting.id}/feedback`)
+      .send({ kind: "dismiss", note: "should be dropped", teach: false })
+      .expect(201);
+
+    expect(res.body).toMatchObject({ kind: "dismiss", note: null, teach: false });
+    const feedback = await getFeedbackByPosting(posting.id);
+    expect(feedback).toMatchObject({ kind: "dismiss", note: null, teach: false });
+    const row = await getPosting(posting.id);
+    expect(row?.rank_eligible).toBe(false);
+
+    const mismatches = await apiClient().get("/api/jobs?view=mismatches").expect(200);
+    expect(mismatches.body.jobs.some((job: { id: string }) => job.id === posting.id)).toBe(
+      true,
+    );
+  });
+
+  it("POST /api/jobs/:id/feedback dismiss defaults teach true and keeps note", async () => {
+    const company = await seedCompany();
+    const posting = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "job-teach-dismiss",
+      companyId: company.id,
+      url: "https://boards.greenhouse.io/acme/jobs/teach-1",
+    });
+
+    const res = await apiClient()
+      .post(`/api/jobs/${posting.id}/feedback`)
+      .send({ kind: "dismiss", note: "Wrong stack" })
+      .expect(201);
+
+    expect(res.body).toMatchObject({ kind: "dismiss", note: "Wrong stack", teach: true });
+  });
+
+  it("GET /api/jobs/:id/board-siblings lists ranked display-employer siblings", async () => {
+    const simplify = await seedCompany({ name: "Simplify", source: "simplify" });
+    const greenhouse = await seedCompany({ name: "Google", source: "greenhouse" });
+    const keep = await seedRankedPosting({
+      source: "simplify",
+      externalId: "sib-keep",
+      companyId: simplify.id,
+      department: "Google",
+      title: "SWE Intern — Keep",
+      url: "https://simplify.jobs/p/keep",
+    });
+    const hide = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "sib-hide",
+      companyId: greenhouse.id,
+      title: "SWE Intern — Hide",
+      url: "https://boards.greenhouse.io/google/jobs/1",
+    });
+    await seedRankedPosting({
+      source: "simplify",
+      externalId: "sib-other",
+      companyId: simplify.id,
+      department: "Meta",
+      title: "Other employer",
+      url: "https://simplify.jobs/p/meta",
+    });
+
+    const res = await apiClient().get(`/api/jobs/${keep.id}/board-siblings`).expect(200);
+    expect(res.body.employer).toBe("Google");
+    expect(res.body.jobs).toHaveLength(2);
+    expect(res.body.jobs.map((job: { id: string }) => job.id).sort()).toEqual(
+      [keep.id, hide.id].sort(),
+    );
+  });
+
+  it("POST /api/jobs/hide-from-board quietly hides selected ranked roles", async () => {
+    const company = await seedCompany({ name: "HideCo" });
+    const a = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "hide-a",
+      companyId: company.id,
+      title: "Role A",
+      url: "https://boards.greenhouse.io/hideco/jobs/1",
+    });
+    const b = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "hide-b",
+      companyId: company.id,
+      title: "Role B",
+      url: "https://boards.greenhouse.io/hideco/jobs/2",
+    });
+    const keep = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "hide-keep",
+      companyId: company.id,
+      title: "Role Keep",
+      url: "https://boards.greenhouse.io/hideco/jobs/3",
+    });
+
+    await apiClient()
+      .post("/api/jobs/hide-from-board")
+      .send({ postingIds: [a.id, b.id] })
+      .expect(200);
+
+    expect(await getFeedbackByPosting(a.id)).toMatchObject({
+      kind: "dismiss",
+      teach: false,
+      note: null,
+    });
+    expect(await getFeedbackByPosting(b.id)).toMatchObject({ kind: "dismiss", teach: false });
+    expect(await getFeedbackByPosting(keep.id)).toBeNull();
+    expect((await getPosting(a.id))?.rank_eligible).toBe(false);
+    expect((await getPosting(keep.id))?.rank_eligible).toBe(true);
+  });
+
   it("DELETE /api/jobs/:id/feedback removes feedback", async () => {
     const company = await seedCompany();
     const posting = await seedRankedPosting({

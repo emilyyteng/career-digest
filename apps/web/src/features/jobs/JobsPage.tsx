@@ -468,7 +468,7 @@ export default function Jobs() {
     setAppliedConfirm(job);
   }
 
-  async function confirmFeedback(note: string) {
+  async function confirmFeedback(result: { note: string; teach: boolean }) {
     if (!dialog) return;
     const { job, kind } = dialog;
     setPendingId(job.id);
@@ -476,7 +476,7 @@ export default function Jobs() {
       if (kind === "unlike") {
         await clearJobFeedback(job.id);
       } else {
-        await sendJobFeedback(job.id, kind, note);
+        await sendJobFeedback(job.id, kind, result.note, result.teach);
       }
       setDialog(null);
       invalidateListCache("jobs:");
@@ -748,7 +748,7 @@ export default function Jobs() {
           title={`${dialog.job.company} — ${dialog.job.title}`}
           pending={pendingId === dialog.job.id}
           onCancel={() => setDialog(null)}
-          onConfirm={(note) => void confirmFeedback(note)}
+          onConfirm={(result) => void confirmFeedback(result)}
         />
       )}
       {rerankDialog && (

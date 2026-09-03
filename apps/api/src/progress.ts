@@ -397,7 +397,11 @@ export async function getProgressDay(
   }>(
     `SELECT
        a.id,
-       COALESCE(a.company_name, c.name) AS company,
+       COALESCE(
+         a.company_name,
+         CASE WHEN p.source = 'simplify' THEN NULLIF(p.department, '') END,
+         c.name
+       ) AS company,
        COALESCE(a.title, p.title) AS title,
        a.applied_at AS "appliedAt"
      FROM applications a

@@ -6,7 +6,7 @@ Personal internship digest and application tracker. Ingests public ATS job board
 
 | Area | What you get |
 |------|----------------|
-| **Jobs** | Ranked digest board from Greenhouse, Lever, Ashby, and Simplify |
+| **Jobs** | Ranked digest board; **Mark as mismatch** (optional ranking feedback) or **Hide from board** (quiet / company bulk) → Mismatches |
 | **Applications** | Pipeline tracker (applied → interviewing → accepted / declined) |
 | **Tasks** | Unified action backlog — application, school, and personal |
 | **Interviews** | Step-based pipelines with countdowns and workspace |

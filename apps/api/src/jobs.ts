@@ -1,5 +1,6 @@
 import { pool } from "./db.js";
 import { parseHttpUrl } from "./parsing.js";
+import { DISPLAY_EMPLOYER_SQL } from "./rankContext.js";
 import { LOCATION_FITS } from "./rankPrompt.js";
 
 export const JOB_VIEWS = ["ranked", "mismatches", "unranked", "needs-description"] as const;
@@ -280,12 +281,14 @@ export type JobFeedbackRow = {
   id: string;
   kind: string;
   note: string | null;
+  teach: boolean;
 };
 
 export async function upsertJobFeedback(
   id: string,
   kind: string,
   note: string | null,
+  teach = true,
 ): Promise<JobFeedbackRow> {
   if (kind !== "like" && kind !== "dismiss") {
     throw new Error("kind must be like or dismiss");
@@ -294,15 +297,18 @@ export async function upsertJobFeedback(
   if (!posting.rows[0]) {
     throw new Error("Job not found");
   }
+  const teaching = kind === "dismiss" ? teach : true;
+  const storedNote = teaching ? note : null;
   const inserted = await pool.query<JobFeedbackRow>(
-    `INSERT INTO posting_feedback (posting_id, kind, note)
-     VALUES ($1, $2, $3)
+    `INSERT INTO posting_feedback (posting_id, kind, note, teach)
+     VALUES ($1, $2, $3, $4)
      ON CONFLICT (posting_id) DO UPDATE SET
        kind = EXCLUDED.kind,
        note = EXCLUDED.note,
+       teach = EXCLUDED.teach,
        created_at = now()
-     RETURNING id, kind, note`,
-    [id, kind, note],
+     RETURNING id, kind, note, teach`,
+    [id, kind, storedNote, teaching],
   );
   if (kind === "dismiss") {
     await pool.query(
@@ -321,6 +327,91 @@ export async function deleteJobFeedback(id: string): Promise<boolean> {
     [id],
   );
   return Boolean(result.rows[0]);
+}
+
+export type BoardSibling = {
+  id: string;
+  title: string;
+  company: string;
+  feedbackKind: string | null;
+};
+
+const RANKED_ON_BOARD = `
+  p.removed_from_board_at IS NULL
+  AND ${HAS_DESCRIPTION}
+  AND p.ranked_at IS NOT NULL
+  AND p.rank_eligible IS NOT FALSE
+  AND (a.id IS NULL OR a.status = 'todo')
+`;
+
+export async function listRankedBoardSiblings(id: string): Promise<{
+  employer: string;
+  jobs: BoardSibling[];
+}> {
+  const anchor = await pool.query<{ employer: string | null }>(
+    `SELECT ${DISPLAY_EMPLOYER_SQL} AS employer
+     FROM postings p
+     JOIN companies c ON c.id = p.company_id
+     WHERE p.id = $1`,
+    [id],
+  );
+  const employer = anchor.rows[0]?.employer?.trim() || null;
+  if (!employer) {
+    throw new Error("Job not found");
+  }
+
+  const { rows } = await pool.query<BoardSibling>(
+    `SELECT
+       p.id,
+       p.title,
+       ${DISPLAY_EMPLOYER_SQL} AS company,
+       f.kind AS "feedbackKind"
+     FROM postings p
+     JOIN companies c ON c.id = p.company_id
+     LEFT JOIN applications a ON a.posting_id = p.id
+     LEFT JOIN posting_feedback f ON f.posting_id = p.id
+     WHERE ${RANKED_ON_BOARD}
+       AND ${DISPLAY_EMPLOYER_SQL} = $1
+     ORDER BY p.rank_score DESC NULLS LAST, p.title ASC`,
+    [employer],
+  );
+
+  return { employer, jobs: rows };
+}
+
+export async function hideFromBoard(postingIds: string[]): Promise<{ hidden: number }> {
+  const ids = [...new Set(postingIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) {
+    throw new Error("postingIds required");
+  }
+
+  const { rows } = await pool.query<{
+    id: string;
+    employer: string | null;
+  }>(
+    `SELECT
+       p.id,
+       ${DISPLAY_EMPLOYER_SQL} AS employer
+     FROM postings p
+     JOIN companies c ON c.id = p.company_id
+     LEFT JOIN applications a ON a.posting_id = p.id
+     WHERE p.id = ANY($1::uuid[])
+       AND ${RANKED_ON_BOARD}`,
+    [ids],
+  );
+
+  if (rows.length !== ids.length) {
+    throw new Error("One or more jobs are not on the ranked board");
+  }
+  const employers = new Set(rows.map((row) => row.employer?.trim() || ""));
+  if (employers.size !== 1 || [...employers][0] === "") {
+    throw new Error("All roles must share the same display employer");
+  }
+
+  for (const id of ids) {
+    await upsertJobFeedback(id, "dismiss", null, false);
+  }
+  return { hidden: ids.length };
 }
 
 export async function assertJobRerankable(id: string): Promise<void> {

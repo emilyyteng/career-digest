@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 
 type Kind = "like" | "dismiss" | "unlike";
 
+export type FeedbackConfirm = {
+  note: string;
+  teach: boolean;
+};
+
 type Props = {
   kind: Kind;
   title: string;
   pending?: boolean;
   onCancel: () => void;
-  onConfirm: (note: string) => void;
+  onConfirm: (result: FeedbackConfirm) => void;
 };
 
 const COPY: Record<Kind, { heading: string; lede: string; confirm: string; note: string }> = {
@@ -19,7 +24,7 @@ const COPY: Record<Kind, { heading: string; lede: string; confirm: string; note:
   },
   dismiss: {
     heading: "Mark as mismatch?",
-    lede: "Marks this as a mismatch and moves it to the Mismatches tab. Your note is saved for future rankings and re-ingest won't re-rank it.",
+    lede: "Moves this posting to the Mismatches tab. With ranking feedback on, your note teaches future rankings and re-ingest won't re-rank it.",
     confirm: "Mark mismatch",
     note: "Why doesn't this fit? (optional)",
   },
@@ -40,6 +45,7 @@ export default function FeedbackDialog({
 }: Props) {
   const copy = COPY[kind];
   const [note, setNote] = useState("");
+  const [teach, setTeach] = useState(true);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -48,6 +54,12 @@ export default function FeedbackDialog({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
+
+  const showNote = Boolean(copy.note) && (kind !== "dismiss" || teach);
+  const lede =
+    kind === "dismiss" && !teach
+      ? "Hides this posting on the Mismatches tab without teaching the ranker. Re-ingest won't put it back on Ranked until you Rerank."
+      : copy.lede;
 
   return (
     <div
@@ -61,13 +73,26 @@ export default function FeedbackDialog({
           className="form"
           onSubmit={(event) => {
             event.preventDefault();
-            onConfirm(note.trim());
+            onConfirm({
+              note: kind === "dismiss" && !teach ? "" : note.trim(),
+              teach: kind === "dismiss" ? teach : true,
+            });
           }}
         >
           <h2 id="feedback-title">{copy.heading}</h2>
           <p className="muted lede">{title}</p>
-          <p className="muted lede">{copy.lede}</p>
-          {copy.note && (
+          <p className="muted lede">{lede}</p>
+          {kind === "dismiss" && (
+            <label className="feedback-teach-toggle">
+              <input
+                type="checkbox"
+                checked={teach}
+                onChange={(event) => setTeach(event.target.checked)}
+              />
+              Use as ranking feedback
+            </label>
+          )}
+          {showNote && (
             <textarea
               value={note}
               onChange={(event) => setNote(event.target.value)}
