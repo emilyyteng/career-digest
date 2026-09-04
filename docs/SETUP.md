@@ -145,16 +145,6 @@ CI runs the same on every push to `main` (see `.github/workflows/test.yml`).
 | Restore fails | Stop `dev:api` and any cron jobs writing to the DB first |
 | Home shows no name | Set `DIGEST_GREETING_NAME` in `.env` (optional) |
 
-## Demo mode (optional portfolio sandbox)
-
-For a public, linkable demo without personal data:
-
-1. Deploy API + web + Postgres somewhere that can run Node (e.g. **Railway**; set a hard ~$10/mo spend limit and billing alerts in the Railway dashboard). Static hosts like GitHub Pages cannot run this stack alone.
-2. Set `DEMO_MODE=true` on that deployment only (see `.env.example`). Do **not** enable this against your personal `career_digest` database.
-3. Optionally set `DEMO_RESET_HOUR_UTC` / `DEMO_RESET_MINUTE_UTC` (default `08:00` UTC).
-4. On boot the API seeds fictional companies/roles; it reseeds daily. Visitors can mutate data; ranking and board refresh stay gated.
-5. Confirm `GET /api/ops` includes `demo.enabled: true` and the UI shows the Demo mode banner.
-
 ## Local-only data
 
 These paths are gitignored and created at runtime:
