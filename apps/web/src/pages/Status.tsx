@@ -7,6 +7,7 @@ import {
   startLiveRankBacklog,
   type OpsStatus,
 } from "../api";
+import { demoGatedTitle, useDemoMode } from "../demoMode";
 import { formatStepWhen } from "../formatDate";
 
 function StatusBadge({ tone, children }: { tone: string; children: string }) {
@@ -43,7 +44,8 @@ export default function Status() {
   const [backupBusy, setBackupBusy] = useState(false);
   const [rankBacklogBusy, setRankBacklogBusy] = useState(false);
   const wasRefreshing = useRef(false);
-
+  const demo = useDemoMode();
+  const demoGateTitle = demoGatedTitle(demo);
   async function load() {
     const data = await getOpsStatus();
     setOps(data);
@@ -221,7 +223,8 @@ export default function Status() {
             <button
               type="button"
               className="secondary"
-              disabled={refreshBusy || board.status === "running"}
+              disabled={refreshBusy || board.status === "running" || demo.enabled}
+              title={demoGateTitle}
               onClick={() => void triggerRefresh()}
             >
               {board.status === "running" ? "Refreshing…" : "Run board refresh"}
@@ -306,8 +309,10 @@ export default function Status() {
                 rankBacklogBusy ||
                 liveBacklogActive ||
                 rankBatchActive ||
-                board.status === "running"
+                board.status === "running" ||
+                demo.enabled
               }
+              title={demoGateTitle}
               onClick={() => void triggerRankBacklog()}
             >
               {liveBacklogActive ? "Ranking backlog…" : "Rank full backlog"}

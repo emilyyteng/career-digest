@@ -14,7 +14,7 @@ Personal internship digest and application tracker. Ingests public ATS job board
 | **Home** | Digest status, today strip, needs attention, top job picks |
 | **Status** | Ops dashboard — ingest, scrape, rank, and backup health |
 
-**Tasks** is what you need to do; **Applications** is the tracker for roles you've already applied to (or are past the “must apply” stage). Domain terms are defined in [CONTEXT.md](./CONTEXT.md).
+**Tasks** is what you need to do; **Applications** is the tracker for roles you've already applied to (or are past the “must apply” stage).
 
 ## Stack
 
@@ -49,6 +49,21 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `/progress` | Today log, heatmaps, history |
 | `/status` | Pipeline / ops dashboard |
 
+## Demo mode (portfolio)
+
+Optional **Demo mode** boots a writable sandbox of **fictional** employers and roles (no real ATS brands or personal data). Live ranking, rerank, and board refresh stay visible but are API-gated; the UI shows a banner and disables those controls.
+
+```bash
+# In .env for the demo deployment only — never on your personal DB
+DEMO_MODE=true
+# DEMO_RESET_HOUR_UTC=8
+# DEMO_RESET_MINUTE_UTC=0
+```
+
+On API boot (and once per day at the UTC reset time), the database is wiped and re-seeded. Manual reset: `POST /api/demo/reset` (404 when Demo mode is off).
+
+**Hosting:** the full app needs the API + Postgres (not a static GitHub Pages site). A typical setup is **Railway** (web + API + Postgres) with a hard spend limit / billing alerts around **~$10/month**. Set `DEMO_MODE=true` only on that service.
+
 ## Commands
 
 | Command | Purpose |
@@ -78,9 +93,7 @@ npm run test
 ## Docs
 
 - [docs/SETUP.md](./docs/SETUP.md) — cold-clone setup and verification checklist
-- [CONTEXT.md](./CONTEXT.md) — domain glossary (Task, Needs attention, Activity, …)
 - [docs/CHANGELOG.md](./docs/CHANGELOG.md) — milestone development history
-- [docs/specs/](./docs/specs/) — feature specs ([README](./docs/specs/README.md))
 
 ## License
 

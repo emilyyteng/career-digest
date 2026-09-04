@@ -1,6 +1,7 @@
 import { access, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { getDemoStatus } from "./demoMode.js";
 import { getBackupStatus } from "./backupStatus.js";
 import { getBackupJob } from "./backupJob.js";
 import { pool } from "./db.js";
@@ -110,6 +111,7 @@ export type OpsStatusSnapshot = {
   backup: Awaited<ReturnType<typeof getBackupStatus>>;
   backupJob: Awaited<ReturnType<typeof getBackupJob>>;
   liveRankBacklog: Awaited<ReturnType<typeof getLiveRankBacklogJob>>;
+  demo: ReturnType<typeof getDemoStatus>;
 };
 
 export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
@@ -308,5 +310,6 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
     backup,
     backupJob: await getBackupJob(),
     liveRankBacklog: await getLiveRankBacklogJob(),
+    demo: getDemoStatus(),
   };
 }

@@ -21,6 +21,7 @@ import { isBlankJobDescription, isMismatch, RankBadges, RankNote } from "./RankM
 import JobFeedbackButtons from "./JobFeedbackButtons";
 import FeedbackDialog from "./FeedbackDialog";
 import HideFromBoardDialog from "./HideFromBoardDialog";
+import { demoGatedTitle, useDemoMode } from "../../demoMode";
 import { listReturnTo } from "../../navigationReturn";
 import MarkAppliedDialog from "./MarkAppliedDialog";
 import RerankDialog from "./RerankDialog";
@@ -28,6 +29,8 @@ import RerankDialog from "./RerankDialog";
 export default function JobDetail() {
   const { id } = useParams();
   const location = useLocation();
+  const demo = useDemoMode();
+  const demoGateTitle = demoGatedTitle(demo);
   const navigate = useNavigate();
   const [job, setJob] = useState<JobDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -327,7 +330,8 @@ export default function JobDetail() {
             <button
               type="button"
               className="secondary"
-              disabled={rerankBusy}
+              disabled={rerankBusy || demo.enabled}
+              title={demoGateTitle}
               onClick={() => setRerankOpen(true)}
             >
               {rerank?.status === "queued" || rerank?.status === "running" ? (

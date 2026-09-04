@@ -193,6 +193,10 @@ export type OpsStatus = {
     rankedError: number | null;
     halted: boolean | null;
   };
+  demo?: {
+    enabled: boolean;
+    resetsDailyAt: string;
+  };
 };
 
 export const getOpsStatus = () => parse<OpsStatus>(api("/api/ops"));

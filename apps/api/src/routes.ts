@@ -19,6 +19,9 @@ import {
 } from "./applications.js";
 import { pool } from "./db.js";
 import { getHomeDashboard } from "./home.js";
+import { DemoGatedError, assertDemoAllowsMutation, isDemoMode } from "./demoMode.js";
+import { markDemoResetDone } from "./demoScheduler.js";
+import { resetDemoDatabase } from "./demoSeed.js";
 import { getOpsStatus } from "./opsStatus.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
 import {
@@ -95,6 +98,15 @@ api.get("/board/refresh", async (_req, res) => {
 });
 
 api.post("/board/refresh", async (_req, res) => {
+  try {
+    assertDemoAllowsMutation();
+  } catch (err) {
+    if (err instanceof DemoGatedError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
   const result = await startBoardRefresh();
   res.status(result.started ? 202 : 409).json(result.snapshot);
 });
@@ -113,6 +125,15 @@ api.get("/rank/live-backlog", async (_req, res) => {
 });
 
 api.post("/rank/live-backlog", async (_req, res) => {
+  try {
+    assertDemoAllowsMutation();
+  } catch (err) {
+    if (err instanceof DemoGatedError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
   const result = await startLiveRankBacklogJob();
   res.status(result.started ? 202 : 409).json(result.snapshot);
 });
@@ -123,6 +144,21 @@ api.get("/rank/batch", async (_req, res) => {
 
 api.get("/ops", async (_req, res) => {
   res.json(await getOpsStatus());
+});
+
+api.post("/demo/reset", async (_req, res) => {
+  if (!isDemoMode()) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  try {
+    const summary = await resetDemoDatabase(pool);
+    markDemoResetDone();
+    res.json({ ok: true, summary });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
+  }
 });
 
 api.get("/home", async (_req, res) => {
@@ -215,6 +251,15 @@ api.post("/jobs/:id/feedback", async (req, res) => {
 });
 
 api.post("/jobs/:id/rerank", async (req, res) => {
+  try {
+    assertDemoAllowsMutation();
+  } catch (err) {
+    if (err instanceof DemoGatedError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
   const note = String((req.body as { note?: string }).note ?? "").trim();
   if (!note) {
     res.status(400).json({ error: "note is required" });

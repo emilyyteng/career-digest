@@ -24,7 +24,15 @@ CLAUDE.md
 skills-lock.json
 docs/agents/
 
-# Local dev spikes and scratch tickets (not needed to run the app)
-docs/specs/tickets/
+# Local agent glossary / ADRs / specs (not part of the public project surface)
+CONTEXT.md
+docs/adr/
+docs/specs/
+
+# Local demo walkthrough / presentation notes
+docs/DEMO*.md
+.scratch/
+
+# Local dev spikes (not needed to run the app)
 scripts/spike-*.py
 scripts/ats-survey.py

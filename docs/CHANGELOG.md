@@ -1,6 +1,14 @@
 # Changelog
 
-Development history for Career Digest. For domain terms, see [CONTEXT.md](../CONTEXT.md). For setup, see [docs/SETUP.md](./SETUP.md).
+Development history for Career Digest. For setup, see [docs/SETUP.md](./SETUP.md).
+
+## Milestone 10 — Portfolio Demo mode + docs hygiene
+
+Public, linkable demo without personal internship data.
+
+- **Demo mode** (`DEMO_MODE`): boot + daily UTC reset into a committed fictional seed; `POST /api/demo/reset`; `GET /api/ops` reports `demo`
+- Gates live board refresh, live rank backlog, and rerank (API 403 + UI disabled with tooltip); persistent Demo banner
+- Docs: gitignore local agent glossary/ADRs/specs; keep this changelog; Railway / ~$10-cap notes in README + SETUP
 
 ## Milestone 9 — Hide from board vs Mark as mismatch
 

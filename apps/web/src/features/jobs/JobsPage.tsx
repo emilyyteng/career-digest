@@ -24,6 +24,7 @@ import { invalidateListCache, readListCache, writeListCache } from "../../listCa
 import MarkAppliedDialog from "./MarkAppliedDialog";
 import FeedbackDialog from "./FeedbackDialog";
 import RerankDialog from "./RerankDialog";
+import { demoGatedTitle, useDemoMode } from "../../demoMode";
 import { listLinkState } from "../../navigationReturn";
 import LocationFilterChips from "./LocationFilterChips";
 
@@ -182,6 +183,8 @@ export default function Jobs() {
   const [appliedConfirm, setAppliedConfirm] = useState<JobCard | null>(null);
   const [rerankQueue, setRerankQueue] = useState<RerankQueueSnapshot["items"]>([]);
   const [searchInput, setSearchInput] = useState(query);
+  const demo = useDemoMode();
+  const demoGateTitle = demoGatedTitle(demo);
   const wasReranking = useRef(false);
   const wasRefreshing = useRef(false);
   const wasRanking = useRef(false);
@@ -545,7 +548,8 @@ export default function Jobs() {
         <button
           type="button"
           className="secondary refresh-btn"
-          disabled={refreshing}
+          disabled={refreshing || demo.enabled}
+          title={demoGateTitle}
           onClick={() => void refreshBoard()}
         >
           {refreshing && <span className="spinner" aria-hidden="true" />}
@@ -674,7 +678,8 @@ export default function Jobs() {
                   <button
                     type="button"
                     className="secondary"
-                    disabled={rerankBusy}
+                    disabled={rerankBusy || demo.enabled}
+                    title={demoGateTitle}
                     onClick={() => setRerankDialog(job)}
                   >
                     {rerank?.status === "queued" || rerank?.status === "running" ? (

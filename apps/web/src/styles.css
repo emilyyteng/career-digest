@@ -51,6 +51,17 @@ a:hover { color: var(--accent-purple-deep); }
 
 .shell { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
 
+.demo-banner {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent, #5b7cfa) 45%, transparent);
+  background: color-mix(in srgb, var(--accent, #5b7cfa) 14%, transparent);
+  color: var(--text, inherit);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
 .top {
   display: flex;
   justify-content: space-between;
