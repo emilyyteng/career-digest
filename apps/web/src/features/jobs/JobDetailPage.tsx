@@ -153,6 +153,8 @@ export default function JobDetail() {
         status: "applied",
         ...(notes ? { notes } : {}),
       });
+      invalidateListCache("applications:");
+      invalidateListCache("tasks:");
       navigate(`/applications/${result.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not mark applied");

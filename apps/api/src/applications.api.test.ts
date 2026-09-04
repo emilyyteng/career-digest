@@ -10,6 +10,46 @@ import {
 import { integrationReady } from "./test/integrationSetup.js";
 
 describe.skipIf(!integrationReady)("applications API", () => {
+  it("POST /api/applications applied for a posting completes its open application task", async () => {
+    const company = await seedCompany({ name: "Jobs Applied Co" });
+    const posting = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "jobs-applied-task",
+      companyId: company.id,
+      title: "SWE Intern",
+      url: "https://boards.greenhouse.io/jobsapplied/jobs/1",
+    });
+
+    const taskRes = await apiClient()
+      .post("/api/tasks/from-posting")
+      .send({ postingId: posting.id })
+      .expect(201);
+    const taskId = taskRes.body.id as string;
+
+    const openBefore = await apiClient().get("/api/tasks?view=open").expect(200);
+    expect(openBefore.body.tasks.some((row: { id: string }) => row.id === taskId)).toBe(true);
+
+    await apiClient()
+      .post("/api/applications")
+      .send({ postingId: posting.id, status: "applied", notes: "Submitted" })
+      .expect(201);
+
+    const openAfter = await apiClient().get("/api/tasks?view=open").expect(200);
+    expect(openAfter.body.tasks.some((row: { id: string }) => row.id === taskId)).toBe(false);
+
+    const taskRow = await pool.query<{ status: string }>(
+      `SELECT status FROM tasks WHERE id = $1`,
+      [taskId],
+    );
+    expect(taskRow.rows[0]?.status).toBe("completed");
+
+    const app = await pool.query<{ status: string }>(
+      `SELECT status FROM applications WHERE posting_id = $1`,
+      [posting.id],
+    );
+    expect(app.rows[0]?.status).toBe("applied");
+  });
+
   it("GET /api/applications lists tracker applications and excludes todo", async () => {
     await seedManualApplication({ status: "todo", company: "Todo Co", title: "PM Intern" });
     await seedManualApplication({ status: "applied", company: "Applied Co", title: "SWE Intern" });

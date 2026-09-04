@@ -455,6 +455,7 @@ export default function Jobs() {
         ...(notes ? { notes } : {}),
       });
       invalidateListCache("applications:");
+      invalidateListCache("tasks:");
       const data = await reload();
       if (data.jobs.length === 0 && page > 1) {
         setPage(page - 1);

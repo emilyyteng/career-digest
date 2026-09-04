@@ -5,7 +5,7 @@ import { resolveThreadsForApplication } from "./interviews.js";
 import { applicationResolutionFromStatus } from "./interviewStatuses.js";
 import { parseDueAt, parseHttpUrl, resolveAppliedAt } from "./parsing.js";
 import type { ApplicationStatus } from "./statuses.js";
-import { deleteTask } from "./tasks.js";
+import { completeOpenApplicationTasksForApplication, deleteTask } from "./tasks.js";
 
 type Queryable = Pool | PoolClient;
 
@@ -225,7 +225,11 @@ export async function createApplication(
        RETURNING id`,
       [input.postingId, input.status, input.notes ?? null, appliedAt, dueAt],
     );
-    return { id: inserted.rows[0]!.id };
+    const id = inserted.rows[0]!.id;
+    if (input.status !== "todo") {
+      await completeOpenApplicationTasksForApplication(db, id);
+    }
+    return { id };
   }
 
   if (!input.company?.trim() || !input.title?.trim()) {
@@ -250,7 +254,11 @@ export async function createApplication(
       dueAt,
     ],
   );
-  return { id: inserted.rows[0]!.id };
+  const id = inserted.rows[0]!.id;
+  if (input.status !== "todo") {
+    await completeOpenApplicationTasksForApplication(db, id);
+  }
+  return { id };
 }
 
 export type PatchApplicationInput = {
@@ -384,6 +392,9 @@ export async function patchApplication(
     const resolution = applicationResolutionFromStatus(status);
     if (statusChanged && resolution) {
       await resolveThreadsForApplication(client, id, resolution);
+    }
+    if (status !== "todo") {
+      await completeOpenApplicationTasksForApplication(client, id);
     }
     await client.query("COMMIT");
     return { id: result.rows[0]!.id };

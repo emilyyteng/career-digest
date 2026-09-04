@@ -621,6 +621,23 @@ export async function deleteTaskByPostingId(db: Queryable, postingId: string): P
   return deleteTask(db, rows[0].id);
 }
 
+/** When a tracker application leaves todo (Applied+), close any open application task. */
+export async function completeOpenApplicationTasksForApplication(
+  db: Queryable,
+  applicationId: string,
+): Promise<void> {
+  await db.query(
+    `UPDATE tasks
+     SET status = 'completed',
+         completed_at = COALESCE(completed_at, now()),
+         updated_at = now()
+     WHERE application_id = $1
+       AND status = 'open'
+       AND category = 'application'`,
+    [applicationId],
+  );
+}
+
 export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskInput | null {
   const category = typeof body.category === "string" ? body.category : "";
   if (!isTaskCategory(category)) return null;
