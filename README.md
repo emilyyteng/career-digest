@@ -59,6 +59,8 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `npm run rank` | Rank via OpenAI Batch API |
 | `npm run rank:live` | Rank synchronously (rate-limited) |
 | `npm run board-refresh` | Ingest + scrape + light live rank |
+| `npm run build` | Build the web UI for production |
+| `npm start` | Serve API + built UI on `PORT` (default 3000) |
 | `npm run test` | API unit + integration tests |
 | `npm run backup` / `npm run restore` | Logical DB backup to `backups/` (stop dev servers before restore) |
 | `npm run discover-boards` | Diff Simplify ATS URLs vs `companies.ts` |

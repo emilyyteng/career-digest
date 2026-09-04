@@ -10,7 +10,11 @@ import { ensureUploadDir } from "./routes.js";
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 loadEnv({ path: path.join(root, ".env") });
 
-const app = createApp();
+const webDistPath = process.env.WEB_DIST_PATH?.trim()
+  ? path.resolve(process.env.WEB_DIST_PATH.trim())
+  : path.join(root, "apps/web/dist");
+
+const app = createApp({ webDistPath });
 const port = Number(process.env.PORT ?? 3000);
 
 await migrate();

@@ -1,7 +1,10 @@
 {
   "name": "career-digest",
   "private": true,
-  "workspaces": ["apps/api", "apps/web"],
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
   "scripts": {
     "dev:api": "npm run dev -w @career-digest/api",
     "dev:web": "npm run dev -w @career-digest/web",
@@ -20,6 +23,10 @@
     "restore": "bash scripts/restore-db.sh",
     "cron:install-backup": "bash scripts/install-daily-backup.sh",
     "test": "npm run test -w @career-digest/api",
-    "test:watch": "npm run test:watch -w @career-digest/api"
+    "test:watch": "npm run test:watch -w @career-digest/api",
+    "build": "npm run build -w @career-digest/web",
+    "start": "npm run start -w @career-digest/api",
+    "build:web": "npm run build -w @career-digest/web",
+    "build:api": "npm run build -w @career-digest/api"
   }
 }

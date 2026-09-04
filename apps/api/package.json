@@ -14,7 +14,9 @@
     "discover-boards": "tsx src/discoverBoards.ts",
     "merge-postings": "tsx src/mergeDuplicatePostings.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build": "node -e \"console.log(\\\"api: no emit step; start uses tsx\\\")\"",
+    "start": "tsx src/index.ts"
   },
   "dependencies": {
     "@types/multer": "^2.2.0",
@@ -24,7 +26,8 @@
     "multer": "^2.2.0",
     "openai": "^7.7.0",
     "pg": "^8.13.1",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "tsx": "^4.19.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
