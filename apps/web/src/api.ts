@@ -77,6 +77,7 @@ export const getJobs = (
     view?: JobView;
     sort?: "rank" | "published" | "updated";
     loc?: string | null;
+    source?: string | null;
   },
 ) => {
   const params = new URLSearchParams();
@@ -86,6 +87,7 @@ export const getJobs = (
   if (opts?.view && opts.view !== "ranked") params.set("view", opts.view);
   if (opts?.sort && opts.sort !== "rank") params.set("sort", opts.sort);
   if (opts?.loc) params.set("loc", opts.loc);
+  if (opts?.source) params.set("source", opts.source);
   return parse<JobsPage>(api(`/api/jobs?${params}`));
 };
 

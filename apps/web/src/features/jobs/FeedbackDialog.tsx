@@ -45,7 +45,7 @@ export default function FeedbackDialog({
 }: Props) {
   const copy = COPY[kind];
   const [note, setNote] = useState("");
-  const [teach, setTeach] = useState(true);
+  const [teach, setTeach] = useState(false);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -84,12 +84,14 @@ export default function FeedbackDialog({
           <p className="muted lede">{lede}</p>
           {kind === "dismiss" && (
             <label className="feedback-teach-toggle">
-              <input
-                type="checkbox"
-                checked={teach}
-                onChange={(event) => setTeach(event.target.checked)}
-              />
-              Use as ranking feedback
+              <span className="feedback-teach-toggle-control">
+                <input
+                  type="checkbox"
+                  checked={teach}
+                  onChange={(event) => setTeach(event.target.checked)}
+                />
+                Use as ranking feedback
+              </span>
             </label>
           )}
           {showNote && (

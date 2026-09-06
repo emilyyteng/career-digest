@@ -43,8 +43,9 @@ function jobsListCacheKey(
   view: JobView,
   sort: JobSort,
   loc: string | null,
+  source: string | null,
 ): string {
-  return `jobs:${view}:${sort}:${loc ?? ""}:${page}:${query}`;
+  return `jobs:${view}:${sort}:${loc ?? ""}:${source ?? ""}:${page}:${query}`;
 }
 
 const TABS: { id: JobView; label: string }[] = [
@@ -62,6 +63,24 @@ const EMPTY_COUNTS: Record<JobView, number> = {
 };
 
 type JobSort = "rank" | "published" | "updated";
+
+const JOB_SOURCE_OPTIONS = [
+  { value: "simplify", label: "Simplify" },
+  { value: "greenhouse", label: "Greenhouse" },
+  { value: "lever", label: "Lever" },
+  { value: "ashby", label: "Ashby" },
+  { value: "oracle", label: "Oracle" },
+  { value: "smartrecruiters", label: "SmartRecruiters" },
+] as const;
+
+type JobSource = (typeof JOB_SOURCE_OPTIONS)[number]["value"];
+
+function parseSource(value: string | null): JobSource | null {
+  if (!value) return null;
+  return JOB_SOURCE_OPTIONS.some((opt) => opt.value === value)
+    ? (value as JobSource)
+    : null;
+}
 
 function parseView(value: string | null): JobView {
   if (
@@ -159,7 +178,15 @@ export default function Jobs() {
   const sort = parseSort(params.get("sort"), view);
   const page = Math.max(1, Number(params.get("page") || 1));
   const locationFilter = view === "ranked" ? params.get("loc") : null;
-  const initialCacheKey = jobsListCacheKey(query, page, view, sort, locationFilter);
+  const sourceFilter = parseSource(params.get("source"));
+  const initialCacheKey = jobsListCacheKey(
+    query,
+    page,
+    view,
+    sort,
+    locationFilter,
+    sourceFilter,
+  );
   const initialSnapshot = readListCache<JobsListSnapshot>(initialCacheKey);
   const [jobs, setJobs] = useState<JobCard[]>(() => initialSnapshot?.jobs ?? []);
   const [count, setCount] = useState(() => initialSnapshot?.count ?? 0);
@@ -197,6 +224,7 @@ export default function Jobs() {
     nextQuery = query,
     nextSort = sort,
     nextLoc = locationFilter,
+    nextSource = sourceFilter,
   ) {
     const nextParams = new URLSearchParams();
     if (nextQuery) nextParams.set("q", nextQuery);
@@ -206,6 +234,7 @@ export default function Jobs() {
       nextParams.set("sort", nextSort);
     }
     if (nextView === "ranked" && nextLoc) nextParams.set("loc", nextLoc);
+    if (nextSource) nextParams.set("source", nextSource);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
     return nextParams;
   }
@@ -225,11 +254,19 @@ export default function Jobs() {
   }
 
   async function reload(nextPage = page) {
-    const cacheKey = jobsListCacheKey(query, nextPage, view, sort, locationFilter);
+    const cacheKey = jobsListCacheKey(
+      query,
+      nextPage,
+      view,
+      sort,
+      locationFilter,
+      sourceFilter,
+    );
     const data = await getJobs(query, nextPage, PAGE_SIZE, {
       view,
       sort,
       loc: locationFilter,
+      source: sourceFilter,
     });
     applyJobsData(data, cacheKey);
     return data;
@@ -246,11 +283,18 @@ export default function Jobs() {
       setParams(jobsParams(1, view, trimmed), { replace: true });
     }, 200);
     return () => window.clearTimeout(timer);
-  }, [searchInput, query, view, sort, setParams]);
+  }, [searchInput, query, view, sort, locationFilter, sourceFilter, setParams]);
 
   useEffect(() => {
     let cancelled = false;
-    const cacheKey = jobsListCacheKey(query, page, view, sort, locationFilter);
+    const cacheKey = jobsListCacheKey(
+      query,
+      page,
+      view,
+      sort,
+      locationFilter,
+      sourceFilter,
+    );
     const cached = readListCache<JobsListSnapshot>(cacheKey);
     if (cached) {
       setJobs(cached.jobs);
@@ -262,7 +306,12 @@ export default function Jobs() {
       setLoading(true);
     }
 
-    getJobs(query, page, PAGE_SIZE, { view, sort, loc: locationFilter })
+    getJobs(query, page, PAGE_SIZE, {
+      view,
+      sort,
+      loc: locationFilter,
+      source: sourceFilter,
+    })
       .then((data) => {
         if (cancelled) return;
         applyJobsData(data, cacheKey);
@@ -277,7 +326,7 @@ export default function Jobs() {
     return () => {
       cancelled = true;
     };
-  }, [query, page, view, sort, locationFilter]);
+  }, [query, page, view, sort, locationFilter, sourceFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -389,6 +438,10 @@ export default function Jobs() {
 
   function setSort(next: JobSort) {
     setParams(jobsParams(1, view, query, next));
+  }
+
+  function setSourceFilter(next: JobSource | null) {
+    setParams(jobsParams(1, view, query, sort, locationFilter, next));
   }
 
   function setPage(next: number) {
@@ -588,6 +641,22 @@ export default function Jobs() {
           {view === "ranked" && <option value="rank">Sort: rank</option>}
           <option value="published">Sort: published</option>
           <option value="updated">Sort: updated</option>
+        </select>
+        <select
+          className="sort jobs-source-select"
+          aria-label="Filter by source"
+          value={sourceFilter ?? ""}
+          onChange={(event) => {
+            const next = event.target.value;
+            setSourceFilter(parseSource(next || null));
+          }}
+        >
+          <option value="">Source: all</option>
+          {JOB_SOURCE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              Source: {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 

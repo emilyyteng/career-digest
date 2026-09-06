@@ -990,13 +990,33 @@ a.external .ext-icon { font-size: 0.75rem; }
   border-color: var(--accent-pink);
 }
 
+.form label.feedback-teach-toggle,
 .feedback-teach-toggle {
-  display: inline-flex;
+  display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 0.45rem;
+  width: 100%;
   font-size: 0.88rem;
   color: var(--text-muted);
   margin: 0.15rem 0 0.35rem;
+  cursor: pointer;
+}
+.feedback-teach-toggle-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.feedback-teach-toggle input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  accent-color: var(--accent-mint-deep);
 }
 
 .hide-board-modal {
@@ -1619,8 +1639,9 @@ button.hide-board-remove:hover:not(:disabled) {
   margin-bottom: 1rem;
 }
 .jobs-search-input {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
+  max-width: none;
   font-family: var(--font-sans);
   font-size: 0.9rem;
   padding: 0.48rem 0.75rem;
@@ -1634,9 +1655,13 @@ button.hide-board-remove:hover:not(:disabled) {
   border-color: var(--accent-blue);
   box-shadow: 0 0 0 2px rgba(123, 163, 201, 0.25);
 }
-.jobs-sort-select {
+.jobs-sort-select,
+.jobs-source-select {
   flex: 0 0 auto;
   min-width: 9rem;
+}
+.jobs-source-select {
+  min-width: 11.5rem;
 }
 
 .card-hit {

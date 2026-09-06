@@ -45,6 +45,38 @@ describe.skipIf(!integrationReady)("interviews API", () => {
     expect(list.body.actionRequired.length + list.body.awaiting.length).toBeGreaterThan(0);
   });
 
+  it("PATCH /api/interviews/:threadId/steps/:stepId can set a scheduled time on a phone step", async () => {
+    const application = await seedManualApplication({ status: "interviewing" });
+
+    const createRes = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [application.id],
+        step: { title: "Phone screen", kind: "phone" },
+      })
+      .expect(201);
+
+    const threadId = createRes.body.id as string;
+    const detailBefore = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    const stepId = detailBefore.body.steps[0].id as string;
+    expect(detailBefore.body.steps[0].status).toBe("pending");
+
+    const scheduledAt = "2026-09-10T18:30:00.000Z";
+    await apiClient()
+      .patch(`/api/interviews/${threadId}/steps/${stepId}`)
+      .send({ scheduledAt, title: "Recruiter phone screen" })
+      .expect(200);
+
+    const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    expect(detail.body.steps[0]).toMatchObject({
+      id: stepId,
+      title: "Recruiter phone screen",
+      kind: "phone",
+      status: "scheduled",
+    });
+    expect(new Date(detail.body.steps[0].scheduledAt).toISOString()).toBe(scheduledAt);
+  });
+
   it("POST /api/interviews/:threadId/steps adds another step after closing the current one", async () => {
     const application = await seedManualApplication({ status: "interviewing" });
 

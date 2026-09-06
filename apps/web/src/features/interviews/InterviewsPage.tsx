@@ -65,16 +65,26 @@ function ThreadCard({
         </Link>
         {linked && <p className="interview-linked-roles muted">{linked}</p>}
         {step && (
-          <p className="interview-active-step">
-            <span className="interview-active-step-label">Active step</span>
-            {stepActionLabel(step)}
-          </p>
+          <>
+            <p className="interview-active-step">
+              <span className="interview-active-step-label">Active step</span>
+              {stepActionLabel(step)}
+            </p>
+            {step.notes && (
+              <p className="muted interview-step-notes">{step.notes}</p>
+            )}
+          </>
         )}
         {awaitingStep && !step && (
-          <p className="interview-active-step">
-            <span className="interview-active-step-label">Waiting on them</span>
-            {stepActionLabel(awaitingStep)}
-          </p>
+          <>
+            <p className="interview-active-step">
+              <span className="interview-active-step-label">Waiting on them</span>
+              {stepActionLabel(awaitingStep)}
+            </p>
+            {awaitingStep.notes && (
+              <p className="muted interview-step-notes">{awaitingStep.notes}</p>
+            )}
+          </>
         )}
         {deadlineLabel && (
           <div className="interview-deadline-block">

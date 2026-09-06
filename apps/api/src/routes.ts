@@ -193,6 +193,7 @@ api.get("/jobs", async (req, res) => {
       pageSize: req.query.pageSize,
       page: req.query.page,
       loc: String(req.query.loc ?? ""),
+      source: String(req.query.source ?? ""),
     }),
   );
 });

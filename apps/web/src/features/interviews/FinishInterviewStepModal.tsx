@@ -1,13 +1,9 @@
 import { useState } from "react";
-
-const KIND_OPTIONS = [
-  "assessment",
-  "phone",
-  "technical",
-  "onsite",
-  "offer",
-  "custom",
-] as const;
+import InterviewStepFields, {
+  emptyInterviewStepFields,
+  interviewStepFieldsToPayload,
+  type InterviewStepFieldValues,
+} from "./InterviewStepFields";
 
 export type FinishStepOutcome = "waiting" | "round_done";
 
@@ -15,7 +11,7 @@ export type FinishStepMode = "actionable" | "awaiting_response";
 
 export type FinishStepResult = {
   outcome: FinishStepOutcome;
-  nextStep?: { title: string; kind: string };
+  nextStep?: ReturnType<typeof interviewStepFieldsToPayload>;
 };
 
 type Props = {
@@ -36,18 +32,21 @@ export default function FinishInterviewStepModal({
   const awaitingResponse = mode === "awaiting_response";
   const [outcome, setOutcome] = useState<FinishStepOutcome>("round_done");
   const [addNextStep, setAddNextStep] = useState(awaitingResponse);
-  const [nextTitle, setNextTitle] = useState("");
-  const [nextKind, setNextKind] = useState<string>("technical");
+  const [nextFields, setNextFields] = useState<InterviewStepFieldValues>(() =>
+    emptyInterviewStepFields("technical"),
+  );
 
   const nextStepInvalid =
-    (awaitingResponse || outcome === "round_done") && addNextStep && !nextTitle.trim();
+    (awaitingResponse || outcome === "round_done") &&
+    addNextStep &&
+    !nextFields.title.trim();
 
   async function submit() {
     if (nextStepInvalid) return;
     const resolvedOutcome: FinishStepOutcome = awaitingResponse ? "round_done" : outcome;
     const result: FinishStepResult = { outcome: resolvedOutcome };
-    if (resolvedOutcome === "round_done" && addNextStep && nextTitle.trim()) {
-      result.nextStep = { title: nextTitle.trim(), kind: nextKind };
+    if (resolvedOutcome === "round_done" && addNextStep && nextFields.title.trim()) {
+      result.nextStep = interviewStepFieldsToPayload(nextFields);
     }
     await onFinish(result);
   }
@@ -129,27 +128,13 @@ export default function FinishInterviewStepModal({
           </label>
           {addNextStep && (
             <div className="finish-step-add-fields">
-              <label>
-                Next step title
-                <input
-                  value={nextTitle}
-                  disabled={busy}
-                  onChange={(event) => setNextTitle(event.target.value)}
-                  placeholder="e.g. Technical interview"
-                />
-              </label>
-              <label>
-                Type
-                <select
-                  value={nextKind}
-                  disabled={busy}
-                  onChange={(event) => setNextKind(event.target.value)}
-                >
-                  {KIND_OPTIONS.map((kind) => (
-                    <option key={kind} value={kind}>{kind}</option>
-                  ))}
-                </select>
-              </label>
+              <InterviewStepFields
+                values={nextFields}
+                onChange={setNextFields}
+                disabled={busy}
+                titleLabel="Next step title"
+                titleId="finish-next-title-error"
+              />
             </div>
           )}
         </div>

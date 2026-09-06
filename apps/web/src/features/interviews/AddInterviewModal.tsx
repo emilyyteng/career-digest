@@ -12,16 +12,11 @@ import {
   getInterviewPickerApplications,
   type InterviewPickerApplication,
 } from "../../api";
-import { combineDateAndTime } from "../../formatDate";
-
-const TYPE_OPTIONS = [
-  { value: "assessment", label: "Assessment", mode: "due" as const },
-  { value: "phone", label: "Phone screen", mode: "scheduled" as const },
-  { value: "technical", label: "Technical", mode: "scheduled" as const },
-  { value: "onsite", label: "Onsite", mode: "scheduled" as const },
-  { value: "offer", label: "Offer", mode: "scheduled" as const },
-  { value: "custom", label: "Custom", mode: "due" as const },
-];
+import InterviewStepFields, {
+  emptyInterviewStepFields,
+  interviewStepFieldsToPayload,
+  type InterviewStepFieldValues,
+} from "./InterviewStepFields";
 
 type FieldErrors = {
   applications?: string;
@@ -37,23 +32,13 @@ export type AddInterviewModalHandle = {
   requestClose: () => void;
 };
 
-function typeMode(kind: string): "due" | "scheduled" {
-  const opt = TYPE_OPTIONS.find((o) => o.value === kind);
-  return opt?.mode ?? "due";
-}
-
 const AddInterviewModal = forwardRef<AddInterviewModalHandle, Props>(
   function AddInterviewModal({ onCreated, onCancel }, ref) {
   const [apps, setApps] = useState<InterviewPickerApplication[]>([]);
   const [selected, setSelected] = useState<InterviewPickerApplication[]>([]);
-  const [kind, setKind] = useState("assessment");
-  const [title, setTitle] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [dueTime, setDueTime] = useState("");
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
-  const [url, setUrl] = useState("");
-  const [notes, setNotes] = useState("");
+  const [stepFields, setStepFields] = useState<InterviewStepFieldValues>(() =>
+    emptyInterviewStepFields("assessment"),
+  );
   const [query, setQuery] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -63,18 +48,16 @@ const AddInterviewModal = forwardRef<AddInterviewModalHandle, Props>(
   const [saving, setSaving] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  const scheduleMode = typeMode(kind);
-
   const dirty =
     selected.length > 0 ||
-    kind !== "assessment" ||
-    title.trim() !== "" ||
-    dueDate !== "" ||
-    dueTime !== "" ||
-    scheduledDate !== "" ||
-    scheduledTime !== "" ||
-    url.trim() !== "" ||
-    notes.trim() !== "";
+    stepFields.kind !== "assessment" ||
+    stepFields.title.trim() !== "" ||
+    stepFields.dueDate !== "" ||
+    stepFields.dueTime !== "" ||
+    stepFields.scheduledDate !== "" ||
+    stepFields.scheduledTime !== "" ||
+    stepFields.url.trim() !== "" ||
+    stepFields.notes.trim() !== "";
 
   function requestClose() {
     if (!onCancel) return;
@@ -149,7 +132,7 @@ const AddInterviewModal = forwardRef<AddInterviewModalHandle, Props>(
     if (selected.length === 0) {
       errors.applications = "Select at least one application.";
     }
-    if (!title.trim()) {
+    if (!stepFields.title.trim()) {
       errors.title = "Title is required.";
     }
     return errors;
@@ -167,24 +150,11 @@ const AddInterviewModal = forwardRef<AddInterviewModalHandle, Props>(
     setSubmitError(null);
     setFieldErrors({});
     try {
-      const dueAt =
-        scheduleMode === "due" ? combineDateAndTime(dueDate, dueTime) : null;
-      const scheduledAt =
-        scheduleMode === "scheduled"
-          ? combineDateAndTime(scheduledDate, scheduledTime)
-          : null;
       const applicationIds = selected.map((a) => a.id);
       const created = await createInterview({
         applicationIds,
         primaryApplicationId: applicationIds[0],
-        step: {
-          kind,
-          title: title.trim(),
-          dueAt,
-          scheduledAt,
-          url: url.trim() || null,
-          notes: notes.trim() || null,
-        },
+        step: interviewStepFieldsToPayload(stepFields),
       });
       onCreated(created.id);
     } catch (err) {
@@ -308,105 +278,17 @@ const AddInterviewModal = forwardRef<AddInterviewModalHandle, Props>(
         )}
       </div>
 
-      <div className="form-field">
-        <label>
-          <span className="form-field-label">
-            Type <span className="required-mark" aria-hidden="true">*</span>
-          </span>
-          <select
-            value={kind}
-            onChange={(event) => setKind(event.target.value)}
-            required
-          >
-            {TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className={`form-field ${fieldErrors.title ? "field-invalid" : ""}`}>
-        <label>
-          <span className="form-field-label">
-            Title <span className="required-mark" aria-hidden="true">*</span>
-          </span>
-          <input
-            value={title}
-            onChange={(event) => {
-              setTitle(event.target.value);
-              if (fieldErrors.title) {
-                setFieldErrors((e) => ({ ...e, title: undefined }));
-              }
-            }}
-            placeholder="CodeSignal, HM chat, …"
-            aria-invalid={Boolean(fieldErrors.title)}
-            aria-describedby={fieldErrors.title ? "title-error" : undefined}
-          />
-        </label>
-        {fieldErrors.title && (
-          <p className="field-error-message" id="title-error" role="alert">
-            {fieldErrors.title}
-          </p>
-        )}
-      </div>
-
-      {scheduleMode === "due" ? (
-        <div className="interview-datetime-row">
-          <label>
-            <span className="form-field-label">Due date</span>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-            />
-          </label>
-          <label>
-            <span className="form-field-label">Due time</span>
-            <input
-              type="time"
-              value={dueTime}
-              onChange={(event) => setDueTime(event.target.value)}
-            />
-          </label>
-        </div>
-      ) : (
-        <div className="interview-datetime-row">
-          <label>
-            <span className="form-field-label">Scheduled date</span>
-            <input
-              type="date"
-              value={scheduledDate}
-              onChange={(event) => setScheduledDate(event.target.value)}
-            />
-          </label>
-          <label>
-            <span className="form-field-label">Scheduled time</span>
-            <input
-              type="time"
-              value={scheduledTime}
-              onChange={(event) => setScheduledTime(event.target.value)}
-            />
-          </label>
-        </div>
-      )}
-
-      <label>
-        <span className="form-field-label">Link</span>
-        <input
-          type="url"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          placeholder={
-            scheduleMode === "due"
-              ? "Assessment or portal URL"
-              : "Meeting or calendar URL"
+      <InterviewStepFields
+        values={stepFields}
+        titleError={fieldErrors.title}
+        titleId="title-error"
+        onChange={(next) => {
+          setStepFields(next);
+          if (fieldErrors.title && next.title.trim()) {
+            setFieldErrors((e) => ({ ...e, title: undefined }));
           }
-        />
-      </label>
-      <label>
-        <span className="form-field-label">Notes</span>
-        <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
-      </label>
+        }}
+      />
       <div className="form-actions">
         {onCancel && (
           <button type="button" className="secondary" onClick={requestClose} disabled={saving}>

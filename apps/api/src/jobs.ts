@@ -2,6 +2,7 @@ import { pool } from "./db.js";
 import { parseHttpUrl } from "./parsing.js";
 import { DISPLAY_EMPLOYER_SQL } from "./rankContext.js";
 import { LOCATION_FITS } from "./rankPrompt.js";
+import type { Source } from "./types.js";
 
 export const JOB_VIEWS = ["ranked", "mismatches", "unranked", "needs-description"] as const;
 export type JobView = (typeof JOB_VIEWS)[number];
@@ -19,12 +20,33 @@ export function parseJobView(raw: string): JobView {
   return "ranked";
 }
 
+export const JOB_SOURCES = [
+  "simplify",
+  "greenhouse",
+  "lever",
+  "ashby",
+  "oracle",
+  "smartrecruiters",
+] as const satisfies readonly Source[];
+
+export function parseJobSource(raw: string): Source | null {
+  const value = raw.trim().toLowerCase();
+  if ((JOB_SOURCES as readonly string[]).includes(value)) return value as Source;
+  return null;
+}
+
 function parseLocationFitFilter(raw: string): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
   if (trimmed === "unset") return "unset";
   if ((LOCATION_FITS as readonly string[]).includes(trimmed)) return trimmed;
   return null;
+}
+
+function jobSourceFilter(source: Source | null, params: unknown[]): string {
+  if (!source) return "";
+  params.push(source);
+  return `AND p.source = $${params.length}`;
 }
 
 function jobLocationFitFilter(loc: string | null, params: unknown[]): string {
@@ -47,7 +69,10 @@ function jobViewFilter(view: JobView): string {
   }
 }
 
-async function jobRankedLocationCounts(q: string): Promise<Record<string, number>> {
+async function jobRankedLocationCounts(
+  q: string,
+  source: Source | null,
+): Promise<Record<string, number>> {
   const params: unknown[] = [];
   let search = "";
   if (q) {
@@ -59,6 +84,7 @@ async function jobRankedLocationCounts(q: string): Promise<Record<string, number
       OR COALESCE(p.location, '') ILIKE $1
     )`;
   }
+  const sourceFilterSql = jobSourceFilter(source, params);
   const result = await pool.query<{ fit: string; count: number }>(
     `SELECT
        COALESCE(p.rank_location_fit, 'unset') AS fit,
@@ -69,6 +95,7 @@ async function jobRankedLocationCounts(q: string): Promise<Record<string, number
      WHERE ${JOBS_LIST_BASE}
        ${jobViewFilter("ranked")}
        ${search}
+       ${sourceFilterSql}
      GROUP BY COALESCE(p.rank_location_fit, 'unset')`,
     params,
   );
@@ -123,6 +150,7 @@ export type ListJobsParams = {
   pageSize?: unknown;
   page?: unknown;
   loc?: string;
+  source?: string;
 };
 
 export async function listJobs(params: ListJobsParams): Promise<{
@@ -144,6 +172,7 @@ export async function listJobs(params: ListJobsParams): Promise<{
   const offset = (page - 1) * pageSize;
   const locationFit =
     view === "ranked" ? parseLocationFitFilter(String(params.loc ?? "")) : null;
+  const source = parseJobSource(String(params.source ?? ""));
   const queryParams: unknown[] = [];
   let search = "";
   if (q) {
@@ -155,6 +184,7 @@ export async function listJobs(params: ListJobsParams): Promise<{
       OR COALESCE(p.location, '') ILIKE $1
     )`;
   }
+  const sourceFilterSql = jobSourceFilter(source, queryParams);
   const locationFilterSql = jobLocationFitFilter(locationFit, queryParams);
   const effectiveSort = view === "ranked" ? sort : sort === "rank" ? "published" : sort;
   const orderBy =
@@ -206,6 +236,7 @@ export async function listJobs(params: ListJobsParams): Promise<{
      WHERE ${JOBS_LIST_BASE}
        ${jobViewFilter(view)}
        ${search}
+       ${sourceFilterSql}
        ${locationFilterSql}
      ORDER BY
        ${orderBy}
@@ -215,7 +246,8 @@ export async function listJobs(params: ListJobsParams): Promise<{
   const count = result.rows[0]?.totalCount ?? 0;
   const jobs = result.rows.map(({ totalCount: _total, ...job }) => job);
   const counts = await jobTabCounts();
-  const locationCounts = view === "ranked" ? await jobRankedLocationCounts(q) : undefined;
+  const locationCounts =
+    view === "ranked" ? await jobRankedLocationCounts(q, source) : undefined;
   return { count, page, pageSize, view, counts, locationCounts, jobs };
 }
 

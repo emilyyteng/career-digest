@@ -656,15 +656,19 @@ export async function patchInterviewStep(
   );
   if (!current.rows[0]) throw new Error("Step not found");
 
-  let status = current.rows[0].status;
-  if (body.status && isStepStatus(body.status)) {
-    status = body.status;
-  }
-
   const dueProvided = body.dueAt !== undefined;
   const schedProvided = body.scheduledAt !== undefined;
   const dueAt = dueProvided ? parseOptionalTimestamp(body.dueAt) : undefined;
   const scheduledAt = schedProvided ? parseOptionalTimestamp(body.scheduledAt) : undefined;
+
+  let status = current.rows[0].status;
+  if (body.status && isStepStatus(body.status)) {
+    status = body.status;
+  } else if (status === "pending" && schedProvided && scheduledAt) {
+    status = "scheduled";
+  } else if (status === "scheduled" && schedProvided && !scheduledAt) {
+    status = "pending";
+  }
 
   await db.query(
     `UPDATE application_steps SET

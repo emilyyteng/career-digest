@@ -60,6 +60,43 @@ describe.skipIf(!integrationReady)("jobs API", () => {
     expect(bayOnly.body.locationCounts).toMatchObject({ bay: 1, nyc: 1 });
   });
 
+  it("GET /api/jobs filters postings by source", async () => {
+    const company = await seedCompany({ name: "Source Co" });
+    const greenhouse = await seedRankedPosting({
+      source: "greenhouse",
+      externalId: "job-src-gh",
+      companyId: company.id,
+      title: "GH Intern",
+      url: "https://boards.greenhouse.io/src/jobs/1",
+      rankScore: 91,
+    });
+    const lever = await seedRankedPosting({
+      source: "lever",
+      externalId: "job-src-lever",
+      companyId: company.id,
+      title: "Lever Intern",
+      url: "https://jobs.lever.co/src/abc",
+      rankScore: 80,
+    });
+
+    const leverOnly = await apiClient().get("/api/jobs?source=lever").expect(200);
+    expect(leverOnly.body.jobs.every((job: { source: string }) => job.source === "lever")).toBe(
+      true,
+    );
+    expect(leverOnly.body.jobs.some((job: { id: string }) => job.id === lever.id)).toBe(true);
+    expect(leverOnly.body.jobs.some((job: { id: string }) => job.id === greenhouse.id)).toBe(
+      false,
+    );
+
+    const greenhouseOnly = await apiClient().get("/api/jobs?source=greenhouse").expect(200);
+    expect(
+      greenhouseOnly.body.jobs.every((job: { source: string }) => job.source === "greenhouse"),
+    ).toBe(true);
+    expect(greenhouseOnly.body.jobs.some((job: { id: string }) => job.id === greenhouse.id)).toBe(
+      true,
+    );
+  });
+
   it("GET /api/jobs/:id returns posting detail", async () => {
     const company = await seedCompany();
     const posting = await seedRankedPosting({

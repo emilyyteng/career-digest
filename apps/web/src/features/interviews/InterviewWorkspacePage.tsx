@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   addInterviewStep,
@@ -9,6 +9,12 @@ import {
   type InterviewThreadDetail,
 } from "../../api";
 import InterviewCountdown from "./InterviewCountdown";
+import InterviewStepFields, {
+  emptyInterviewStepFields,
+  interviewStepFieldsToPayload,
+  interviewStepToFields,
+  type InterviewStepFieldValues,
+} from "./InterviewStepFields";
 import {
   currentNotesStep,
   formatLinkedRoles,
@@ -33,20 +39,13 @@ const STEP_STATUS_LABEL: Record<string, string> = {
   skipped: "Skipped",
 };
 
-const KIND_OPTIONS = [
-  "assessment",
-  "phone",
-  "technical",
-  "onsite",
-  "offer",
-  "custom",
-] as const;
-
 function stepIsActionable(step: InterviewStep): boolean {
   return step.status === "pending" || step.status === "scheduled";
 }
 
 type StepConfirmAction = "reopen";
+
+const NOTES_FLASH_MS = 2500;
 
 export default function InterviewWorkspace() {
   const { threadId } = useParams();
@@ -54,8 +53,14 @@ export default function InterviewWorkspace() {
   const [thread, setThread] = useState<InterviewThreadDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addingStep, setAddingStep] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newKind, setNewKind] = useState("technical");
+  const [newStepFields, setNewStepFields] = useState<InterviewStepFieldValues>(() =>
+    emptyInterviewStepFields("technical"),
+  );
+  const [editingStepId, setEditingStepId] = useState<string | null>(null);
+  const [editStepFields, setEditStepFields] = useState<InterviewStepFieldValues>(() =>
+    emptyInterviewStepFields(),
+  );
+  const [savingStep, setSavingStep] = useState(false);
   const [notes, setNotes] = useState("");
   const [stepConfirm, setStepConfirm] = useState<{
     stepId: string;
@@ -67,6 +72,8 @@ export default function InterviewWorkspace() {
     mode: FinishStepMode;
   } | null>(null);
   const [finishBusy, setFinishBusy] = useState(false);
+  const [notesFlash, setNotesFlash] = useState(false);
+  const notesFlashTimer = useRef<number | null>(null);
 
   async function load() {
     if (!threadId) return;
@@ -83,6 +90,21 @@ export default function InterviewWorkspace() {
   useEffect(() => {
     load().catch((err: Error) => setError(err.message));
   }, [threadId]);
+
+  useEffect(() => {
+    return () => {
+      if (notesFlashTimer.current) window.clearTimeout(notesFlashTimer.current);
+    };
+  }, []);
+
+  function showNotesFlash() {
+    if (notesFlashTimer.current) window.clearTimeout(notesFlashTimer.current);
+    setNotesFlash(true);
+    notesFlashTimer.current = window.setTimeout(() => {
+      setNotesFlash(false);
+      notesFlashTimer.current = null;
+    }, NOTES_FLASH_MS);
+  }
 
   useEffect(() => {
     if (searchParams.get("addStep") === "1") {
@@ -106,24 +128,56 @@ export default function InterviewWorkspace() {
   async function saveNotes(event: FormEvent) {
     event.preventDefault();
     const notesStep = thread ? currentNotesStep(thread.steps) : null;
-    if (!notesStep) return;
-    await updateStep(notesStep.id, { prepNotes: notes });
+    if (!threadId || !notesStep) return;
+    setError(null);
+    try {
+      await patchInterviewStep(threadId, notesStep.id, { prepNotes: notes });
+      await load();
+      showNotesFlash();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update step");
+    }
   }
 
   async function addStep(event: FormEvent) {
     event.preventDefault();
-    if (!threadId || !newTitle.trim()) return;
+    if (!threadId || !newStepFields.title.trim()) return;
     setError(null);
+    setSavingStep(true);
     try {
-      await addInterviewStep(threadId, {
-        kind: newKind,
-        title: newTitle.trim(),
-      });
-      setNewTitle("");
+      await addInterviewStep(threadId, interviewStepFieldsToPayload(newStepFields));
+      setNewStepFields(emptyInterviewStepFields("technical"));
       setAddingStep(false);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add step");
+    } finally {
+      setSavingStep(false);
+    }
+  }
+
+  function startEditStep(step: InterviewStep) {
+    setEditStepFields(interviewStepToFields(step));
+    setEditingStepId(step.id);
+  }
+
+  async function saveEditedStep(event: FormEvent) {
+    event.preventDefault();
+    if (!threadId || !editingStepId || !editStepFields.title.trim()) return;
+    setError(null);
+    setSavingStep(true);
+    try {
+      await patchInterviewStep(
+        threadId,
+        editingStepId,
+        interviewStepFieldsToPayload(editStepFields),
+      );
+      setEditingStepId(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update step");
+    } finally {
+      setSavingStep(false);
     }
   }
 
@@ -164,6 +218,7 @@ export default function InterviewWorkspace() {
         await addInterviewStep(threadId, result.nextStep);
       }
       setFinishStepTarget(null);
+      setEditingStepId(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not finish step");
@@ -227,7 +282,7 @@ export default function InterviewWorkspace() {
                     <span className="muted"> · {formatDeadlineLong(step.completedAt)}</span>
                   )}
                 </div>
-                {step.notes && <p className="muted interview-history-notes">{step.notes}</p>}
+                {step.notes && <p className="muted interview-step-notes">{step.notes}</p>}
                 {thread.status === "active" && (
                   <button
                     type="button"
@@ -247,30 +302,61 @@ export default function InterviewWorkspace() {
         <div className="interview-next-hero">
           <div className="interview-next-hero-main">
             <h3 className="interview-section-heading">Next action</h3>
-            <p className="interview-next-title">{nextStep.title}</p>
-            {deadlineLabel && (
-              <div className="interview-deadline-block">
-                <div className="interview-deadline-date">{deadlineLabel}</div>
-                {deadlineIso && <InterviewCountdown target={deadlineIso} />}
-              </div>
+            {editingStepId ? (
+              <form className="interview-add-step-form" onSubmit={saveEditedStep}>
+                <InterviewStepFields values={editStepFields} onChange={setEditStepFields} />
+                <div className="save-inline-row">
+                  <button type="submit" disabled={savingStep || !editStepFields.title.trim()}>
+                    {savingStep ? "Saving…" : "Save step"}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={savingStep}
+                    onClick={() => setEditingStepId(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <p className="interview-next-title">{nextStep.title}</p>
+                {nextStep.notes && (
+                  <p className="muted interview-step-notes">{nextStep.notes}</p>
+                )}
+                {deadlineLabel && (
+                  <div className="interview-deadline-block">
+                    <div className="interview-deadline-date">{deadlineLabel}</div>
+                    {deadlineIso && <InterviewCountdown target={deadlineIso} />}
+                  </div>
+                )}
+                <div className="interview-next-actions">
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => startEditStep(nextStep)}
+                  >
+                    Edit step
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() =>
+                      setFinishStepTarget({
+                        stepId: nextStep.id,
+                        stepTitle: nextStep.title,
+                        mode: "actionable",
+                      })
+                    }
+                  >
+                    Finish step
+                  </button>
+                </div>
+              </>
             )}
-            <div className="interview-next-actions">
-              <button
-                type="button"
-                className="secondary"
-                onClick={() =>
-                  setFinishStepTarget({
-                    stepId: nextStep.id,
-                    stepTitle: nextStep.title,
-                    mode: "actionable",
-                  })
-                }
-              >
-                Finish step
-              </button>
-            </div>
           </div>
-          {nextStep.url && (
+          {!editingStepId && nextStep.url && (
             <a
               className="interview-cta-btn interview-cta-btn-large"
               href={nextStep.url}
@@ -288,26 +374,57 @@ export default function InterviewWorkspace() {
         <div className="interview-next-hero interview-awaiting-hero">
           <div className="interview-next-hero-main">
             <h3 className="interview-section-heading">Waiting on them</h3>
-            <p className="interview-next-title">{awaitingStep.title}</p>
-            <p className="muted interview-awaiting-hint">
-              You finished your part on this step. When the employer responds, close it and
-              add the next round.
-            </p>
-            <div className="interview-next-actions">
-              <button
-                type="button"
-                className="secondary"
-                onClick={() =>
-                  setFinishStepTarget({
-                    stepId: awaitingStep.id,
-                    stepTitle: awaitingStep.title,
-                    mode: "awaiting_response",
-                  })
-                }
-              >
-                They responded
-              </button>
-            </div>
+            {editingStepId ? (
+              <form className="interview-add-step-form" onSubmit={saveEditedStep}>
+                <InterviewStepFields values={editStepFields} onChange={setEditStepFields} />
+                <div className="save-inline-row">
+                  <button type="submit" disabled={savingStep || !editStepFields.title.trim()}>
+                    {savingStep ? "Saving…" : "Save step"}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={savingStep}
+                    onClick={() => setEditingStepId(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <p className="interview-next-title">{awaitingStep.title}</p>
+                {awaitingStep.notes && (
+                  <p className="muted interview-step-notes">{awaitingStep.notes}</p>
+                )}
+                <p className="muted interview-awaiting-hint">
+                  You finished your part on this step. When the employer responds, close it and
+                  add the next round.
+                </p>
+                <div className="interview-next-actions">
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => startEditStep(awaitingStep)}
+                  >
+                    Edit step
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() =>
+                      setFinishStepTarget({
+                        stepId: awaitingStep.id,
+                        stepTitle: awaitingStep.title,
+                        mode: "awaiting_response",
+                      })
+                    }
+                  >
+                    They responded
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -357,21 +474,20 @@ export default function InterviewWorkspace() {
           )}
           {canAddStep && addingStep ? (
             <form className="interview-add-step-form" onSubmit={addStep}>
-              <label>
-                Title
-                <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required />
-              </label>
-              <label>
-                Type
-                <select value={newKind} onChange={(e) => setNewKind(e.target.value)}>
-                  {KIND_OPTIONS.map((k) => (
-                    <option key={k} value={k}>{k}</option>
-                  ))}
-                </select>
-              </label>
+              <InterviewStepFields values={newStepFields} onChange={setNewStepFields} />
               <div className="save-inline-row">
-                <button type="submit">Add step</button>
-                <button type="button" className="secondary" onClick={() => setAddingStep(false)}>
+                <button type="submit" disabled={savingStep || !newStepFields.title.trim()}>
+                  {savingStep ? "Saving…" : "Add step"}
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={savingStep}
+                  onClick={() => {
+                    setAddingStep(false);
+                    setNewStepFields(emptyInterviewStepFields("technical"));
+                  }}
+                >
                   Cancel
                 </button>
               </div>
@@ -390,6 +506,11 @@ export default function InterviewWorkspace() {
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
           <div className="save-inline-row save-end">
             <button type="submit" className="secondary">Save notes</button>
+            {notesFlash && (
+              <span className="save-flash-inline" role="status" aria-live="polite">
+                Saved!
+              </span>
+            )}
           </div>
         </form>
       )}
