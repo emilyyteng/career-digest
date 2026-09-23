@@ -1612,7 +1612,7 @@ button.hide-board-remove:hover:not(:disabled) {
   box-shadow: 0 16px 40px var(--shadow-strong);
 }
 .modal.modal-wide {
-  width: min(48rem, 100%);
+  width: min(56rem, 100%);
 }
 .document-preview-modal {
   width: min(56rem, 100%);

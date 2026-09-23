@@ -174,10 +174,7 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
       >
         <form className="form edit-subtasks-form" onSubmit={(event) => void onSubmit(event)}>
           <h2 id="edit-subtasks-title">Edit subtasks</h2>
-          <p className="muted field-hint">
-            Under {task.title}. Check off items on the card — this editor is for titles, dates,
-            estimates, and priority only.
-          </p>
+          <p className="muted field-hint edit-subtasks-parent">{task.title}</p>
           {error && <p className="error">{error}</p>}
 
           <div className="edit-subtasks-table" role="table" aria-label="Subtasks">
