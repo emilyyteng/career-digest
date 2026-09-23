@@ -517,12 +517,25 @@ export const patchInterviewStep = (
     }),
   );
 
-export type TaskCategory = "application" | "school" | "personal";
+export type TaskKind = "application" | "misc";
+/** @deprecated use TaskKind */
+export type TaskCategory = TaskKind;
 export type TaskView = "open" | "completed";
+
+export type TaskCategoryRow = {
+  id: string;
+  name: string;
+  kind: TaskKind;
+  system: boolean;
+  sortOrder: number;
+  openCount: number;
+};
 
 export type TaskRow = {
   id: string;
-  category: TaskCategory;
+  category: TaskKind;
+  categoryId: string;
+  categoryName: string;
   status: "open" | "completed";
   title: string;
   organization: string | null;
@@ -543,11 +556,36 @@ export type TasksPage = {
   view: TaskView;
   count: number;
   counts: { open: number; completed: number };
+  categories: TaskCategoryRow[];
   tasks: TaskRow[];
 };
 
 export const getTasks = (view: TaskView = "open") =>
   parse<TasksPage>(api(`/api/tasks?view=${encodeURIComponent(view)}`));
+
+export const getTaskCategories = () =>
+  parse<{ categories: TaskCategoryRow[] }>(api("/api/task-categories"));
+
+export const createTaskCategory = (name: string) =>
+  parse<TaskCategoryRow>(
+    api("/api/task-categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  );
+
+export const renameTaskCategory = (id: string, name: string) =>
+  parse<TaskCategoryRow>(
+    api(`/api/task-categories/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  );
+
+export const deleteTaskCategory = (id: string) =>
+  parse<{ ok: boolean }>(api(`/api/task-categories/${id}`, { method: "DELETE" }));
 
 export const createTask = (body: Record<string, unknown>) =>
   parse<TaskRow>(

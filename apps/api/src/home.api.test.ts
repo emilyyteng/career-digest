@@ -75,7 +75,7 @@ describe.skipIf(!integrationReady)("home API", () => {
     expect(res.body.needsAttention.tasks[0]).toMatchObject({
       title: "Homework",
       organization: "CS 229",
-      category: "school",
+      category: "misc",
       dueIso: sooner.toISOString(),
     });
     expect(res.body.needsAttention.tasks[0].dueLabel).toMatch(/^Due:/);

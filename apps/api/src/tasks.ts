@@ -2,20 +2,28 @@ import type { Pool, PoolClient } from "pg";
 import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { resolveThreadsForApplication } from "./interviews.js";
 import { applicationResolutionFromStatus } from "./interviewStatuses.js";
+import {
+  getApplicationTaskCategory,
+  getTaskCategoryById,
+  listTaskCategories,
+  type TaskCategoryRow,
+} from "./taskCategories.js";
 
 type Queryable = Pool | PoolClient;
 
-export const TASK_CATEGORIES = ["application", "school", "personal"] as const;
-export type TaskCategory = (typeof TASK_CATEGORIES)[number];
+export const TASK_KINDS = ["application", "misc"] as const;
+export type TaskKind = (typeof TASK_KINDS)[number];
+/** @deprecated use TaskKind — kept as alias for gradual web migration */
+export type TaskCategory = TaskKind;
 
 export const TASK_VIEWS = ["open", "completed"] as const;
 export type TaskView = (typeof TASK_VIEWS)[number];
 
-export const SCHOOL_PERSONAL_CATEGORIES: TaskCategory[] = ["school", "personal"];
-
 export type TaskRow = {
   id: string;
-  category: TaskCategory;
+  category: TaskKind;
+  categoryId: string;
+  categoryName: string;
   status: "open" | "completed";
   title: string;
   organization: string | null;
@@ -36,6 +44,8 @@ const taskListSelect = `
   SELECT
     t.id,
     t.category,
+    t.category_id AS "categoryId",
+    tc.name AS "categoryName",
     t.status,
     COALESCE(t.title, a.title, p.title) AS title,
     COALESCE(
@@ -56,6 +66,7 @@ const taskListSelect = `
     t.created_at AS "createdAt",
     t.updated_at AS "updatedAt"
   FROM tasks t
+  JOIN task_categories tc ON tc.id = t.category_id
   LEFT JOIN applications a ON a.id = t.application_id
   LEFT JOIN postings p ON p.id = COALESCE(t.posting_id, a.posting_id)
   LEFT JOIN companies c ON c.id = p.company_id
@@ -87,12 +98,22 @@ const STATUS_RANK: Record<string, number> = {
   declined: 1,
 };
 
-export function isTaskCategory(value: string): value is TaskCategory {
-  return (TASK_CATEGORIES as readonly string[]).includes(value);
+export function isTaskKind(value: string): value is TaskKind {
+  return (TASK_KINDS as readonly string[]).includes(value);
 }
 
-export function isSchoolPersonalCategory(value: string): value is "school" | "personal" {
-  return value === "school" || value === "personal";
+/** @deprecated use isTaskKind */
+export function isTaskCategory(value: string): value is TaskKind {
+  return isTaskKind(value);
+}
+
+export function isMiscCategory(value: string): value is "misc" {
+  return value === "misc";
+}
+
+/** @deprecated use isMiscCategory */
+export function isSchoolPersonalCategory(value: string): boolean {
+  return isMiscCategory(value);
 }
 
 export function isApplicationCategory(value: string): value is "application" {
@@ -151,7 +172,7 @@ async function countTasks(db: Queryable): Promise<{ open: number; completed: num
     `SELECT
        COUNT(*) FILTER (WHERE status = 'open')::text AS open,
        COUNT(*) FILTER (
-         WHERE status = 'completed' AND category IN ('school', 'personal')
+         WHERE status = 'completed' AND category = 'misc'
        )::text AS completed
      FROM tasks`,
   );
@@ -170,23 +191,25 @@ export async function listTasks(db: Queryable, view: TaskView): Promise<{
   view: TaskView;
   count: number;
   counts: { open: number; completed: number };
+  categories: TaskCategoryRow[];
   tasks: TaskRow[];
 }> {
   const counts = await countTasks(db);
+  const categories = await listTaskCategories(db);
   if (view === "open") {
     const { rows } = await db.query<TaskRow>(
       `${taskListSelect}
        WHERE t.status = 'open'
        ORDER BY t.due_at ASC NULLS LAST, t.created_at DESC`,
     );
-    return { view, count: rows.length, counts, tasks: rows };
+    return { view, count: rows.length, counts, categories, tasks: rows };
   }
   const { rows } = await db.query<TaskRow>(
     `${taskListSelect}
-     WHERE t.status = 'completed' AND t.category IN ('school', 'personal')
+     WHERE t.status = 'completed' AND t.category = 'misc'
      ORDER BY t.completed_at DESC NULLS LAST, t.created_at DESC`,
   );
-  return { view, count: rows.length, counts, tasks: rows };
+  return { view, count: rows.length, counts, categories, tasks: rows };
 }
 
 export async function listOpenTasksForHome(
@@ -209,7 +232,7 @@ export async function getTaskById(db: Queryable, id: string): Promise<TaskRow | 
 }
 
 export type CreateTaskInput = {
-  category: TaskCategory;
+  categoryId: string;
   title: string;
   organization?: string | null;
   url?: string | null;
@@ -245,13 +268,15 @@ async function createManualApplicationTask(
       ],
     );
     const applicationId = appResult.rows[0]!.id;
+    const appsCategory = await getApplicationTaskCategory(queryable);
     const { rows } = await queryable.query<{ id: string }>(
       `INSERT INTO tasks (
-         category, status, title, organization, url, notes, due_at, application_id
+         category, category_id, status, title, organization, url, notes, due_at, application_id
        )
-       VALUES ('application', 'open', $1, $2, $3, $4, $5, $6)
+       VALUES ('application', $1, 'open', $2, $3, $4, $5, $6, $7)
        RETURNING id`,
       [
+        appsCategory.id,
         input.title,
         input.organization ?? null,
         input.url ?? null,
@@ -271,15 +296,20 @@ async function createManualApplicationTask(
 }
 
 export async function createTask(db: Queryable, input: CreateTaskInput): Promise<TaskRow> {
-  if (input.category === "application") {
+  const category = await getTaskCategoryById(db, input.categoryId);
+  if (!category) throw Object.assign(new Error("category not found"), { status: 400 });
+  if (category.kind === "application") {
+    if (!input.organization?.trim()) {
+      throw Object.assign(new Error("organization is required for application tasks"), { status: 400 });
+    }
     return createManualApplicationTask(db, input);
   }
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO tasks (category, title, organization, url, notes, due_at)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO tasks (category, category_id, title, organization, url, notes, due_at)
+     VALUES ('misc', $1, $2, $3, $4, $5, $6)
      RETURNING id`,
     [
-      input.category,
+      category.id,
       input.title,
       input.organization ?? null,
       input.url ?? null,
@@ -385,13 +415,14 @@ export async function createTaskFromPosting(db: Queryable, postingId: string): P
     }
 
     const row = posting.rows[0]!;
+    const appsCategory = await getApplicationTaskCategory(queryable);
     const { rows: taskRows } = await queryable.query<{ id: string }>(
       `INSERT INTO tasks (
-         category, status, title, organization, url, posting_id, application_id
+         category, category_id, status, title, organization, url, posting_id, application_id
        )
-       VALUES ('application', 'open', $1, $2, $3, $4, $5)
+       VALUES ('application', $1, 'open', $2, $3, $4, $5, $6)
        RETURNING id`,
-      [row.title, row.company, row.url, postingId, applicationId],
+      [appsCategory.id, row.title, row.company, row.url, postingId, applicationId],
     );
     if (client) await client.query("COMMIT");
     return (await fetchTaskRow(db, taskRows[0]!.id))!;
@@ -412,6 +443,7 @@ export type PatchTaskInput = {
   location?: string | null;
   descriptionHtml?: string | null;
   postingId?: string | null;
+  categoryId?: string;
 };
 
 export async function patchTask(
@@ -440,6 +472,18 @@ export async function patchTask(
     if (patch.dueAt !== null && patch.dueAt !== "" && dueAt === null) return null;
   }
 
+  let nextCategoryId = existing.categoryId;
+  if (patch.categoryId !== undefined) {
+    if (isApplicationCategory(existing.category)) {
+      throw Object.assign(new Error("Application tasks cannot change category"), { status: 400 });
+    }
+    const target = await getTaskCategoryById(db, patch.categoryId);
+    if (!target || target.kind !== "misc") {
+      throw Object.assign(new Error("category not found"), { status: 400 });
+    }
+    nextCategoryId = target.id;
+  }
+
   const client = "connect" in db && patch.postingId ? await db.connect() : null;
   const queryable = client ?? db;
   try {
@@ -460,7 +504,8 @@ export async function patchTask(
            url = $4,
            notes = $5,
            due_at = $6,
-           posting_id = CASE WHEN $7::boolean THEN $8::uuid ELSE posting_id END,
+           category_id = $7,
+           posting_id = CASE WHEN $8::boolean THEN $9::uuid ELSE posting_id END,
            updated_at = now()
        WHERE id = $1`,
       [
@@ -470,6 +515,7 @@ export async function patchTask(
         url,
         notes,
         dueAt,
+        nextCategoryId,
         patch.postingId !== undefined,
         patch.postingId ?? null,
       ],
@@ -547,7 +593,7 @@ export async function completeTask(db: Queryable, id: string): Promise<TaskRow |
       if (resolution && client) {
         await resolveThreadsForApplication(client, existing.applicationId, resolution);
       }
-    } else if (!isSchoolPersonalCategory(existing.category)) {
+    } else if (!isMiscCategory(existing.category)) {
       return null;
     }
 
@@ -573,7 +619,7 @@ export async function completeTask(db: Queryable, id: string): Promise<TaskRow |
 export async function reopenTask(db: Queryable, id: string): Promise<TaskRow | null> {
   const existing = await getTaskById(db, id);
   if (!existing || existing.status !== "completed") return null;
-  if (!isSchoolPersonalCategory(existing.category)) return null;
+  if (!isMiscCategory(existing.category)) return null;
 
   await db.query(
     `UPDATE tasks
@@ -639,24 +685,17 @@ export async function completeOpenApplicationTasksForApplication(
 }
 
 export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskInput | null {
-  const category = typeof body.category === "string" ? body.category : "";
-  if (!isTaskCategory(category)) return null;
+  const categoryId = typeof body.categoryId === "string" ? body.categoryId.trim() : "";
+  if (!categoryId) return null;
 
   const title = parseRequiredText(body.title);
   if (!title) return null;
 
-  let organization: string | null;
-  if (category === "application") {
-    const company = parseRequiredText(body.organization);
-    if (!company) return null;
-    organization = company;
-  } else {
-    const org = parseOptionalText(body.organization);
-    if (org === null && body.organization !== undefined && body.organization !== null) {
-      if (typeof body.organization !== "string") return null;
-    }
-    organization = org ?? null;
-  }
+  // organization requiredness depends on category kind — enforced in createTask after lookup.
+  // For parse-time: if organization provided as non-string, reject.
+  const orgRaw = body.organization;
+  if (orgRaw !== undefined && orgRaw !== null && typeof orgRaw !== "string") return null;
+  const organization = parseOptionalText(orgRaw) ?? null;
 
   const notes = parseOptionalText(body.notes);
   if (notes === null && body.notes !== undefined && body.notes !== null) {
@@ -678,21 +717,21 @@ export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskIn
 
   const location = parseOptionalText(body.location);
   let descriptionHtml: string | null = null;
-  if (category === "application" && body.descriptionHtml !== undefined) {
+  if (body.descriptionHtml !== undefined) {
     descriptionHtml = normalizeDescriptionHtml(
       typeof body.descriptionHtml === "string" ? body.descriptionHtml : null,
     );
   }
 
   return {
-    category,
+    categoryId,
     title,
     organization,
     url,
     notes: notes ?? null,
     dueAt,
-    location: category === "application" ? (location ?? null) : null,
-    descriptionHtml: category === "application" ? descriptionHtml : null,
+    location: location ?? null,
+    descriptionHtml,
   };
 }
 
@@ -750,6 +789,11 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     patch.descriptionHtml = normalizeDescriptionHtml(body.descriptionHtml);
   }
 
+  if (body.categoryId !== undefined) {
+    if (typeof body.categoryId !== "string" || !body.categoryId.trim()) return null;
+    patch.categoryId = body.categoryId.trim();
+  }
+
   if (
     patch.title === undefined &&
     patch.organization === undefined &&
@@ -758,7 +802,8 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     patch.dueAt === undefined &&
     patch.location === undefined &&
     patch.descriptionHtml === undefined &&
-    patch.postingId === undefined
+    patch.postingId === undefined &&
+    patch.categoryId === undefined
   ) {
     return null;
   }

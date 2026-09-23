@@ -225,6 +225,17 @@ export async function resetDemoDatabase(db: Pool): Promise<DemoSeedSummary> {
     applicationIds.push(rows[0]!.id);
   }
 
+  const catIds = await db.query<{ id: string; name: string; kind: string }>(
+    `SELECT id, name, kind FROM task_categories`,
+  );
+  const byName = Object.fromEntries(catIds.rows.map((r) => [r.name, r.id]));
+  const appsCategoryId = catIds.rows.find((r) => r.kind === "application")?.id;
+  const schoolCategoryId = byName["School"];
+  const adminCategoryId = byName["Admin"];
+  if (!appsCategoryId || !schoolCategoryId || !adminCategoryId) {
+    throw new Error("Demo seed requires Applications/School/Admin task categories");
+  }
+
   // Open application tasks for a few ranked postings not yet applied
   let todoApps = 0;
   for (let i = 10; i < 18; i += 1) {
@@ -247,11 +258,12 @@ export async function resetDemoDatabase(db: Pool): Promise<DemoSeedSummary> {
     todoApps += 1;
     await db.query(
       `INSERT INTO tasks (
-         category, status, title, organization, url, posting_id, application_id
+         category, category_id, status, title, organization, url, posting_id, application_id
        ) VALUES (
-         'application', 'open', $1, $2, $3, $4, $5
+         'application', $1, 'open', $2, $3, $4, $5, $6
        )`,
       [
+        appsCategoryId,
         title,
         company,
         `https://demo.career-digest.invalid/apply/${i}`,
@@ -262,18 +274,19 @@ export async function resetDemoDatabase(db: Pool): Promise<DemoSeedSummary> {
   }
 
   await db.query(
-    `INSERT INTO tasks (category, status, title, organization, notes, due_at)
+    `INSERT INTO tasks (category, category_id, status, title, organization, notes, due_at)
      VALUES
-       ('school', 'open', 'Finish networks problem set', 'Campus University', 'Chapters 4–5', $1),
-       ('school', 'open', 'Office hours — compilers', 'Campus University', NULL, $2),
-       ('personal', 'open', 'Book dentist cleaning', NULL, NULL, $3),
-       ('personal', 'open', 'Update resume bullet for Parcel Grove', NULL, 'Demo personal task', NULL),
-       ('school', 'completed', 'Submit systems lab', 'Campus University', NULL, NULL)`,
-    [daysAgo(-2), daysAgo(-1), daysAgo(-3)],
+       ('misc', $4, 'open', 'Finish networks problem set', 'Campus University', 'Chapters 4–5', $1),
+       ('misc', $4, 'open', 'Office hours — compilers', 'Campus University', NULL, $2),
+       ('misc', $5, 'open', 'Book dentist cleaning', NULL, NULL, $3),
+       ('misc', $5, 'open', 'Update resume bullet for Parcel Grove', NULL, 'Demo personal task', NULL),
+       ('misc', $4, 'completed', 'Submit systems lab', 'Campus University', NULL, NULL)`,
+    [daysAgo(-2), daysAgo(-1), daysAgo(-3), schoolCategoryId, adminCategoryId],
   );
   await db.query(
     `UPDATE tasks SET completed_at = now() - interval '3 days'
-     WHERE category = 'school' AND status = 'completed'`,
+     WHERE category = 'misc' AND status = 'completed' AND category_id = $1`,
+    [schoolCategoryId],
   );
 
   // Interview threads (schema: primary_application_id, label, status — no company_name columns)

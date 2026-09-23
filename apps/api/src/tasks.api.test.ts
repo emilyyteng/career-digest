@@ -10,6 +10,15 @@ import {
 } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
 
+async function categoryIdByName(name: string): Promise<string> {
+  const res = await apiClient().get("/api/task-categories").expect(200);
+  const match = (res.body.categories as Array<{ id: string; name: string }>).find(
+    (c) => c.name === name,
+  );
+  if (!match) throw new Error(`category ${name} not found`);
+  return match.id;
+}
+
 describe.skipIf(!integrationReady)("tasks API", () => {
   it("GET /api/tasks?view=open lists open school and personal tasks with counts", async () => {
     await seedTask({ category: "school", title: "Homework", organization: "CS 229" });
@@ -24,6 +33,7 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     const res = await apiClient().get("/api/tasks?view=open").expect(200);
 
     expect(res.body.counts).toMatchObject({ open: 2, completed: 1 });
+    expect(res.body.categories.length).toBeGreaterThanOrEqual(5);
     expect(res.body.tasks).toHaveLength(2);
     expect(res.body.tasks.map((task: { title: string }) => task.title)).toEqual(
       expect.arrayContaining(["Homework", "Schedule interview"]),
@@ -80,11 +90,14 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     expect(titles).toEqual(["Due soon", "Due later", "Undated newer", "Undated older"]);
   });
 
-  it("POST /api/tasks creates school and personal tasks", async () => {
+  it("POST /api/tasks creates misc tasks in named categories", async () => {
+    const schoolId = await categoryIdByName("School");
+    const adminId = await categoryIdByName("Admin");
+
     const school = await apiClient()
       .post("/api/tasks")
       .send({
-        category: "school",
+        categoryId: schoolId,
         title: "Problem set 4",
         organization: "Stanford",
         url: "https://canvas.stanford.edu/assignments/1",
@@ -94,7 +107,9 @@ describe.skipIf(!integrationReady)("tasks API", () => {
       .expect(201);
 
     expect(school.body).toMatchObject({
-      category: "school",
+      category: "misc",
+      categoryId: schoolId,
+      categoryName: "School",
       status: "open",
       title: "Problem set 4",
       organization: "Stanford",
@@ -103,20 +118,25 @@ describe.skipIf(!integrationReady)("tasks API", () => {
       dueAt: "2025-10-01T17:00:00.000Z",
     });
 
-    const personal = await apiClient()
+    const admin = await apiClient()
       .post("/api/tasks")
-      .send({ category: "personal", title: "Book flight" })
+      .send({ categoryId: adminId, title: "Book flight" })
       .expect(201);
 
-    expect(personal.body.category).toBe("personal");
-    expect(personal.body.title).toBe("Book flight");
+    expect(admin.body).toMatchObject({
+      category: "misc",
+      categoryId: adminId,
+      categoryName: "Admin",
+      title: "Book flight",
+    });
   });
 
   it("POST /api/tasks creates manual application tasks", async () => {
+    const appsId = await categoryIdByName("Applications");
     const res = await apiClient()
       .post("/api/tasks")
       .send({
-        category: "application",
+        categoryId: appsId,
         organization: "Stripe",
         title: "Backend Intern",
         url: "https://stripe.com/jobs/1",
@@ -127,6 +147,7 @@ describe.skipIf(!integrationReady)("tasks API", () => {
 
     expect(res.body).toMatchObject({
       category: "application",
+      categoryName: "Applications",
       status: "open",
       organization: "Stripe",
       title: "Backend Intern",
@@ -212,17 +233,18 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     expect(app.rows[0].applied_at).toBeTruthy();
   });
 
-  it("PATCH /api/tasks/:id updates editable fields but not category", async () => {
+  it("PATCH /api/tasks/:id updates fields and can refile misc categories", async () => {
     const created = await seedTask({
       category: "school",
       title: "Reading",
       organization: "History",
     });
+    const adminId = await categoryIdByName("Admin");
 
     await apiClient()
       .patch(`/api/tasks/${created.id}`)
       .send({
-        category: "personal",
+        categoryId: adminId,
         title: "Updated reading",
         organization: "Humanities",
         url: "https://example.com/reading",
@@ -232,12 +254,31 @@ describe.skipIf(!integrationReady)("tasks API", () => {
       .expect(200);
 
     const row = await pool.query(`SELECT * FROM tasks WHERE id = $1`, [created.id]);
-    expect(row.rows[0].category).toBe("school");
+    expect(row.rows[0].category).toBe("misc");
+    expect(row.rows[0].category_id).toBe(adminId);
     expect(row.rows[0].title).toBe("Updated reading");
     expect(row.rows[0].organization).toBe("Humanities");
     expect(row.rows[0].url).toBe("https://example.com/reading");
     expect(row.rows[0].notes).toBe("Chapter 2");
     expect(new Date(row.rows[0].due_at as Date).toISOString()).toBe("2025-11-01T12:00:00.000Z");
+  });
+
+  it("task categories: create, block delete with open tasks, delete when empty", async () => {
+    const created = await apiClient()
+      .post("/api/task-categories")
+      .send({ name: "Club" })
+      .expect(201);
+    expect(created.body).toMatchObject({ name: "Club", kind: "misc", system: false });
+
+    const task = await apiClient()
+      .post("/api/tasks")
+      .send({ categoryId: created.body.id, title: "Meeting notes" })
+      .expect(201);
+
+    await apiClient().delete(`/api/task-categories/${created.body.id}`).expect(409);
+
+    await apiClient().delete(`/api/tasks/${task.body.id}`).expect(200);
+    await apiClient().delete(`/api/task-categories/${created.body.id}`).expect(200);
   });
 
   it("POST /api/tasks/:id/complete marks school/personal tasks completed", async () => {

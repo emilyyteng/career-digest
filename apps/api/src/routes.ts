@@ -66,6 +66,12 @@ import {
   reopenTask,
 } from "./tasks.js";
 import {
+  createTaskCategory,
+  deleteTaskCategory,
+  listTaskCategories,
+  renameTaskCategory,
+} from "./taskCategories.js";
+import {
   createReflectionLog,
   getProgressDay,
   getProgressHeatmap,
@@ -638,14 +644,87 @@ api.delete("/tasks/from-posting/:postingId", async (req, res) => {
   res.json({ ok: true });
 });
 
+api.get("/task-categories", async (_req, res) => {
+  res.json({ categories: await listTaskCategories(pool) });
+});
+
+api.post("/task-categories", async (req, res) => {
+  const name = (req.body as { name?: unknown }).name;
+  if (typeof name !== "string") {
+    res.status(400).json({ error: "name is required" });
+    return;
+  }
+  try {
+    const category = await createTaskCategory(pool, name);
+    res.status(201).json(category);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = typeof (err as { status?: number }).status === "number"
+      ? (err as { status: number }).status
+      : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.patch("/task-categories/:id", async (req, res) => {
+  const name = (req.body as { name?: unknown }).name;
+  if (typeof name !== "string") {
+    res.status(400).json({ error: "name is required" });
+    return;
+  }
+  try {
+    const category = await renameTaskCategory(pool, req.params.id, name);
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+      return;
+    }
+    res.json(category);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = typeof (err as { status?: number }).status === "number"
+      ? (err as { status: number }).status
+      : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.delete("/task-categories/:id", async (req, res) => {
+  try {
+    const result = await deleteTaskCategory(pool, req.params.id);
+    if (result === "missing") {
+      res.status(404).json({ error: "Category not found" });
+      return;
+    }
+    if (result === "blocked") {
+      res.status(409).json({ error: "Category still has open tasks" });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = typeof (err as { status?: number }).status === "number"
+      ? (err as { status: number }).status
+      : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
 api.post("/tasks", async (req, res) => {
   const parsed = parseCreateTaskBody(req.body as Record<string, unknown>);
   if (!parsed) {
     res.status(400).json({ error: "Invalid task payload" });
     return;
   }
-  const task = await createTask(pool, parsed);
-  res.status(201).json(task);
+  try {
+    const task = await createTask(pool, parsed);
+    res.status(201).json(task);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = typeof (err as { status?: number }).status === "number"
+      ? (err as { status: number }).status
+      : 400;
+    res.status(status).json({ error: message });
+  }
 });
 
 api.patch("/tasks/:id", async (req, res) => {
@@ -663,7 +742,12 @@ api.patch("/tasks/:id", async (req, res) => {
     res.json(task);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
-    const status = message.includes("already linked") ? 409 : 400;
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : message.includes("already linked")
+          ? 409
+          : 400;
     res.status(status).json({ error: message });
   }
 });

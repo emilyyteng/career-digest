@@ -2,6 +2,10 @@
 
 Development history for Career Digest. For setup, see [docs/SETUP.md](./SETUP.md).
 
+## Milestone 11 — Tasks categories board (pass 1)
+
+Stacked Open sections by category (Applications first; School / Reading / Writing / Admin + custom), per-section Add, refile misc tasks, migrate school→School and personal→Admin.
+
 ## Milestone 10 — Portfolio Demo mode + docs hygiene
 
 Internal support for a hosted portfolio sandbox (fictional seed, gated ranking side effects, demo banner) plus quieter public docs (local agent glossary/ADRs/specs gitignored; changelog kept).

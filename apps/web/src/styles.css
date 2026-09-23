@@ -906,6 +906,75 @@ a.external .ext-icon { font-size: 0.75rem; }
   font-size: inherit;
   text-transform: capitalize;
 }
+
+.task-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+.task-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.task-section-empty {
+  background: transparent;
+}
+.task-section-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent, #5b7cfa) 8%);
+  border-bottom: 1px solid var(--border);
+}
+.task-section-empty .task-section-header {
+  border-bottom: none;
+}
+.task-section-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.task-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.task-section-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.task-section-add {
+  flex: 0 0 auto;
+}
+.task-section-body {
+  padding: 0.65rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.task-section-scroll .task-section-body {
+  max-height: 28rem;
+  overflow-y: auto;
+}
+.task-new-category {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0;
+}
+.task-new-category input {
+  flex: 1 1 auto;
+}
+
 .task-category-lock {
   margin: 0;
   font-size: 0.85rem;

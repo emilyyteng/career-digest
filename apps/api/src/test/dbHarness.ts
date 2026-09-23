@@ -252,7 +252,9 @@ export async function seedApplicationDocument(input: {
 }
 
 export async function seedTask(input: {
-  category?: "school" | "personal" | "application";
+  /** Legacy aliases: school→School, personal→Admin, application→Applications */
+  category?: "school" | "personal" | "application" | "misc";
+  categoryName?: string;
   status?: "open" | "completed";
   title?: string;
   organization?: string | null;
@@ -264,15 +266,38 @@ export async function seedTask(input: {
   postingId?: string | null;
   applicationId?: string | null;
 } = {}): Promise<{ id: string }> {
+  let categoryName = input.categoryName;
+  let kind: "application" | "misc" = "misc";
+  if (!categoryName) {
+    if (input.category === "application") {
+      categoryName = "Applications";
+      kind = "application";
+    } else if (input.category === "personal") {
+      categoryName = "Admin";
+    } else {
+      categoryName = "School";
+    }
+  }
+  if (input.category === "application") kind = "application";
+
+  const cat = await pool.query<{ id: string }>(
+    `SELECT id FROM task_categories WHERE lower(name) = lower($1) LIMIT 1`,
+    [categoryName],
+  );
+  if (!cat.rows[0]) {
+    throw new Error(`seedTask: category ${categoryName} missing — run migrations`);
+  }
+
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO tasks (
-       category, status, title, organization, url, notes,
+       category, category_id, status, title, organization, url, notes,
        due_at, completed_at, created_at, posting_id, application_id
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9, now()), $10, $11)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10, now()), $11, $12)
      RETURNING id`,
     [
-      input.category ?? "school",
+      kind,
+      cat.rows[0].id,
       input.status ?? "open",
       input.title ?? "Read chapter 3",
       input.organization ?? null,

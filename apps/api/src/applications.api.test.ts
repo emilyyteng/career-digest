@@ -159,8 +159,15 @@ describe.skipIf(!integrationReady)("applications API", () => {
     const applied = await seedManualApplication({ status: "applied" });
 
     await pool.query(
-      `INSERT INTO tasks (category, status, title, organization, application_id)
-       VALUES ('application', 'open', 'Analyst Intern', 'Manual Co', $1)`,
+      `INSERT INTO tasks (category, category_id, status, title, organization, application_id)
+       VALUES (
+         'application',
+         (SELECT id FROM task_categories WHERE kind = 'application' LIMIT 1),
+         'open',
+         'Analyst Intern',
+         'Manual Co',
+         $1
+       )`,
       [todo.id],
     );
 
@@ -193,10 +200,12 @@ describe.skipIf(!integrationReady)("applications API", () => {
 
     await pool.query(`
       INSERT INTO tasks (
-        category, status, title, organization, url, notes, due_at, posting_id, application_id
+        category, category_id, status, title, organization, url, notes, due_at, posting_id, application_id
       )
       SELECT
-        'application', 'open',
+        'application',
+        (SELECT id FROM task_categories WHERE kind = 'application' LIMIT 1),
+        'open',
         COALESCE(a.title, p.title, 'Untitled'),
         COALESCE(a.company_name, c.name),
         COALESCE(a.url, p.url),

@@ -5,7 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { patchTask, getJobs, type JobCard, type TaskRow } from "../api";
+import { patchTask, getJobs, type JobCard, type TaskCategoryRow, type TaskRow } from "../api";
 import { Link } from "react-router-dom";
 import {
   combineApplyByDateTime,
@@ -17,6 +17,7 @@ import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 
 type Props = {
   task: TaskRow;
+  miscCategories: TaskCategoryRow[];
   onSaved: (row: TaskRow) => void;
   onCancel?: () => void;
 };
@@ -26,7 +27,7 @@ export type EditTaskFormHandle = {
 };
 
 const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm(
-  { task, onSaved, onCancel },
+  { task, miscCategories, onSaved, onCancel },
   ref,
 ) {
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +40,7 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
   const [descriptionHtml, setDescriptionHtml] = useState(task.descriptionHtml ?? "");
   const [dueDate, setDueDate] = useState(toDateInputValue(task.dueAt));
   const [dueTime, setDueTime] = useState(applyByTimeInputValue(task.dueAt));
+  const [categoryId, setCategoryId] = useState(task.categoryId);
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<JobCard[]>([]);
   const [linkFlash, setLinkFlash] = useState(false);
@@ -55,7 +57,8 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
     notes.trim() !== (task.notes ?? "") ||
     descriptionHtml !== (task.descriptionHtml ?? "") ||
     dueDate !== toDateInputValue(task.dueAt) ||
-    dueTime !== applyByTimeInputValue(task.dueAt);
+    dueTime !== applyByTimeInputValue(task.dueAt) ||
+    categoryId !== task.categoryId;
 
   function requestClose() {
     if (!onCancel) return;
@@ -114,6 +117,9 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
         notes: notes.trim() || null,
         dueAt,
       };
+      if (!isApplication && categoryId !== task.categoryId) {
+        body.categoryId = categoryId;
+      }
       if (isApplication) {
         body.location = location.trim() || null;
         if (showDescription) {
@@ -133,7 +139,23 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
     <>
       <form className="form" onSubmit={(event) => void onSubmit(event)}>
         <h2 id="edit-task-title">Edit task</h2>
-        <p className="muted task-category-lock">Category: {task.category}</p>
+        {isApplication ? (
+          <p className="muted task-category-lock">Category: {task.categoryName}</p>
+        ) : (
+          <label>
+            Category
+            <select
+              value={categoryId}
+              onChange={(event) => setCategoryId(event.target.value)}
+            >
+              {miscCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {error && <p className="error">{error}</p>}
         <label>
           Title

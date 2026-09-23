@@ -2,10 +2,12 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   completeTask,
+  createTaskCategory,
   deleteTask,
   getTasks,
   patchTask,
   reopenTask,
+  type TaskCategoryRow,
   type TaskRow,
   type TaskView,
 } from "../api";
@@ -30,19 +32,18 @@ const EMPTY_COUNTS = { open: 0, completed: 0 };
 type TasksSnapshot = {
   tasks: TaskRow[];
   counts: { open: number; completed: number };
+  categories: TaskCategoryRow[];
 };
 
 function tasksCacheKey(view: TaskView): string {
   return `tasks:${view}`;
 }
 
-function categoryLabel(category: TaskRow["category"]): string {
-  return category;
-}
-
 function isApplicationTask(row: TaskRow): boolean {
   return row.category === "application";
 }
+
+const SECTION_CLAMP_AFTER = 6;
 
 export default function Tasks() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,10 +55,15 @@ export default function Tasks() {
   const [counts, setCounts] = useState(
     () => initialSnapshot?.counts ?? EMPTY_COUNTS,
   );
+  const [categories, setCategories] = useState<TaskCategoryRow[]>(
+    () => initialSnapshot?.categories ?? [],
+  );
   const [loaded, setLoaded] = useState(() => !!initialSnapshot);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [addingCategory, setAddingCategory] = useState<TaskCategoryRow | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const [editing, setEditing] = useState<TaskRow | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<TaskRow | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
@@ -73,10 +79,12 @@ export default function Tasks() {
     const snapshot: TasksSnapshot = {
       tasks: data.tasks,
       counts: { ...EMPTY_COUNTS, ...data.counts },
+      categories: data.categories ?? [],
     };
     writeListCache(cacheKey, snapshot);
     setRows(snapshot.tasks);
     setCounts(snapshot.counts);
+    setCategories(snapshot.categories);
     setLoaded(true);
   }
 
@@ -93,6 +101,7 @@ export default function Tasks() {
     if (cached) {
       setRows(cached.tasks);
       setCounts(cached.counts);
+      setCategories(cached.categories ?? []);
       setLoaded(true);
     } else {
       setLoaded(false);
@@ -114,13 +123,13 @@ export default function Tasks() {
   }, [view]);
 
   useEffect(() => {
-    if (!adding) return;
+    if (!addingCategory) return;
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") addFormRef.current?.requestClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [adding]);
+  }, [addingCategory]);
 
   useEffect(() => {
     if (!editing) return;
@@ -140,7 +149,7 @@ export default function Tasks() {
   }
 
   function onCreated(row: TaskRow) {
-    setAdding(false);
+    setAddingCategory(null);
     invalidateListCache("tasks:");
     if (view !== "open") {
       setSearchParams({ view: "open" });
@@ -273,6 +282,167 @@ export default function Tasks() {
     }
   }
 
+
+  const miscCategories = categories.filter((c) => c.kind === "misc");
+
+  async function onCreateCategory(event: FormEvent) {
+    event.preventDefault();
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setCreatingCategory(true);
+    setError(null);
+    try {
+      await createTaskCategory(name);
+      setNewCategoryName("");
+      invalidateListCache("tasks:");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create category");
+    } finally {
+      setCreatingCategory(false);
+    }
+  }
+
+  function renderTaskCard(row: TaskRow) {
+    const completedLabel = formatShortDate(row.completedAt);
+    const application = isApplicationTask(row);
+    const dueDraft = dueDraftFor(row);
+    const linkLabel = application ? "Apply" : "Open link";
+    const deadlineLabel = row.dueAt
+      ? application
+        ? applyByLabel(row.dueAt)
+        : dueLabel(row.dueAt)
+      : null;
+    return (
+      <article key={row.id} className="card application-card task-card">
+        <div className="task-card-header">
+          <h2 className="application-card-title task-card-header-title">{row.title}</h2>
+          <div className="meta application-card-meta task-card-header-meta">
+            {row.organization && <span className="employer">{row.organization}</span>}
+            {application && row.location && (
+              <span className="location">{row.location}</span>
+            )}
+            {!application && view === "completed" && (
+              <span className="task-category-pill">{row.categoryName}</span>
+            )}
+          </div>
+          {view === "open" && row.dueAt && (
+            <div className="application-card-aside-countdown task-card-header-aside">
+              {deadlineLabel && (
+                <div className="task-card-deadline-label">{deadlineLabel}</div>
+              )}
+              <InterviewCountdown target={row.dueAt} />
+            </div>
+          )}
+          {view === "open" && (
+            <div className="task-card-toolbar">
+              <button
+                type="button"
+                className="task-edit-btn"
+                aria-label="Edit task"
+                disabled={pendingId === row.id}
+                onClick={() => setEditing(row)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" />
+                  <path d="M13.5 6.5l3 3" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="todo-remove-btn"
+                aria-label="Delete task"
+                disabled={pendingId === row.id}
+                onClick={() => setRemoveConfirm(row)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+        {(view === "open" || row.url || completedLabel) && (
+          <div className="row-actions application-card-footer application-card-footer-todo">
+            {view === "open" && (
+              <form
+                className="application-card-apply-by"
+                onSubmit={(event) => void saveDueAt(event, row)}
+              >
+                <label className="application-apply-by-field">
+                  <span className="application-apply-by-field-label">Date</span>
+                  <input
+                    type="date"
+                    value={dueDraft.date}
+                    disabled={pendingId === row.id}
+                    onChange={(event) => setDueDraft(row.id, { date: event.target.value })}
+                  />
+                </label>
+                <label className="application-apply-by-field">
+                  <span className="application-apply-by-field-label">Time</span>
+                  <input
+                    type="time"
+                    value={dueDraft.time}
+                    disabled={pendingId === row.id}
+                    onChange={(event) => setDueDraft(row.id, { time: event.target.value })}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="secondary"
+                  disabled={pendingId === row.id || !dueDraft.date}
+                >
+                  Save
+                </button>
+                {dueFlash[row.id] && (
+                  <span className="save-flash-inline" role="status" aria-live="polite">
+                    Saved!
+                  </span>
+                )}
+              </form>
+            )}
+            <div className="application-card-footer-actions">
+              {row.url && (
+                <a
+                  className="external application-card-apply-link"
+                  href={row.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {linkLabel}
+                  <span className="ext-icon" aria-hidden="true">↗</span>
+                </a>
+              )}
+              {view === "open" && (
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={pendingId === row.id}
+                  onClick={() => setCompleteConfirm(row)}
+                >
+                  {application ? "Mark applied" : "Complete"}
+                </button>
+              )}
+              {view === "completed" && !application && (
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={pendingId === row.id}
+                  onClick={() => setReopenConfirm(row)}
+                >
+                  Mark to-do
+                </button>
+              )}
+              {view === "completed" && completedLabel && (
+                <span className="applied-date">Completed: {completedLabel}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </article>
+    );
+  }
+
   return (
     <section>
       <div className="tabs-row">
@@ -291,153 +461,66 @@ export default function Tasks() {
             </button>
           ))}
         </div>
-        <button type="button" onClick={() => setAdding(true)}>
-          Add task +
-        </button>
       </div>
       {error && <p className="error">{error}</p>}
       {!loaded && rows.length === 0 && <p className="muted">Loading…</p>}
-      {loaded && rows.length === 0 && <p className="muted">Nothing in this tab yet.</p>}
-      {rows.map((row) => {
-        const completedLabel = formatShortDate(row.completedAt);
-        const application = isApplicationTask(row);
-        const dueDraft = dueDraftFor(row);
-        const linkLabel = application ? "Apply" : "Open link";
-        const deadlineLabel = row.dueAt
-          ? application
-            ? applyByLabel(row.dueAt)
-            : dueLabel(row.dueAt)
-          : null;
-        return (
-          <article key={row.id} className="card application-card task-card">
-            <div className="task-card-header">
-              <h2 className="application-card-title task-card-header-title">{row.title}</h2>
-              <div className="meta application-card-meta task-card-header-meta">
-                {row.organization && <span className="employer">{row.organization}</span>}
-                {application && row.location && (
-                  <span className="location">{row.location}</span>
-                )}
-                {!application && (
-                  <span className="task-category-pill">{categoryLabel(row.category)}</span>
-                )}
-              </div>
-              {view === "open" && row.dueAt && (
-                <div className="application-card-aside-countdown task-card-header-aside">
-                  {deadlineLabel && (
-                    <div className="task-card-deadline-label">{deadlineLabel}</div>
-                  )}
-                  <InterviewCountdown target={row.dueAt} />
-                </div>
-              )}
-              {view === "open" && (
-                <div className="task-card-toolbar">
+      {view === "open" && loaded && (
+        <div className="task-board">
+          {categories.map((category) => {
+            const sectionTasks = rows.filter((row) => row.categoryId === category.id);
+            const empty = sectionTasks.length === 0;
+            const clamp = sectionTasks.length > SECTION_CLAMP_AFTER;
+            return (
+              <section
+                key={category.id}
+                className={
+                  empty
+                    ? "task-section task-section-empty"
+                    : clamp
+                      ? "task-section task-section-scroll"
+                      : "task-section"
+                }
+              >
+                <header className="task-section-header">
+                  <div className="task-section-title-row">
+                    <h2 className="task-section-title">{category.name}</h2>
+                    <span className="task-section-count">{sectionTasks.length}</span>
+                  </div>
                   <button
                     type="button"
-                    className="task-edit-btn"
-                    aria-label="Edit task"
-                    disabled={pendingId === row.id}
-                    onClick={() => setEditing(row)}
+                    className="secondary task-section-add"
+                    onClick={() => setAddingCategory(category)}
                   >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" />
-                      <path d="M13.5 6.5l3 3" />
-                    </svg>
+                    Add
                   </button>
-                  <button
-                    type="button"
-                    className="todo-remove-btn"
-                    aria-label="Delete task"
-                    disabled={pendingId === row.id}
-                    onClick={() => setRemoveConfirm(row)}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </div>
-            {(view === "open" || row.url || completedLabel) && (
-              <div className="row-actions application-card-footer application-card-footer-todo">
-                {view === "open" && (
-                  <form
-                    className="application-card-apply-by"
-                    onSubmit={(event) => void saveDueAt(event, row)}
-                  >
-                    <label className="application-apply-by-field">
-                      <span className="application-apply-by-field-label">Date</span>
-                      <input
-                        type="date"
-                        value={dueDraft.date}
-                        disabled={pendingId === row.id}
-                        onChange={(event) => setDueDraft(row.id, { date: event.target.value })}
-                      />
-                    </label>
-                    <label className="application-apply-by-field">
-                      <span className="application-apply-by-field-label">Time</span>
-                      <input
-                        type="time"
-                        value={dueDraft.time}
-                        disabled={pendingId === row.id}
-                        onChange={(event) => setDueDraft(row.id, { time: event.target.value })}
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="secondary"
-                      disabled={pendingId === row.id || !dueDraft.date}
-                    >
-                      Save
-                    </button>
-                    {dueFlash[row.id] && (
-                      <span className="save-flash-inline" role="status" aria-live="polite">
-                        Saved!
-                      </span>
-                    )}
-                  </form>
+                </header>
+                {!empty && (
+                  <div className="task-section-body">
+                    {sectionTasks.map((row) => renderTaskCard(row))}
+                  </div>
                 )}
-                <div className="application-card-footer-actions">
-                  {row.url && (
-                    <a
-                      className="external application-card-apply-link"
-                      href={row.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {linkLabel}
-                      <span className="ext-icon" aria-hidden="true">↗</span>
-                    </a>
-                  )}
-                  {view === "open" && (
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={pendingId === row.id}
-                      onClick={() => setCompleteConfirm(row)}
-                    >
-                      {application ? "Mark applied" : "Complete"}
-                    </button>
-                  )}
-                  {view === "completed" && !application && (
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={pendingId === row.id}
-                      onClick={() => setReopenConfirm(row)}
-                    >
-                      Mark to-do
-                    </button>
-                  )}
-                  {view === "completed" && completedLabel && (
-                    <span className="applied-date">Completed: {completedLabel}</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </article>
-        );
-      })}
-      {adding && (
+              </section>
+            );
+          })}
+          <form className="task-new-category" onSubmit={(event) => void onCreateCategory(event)}>
+            <input
+              type="text"
+              value={newCategoryName}
+              placeholder="New category name"
+              onChange={(event) => setNewCategoryName(event.target.value)}
+              aria-label="New category name"
+            />
+            <button type="submit" className="secondary" disabled={creatingCategory || !newCategoryName.trim()}>
+              {creatingCategory ? "Adding…" : "Add category"}
+            </button>
+          </form>
+        </div>
+      )}
+      {view === "completed" && loaded && rows.length === 0 && (
+        <p className="muted">Nothing in this tab yet.</p>
+      )}
+      {view === "completed" && rows.map((row) => renderTaskCard(row))}
+      {addingCategory && (
         <div
           className="modal-backdrop"
           onClick={(event) => {
@@ -447,8 +530,11 @@ export default function Tasks() {
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-task-title">
             <AddTaskForm
               ref={addFormRef}
+              categoryId={addingCategory.id}
+              categoryKind={addingCategory.kind}
+              categoryName={addingCategory.name}
               onCreated={onCreated}
-              onCancel={() => setAdding(false)}
+              onCancel={() => setAddingCategory(null)}
             />
           </div>
         </div>
@@ -464,6 +550,7 @@ export default function Tasks() {
             <EditTaskForm
               ref={editFormRef}
               task={editing}
+              miscCategories={miscCategories}
               onSaved={onEdited}
               onCancel={() => setEditing(null)}
             />
