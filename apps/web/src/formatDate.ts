@@ -137,3 +137,15 @@ export function formatEstimateMinutes(mins: number | null | undefined): string |
   if (m === 0) return `${h}h`;
   return `${h}h ${m}m`;
 }
+
+/** Compact subtask due: "Tue 3:00 PM". */
+export function formatSubtaskDueShort(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}

@@ -72,6 +72,7 @@ import {
   moveSubtask,
   patchSubtask,
   reopenSubtask,
+  reorderSubtasks,
 } from "./taskSubtasks.js";
 import {
   createTaskCategory,
@@ -882,6 +883,29 @@ api.post("/tasks/:taskId/subtasks/:subtaskId/move", async (req, res) => {
     const subtasks = await moveSubtask(pool, req.params.taskId, req.params.subtaskId, direction);
     if (!subtasks) {
       res.status(404).json({ error: "Subtask not found" });
+      return;
+    }
+    res.json({ subtasks });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.post("/tasks/:taskId/subtasks/reorder", async (req, res) => {
+  const orderedIds = (req.body as { orderedIds?: unknown }).orderedIds;
+  if (!Array.isArray(orderedIds) || !orderedIds.every((id) => typeof id === "string")) {
+    res.status(400).json({ error: "orderedIds must be an array of strings" });
+    return;
+  }
+  try {
+    const subtasks = await reorderSubtasks(pool, req.params.taskId, orderedIds);
+    if (!subtasks) {
+      res.status(404).json({ error: "Task not found" });
       return;
     }
     res.json({ subtasks });

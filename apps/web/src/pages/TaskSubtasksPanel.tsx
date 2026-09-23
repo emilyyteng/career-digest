@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, type DragEvent } from "react";
 import {
   completeSubtask,
-  moveSubtask,
   reopenSubtask,
+  reorderSubtasks,
   type TaskRow,
 } from "../api";
+import { formatEstimateMinutes, formatSubtaskDueShort } from "../formatDate";
 
 type Props = {
   task: TaskRow;
@@ -13,7 +14,23 @@ type Props = {
   onError: (message: string) => void;
 };
 
-/** Checklist + progress only — Add lives in the card footer. */
+function DragHandle() {
+  return (
+    <span className="task-subtask-handle" aria-hidden="true" title="Drag to reorder">
+      <svg viewBox="0 0 16 16" width="14" height="14">
+        <path
+          d="M3 5h10M3 8h10M3 11h10"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
+}
+
+/** Checklist + progress; Edit subtasks lives in the card footer. */
 export default function TaskSubtasksPanel({
   task,
   disabled,
@@ -21,6 +38,8 @@ export default function TaskSubtasksPanel({
   onError,
 }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   const subtasks = task.subtasks ?? [];
   const progress = task.subtaskProgress;
@@ -43,17 +62,52 @@ export default function TaskSubtasksPanel({
     }
   }
 
-  async function onMove(subId: string, direction: "up" | "down") {
-    if (busyId) return;
-    setBusyId(subId);
+  function onDragStart(event: DragEvent, subId: string) {
+    if (disabled) {
+      event.preventDefault();
+      return;
+    }
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", subId);
+    setDraggingId(subId);
+  }
+
+  function onDragOver(event: DragEvent, subId: string) {
+    if (!draggingId || draggingId === subId) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    setDragOverId(subId);
+  }
+
+  async function onDrop(event: DragEvent, targetId: string) {
+    event.preventDefault();
+    const sourceId = draggingId ?? event.dataTransfer.getData("text/plain");
+    setDraggingId(null);
+    setDragOverId(null);
+    if (!sourceId || sourceId === targetId || disabled) return;
+
+    const ids = open.map((s) => s.id);
+    const from = ids.indexOf(sourceId);
+    const to = ids.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    const next = [...ids];
+    next.splice(from, 1);
+    next.splice(to, 0, sourceId);
+
+    setBusyId(sourceId);
     try {
-      await moveSubtask(task.id, subId, direction);
+      await reorderSubtasks(task.id, next);
       onChanged();
     } catch (err) {
       onError(err instanceof Error ? err.message : "Could not reorder");
     } finally {
       setBusyId(null);
     }
+  }
+
+  function onDragEnd() {
+    setDraggingId(null);
+    setDragOverId(null);
   }
 
   const pct =
@@ -83,8 +137,33 @@ export default function TaskSubtasksPanel({
         </div>
       )}
       <ul className="task-subtasks-list">
-        {open.map((sub, index) => (
-          <li key={sub.id} className="task-subtask-row">
+        {open.map((sub) => {
+          const estimate = formatEstimateMinutes(sub.estimateMinutes);
+          const due = formatSubtaskDueShort(sub.dueAt);
+          return (
+          <li
+            key={sub.id}
+            className={[
+              "task-subtask-row",
+              draggingId === sub.id ? "is-dragging" : "",
+              dragOverId === sub.id ? "is-drag-over" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onDragOver={(event) => onDragOver(event, sub.id)}
+            onDrop={(event) => void onDrop(event, sub.id)}
+            onDragEnd={onDragEnd}
+          >
+            <button
+              type="button"
+              className="task-subtask-handle-btn"
+              draggable={!disabled && busyId == null}
+              aria-label={`Reorder ${sub.title}`}
+              disabled={disabled || busyId === sub.id}
+              onDragStart={(event) => onDragStart(event, sub.id)}
+            >
+              <DragHandle />
+            </button>
             <label className="task-subtask-check">
               <input
                 type="checkbox"
@@ -92,32 +171,21 @@ export default function TaskSubtasksPanel({
                 disabled={disabled || busyId === sub.id}
                 onChange={() => void onToggle(sub.id, "open")}
               />
-              <span>{sub.title}</span>
+              <span className="task-subtask-title-cluster">
+                <span className="task-subtask-title">{sub.title}</span>
+                {estimate && <span className="task-subtask-estimate">{estimate}</span>}
+              </span>
             </label>
-            <div className="task-subtask-actions">
-              <button
-                type="button"
-                className="task-subtask-move"
-                aria-label="Move up"
-                disabled={disabled || busyId === sub.id || index === 0}
-                onClick={() => void onMove(sub.id, "up")}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="task-subtask-move"
-                aria-label="Move down"
-                disabled={disabled || busyId === sub.id || index === open.length - 1}
-                onClick={() => void onMove(sub.id, "down")}
-              >
-                ↓
-              </button>
-            </div>
+            {due && <span className="task-subtask-due">{due}</span>}
           </li>
-        ))}
-        {done.map((sub) => (
+          );
+        })}
+        {done.map((sub) => {
+          const estimate = formatEstimateMinutes(sub.estimateMinutes);
+          const due = formatSubtaskDueShort(sub.dueAt);
+          return (
           <li key={sub.id} className="task-subtask-row is-done">
+            <span className="task-subtask-handle-spacer" aria-hidden="true" />
             <label className="task-subtask-check">
               <input
                 type="checkbox"
@@ -125,10 +193,15 @@ export default function TaskSubtasksPanel({
                 disabled={disabled || busyId === sub.id}
                 onChange={() => void onToggle(sub.id, "completed")}
               />
-              <span>{sub.title}</span>
+              <span className="task-subtask-title-cluster">
+                <span className="task-subtask-title">{sub.title}</span>
+                {estimate && <span className="task-subtask-estimate">{estimate}</span>}
+              </span>
             </label>
+            {due && <span className="task-subtask-due">{due}</span>}
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

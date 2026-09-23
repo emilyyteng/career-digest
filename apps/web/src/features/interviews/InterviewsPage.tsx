@@ -187,15 +187,6 @@ export default function Interviews() {
     load().catch((err: Error) => setError(err.message));
   }, [view]);
 
-  useEffect(() => {
-    if (!adding) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") addFormRef.current?.requestClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [adding]);
-
   function requestCloseAdd() {
     addFormRef.current?.requestClose();
   }
@@ -313,28 +304,16 @@ export default function Interviews() {
         </ModalLayer>
       )}
       {adding && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) requestCloseAdd();
-          }}
-        >
-          <div
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="add-interview-title"
-          >
-            <AddInterviewModal
-              ref={addFormRef}
-              onCreated={(threadId) => {
-                setAdding(false);
-                navigate(`/interviews/${threadId}`);
-              }}
-              onCancel={() => setAdding(false)}
-            />
-          </div>
-        </div>
+        <ModalLayer labelledBy="add-interview-title" onClose={requestCloseAdd}>
+          <AddInterviewModal
+            ref={addFormRef}
+            onCreated={(threadId) => {
+              setAdding(false);
+              navigate(`/interviews/${threadId}`);
+            }}
+            onCancel={() => setAdding(false)}
+          />
+        </ModalLayer>
       )}
     </section>
   );

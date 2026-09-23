@@ -225,8 +225,8 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
         </div>
       </form>
       {confirmDiscard && (
-        <div className="modal-backdrop" role="presentation">
-          <div className="modal" role="dialog" aria-modal="true">
+        <div className="modal-backdrop modal-backdrop-nested" role="presentation">
+          <div className="modal modal-compact" role="dialog" aria-modal="true">
             <h2>Discard draft?</h2>
             <p className="muted">You have unsaved fields.</p>
             <div className="row-actions">

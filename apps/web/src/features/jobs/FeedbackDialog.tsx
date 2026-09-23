@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
+import ModalLayer, { type ModalLayerHandle } from "../../ModalLayer";
 
 type Kind = "like" | "dismiss" | "unlike";
 
@@ -43,74 +44,73 @@ export default function FeedbackDialog({
   onCancel,
   onConfirm,
 }: Props) {
+  const layerRef = useRef<ModalLayerHandle>(null);
   const copy = COPY[kind];
   const [note, setNote] = useState("");
   const [teach, setTeach] = useState(false);
-
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onCancel();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
 
   const showNote = Boolean(copy.note) && (kind !== "dismiss" || teach);
   const lede =
     kind === "dismiss" && !teach
       ? "Hides this posting on the Mismatches tab without teaching the ranker. Re-ingest won't put it back on Ranked until you Rerank."
       : copy.lede;
+  const dirty = !pending && (note.trim() !== "" || teach);
 
   return (
-    <div
-      className="modal-backdrop"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onCancel();
+    <ModalLayer
+      ref={layerRef}
+      labelledBy="feedback-title"
+      dirty={dirty}
+      onClose={() => {
+        if (!pending) onCancel();
       }}
     >
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
-        <form
-          className="form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onConfirm({
-              note: kind === "dismiss" && !teach ? "" : note.trim(),
-              teach: kind === "dismiss" ? teach : true,
-            });
-          }}
-        >
-          <h2 id="feedback-title">{copy.heading}</h2>
-          <p className="muted lede">{title}</p>
-          <p className="muted lede">{lede}</p>
-          {kind === "dismiss" && (
-            <label className="feedback-teach-toggle">
-              <span className="feedback-teach-toggle-control">
-                <input
-                  type="checkbox"
-                  checked={teach}
-                  onChange={(event) => setTeach(event.target.checked)}
-                />
-                Use as ranking feedback
-              </span>
-            </label>
-          )}
-          {showNote && (
-            <textarea
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder={copy.note}
-            />
-          )}
-          <div className="form-actions">
-            <button type="button" className="secondary" onClick={onCancel} disabled={pending}>
-              Cancel
-            </button>
-            <button type="submit" className="modal-confirm-btn" disabled={pending}>
-              {pending ? "Saving…" : copy.confirm}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <form
+        className="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm({
+            note: kind === "dismiss" && !teach ? "" : note.trim(),
+            teach: kind === "dismiss" ? teach : true,
+          });
+        }}
+      >
+        <h2 id="feedback-title">{copy.heading}</h2>
+        <p className="muted lede">{title}</p>
+        <p className="muted lede">{lede}</p>
+        {kind === "dismiss" && (
+          <label className="feedback-teach-toggle">
+            <span className="feedback-teach-toggle-control">
+              <input
+                type="checkbox"
+                checked={teach}
+                onChange={(event) => setTeach(event.target.checked)}
+              />
+              Use as ranking feedback
+            </span>
+          </label>
+        )}
+        {showNote && (
+          <textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder={copy.note}
+          />
+        )}
+        <div className="form-actions">
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => layerRef.current?.requestClose()}
+            disabled={pending}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="modal-confirm-btn" disabled={pending}>
+            {pending ? "Saving…" : copy.confirm}
+          </button>
+        </div>
+      </form>
+    </ModalLayer>
   );
 }

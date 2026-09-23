@@ -704,6 +704,15 @@ export const moveSubtask = (taskId: string, subtaskId: string, direction: "up" |
     }),
   );
 
+export const reorderSubtasks = (taskId: string, orderedIds: string[]) =>
+  parse<{ subtasks: TaskSubtaskRow[] }>(
+    api(`/api/tasks/${taskId}/subtasks/reorder`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedIds }),
+    }),
+  );
+
 export const deleteSubtask = (taskId: string, subtaskId: string) =>
   parse<{ ok: boolean }>(
     api(`/api/tasks/${taskId}/subtasks/${subtaskId}`, { method: "DELETE" }),

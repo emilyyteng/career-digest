@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
+import ModalLayer, { type ModalLayerHandle } from "../../ModalLayer";
 
 type Props = {
   title: string;
@@ -13,54 +14,53 @@ export default function MarkAppliedDialog({
   onCancel,
   onConfirm,
 }: Props) {
+  const layerRef = useRef<ModalLayerHandle>(null);
   const [notes, setNotes] = useState("");
-
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onCancel();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
+  const dirty = !pending && notes.trim() !== "";
 
   return (
-    <div
-      className="modal-backdrop"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onCancel();
+    <ModalLayer
+      ref={layerRef}
+      labelledBy="mark-applied-title"
+      dirty={dirty}
+      onClose={() => {
+        if (!pending) onCancel();
       }}
     >
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="mark-applied-title">
-        <form
-          className="form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onConfirm(notes.trim());
-          }}
-        >
-          <h2 id="mark-applied-title">Mark as applied?</h2>
-          <p className="muted lede">{title}</p>
-          <p className="muted lede">
-            This removes the role from Jobs and moves it to Applications.
-          </p>
-          <label className="mark-applied-notes-label">
-            <span>Notes (optional)</span>
-            <textarea
-              value={notes}
-              placeholder="Paste application questions, answers, or anything to remember…"
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </label>
-          <div className="form-actions">
-            <button type="button" className="secondary" onClick={onCancel} disabled={pending}>
-              Cancel
-            </button>
-            <button type="submit" className="modal-confirm-btn" disabled={pending}>
-              {pending ? "Saving…" : "Mark applied"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <form
+        className="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm(notes.trim());
+        }}
+      >
+        <h2 id="mark-applied-title">Mark as applied?</h2>
+        <p className="muted lede">{title}</p>
+        <p className="muted lede">
+          This removes the role from Jobs and moves it to Applications.
+        </p>
+        <label className="mark-applied-notes-label">
+          <span>Notes (optional)</span>
+          <textarea
+            value={notes}
+            placeholder="Paste application questions, answers, or anything to remember…"
+            onChange={(event) => setNotes(event.target.value)}
+          />
+        </label>
+        <div className="form-actions">
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => layerRef.current?.requestClose()}
+            disabled={pending}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="modal-confirm-btn" disabled={pending}>
+            {pending ? "Saving…" : "Mark applied"}
+          </button>
+        </div>
+      </form>
+    </ModalLayer>
   );
 }

@@ -22,6 +22,7 @@ import {
   formatEstimateMinutes,
 } from "../formatDate";
 import InterviewCountdown from "../features/interviews/InterviewCountdown";
+import ModalLayer from "../ModalLayer";
 import PriorityBadge from "../PriorityBadge";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import StepActionConfirm from "../StepActionConfirm";
@@ -130,24 +131,6 @@ export default function Tasks() {
       cancelled = true;
     };
   }, [view]);
-
-  useEffect(() => {
-    if (!addingCategory) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") addFormRef.current?.requestClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [addingCategory]);
-
-  useEffect(() => {
-    if (!editing) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") editFormRef.current?.requestClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [editing]);
 
   function requestCloseAdd() {
     addFormRef.current?.requestClose();
@@ -667,41 +650,33 @@ export default function Tasks() {
       )}
       {view === "completed" && rows.map((row) => renderTaskCard(row))}
       {addingCategory && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) requestCloseAdd();
-          }}
+        <ModalLayer
+          labelledBy="add-task-title"
+          onClose={requestCloseAdd}
         >
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-task-title">
-            <AddTaskForm
-              ref={addFormRef}
-              categoryId={addingCategory.id}
-              categoryKind={addingCategory.kind}
-              categoryName={addingCategory.name}
-              onCreated={onCreated}
-              onCancel={() => setAddingCategory(null)}
-            />
-          </div>
-        </div>
+          <AddTaskForm
+            ref={addFormRef}
+            categoryId={addingCategory.id}
+            categoryKind={addingCategory.kind}
+            categoryName={addingCategory.name}
+            onCreated={onCreated}
+            onCancel={() => setAddingCategory(null)}
+          />
+        </ModalLayer>
       )}
       {editing && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) requestCloseEdit();
-          }}
+        <ModalLayer
+          labelledBy="edit-task-title"
+          onClose={requestCloseEdit}
         >
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="edit-task-title">
-            <EditTaskForm
-              ref={editFormRef}
-              task={editing}
-              miscCategories={miscCategories}
-              onSaved={onEdited}
-              onCancel={() => setEditing(null)}
-            />
-          </div>
-        </div>
+          <EditTaskForm
+            ref={editFormRef}
+            task={editing}
+            miscCategories={miscCategories}
+            onSaved={onEdited}
+            onCancel={() => setEditing(null)}
+          />
+        </ModalLayer>
       )}
       {editingSubtasksFor && (
         <EditSubtasksModal
@@ -715,66 +690,45 @@ export default function Tasks() {
         />
       )}
       {removeConfirm && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setRemoveConfirm(null);
-          }}
-        >
-          <div className="modal" role="dialog" aria-modal="true">
-            <StepActionConfirm
-              title="Delete task?"
-              description="This permanently removes the task. You can add a new one with the right category if needed."
-              confirmLabel="Delete"
-              onConfirm={() => void confirmRemove()}
-              onCancel={() => setRemoveConfirm(null)}
-            />
-          </div>
-        </div>
+        <ModalLayer onClose={() => setRemoveConfirm(null)}>
+          <StepActionConfirm
+            title="Delete task?"
+            description="This permanently removes the task. You can add a new one with the right category if needed."
+            confirmLabel="Delete"
+            onConfirm={() => void confirmRemove()}
+            onCancel={() => setRemoveConfirm(null)}
+          />
+        </ModalLayer>
       )}
       {completeConfirm && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setCompleteConfirm(null);
-          }}
-        >
-          <div className="modal" role="dialog" aria-modal="true">
-            <StepActionConfirm
-              title={
-                isApplicationTask(completeConfirm)
-                  ? "Mark as applied?"
-                  : "Mark task complete?"
-              }
-              description={
-                isApplicationTask(completeConfirm)
-                  ? "This moves the application to Applied with today's date and removes the task from your open list."
-                  : "This archives the task to Completed. You can still refer back to it there."
-              }
-              confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
-              onConfirm={() => void confirmComplete()}
-              onCancel={() => setCompleteConfirm(null)}
-            />
-          </div>
-        </div>
+        <ModalLayer onClose={() => setCompleteConfirm(null)}>
+          <StepActionConfirm
+            title={
+              isApplicationTask(completeConfirm)
+                ? "Mark as applied?"
+                : "Mark task complete?"
+            }
+            description={
+              isApplicationTask(completeConfirm)
+                ? "This moves the application to Applied with today's date and removes the task from your open list."
+                : "This archives the task to Completed. You can still refer back to it there."
+            }
+            confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
+            onConfirm={() => void confirmComplete()}
+            onCancel={() => setCompleteConfirm(null)}
+          />
+        </ModalLayer>
       )}
       {reopenConfirm && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setReopenConfirm(null);
-          }}
-        >
-          <div className="modal" role="dialog" aria-modal="true">
-            <StepActionConfirm
-              title="Move back to open?"
-              description="This returns the task to your open list and clears the completed date."
-              confirmLabel="Mark to-do"
-              onConfirm={() => void confirmReopen()}
-              onCancel={() => setReopenConfirm(null)}
-            />
-          </div>
-        </div>
+        <ModalLayer onClose={() => setReopenConfirm(null)}>
+          <StepActionConfirm
+            title="Move back to open?"
+            description="This returns the task to your open list and clears the completed date."
+            confirmLabel="Mark to-do"
+            onConfirm={() => void confirmReopen()}
+            onCancel={() => setReopenConfirm(null)}
+          />
+        </ModalLayer>
       )}
     </section>
   );

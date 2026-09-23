@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { getApplications, type ApplicationRow } from "../../api";
 import { formatShortDate } from "../../formatDate";
+import ModalLayer from "../../ModalLayer";
 import ApplicationMetaBadges from "./ApplicationMetaBadges";
 import { invalidateListCache, readListCache, writeListCache } from "../../listCache";
 import { listLinkState } from "../../navigationReturn";
@@ -101,15 +102,6 @@ export default function Applications() {
     };
   }, [status, rawStatus]);
 
-  useEffect(() => {
-    if (!adding) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") addFormRef.current?.requestClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [adding]);
-
   function requestCloseAdd() {
     addFormRef.current?.requestClose();
   }
@@ -206,20 +198,13 @@ export default function Applications() {
         );
       })}
       {adding && (
-        <div
-          className="modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) requestCloseAdd();
-          }}
-        >
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-app-title">
-            <AddApplicationForm
-              ref={addFormRef}
-              onCreated={onCreated}
-              onCancel={() => setAdding(false)}
-            />
-          </div>
-        </div>
+        <ModalLayer labelledBy="add-app-title" onClose={requestCloseAdd}>
+          <AddApplicationForm
+            ref={addFormRef}
+            onCreated={onCreated}
+            onCancel={() => setAdding(false)}
+          />
+        </ModalLayer>
       )}
     </section>
   );

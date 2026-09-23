@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import {
   createSubtask,
   deleteSubtask,
@@ -13,6 +13,7 @@ import {
   DEFAULT_APPLY_BY_TIME,
   toDateInputValue,
 } from "../formatDate";
+import ModalLayer, { type ModalLayerHandle } from "../ModalLayer";
 import { PrioritySelect } from "../PriorityBadge";
 
 type DraftRow = {
@@ -68,24 +69,22 @@ type Props = {
   onCancel: () => void;
 };
 
+function initialRowsFor(task: TaskRow): DraftRow[] {
+  const existing = (task.subtasks ?? []).map(fromSubtask);
+  return existing.length > 0 ? existing : [emptyRow()];
+}
+
 export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
-  const [rows, setRows] = useState<DraftRow[]>(() => {
-    const existing = (task.subtasks ?? []).map(fromSubtask);
-    return existing.length > 0 ? existing : [emptyRow()];
-  });
+  const layerRef = useRef<ModalLayerHandle>(null);
+  const initialSnapshot = useMemo(
+    () => initialRowsFor(task).map(snapshot).join("\0"),
+    [task],
+  );
+  const [rows, setRows] = useState<DraftRow[]>(() => initialRowsFor(task));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        if (!saving) onCancel();
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [saving, onCancel]);
+  const dirty = !saving && rows.map(snapshot).join("\0") !== initialSnapshot;
 
   function updateRow(key: string, patch: Partial<DraftRow>) {
     setRows((current) =>
@@ -160,118 +159,119 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
   }
 
   return (
-    <div
-      className="modal-backdrop"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !saving) onCancel();
+    <ModalLayer
+      ref={layerRef}
+      className="modal modal-wide"
+      labelledBy="edit-subtasks-title"
+      dirty={dirty}
+      onClose={() => {
+        if (!saving) onCancel();
       }}
     >
-      <div
-        className="modal modal-wide"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="edit-subtasks-title"
-      >
-        <form className="form edit-subtasks-form" onSubmit={(event) => void onSubmit(event)}>
-          <h2 id="edit-subtasks-title">Edit subtasks</h2>
-          <p className="muted field-hint edit-subtasks-parent">{task.title}</p>
-          {error && <p className="error">{error}</p>}
+      <form className="form edit-subtasks-form" onSubmit={(event) => void onSubmit(event)}>
+        <h2 id="edit-subtasks-title">Edit subtasks</h2>
+        <p className="muted field-hint edit-subtasks-parent">{task.title}</p>
+        {error && <p className="error">{error}</p>}
 
-          <div className="edit-subtasks-table" role="table" aria-label="Subtasks">
-            <div className="edit-subtasks-head" role="row">
-              <span role="columnheader">Title</span>
-              <span role="columnheader">Due</span>
-              <span role="columnheader">Time</span>
-              <span role="columnheader">Est.</span>
-              <span role="columnheader">Priority</span>
-              <span role="columnheader" className="visually-hidden">
-                Remove
-              </span>
-            </div>
-            {rows.map((row) => (
-              <div
-                key={row.key}
-                className={`edit-subtasks-row${row.status === "completed" ? " is-done" : ""}`}
-                role="row"
-              >
-                <input
-                  type="text"
-                  value={row.title}
-                  placeholder="Subtask title"
-                  disabled={saving}
-                  aria-label="Title"
-                  onChange={(event) => updateRow(row.key, { title: event.target.value })}
-                />
-                <input
-                  type="date"
-                  value={row.dueDate}
-                  disabled={saving}
-                  aria-label="Due date"
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    updateRow(row.key, {
-                      dueDate: next,
-                      dueTime: next && !row.dueTime ? DEFAULT_APPLY_BY_TIME : row.dueTime,
-                    });
-                  }}
-                />
-                <input
-                  type="time"
-                  value={row.dueTime}
-                  disabled={saving || !row.dueDate}
-                  aria-label="Due time"
-                  onChange={(event) => updateRow(row.key, { dueTime: event.target.value })}
-                />
-                <input
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={row.estimateMinutes}
-                  placeholder="min"
-                  disabled={saving}
-                  aria-label="Estimate minutes"
-                  onChange={(event) => updateRow(row.key, { estimateMinutes: event.target.value })}
-                />
-                <PrioritySelect
-                  value={row.priorityOverride}
-                  onChange={(priorityOverride) => updateRow(row.key, { priorityOverride })}
-                  emptyLabel="Inherit"
-                  disabled={saving}
-                />
-                <button
-                  type="button"
-                  className="todo-remove-btn edit-subtasks-remove"
-                  aria-label="Remove subtask"
-                  disabled={saving}
-                  onClick={() => removeRow(row.key)}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+        <div className="edit-subtasks-table" role="table" aria-label="Subtasks">
+          <div className="edit-subtasks-head" role="row">
+            <span role="columnheader">Title</span>
+            <span role="columnheader">Due</span>
+            <span role="columnheader">Time</span>
+            <span role="columnheader">Est.</span>
+            <span role="columnheader">Priority</span>
+            <span role="columnheader" className="visually-hidden">
+              Remove
+            </span>
           </div>
+          {rows.map((row) => (
+            <div
+              key={row.key}
+              className={`edit-subtasks-row${row.status === "completed" ? " is-done" : ""}`}
+              role="row"
+            >
+              <input
+                type="text"
+                value={row.title}
+                placeholder="Subtask title"
+                disabled={saving}
+                aria-label="Title"
+                onChange={(event) => updateRow(row.key, { title: event.target.value })}
+              />
+              <input
+                type="date"
+                value={row.dueDate}
+                disabled={saving}
+                aria-label="Due date"
+                onChange={(event) => {
+                  const next = event.target.value;
+                  updateRow(row.key, {
+                    dueDate: next,
+                    dueTime: next && !row.dueTime ? DEFAULT_APPLY_BY_TIME : row.dueTime,
+                  });
+                }}
+              />
+              <input
+                type="time"
+                value={row.dueTime}
+                disabled={saving || !row.dueDate}
+                aria-label="Due time"
+                onChange={(event) => updateRow(row.key, { dueTime: event.target.value })}
+              />
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={row.estimateMinutes}
+                placeholder="min"
+                disabled={saving}
+                aria-label="Estimate minutes"
+                onChange={(event) => updateRow(row.key, { estimateMinutes: event.target.value })}
+              />
+              <PrioritySelect
+                value={row.priorityOverride}
+                onChange={(priorityOverride) => updateRow(row.key, { priorityOverride })}
+                emptyLabel="Inherit"
+                disabled={saving}
+              />
+              <button
+                type="button"
+                className="todo-remove-btn edit-subtasks-remove"
+                aria-label="Remove subtask"
+                disabled={saving}
+                onClick={() => removeRow(row.key)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
 
+        <button
+          type="button"
+          className="secondary edit-subtasks-add-row"
+          disabled={saving}
+          onClick={() => setRows((current) => [...current, emptyRow()])}
+        >
+          + Add another
+        </button>
+
+        <div className="form-actions">
           <button
             type="button"
-            className="secondary edit-subtasks-add-row"
+            className="secondary"
             disabled={saving}
-            onClick={() => setRows((current) => [...current, emptyRow()])}
+            onClick={() => layerRef.current?.requestClose()}
           >
-            + Add another
+            Cancel
           </button>
-
-          <div className="form-actions">
-            <button type="button" className="secondary" disabled={saving} onClick={onCancel}>
-              Cancel
-            </button>
-            <button type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <button type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </form>
+    </ModalLayer>
   );
 }

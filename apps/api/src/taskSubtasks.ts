@@ -404,6 +404,46 @@ export async function moveSubtask(
   return byTask.get(taskId) ?? [];
 }
 
+/** Reorder open subtasks to match orderedIds (must be a permutation of current open ids). */
+export async function reorderSubtasks(
+  db: Queryable,
+  taskId: string,
+  orderedIds: string[],
+): Promise<TaskSubtaskRow[] | null> {
+  await assertMiscParent(db, taskId);
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id
+     FROM task_subtasks
+     WHERE task_id = $1 AND status = 'open' AND parent_subtask_id IS NULL
+     ORDER BY sort_order ASC, created_at ASC`,
+    [taskId],
+  );
+  const current = rows.map((r) => r.id);
+  if (orderedIds.length !== current.length) {
+    throw Object.assign(new Error("orderedIds must include every open subtask once"), {
+      status: 400,
+    });
+  }
+  const currentSet = new Set(current);
+  for (const id of orderedIds) {
+    if (!currentSet.has(id)) {
+      throw Object.assign(new Error("orderedIds contains unknown subtask"), { status: 400 });
+    }
+  }
+  if (new Set(orderedIds).size !== orderedIds.length) {
+    throw Object.assign(new Error("orderedIds must be unique"), { status: 400 });
+  }
+
+  for (let i = 0; i < orderedIds.length; i += 1) {
+    await db.query(
+      `UPDATE task_subtasks SET sort_order = $2, updated_at = now() WHERE id = $1`,
+      [orderedIds[i], i],
+    );
+  }
+  const byTask = await listSubtasksForTasks(db, [taskId]);
+  return byTask.get(taskId) ?? [];
+}
+
 export async function completeOpenSubtasksForTask(
   db: Queryable,
   taskId: string,
