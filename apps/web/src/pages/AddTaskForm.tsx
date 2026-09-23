@@ -12,6 +12,8 @@ import {
 } from "../formatDate";
 import LocationSuggest from "../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
+import { PrioritySelect } from "../PriorityBadge";
+import type { TaskPriority } from "../api";
 
 type Props = {
   categoryId: string;
@@ -39,6 +41,8 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
   const [descriptionHtml, setDescriptionHtml] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState(DEFAULT_APPLY_BY_TIME);
+  const [priority, setPriority] = useState<TaskPriority | null>(null);
+  const [estimateMinutes, setEstimateMinutes] = useState("");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   const isApplication = categoryKind === "application";
@@ -51,7 +55,9 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
     notes.trim() !== "" ||
     !isEmptyRichHtml(descriptionHtml) ||
     dueDate !== "" ||
-    dueTime !== DEFAULT_APPLY_BY_TIME;
+    dueTime !== DEFAULT_APPLY_BY_TIME ||
+    priority != null ||
+    estimateMinutes.trim() !== "";
 
   function requestClose() {
     if (!onCancel) return;
@@ -83,6 +89,13 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
     setError(null);
     try {
       const dueAt = dueDate ? combineApplyByDateTime(dueDate, dueTime) : null;
+      const estimate =
+        estimateMinutes.trim() === "" ? null : Number(estimateMinutes.trim());
+      if (estimateMinutes.trim() !== "" && (!Number.isInteger(estimate) || (estimate ?? 0) <= 0)) {
+        setError("Estimate must be a positive number of minutes");
+        setSaving(false);
+        return;
+      }
       const row = await createTask({
         categoryId,
         title: title.trim(),
@@ -93,6 +106,8 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
         descriptionHtml:
           isApplication && !isEmptyRichHtml(descriptionHtml) ? descriptionHtml : null,
         dueAt,
+        priority,
+        estimateMinutes: estimate,
       });
       onCreated(row);
     } catch (err) {
@@ -178,6 +193,23 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
               value={dueTime}
               disabled={!dueDate}
               onChange={(event) => setDueTime(event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="task-due-fields">
+          <label>
+            Priority
+            <PrioritySelect value={priority} onChange={setPriority} />
+          </label>
+          <label>
+            Estimate (minutes)
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={estimateMinutes}
+              placeholder="e.g. 90"
+              onChange={(event) => setEstimateMinutes(event.target.value)}
             />
           </label>
         </div>

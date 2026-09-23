@@ -66,6 +66,14 @@ import {
   reopenTask,
 } from "./tasks.js";
 import {
+  completeSubtask,
+  createSubtask,
+  deleteSubtask,
+  moveSubtask,
+  patchSubtask,
+  reopenSubtask,
+} from "./taskSubtasks.js";
+import {
   createTaskCategory,
   deleteTaskCategory,
   listTaskCategories,
@@ -778,6 +786,131 @@ api.delete("/tasks/:id", async (req, res) => {
     return;
   }
   res.json({ ok: true });
+});
+
+api.post("/tasks/:taskId/subtasks", async (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  if (typeof body.title !== "string") {
+    res.status(400).json({ error: "title is required" });
+    return;
+  }
+  try {
+    const subtask = await createSubtask(pool, req.params.taskId, {
+      title: body.title,
+      dueAt: body.dueAt as string | null | undefined,
+      estimateMinutes: body.estimateMinutes as number | null | undefined,
+      priorityOverride: body.priorityOverride as 0 | 1 | 2 | null | undefined,
+    });
+    res.status(201).json(subtask);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.patch("/tasks/:taskId/subtasks/:subtaskId", async (req, res) => {
+  try {
+    const body = req.body as Record<string, unknown>;
+    const subtask = await patchSubtask(pool, req.params.taskId, req.params.subtaskId, {
+      title: typeof body.title === "string" ? body.title : undefined,
+      dueAt: body.dueAt as string | null | undefined,
+      estimateMinutes: body.estimateMinutes as number | null | undefined,
+      priorityOverride: body.priorityOverride as 0 | 1 | 2 | null | undefined,
+    });
+    if (!subtask) {
+      res.status(404).json({ error: "Subtask not found" });
+      return;
+    }
+    res.json(subtask);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.post("/tasks/:taskId/subtasks/:subtaskId/complete", async (req, res) => {
+  try {
+    const subtask = await completeSubtask(pool, req.params.taskId, req.params.subtaskId);
+    if (!subtask) {
+      res.status(404).json({ error: "Subtask not found or cannot complete" });
+      return;
+    }
+    res.json(subtask);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.post("/tasks/:taskId/subtasks/:subtaskId/reopen", async (req, res) => {
+  try {
+    const subtask = await reopenSubtask(pool, req.params.taskId, req.params.subtaskId);
+    if (!subtask) {
+      res.status(404).json({ error: "Subtask not found or cannot reopen" });
+      return;
+    }
+    res.json(subtask);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.post("/tasks/:taskId/subtasks/:subtaskId/move", async (req, res) => {
+  const direction = (req.body as { direction?: unknown }).direction;
+  if (direction !== "up" && direction !== "down") {
+    res.status(400).json({ error: "direction must be up or down" });
+    return;
+  }
+  try {
+    const subtasks = await moveSubtask(pool, req.params.taskId, req.params.subtaskId, direction);
+    if (!subtasks) {
+      res.status(404).json({ error: "Subtask not found" });
+      return;
+    }
+    res.json({ subtasks });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.delete("/tasks/:taskId/subtasks/:subtaskId", async (req, res) => {
+  try {
+    const deleted = await deleteSubtask(pool, req.params.taskId, req.params.subtaskId);
+    if (!deleted) {
+      res.status(404).json({ error: "Subtask not found" });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
 });
 
 api.get("/progress/today", async (req, res) => {

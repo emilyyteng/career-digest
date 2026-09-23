@@ -16,6 +16,8 @@ function item(partial: Partial<HomeUpcomingItem> & { at: string }): HomeUpcoming
     title: partial.title ?? "Task",
     categoryName: "Admin",
     deadlineLabel: "Due",
+    priority: null,
+    estimateMinutes: null,
     ...partial,
   };
 }
@@ -67,6 +69,8 @@ describe("homeUpcoming helpers", () => {
           primaryTitle: "Intern",
           stepTitle: "Phone",
           deadlineLabel: "Scheduled",
+          priority: null,
+          estimateMinutes: null,
         }),
       ],
       now,
@@ -83,27 +87,18 @@ describe("homeUpcoming helpers", () => {
     expect(groups[3]!.label).toBe("Friday · Sep 25");
   });
 
-  it("sorts soonest first within a group and mixes kinds", () => {
+  it("sorts by due then priority within a group", () => {
     const now = new Date("2026-09-22T00:00:00.000Z");
     const groups = buildUpcomingGroups(
       [
-        item({ id: "b", at: "2026-09-23T20:00:00.000Z" }),
-        {
-          kind: "interview",
-          threadId: "th",
-          stepId: "s",
-          at: "2026-09-23T12:00:00.000Z",
-          deadlineLabel: "Due",
-          company: "X",
-          primaryTitle: "Y",
-          stepTitle: "Z",
-        },
-        item({ id: "a", at: "2026-09-23T18:00:00.000Z" }),
+        item({ id: "p2", at: "2026-09-23T12:00:00.000Z", priority: 2 }),
+        item({ id: "p0", at: "2026-09-23T12:00:00.000Z", priority: 0 }),
+        item({ id: "none", at: "2026-09-23T12:00:00.000Z", priority: null }),
+        item({ id: "later", at: "2026-09-23T18:00:00.000Z", priority: 0 }),
       ],
       now,
       "UTC",
     );
-    expect(groups).toHaveLength(1);
-    expect(groups[0]!.items.map((i) => i.id ?? i.stepId)).toEqual(["s", "a", "b"]);
+    expect(groups[0]!.items.map((i) => i.id)).toEqual(["p0", "p2", "none", "later"]);
   });
 });

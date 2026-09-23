@@ -2,6 +2,10 @@
 
 Development history for Career Digest. For setup, see [docs/SETUP.md](./SETUP.md).
 
+## Milestone 13 — Tasks subtasks, priority, estimates
+
+Misc task checklists (one-level) with own due dates on Home Upcoming; P0/P1/P2 stoplight + minute estimates on tasks/subtasks; parent complete auto-completes open children. Daily Progress apps/LC cap **3**.
+
 ## Milestone 12 — Home upcoming this week
 
 Home **Upcoming this week** replaces Needs attention: overdue + next 7 local days, interviews and tasks in one list grouped by day (Today / Tomorrow / weekday · date), dated actionable items only (pending/scheduled — not awaiting employer), no 4-cap.
@@ -31,7 +35,7 @@ Activity / Effort / Outcome for internship search motivation.
 - Progress APIs (`/api/progress/*`) including dated LeetCode + reflection edit
 - **Progress** page (`/progress`): **Today** (strip, week/month Outcome, dual heatmaps, log) and **History** (calendar dig-in, view-first edit)
 - Application activity derived from `applications.applied_at` (local calendar date)
-- Home today strip (`Today: n/5 apps · n/5 LC · deep work ✓` / `no deep work`)
+- Home today strip (`Today: n/3 apps · n/3 LC · deep work ✓` / `no deep work`)
 
 ## Milestone 7 — Unified Tasks backlog
 

@@ -4,8 +4,8 @@ import { ACTIVITY_CREDIT_CAP, earnedCredit, isValidTimezone, localDateInTimezone
 describe("earnedCredit", () => {
   it("caps at activity credit limit", () => {
     expect(earnedCredit(0)).toBe(0);
+    expect(earnedCredit(2)).toBe(2);
     expect(earnedCredit(3)).toBe(3);
-    expect(earnedCredit(5)).toBe(5);
     expect(earnedCredit(12)).toBe(ACTIVITY_CREDIT_CAP);
   });
 });

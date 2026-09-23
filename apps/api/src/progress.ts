@@ -6,7 +6,7 @@ export type ProgressLane = (typeof PROGRESS_LANES)[number];
 export const PROGRESS_PERIODS = ["day", "week", "month"] as const;
 export type ProgressPeriod = (typeof PROGRESS_PERIODS)[number];
 
-export const ACTIVITY_CREDIT_CAP = 5;
+export const ACTIVITY_CREDIT_CAP = 3;
 
 export type ActivityCredit = {
   raw: number;

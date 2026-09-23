@@ -19,12 +19,15 @@ import {
   dueLabel,
   toDateInputValue,
   applyByTimeInputValue,
+  formatEstimateMinutes,
 } from "../formatDate";
 import InterviewCountdown from "../features/interviews/InterviewCountdown";
+import PriorityBadge from "../PriorityBadge";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import StepActionConfirm from "../StepActionConfirm";
 import AddTaskForm, { type AddTaskFormHandle } from "./AddTaskForm";
 import EditTaskForm, { type EditTaskFormHandle } from "./EditTaskForm";
+import TaskSubtasksPanel from "./TaskSubtasksPanel";
 
 const TABS: TaskView[] = ["open", "completed"];
 
@@ -359,7 +362,15 @@ export default function Tasks() {
     return (
       <article key={row.id} className="card application-card task-card">
         <div className="task-card-header">
-          <h2 className="application-card-title task-card-header-title">{row.title}</h2>
+          <h2 className="application-card-title task-card-header-title">
+            <PriorityBadge priority={row.priority} className="task-title-priority" />
+            {row.title}
+            {formatEstimateMinutes(row.estimateMinutes) && (
+              <span className="task-estimate-inline">
+                {formatEstimateMinutes(row.estimateMinutes)}
+              </span>
+            )}
+          </h2>
           <div className="meta application-card-meta task-card-header-meta">
             {row.organization && <span className="employer">{row.organization}</span>}
             {application && row.location && (
@@ -405,6 +416,17 @@ export default function Tasks() {
             </div>
           )}
         </div>
+        {view === "open" && !application && (
+          <TaskSubtasksPanel
+            task={row}
+            disabled={pendingId === row.id}
+            onChanged={() => {
+              invalidateListCache("tasks:");
+              void load().catch((err: Error) => setError(err.message));
+            }}
+            onError={(message) => setError(message)}
+          />
+        )}
         {(view === "open" || row.url || completedLabel) && (
           <div className="row-actions application-card-footer application-card-footer-todo">
             {view === "open" && (

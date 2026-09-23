@@ -1,26 +1,33 @@
 import type { Pool, PoolClient } from "pg";
 import { localDateInTimezone } from "./progress.js";
+import type { TaskPriority } from "./taskSubtasks.js";
 
 type Queryable = Pool | PoolClient;
 
-export type HomeUpcomingKind = "interview" | "task";
+export type HomeUpcomingKind = "interview" | "task" | "subtask";
 
 export type HomeUpcomingItem = {
   kind: HomeUpcomingKind;
   /** Shared sort / countdown instant (ISO). */
   at: string;
   deadlineLabel: string;
+  priority: TaskPriority | null;
+  estimateMinutes: number | null;
   // interview
   threadId?: string;
   stepId?: string;
   company?: string | null;
   primaryTitle?: string | null;
   stepTitle?: string | null;
-  // task
+  // task / subtask
   id?: string;
   title?: string;
   organization?: string | null;
   categoryName?: string;
+  // subtask
+  parentId?: string;
+  parentTitle?: string;
+  subtaskId?: string;
 };
 
 export type HomeUpcomingGroup = {
@@ -82,6 +89,10 @@ function interviewDeadlineLabel(at: string, scheduled: boolean): string {
   return formatted ? `${prefix}: ${formatted}` : prefix;
 }
 
+function asPriority(value: number | null | undefined): TaskPriority | null {
+  return value === 0 || value === 1 || value === 2 ? value : null;
+}
+
 /** Actionable dated steps only (not awaiting_employer / completed / skipped). */
 export function interviewStepAt(row: {
   status: string;
@@ -92,6 +103,10 @@ export function interviewStepAt(row: {
   if (row.dueAt) return row.dueAt;
   if (row.scheduledAt) return row.scheduledAt;
   return null;
+}
+
+function priorityRank(priority: TaskPriority | null | undefined): number {
+  return priority == null ? 99 : priority;
 }
 
 export function buildUpcomingGroups(
@@ -121,7 +136,11 @@ export function buildUpcomingGroups(
   }
 
   const sortItems = (rows: HomeUpcomingItem[]) =>
-    [...rows].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+    [...rows].sort((a, b) => {
+      const atDiff = new Date(a.at).getTime() - new Date(b.at).getTime();
+      if (atDiff !== 0) return atDiff;
+      return priorityRank(a.priority) - priorityRank(b.priority);
+    });
 
   const groups: HomeUpcomingGroup[] = [];
   if (overdue.length > 0) {
@@ -145,6 +164,21 @@ type TaskDueRow = {
   organization: string | null;
   categoryName: string;
   dueAt: string;
+  priority: number | null;
+  estimateMinutes: number | null;
+};
+
+type SubtaskDueRow = {
+  subtaskId: string;
+  taskId: string;
+  subtaskTitle: string;
+  parentTitle: string;
+  organization: string | null;
+  categoryName: string;
+  dueAt: string;
+  parentPriority: number | null;
+  priorityOverride: number | null;
+  estimateMinutes: number | null;
 };
 
 type InterviewStepDueRow = {
@@ -165,7 +199,9 @@ async function loadDatedOpenTasks(db: Queryable): Promise<HomeUpcomingItem[]> {
        COALESCE(t.title, a.title, p.title) AS title,
        COALESCE(t.organization, a.company_name, c.name) AS organization,
        tc.name AS "categoryName",
-       t.due_at AS "dueAt"
+       t.due_at AS "dueAt",
+       t.priority,
+       t.estimate_minutes AS "estimateMinutes"
      FROM tasks t
      JOIN task_categories tc ON tc.id = t.category_id
      LEFT JOIN applications a ON a.id = t.application_id
@@ -183,6 +219,50 @@ async function loadDatedOpenTasks(db: Queryable): Promise<HomeUpcomingItem[]> {
     categoryName: row.categoryName,
     at: row.dueAt,
     deadlineLabel: taskDueLabel(row.dueAt),
+    priority: asPriority(row.priority),
+    estimateMinutes: row.estimateMinutes,
+  }));
+}
+
+async function loadDatedOpenSubtasks(db: Queryable): Promise<HomeUpcomingItem[]> {
+  const { rows } = await db.query<SubtaskDueRow>(
+    `SELECT
+       s.id AS "subtaskId",
+       s.task_id AS "taskId",
+       s.title AS "subtaskTitle",
+       COALESCE(t.title, a.title, p.title) AS "parentTitle",
+       COALESCE(t.organization, a.company_name, c.name) AS organization,
+       tc.name AS "categoryName",
+       s.due_at AS "dueAt",
+       t.priority AS "parentPriority",
+       s.priority_override AS "priorityOverride",
+       s.estimate_minutes AS "estimateMinutes"
+     FROM task_subtasks s
+     JOIN tasks t ON t.id = s.task_id
+     JOIN task_categories tc ON tc.id = t.category_id
+     LEFT JOIN applications a ON a.id = t.application_id
+     LEFT JOIN postings p ON p.id = COALESCE(t.posting_id, a.posting_id)
+     LEFT JOIN companies c ON c.id = p.company_id
+     WHERE s.status = 'open'
+       AND t.status = 'open'
+       AND t.category = 'misc'
+       AND s.parent_subtask_id IS NULL
+       AND s.due_at IS NOT NULL
+     ORDER BY s.due_at ASC`,
+  );
+  return rows.map((row) => ({
+    kind: "subtask" as const,
+    id: row.taskId,
+    parentId: row.taskId,
+    parentTitle: row.parentTitle,
+    subtaskId: row.subtaskId,
+    title: `${row.parentTitle} · ${row.subtaskTitle}`,
+    organization: row.organization,
+    categoryName: row.categoryName,
+    at: row.dueAt,
+    deadlineLabel: taskDueLabel(row.dueAt),
+    priority: asPriority(row.priorityOverride) ?? asPriority(row.parentPriority),
+    estimateMinutes: row.estimateMinutes,
   }));
 }
 
@@ -225,6 +305,8 @@ async function loadDatedInterviewSteps(db: Queryable): Promise<HomeUpcomingItem[
       stepTitle: row.stepTitle,
       at,
       deadlineLabel: interviewDeadlineLabel(at, scheduled),
+      priority: null,
+      estimateMinutes: null,
     });
   }
   return items;
@@ -235,9 +317,12 @@ export async function getUpcomingThisWeek(
   tz: string,
   now: Date = new Date(),
 ): Promise<HomeUpcomingThisWeek> {
-  const [tasks, interviews] = await Promise.all([
+  const [tasks, subtasks, interviews] = await Promise.all([
     loadDatedOpenTasks(db),
+    loadDatedOpenSubtasks(db),
     loadDatedInterviewSteps(db),
   ]);
-  return { groups: buildUpcomingGroups([...tasks, ...interviews], now, tz) };
+  return {
+    groups: buildUpcomingGroups([...tasks, ...subtasks, ...interviews], now, tz),
+  };
 }

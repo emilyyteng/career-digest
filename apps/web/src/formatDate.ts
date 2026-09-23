@@ -126,3 +126,14 @@ export function toDateInputValue(value: string | null | undefined): string {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+/** Store minutes; display as 45m / 1h / 1h 30m. */
+export function formatEstimateMinutes(mins: number | null | undefined): string | null {
+  if (mins == null || !Number.isFinite(mins) || mins <= 0) return null;
+  const total = Math.floor(mins);
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}

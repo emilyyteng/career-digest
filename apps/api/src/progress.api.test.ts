@@ -46,8 +46,8 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .expect(200);
 
     expect(res.body.localDate).toBe("2025-08-10");
-    expect(res.body.applications).toMatchObject({ raw: 1, earned: 1, cap: 5 });
-    expect(res.body.leetcode).toMatchObject({ raw: 2, earned: 2, cap: 5 });
+    expect(res.body.applications).toMatchObject({ raw: 1, earned: 1, cap: 3 });
+    expect(res.body.leetcode).toMatchObject({ raw: 2, earned: 2, cap: 3 });
     expect(res.body.effortApplication).toBe(false);
     expect(res.body.effortTechnical).toBe(true);
     expect(res.body.deepWork).toBe(true);
@@ -74,7 +74,7 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .expect(200);
 
     const day = res.body.days.find((row: { date: string }) => row.date === "2025-08-10");
-    expect(day).toMatchObject({ raw: 7, earned: 5, effort: false });
+    expect(day).toMatchObject({ raw: 7, earned: 3, effort: false });
   });
 
   it("PATCH /api/progress/leetcode sets and increments daily count", async () => {
@@ -176,7 +176,7 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .expect(200);
 
     expect(res.body.applications).toMatchObject({ raw: 1, earned: 1 });
-    expect(res.body.leetcode).toMatchObject({ raw: 4, earned: 4 });
+    expect(res.body.leetcode).toMatchObject({ raw: 4, earned: 3 });
     expect(res.body.deepWork).toBe(true);
     expect(res.body.applicationRows).toHaveLength(1);
     expect(res.body.applicationRows[0]).toMatchObject({
@@ -226,7 +226,7 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .get("/api/progress/day/2025-08-05")
       .query({ tz: TZ })
       .expect(200);
-    expect(day.body.leetcode).toMatchObject({ raw: 4, earned: 4 });
+    expect(day.body.leetcode).toMatchObject({ raw: 4, earned: 3 });
   });
 
   it("POST /api/progress/reflections accepts localDate for History backfill", async () => {

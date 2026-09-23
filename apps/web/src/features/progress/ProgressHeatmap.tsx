@@ -3,16 +3,14 @@ import type { ProgressHeatmapDay } from "../../api";
 const CREDIT_COLORS = [
   "var(--surface-2)",
   "#f3d0dc",
-  "#e8a4bc",
   "#c9a8d8",
-  "#9b8ec4",
   "#5b7c99",
 ];
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function creditFill(earned: number): string {
-  return CREDIT_COLORS[Math.max(0, Math.min(5, earned))] ?? CREDIT_COLORS[0]!;
+  return CREDIT_COLORS[Math.max(0, Math.min(CREDIT_COLORS.length - 1, earned))] ?? CREDIT_COLORS[0]!;
 }
 
 function addDays(value: string, delta: number): string {
@@ -52,7 +50,7 @@ export function ProgressHeatLegend() {
           key={color}
           className="progress-heat-swatch"
           style={{ background: color }}
-          title={`${i}/5`}
+          title={`${i}/3`}
         />
       ))}
       <span className="muted">More</span>
@@ -92,7 +90,7 @@ export default function ProgressHeatmap({
                 const future = day.date > today;
                 const tip = future
                   ? undefined
-                  : `${day.date}: ${day.earned}/5${day.effort ? " · deep work" : ""}`;
+                  : `${day.date}: ${day.earned}/3${day.effort ? " · deep work" : ""}`;
                 return (
                   <span
                     key={day.date}

@@ -10,8 +10,9 @@ import {
 } from "../api";
 import InterviewCountdown from "../features/interviews/InterviewCountdown";
 import TodayStrip from "../features/progress/TodayStrip";
+import PriorityBadge from "../PriorityBadge";
 import ThemeEmoji from "../ThemeEmoji";
-import { formatStepWhen } from "../formatDate";
+import { formatEstimateMinutes, formatStepWhen } from "../formatDate";
 import {
   greetingEmojiForPeriod,
   greetingLabelForPeriod,
@@ -54,21 +55,32 @@ function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
 }
 
 function upcomingItemKey(item: HomeUpcomingItem): string {
-  return item.kind === "interview" ? `interview:${item.stepId}` : `task:${item.id}`;
+  if (item.kind === "interview") return `interview:${item.stepId}`;
+  if (item.kind === "subtask") return `subtask:${item.subtaskId}`;
+  return `task:${item.id}`;
 }
 
 function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
+  const estimate = formatEstimateMinutes(item.estimateMinutes);
+  const badges = (
+    <span className="home-upcoming-badges">
+      <PriorityBadge priority={item.priority} />
+      {estimate && <span className="home-estimate">{estimate}</span>}
+    </span>
+  );
+
   if (item.kind === "interview") {
     const secondary = ["Interview", item.stepTitle].filter(Boolean).join(" · ");
     return (
       <li className="home-job-row home-interview-row">
         <Link to={`/interviews/${item.threadId}`} className="home-job-main">
-          <span className="home-job-title">
+          <span className="home-job-title home-upcoming-title">
             {item.company ?? "Unknown"} · {item.primaryTitle ?? "Untitled"}
           </span>
           <span className="muted home-job-meta">{secondary}</span>
         </Link>
         <div className="home-interview-deadline">
+          {badges}
           <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
           <InterviewCountdown target={item.at} />
         </div>
@@ -76,14 +88,19 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
     );
   }
 
-  const secondary = [item.categoryName, item.organization].filter(Boolean).join(" · ");
+  const secondary =
+    item.kind === "subtask"
+      ? [item.categoryName, item.organization].filter(Boolean).join(" · ")
+      : [item.categoryName, item.organization].filter(Boolean).join(" · ");
+
   return (
     <li className="home-job-row home-interview-row">
       <Link to="/tasks" className="home-job-main">
-        <span className="home-job-title">{item.title}</span>
+        <span className="home-job-title home-upcoming-title">{item.title}</span>
         {secondary && <span className="muted home-job-meta">{secondary}</span>}
       </Link>
       <div className="home-interview-deadline">
+        {badges}
         <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
         <InterviewCountdown target={item.at} />
       </div>

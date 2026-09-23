@@ -328,4 +328,64 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     const remaining = await pool.query(`SELECT id FROM tasks WHERE id = $1`, [task.id]);
     expect(remaining.rows).toHaveLength(0);
   });
+
+  it("subtasks support checklist, inherit priority, and cascade on parent complete/delete", async () => {
+    const schoolId = await categoryIdByName("School");
+    const parent = await apiClient()
+      .post("/api/tasks")
+      .send({
+        categoryId: schoolId,
+        title: "Exam prep",
+        priority: 1,
+        estimateMinutes: 120,
+      })
+      .expect(201);
+    expect(parent.body).toMatchObject({
+      priority: 1,
+      estimateMinutes: 120,
+      subtasks: [],
+      subtaskProgress: null,
+    });
+
+    const a = await apiClient()
+      .post(`/api/tasks/${parent.body.id}/subtasks`)
+      .send({ title: "Outline" })
+      .expect(201);
+    expect(a.body).toMatchObject({
+      title: "Outline",
+      priorityOverride: null,
+      priority: 1,
+    });
+
+    const b = await apiClient()
+      .post(`/api/tasks/${parent.body.id}/subtasks`)
+      .send({ title: "Flashcards", priorityOverride: 0, estimateMinutes: 30 })
+      .expect(201);
+    expect(b.body).toMatchObject({ priorityOverride: 0, priority: 0, estimateMinutes: 30 });
+
+    await apiClient()
+      .post(`/api/tasks/${parent.body.id}/subtasks/${a.body.id}/complete`)
+      .expect(200);
+
+    const listed = await apiClient().get("/api/tasks?view=open").expect(200);
+    const row = listed.body.tasks.find((t: { id: string }) => t.id === parent.body.id);
+    expect(row.subtaskProgress).toEqual({ completed: 1, total: 2 });
+    expect(row.subtasks.map((s: { title: string }) => s.title)).toEqual([
+      "Flashcards",
+      "Outline",
+    ]);
+
+    await apiClient().post(`/api/tasks/${parent.body.id}/complete`).expect(200);
+    const after = await pool.query<{ status: string }>(
+      `SELECT status FROM task_subtasks WHERE task_id = $1`,
+      [parent.body.id],
+    );
+    expect(after.rows.every((r) => r.status === "completed")).toBe(true);
+
+    await apiClient().delete(`/api/tasks/${parent.body.id}`).expect(200);
+    const orphans = await pool.query(`SELECT id FROM task_subtasks WHERE task_id = $1`, [
+      parent.body.id,
+    ]);
+    expect(orphans.rows).toHaveLength(0);
+  });
 });

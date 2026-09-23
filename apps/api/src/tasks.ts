@@ -8,6 +8,14 @@ import {
   listTaskCategories,
   type TaskCategoryRow,
 } from "./taskCategories.js";
+import {
+  attachSubtasksToTasks,
+  completeOpenSubtasksForTask,
+  parseTaskEstimateMinutes,
+  parseTaskPriority,
+  type TaskPriority,
+  type TaskSubtaskRow,
+} from "./taskSubtasks.js";
 
 type Queryable = Pool | PoolClient;
 
@@ -30,6 +38,8 @@ export type TaskRow = {
   url: string | null;
   notes: string | null;
   dueAt: string | null;
+  priority: TaskPriority | null;
+  estimateMinutes: number | null;
   postingId: string | null;
   applicationId: string | null;
   location: string | null;
@@ -38,6 +48,8 @@ export type TaskRow = {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  subtasks: TaskSubtaskRow[];
+  subtaskProgress: { completed: number; total: number } | null;
 };
 
 const taskListSelect = `
@@ -57,6 +69,8 @@ const taskListSelect = `
     COALESCE(t.url, a.url, p.url) AS url,
     t.notes,
     t.due_at AS "dueAt",
+    t.priority,
+    t.estimate_minutes AS "estimateMinutes",
     t.posting_id AS "postingId",
     t.application_id AS "applicationId",
     COALESCE(a.location, p.location) AS location,
@@ -183,8 +197,16 @@ async function countTasks(db: Queryable): Promise<{ open: number; completed: num
 }
 
 async function fetchTaskRow(db: Queryable, id: string): Promise<TaskRow | null> {
-  const { rows } = await db.query<TaskRow>(`${taskListSelect} WHERE t.id = $1`, [id]);
-  return rows[0] ?? null;
+  const { rows } = await db.query<Omit<TaskRow, "subtasks" | "subtaskProgress">>(
+    `${taskListSelect} WHERE t.id = $1`,
+    [id],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  const [hydrated] = await attachSubtasksToTasks(db, [
+    { ...row, subtasks: [], subtaskProgress: null },
+  ]);
+  return hydrated ?? null;
 }
 
 export async function listTasks(db: Queryable, view: TaskView): Promise<{
@@ -197,19 +219,27 @@ export async function listTasks(db: Queryable, view: TaskView): Promise<{
   const counts = await countTasks(db);
   const categories = await listTaskCategories(db);
   if (view === "open") {
-    const { rows } = await db.query<TaskRow>(
+    const { rows } = await db.query<Omit<TaskRow, "subtasks" | "subtaskProgress">>(
       `${taskListSelect}
        WHERE t.status = 'open'
        ORDER BY t.due_at ASC NULLS LAST, t.created_at DESC`,
     );
-    return { view, count: rows.length, counts, categories, tasks: rows };
+    const tasks = await attachSubtasksToTasks(
+      db,
+      rows.map((row) => ({ ...row, subtasks: [], subtaskProgress: null })),
+    );
+    return { view, count: tasks.length, counts, categories, tasks };
   }
-  const { rows } = await db.query<TaskRow>(
+  const { rows } = await db.query<Omit<TaskRow, "subtasks" | "subtaskProgress">>(
     `${taskListSelect}
      WHERE t.status = 'completed' AND t.category = 'misc'
      ORDER BY t.completed_at DESC NULLS LAST, t.created_at DESC`,
   );
-  return { view, count: rows.length, counts, categories, tasks: rows };
+  const tasks = await attachSubtasksToTasks(
+    db,
+    rows.map((row) => ({ ...row, subtasks: [], subtaskProgress: null })),
+  );
+  return { view, count: tasks.length, counts, categories, tasks };
 }
 
 export async function getTaskById(db: Queryable, id: string): Promise<TaskRow | null> {
@@ -223,6 +253,8 @@ export type CreateTaskInput = {
   url?: string | null;
   notes?: string | null;
   dueAt?: string | null;
+  priority?: TaskPriority | null;
+  estimateMinutes?: number | null;
   location?: string | null;
   descriptionHtml?: string | null;
 };
@@ -290,8 +322,8 @@ export async function createTask(db: Queryable, input: CreateTaskInput): Promise
     return createManualApplicationTask(db, input);
   }
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO tasks (category, category_id, title, organization, url, notes, due_at)
-     VALUES ('misc', $1, $2, $3, $4, $5, $6)
+    `INSERT INTO tasks (category, category_id, title, organization, url, notes, due_at, priority, estimate_minutes)
+     VALUES ('misc', $1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id`,
     [
       category.id,
@@ -300,6 +332,8 @@ export async function createTask(db: Queryable, input: CreateTaskInput): Promise
       input.url ?? null,
       input.notes ?? null,
       input.dueAt ? new Date(input.dueAt) : null,
+      input.priority ?? null,
+      input.estimateMinutes ?? null,
     ],
   );
   return (await fetchTaskRow(db, rows[0]!.id))!;
@@ -425,6 +459,8 @@ export type PatchTaskInput = {
   url?: string | null;
   notes?: string | null;
   dueAt?: string | null;
+  priority?: TaskPriority | null;
+  estimateMinutes?: number | null;
   location?: string | null;
   descriptionHtml?: string | null;
   postingId?: string | null;
@@ -469,6 +505,15 @@ export async function patchTask(
     nextCategoryId = target.id;
   }
 
+  let priority = existing.priority;
+  if (patch.priority !== undefined) {
+    priority = parseTaskPriority(patch.priority) ?? null;
+  }
+  let estimateMinutes = existing.estimateMinutes;
+  if (patch.estimateMinutes !== undefined) {
+    estimateMinutes = parseTaskEstimateMinutes(patch.estimateMinutes) ?? null;
+  }
+
   const client = "connect" in db && patch.postingId ? await db.connect() : null;
   const queryable = client ?? db;
   try {
@@ -490,7 +535,9 @@ export async function patchTask(
            notes = $5,
            due_at = $6,
            category_id = $7,
-           posting_id = CASE WHEN $8::boolean THEN $9::uuid ELSE posting_id END,
+           priority = $8,
+           estimate_minutes = $9,
+           posting_id = CASE WHEN $10::boolean THEN $11::uuid ELSE posting_id END,
            updated_at = now()
        WHERE id = $1`,
       [
@@ -501,6 +548,8 @@ export async function patchTask(
         notes,
         dueAt,
         nextCategoryId,
+        priority,
+        estimateMinutes,
         patch.postingId !== undefined,
         patch.postingId ?? null,
       ],
@@ -580,6 +629,10 @@ export async function completeTask(db: Queryable, id: string): Promise<TaskRow |
       }
     } else if (!isMiscCategory(existing.category)) {
       return null;
+    }
+
+    if (isMiscCategory(existing.category)) {
+      await completeOpenSubtasksForTask(queryable, id);
     }
 
     await queryable.query(
@@ -708,6 +761,15 @@ export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskIn
     );
   }
 
+  let priority: TaskPriority | null | undefined;
+  let estimateMinutes: number | null | undefined;
+  try {
+    priority = parseTaskPriority(body.priority);
+    estimateMinutes = parseTaskEstimateMinutes(body.estimateMinutes);
+  } catch {
+    return null;
+  }
+
   return {
     categoryId,
     title,
@@ -715,6 +777,8 @@ export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskIn
     url,
     notes: notes ?? null,
     dueAt,
+    priority: priority === undefined ? null : priority,
+    estimateMinutes: estimateMinutes === undefined ? null : estimateMinutes,
     location: location ?? null,
     descriptionHtml,
   };
@@ -779,6 +843,17 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     patch.categoryId = body.categoryId.trim();
   }
 
+  try {
+    if (body.priority !== undefined) {
+      patch.priority = parseTaskPriority(body.priority) ?? null;
+    }
+    if (body.estimateMinutes !== undefined) {
+      patch.estimateMinutes = parseTaskEstimateMinutes(body.estimateMinutes) ?? null;
+    }
+  } catch {
+    return null;
+  }
+
   if (
     patch.title === undefined &&
     patch.organization === undefined &&
@@ -788,7 +863,9 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     patch.location === undefined &&
     patch.descriptionHtml === undefined &&
     patch.postingId === undefined &&
-    patch.categoryId === undefined
+    patch.categoryId === undefined &&
+    patch.priority === undefined &&
+    patch.estimateMinutes === undefined
   ) {
     return null;
   }

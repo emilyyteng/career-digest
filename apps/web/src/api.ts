@@ -239,11 +239,15 @@ export type HomeJobPick = {
   pickKind: "top" | "newly_ranked" | "new_to_digest";
 };
 
+export type TaskPriority = 0 | 1 | 2;
+
 export type HomeUpcomingItem =
   | {
       kind: "interview";
       at: string;
       deadlineLabel: string;
+      priority: TaskPriority | null;
+      estimateMinutes: number | null;
       threadId: string;
       stepId: string;
       company: string | null;
@@ -254,7 +258,23 @@ export type HomeUpcomingItem =
       kind: "task";
       at: string;
       deadlineLabel: string;
+      priority: TaskPriority | null;
+      estimateMinutes: number | null;
       id: string;
+      title: string;
+      organization: string | null;
+      categoryName: string;
+    }
+  | {
+      kind: "subtask";
+      at: string;
+      deadlineLabel: string;
+      priority: TaskPriority | null;
+      estimateMinutes: number | null;
+      id: string;
+      parentId: string;
+      parentTitle: string;
+      subtaskId: string;
       title: string;
       organization: string | null;
       categoryName: string;
@@ -541,6 +561,21 @@ export type TaskCategoryRow = {
   openCount: number;
 };
 
+export type TaskSubtaskRow = {
+  id: string;
+  taskId: string;
+  title: string;
+  status: "open" | "completed";
+  dueAt: string | null;
+  estimateMinutes: number | null;
+  priorityOverride: TaskPriority | null;
+  priority: TaskPriority | null;
+  sortOrder: number;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type TaskRow = {
   id: string;
   category: TaskKind;
@@ -552,6 +587,8 @@ export type TaskRow = {
   url: string | null;
   notes: string | null;
   dueAt: string | null;
+  priority: TaskPriority | null;
+  estimateMinutes: number | null;
   postingId: string | null;
   applicationId: string | null;
   location: string | null;
@@ -560,6 +597,8 @@ export type TaskRow = {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  subtasks: TaskSubtaskRow[];
+  subtaskProgress: { completed: number; total: number } | null;
 };
 
 export type TasksPage = {
@@ -623,6 +662,52 @@ export const reopenTask = (id: string) =>
 
 export const deleteTask = (id: string) =>
   parse<{ ok: boolean }>(api(`/api/tasks/${id}`, { method: "DELETE" }));
+
+export const createSubtask = (taskId: string, body: Record<string, unknown>) =>
+  parse<TaskSubtaskRow>(
+    api(`/api/tasks/${taskId}/subtasks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const patchSubtask = (
+  taskId: string,
+  subtaskId: string,
+  body: Record<string, unknown>,
+) =>
+  parse<TaskSubtaskRow>(
+    api(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const completeSubtask = (taskId: string, subtaskId: string) =>
+  parse<TaskSubtaskRow>(
+    api(`/api/tasks/${taskId}/subtasks/${subtaskId}/complete`, { method: "POST" }),
+  );
+
+export const reopenSubtask = (taskId: string, subtaskId: string) =>
+  parse<TaskSubtaskRow>(
+    api(`/api/tasks/${taskId}/subtasks/${subtaskId}/reopen`, { method: "POST" }),
+  );
+
+export const moveSubtask = (taskId: string, subtaskId: string, direction: "up" | "down") =>
+  parse<{ subtasks: TaskSubtaskRow[] }>(
+    api(`/api/tasks/${taskId}/subtasks/${subtaskId}/move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ direction }),
+    }),
+  );
+
+export const deleteSubtask = (taskId: string, subtaskId: string) =>
+  parse<{ ok: boolean }>(
+    api(`/api/tasks/${taskId}/subtasks/${subtaskId}`, { method: "DELETE" }),
+  );
 
 export const addPostingToTasks = (postingId: string) =>
   parse<TaskRow>(

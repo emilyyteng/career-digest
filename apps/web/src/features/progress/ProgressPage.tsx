@@ -358,7 +358,7 @@ export default function Progress() {
                 <span className="progress-kicker">Apps</span>
                 <p className="progress-apps-summary">
                   {(todayDetail?.applications ?? today.applications).raw} logged ·{" "}
-                  {(todayDetail?.applications ?? today.applications).earned}/5 earned
+                  {(todayDetail?.applications ?? today.applications).earned}/3 earned
                 </p>
                 {(todayDetail?.applicationRows.length ?? 0) > 0 ? (
                   <ul className="progress-app-list">
@@ -433,7 +433,7 @@ export default function Progress() {
                     ) : (
                       <p className="progress-lc-readonly">
                         {historyDetail.leetcode.raw} solved ·{" "}
-                        {historyDetail.leetcode.earned}/5
+                        {historyDetail.leetcode.earned}/3
                       </p>
                     )}
                   </div>
@@ -442,7 +442,7 @@ export default function Progress() {
                     <span className="progress-kicker">Apps</span>
                     <p className="progress-apps-summary">
                       {historyDetail.applications.raw} logged ·{" "}
-                      {historyDetail.applications.earned}/5 earned
+                      {historyDetail.applications.earned}/3 earned
                     </p>
                     {historyDetail.applicationRows.length > 0 ? (
                       <ul className="progress-app-list">
