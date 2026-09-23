@@ -82,7 +82,7 @@ function interviewDeadlineLabel(at: string, scheduled: boolean): string {
   return formatted ? `${prefix}: ${formatted}` : prefix;
 }
 
-/** Incomplete = still open on an active thread (not completed/skipped). */
+/** Actionable dated steps only (not awaiting_employer / completed / skipped). */
 export function interviewStepAt(row: {
   status: string;
   dueAt: string | null;
@@ -207,7 +207,7 @@ async function loadDatedInterviewSteps(db: Queryable): Promise<HomeUpcomingItem[
      LEFT JOIN postings p ON p.id = pa.posting_id
      LEFT JOIN companies c ON c.id = p.company_id
      WHERE t.status = 'active'
-       AND s.status IN ('pending', 'scheduled', 'awaiting_employer')
+       AND s.status IN ('pending', 'scheduled')
        AND (s.due_at IS NOT NULL OR s.scheduled_at IS NOT NULL)`,
   );
 

@@ -98,6 +98,13 @@ describe.skipIf(!integrationReady)("home API", () => {
       [threadId, inThreeDays],
     );
 
+    const awaitingStep = await pool.query<{ id: string }>(
+      `INSERT INTO application_steps (thread_id, title, sort_order, status, due_at)
+       VALUES ($1, 'Waiting on them', 2, 'awaiting_employer', $2)
+       RETURNING id`,
+      [threadId, overdueAt],
+    );
+
     const res = await apiClient().get(`/api/home?tz=${encodeURIComponent(TZ)}`).expect(200);
     const groups = res.body.upcomingThisWeek.groups as Array<{
       key: string;
@@ -121,6 +128,7 @@ describe.skipIf(!integrationReady)("home API", () => {
     expect(flat.some((i) => i.title === "Far away")).toBe(false);
     expect(flat.some((i) => i.stepId === stepId && i.kind === "interview")).toBe(true);
     expect(flat.some((i) => i.stepId === secondStep.rows[0]!.id)).toBe(true);
+    expect(flat.some((i) => i.stepId === awaitingStep.rows[0]!.id)).toBe(false);
     expect(flat.some((i) => i.id === soonTask.id && i.categoryName)).toBe(true);
 
     for (const group of groups) {

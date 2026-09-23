@@ -59,15 +59,14 @@ function upcomingItemKey(item: HomeUpcomingItem): string {
 
 function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
   if (item.kind === "interview") {
-    const secondary = [item.stepTitle].filter(Boolean).join(" · ");
+    const secondary = ["Interview", item.stepTitle].filter(Boolean).join(" · ");
     return (
       <li className="home-job-row home-interview-row">
         <Link to={`/interviews/${item.threadId}`} className="home-job-main">
-          <span className="home-upcoming-chip">Interview</span>
           <span className="home-job-title">
             {item.company ?? "Unknown"} · {item.primaryTitle ?? "Untitled"}
           </span>
-          {secondary && <span className="muted home-job-meta">{secondary}</span>}
+          <span className="muted home-job-meta">{secondary}</span>
         </Link>
         <div className="home-interview-deadline">
           <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
@@ -81,7 +80,6 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
   return (
     <li className="home-job-row home-interview-row">
       <Link to="/tasks" className="home-job-main">
-        <span className="home-upcoming-chip">Task</span>
         <span className="home-job-title">{item.title}</span>
         {secondary && <span className="muted home-job-meta">{secondary}</span>}
       </Link>
