@@ -2666,11 +2666,12 @@ textarea { min-height: 10rem; width: 100%; }
   white-space: nowrap;
 }
 .task-subtasks {
-  padding: 0.35rem 0.85rem 0.55rem;
+  padding: 0.35rem 0.85rem 0.55rem 0.85rem;
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  overflow: visible;
 }
 .task-subtasks-progress {
   width: 100%;
@@ -2703,6 +2704,7 @@ textarea { min-height: 10rem; width: 100%; }
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  overflow: visible;
 }
 .task-subtask-row {
   position: relative;
@@ -2710,7 +2712,6 @@ textarea { min-height: 10rem; width: 100%; }
   align-items: center;
   gap: 0.45rem;
   min-height: 1.65rem;
-  padding-left: 1.15rem;
 }
 .task-subtask-row.is-dragging {
   opacity: 0.55;
@@ -2727,11 +2728,12 @@ textarea { min-height: 10rem; width: 100%; }
 .task-subtask-handle-btn,
 .task-subtask-handle-spacer {
   position: absolute;
-  left: 0;
+  right: 100%;
   top: 50%;
   transform: translateY(-50%);
-  width: 1rem;
+  width: 0.95rem;
   height: 1.4rem;
+  margin-right: 0.1rem;
   display: grid;
   place-items: center;
   padding: 0;
@@ -2742,6 +2744,7 @@ textarea { min-height: 10rem; width: 100%; }
   cursor: grab;
   opacity: 0;
   pointer-events: none;
+  flex: none;
 }
 .task-subtask-handle-btn:disabled {
   cursor: default;

@@ -90,9 +90,11 @@ export default function TaskSubtasksPanel({
     const from = ids.indexOf(sourceId);
     const to = ids.indexOf(targetId);
     if (from < 0 || to < 0) return;
+    // Drop on a row = place below it (indicator is a bottom edge line).
     const next = [...ids];
     next.splice(from, 1);
-    next.splice(to, 0, sourceId);
+    const insertAt = from < to ? to : to + 1;
+    next.splice(insertAt, 0, sourceId);
 
     setBusyId(sourceId);
     try {

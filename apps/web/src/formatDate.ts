@@ -138,14 +138,19 @@ export function formatEstimateMinutes(mins: number | null | undefined): string |
   return `${h}h ${m}m`;
 }
 
-/** Compact subtask due: "Tue 3:00 PM". */
+/** Compact subtask due: "Sat, Sep 26 11:59 PM". */
 export function formatSubtaskDueShort(value: string | null | undefined): string | null {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
+  const weekday = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(date);
+  const monthDay = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+  const time = new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+  return `${weekday}, ${monthDay} ${time}`;
 }
