@@ -26,6 +26,7 @@ import PriorityBadge from "../PriorityBadge";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import StepActionConfirm from "../StepActionConfirm";
 import AddTaskForm, { type AddTaskFormHandle } from "./AddTaskForm";
+import AddSubtaskModal from "./AddSubtaskModal";
 import EditTaskForm, { type EditTaskFormHandle } from "./EditTaskForm";
 import TaskSubtasksPanel from "./TaskSubtasksPanel";
 
@@ -72,6 +73,7 @@ export default function Tasks() {
   const [renameDraft, setRenameDraft] = useState("");
   const [renamingSaving, setRenamingSaving] = useState(false);
   const [editing, setEditing] = useState<TaskRow | null>(null);
+  const [addingSubtaskFor, setAddingSubtaskFor] = useState<TaskRow | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<TaskRow | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
   const [reopenConfirm, setReopenConfirm] = useState<TaskRow | null>(null);
@@ -478,6 +480,16 @@ export default function Tasks() {
                   <span className="ext-icon" aria-hidden="true">↗</span>
                 </a>
               )}
+              {view === "open" && !application && (
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={pendingId === row.id}
+                  onClick={() => setAddingSubtaskFor(row)}
+                >
+                  Add subtask
+                </button>
+              )}
               {view === "open" && (
                 <button
                   type="button"
@@ -690,6 +702,17 @@ export default function Tasks() {
             />
           </div>
         </div>
+      )}
+      {addingSubtaskFor && (
+        <AddSubtaskModal
+          task={addingSubtaskFor}
+          onCancel={() => setAddingSubtaskFor(null)}
+          onCreated={() => {
+            setAddingSubtaskFor(null);
+            invalidateListCache("tasks:");
+            void load().catch((err: Error) => setError(err.message));
+          }}
+        />
       )}
       {removeConfirm && (
         <div
