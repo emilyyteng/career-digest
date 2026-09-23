@@ -5,13 +5,12 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { patchTask, patchSubtask, getJobs, type JobCard, type TaskCategoryRow, type TaskPriority, type TaskRow, type TaskSubtaskRow } from "../api";
+import { patchTask, getJobs, type JobCard, type TaskCategoryRow, type TaskPriority, type TaskRow } from "../api";
 import { Link } from "react-router-dom";
 import {
   combineApplyByDateTime,
   toDateInputValue,
   applyByTimeInputValue,
-  DEFAULT_APPLY_BY_TIME,
 } from "../formatDate";
 import LocationSuggest from "../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
@@ -27,119 +26,6 @@ type Props = {
 export type EditTaskFormHandle = {
   requestClose: () => void;
 };
-
-function SubtaskEditRow({
-  taskId,
-  subtask,
-  disabled,
-}: {
-  taskId: string;
-  subtask: TaskSubtaskRow;
-  disabled?: boolean;
-}) {
-  const [title, setTitle] = useState(subtask.title);
-  const [dueDate, setDueDate] = useState(toDateInputValue(subtask.dueAt));
-  const [dueTime, setDueTime] = useState(applyByTimeInputValue(subtask.dueAt) || DEFAULT_APPLY_BY_TIME);
-  const [estimate, setEstimate] = useState(
-    subtask.estimateMinutes != null ? String(subtask.estimateMinutes) : "",
-  );
-  const [priorityOverride, setPriorityOverride] = useState<TaskPriority | null>(
-    subtask.priorityOverride,
-  );
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [flash, setFlash] = useState(false);
-
-  async function save() {
-    setSaving(true);
-    setError(null);
-    try {
-      const estimateMinutes = estimate.trim() === "" ? null : Number(estimate.trim());
-      if (estimate.trim() !== "" && (!Number.isInteger(estimateMinutes) || (estimateMinutes ?? 0) <= 0)) {
-        setError("Estimate must be positive minutes");
-        setSaving(false);
-        return;
-      }
-      await patchSubtask(taskId, subtask.id, {
-        title: title.trim(),
-        dueAt: dueDate ? combineApplyByDateTime(dueDate, dueTime) : null,
-        estimateMinutes,
-        priorityOverride,
-      });
-      setFlash(true);
-      window.setTimeout(() => setFlash(false), 1600);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save subtask");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className={`task-edit-subtask-row${subtask.status === "completed" ? " is-done" : ""}`}>
-      <input
-        type="text"
-        value={title}
-        disabled={disabled || saving}
-        onChange={(event) => setTitle(event.target.value)}
-        aria-label="Subtask title"
-      />
-      <div className="task-due-fields">
-        <label>
-          Due
-          <input
-            type="date"
-            value={dueDate}
-            disabled={disabled || saving}
-            onChange={(event) => setDueDate(event.target.value)}
-          />
-        </label>
-        <label>
-          Time
-          <input
-            type="time"
-            value={dueTime}
-            disabled={disabled || saving || !dueDate}
-            onChange={(event) => setDueTime(event.target.value)}
-          />
-        </label>
-      </div>
-      <div className="task-due-fields">
-        <label>
-          Priority
-          <PrioritySelect
-            value={priorityOverride}
-            onChange={setPriorityOverride}
-            emptyLabel="Inherit"
-            disabled={disabled || saving}
-          />
-        </label>
-        <label>
-          Est. min
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={estimate}
-            disabled={disabled || saving}
-            onChange={(event) => setEstimate(event.target.value)}
-          />
-        </label>
-      </div>
-      <div className="save-inline-row">
-        <button type="button" className="secondary" disabled={disabled || saving || !title.trim()} onClick={() => void save()}>
-          {saving ? "Saving…" : "Save subtask"}
-        </button>
-        {flash && (
-          <span className="save-flash-inline" role="status">
-            Saved!
-          </span>
-        )}
-      </div>
-      {error && <p className="error">{error}</p>}
-    </div>
-  );
-}
 
 const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm(
   { task, miscCategories, onSaved, onCancel },
@@ -372,17 +258,6 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
           Notes
           <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
         </label>
-        {!isApplication && (task.subtasks?.length ?? 0) > 0 && (
-          <div className="task-edit-subtasks">
-            <h3>Subtasks</h3>
-            <p className="muted field-hint">
-              Due, estimate, and priority override. Blank priority inherits from the parent.
-            </p>
-            {task.subtasks.map((sub) => (
-              <SubtaskEditRow key={sub.id} taskId={task.id} subtask={sub} disabled={saving} />
-            ))}
-          </div>
-        )}
         <div className="form-actions">
           <button type="button" className="secondary" onClick={requestClose} disabled={saving}>
             Cancel

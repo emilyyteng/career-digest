@@ -1611,6 +1611,9 @@ button.hide-board-remove:hover:not(:disabled) {
   overflow: auto;
   box-shadow: 0 16px 40px var(--shadow-strong);
 }
+.modal.modal-wide {
+  width: min(48rem, 100%);
+}
 .document-preview-modal {
   width: min(56rem, 100%);
   padding: 1rem 1.15rem 1.15rem;
@@ -2746,24 +2749,71 @@ textarea { min-height: 10rem; width: 100%; }
   opacity: 0.4;
   cursor: default;
 }
-.task-edit-subtasks {
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border);
+.edit-subtasks-form {
+  gap: 0.75rem;
 }
-.task-edit-subtasks h3 {
-  margin: 0 0 0.25rem;
-  font-size: 0.95rem;
-}
-.task-edit-subtask-row {
+.edit-subtasks-table {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--border);
+  margin-top: 0.25rem;
 }
-.task-edit-subtask-row.is-done {
-  opacity: 0.65;
+.edit-subtasks-head,
+.edit-subtasks-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1.6fr) 7.5rem 5.5rem 4.5rem 5.5rem 1.65rem;
+  gap: 0.35rem;
+  align-items: center;
+}
+.edit-subtasks-head {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0 0.1rem;
+}
+.edit-subtasks-row input,
+.edit-subtasks-row select {
+  width: 100%;
+  min-width: 0;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.4rem;
+}
+.edit-subtasks-row.is-done input:not([type="date"]):not([type="time"]):not([type="number"]) {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+.edit-subtasks-remove {
+  position: static;
+  width: 1.55rem;
+  height: 1.55rem;
+}
+.edit-subtasks-add-row {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+}
+@media (max-width: 640px) {
+  .edit-subtasks-head {
+    display: none;
+  }
+  .edit-subtasks-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "title title"
+      "due time"
+      "est priority"
+      "remove remove";
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .edit-subtasks-row input[aria-label="Title"] { grid-area: title; }
+  .edit-subtasks-row input[type="date"] { grid-area: due; }
+  .edit-subtasks-row input[type="time"] { grid-area: time; }
+  .edit-subtasks-row input[type="number"] { grid-area: est; }
+  .edit-subtasks-row select { grid-area: priority; }
+  .edit-subtasks-remove { grid-area: remove; justify-self: end; }
 }
 .home-interview-deadline {
   flex-shrink: 0;

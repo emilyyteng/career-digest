@@ -26,7 +26,7 @@ import PriorityBadge from "../PriorityBadge";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import StepActionConfirm from "../StepActionConfirm";
 import AddTaskForm, { type AddTaskFormHandle } from "./AddTaskForm";
-import AddSubtaskModal from "./AddSubtaskModal";
+import EditSubtasksModal from "./EditSubtasksModal";
 import EditTaskForm, { type EditTaskFormHandle } from "./EditTaskForm";
 import TaskSubtasksPanel from "./TaskSubtasksPanel";
 
@@ -73,7 +73,7 @@ export default function Tasks() {
   const [renameDraft, setRenameDraft] = useState("");
   const [renamingSaving, setRenamingSaving] = useState(false);
   const [editing, setEditing] = useState<TaskRow | null>(null);
-  const [addingSubtaskFor, setAddingSubtaskFor] = useState<TaskRow | null>(null);
+  const [editingSubtasksFor, setEditingSubtasksFor] = useState<TaskRow | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<TaskRow | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
   const [reopenConfirm, setReopenConfirm] = useState<TaskRow | null>(null);
@@ -485,9 +485,9 @@ export default function Tasks() {
                   type="button"
                   className="secondary"
                   disabled={pendingId === row.id}
-                  onClick={() => setAddingSubtaskFor(row)}
+                  onClick={() => setEditingSubtasksFor(row)}
                 >
-                  Add subtask
+                  Edit subtasks
                 </button>
               )}
               {view === "open" && (
@@ -703,12 +703,12 @@ export default function Tasks() {
           </div>
         </div>
       )}
-      {addingSubtaskFor && (
-        <AddSubtaskModal
-          task={addingSubtaskFor}
-          onCancel={() => setAddingSubtaskFor(null)}
-          onCreated={() => {
-            setAddingSubtaskFor(null);
+      {editingSubtasksFor && (
+        <EditSubtasksModal
+          task={editingSubtasksFor}
+          onCancel={() => setEditingSubtasksFor(null)}
+          onSaved={() => {
+            setEditingSubtasksFor(null);
             invalidateListCache("tasks:");
             void load().catch((err: Error) => setError(err.message));
           }}
