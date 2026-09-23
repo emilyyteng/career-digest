@@ -363,11 +363,11 @@ button {
   font-weight: 500;
   font-family: var(--font-sans);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss):not(.hide-board-remove) {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-section-rename-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss):not(.hide-board-remove) {
   border-radius: var(--radius-soft);
   box-shadow: var(--shadow-button);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.hide-board-remove):not(:disabled):hover {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-section-rename-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.hide-board-remove):not(:disabled):hover {
   background: var(--accent-blue);
   border-color: var(--accent-blue);
   box-shadow: 0 3px 10px rgba(91, 124, 153, 0.28);
@@ -939,7 +939,7 @@ a.external .ext-icon { font-size: 0.75rem; }
 }
 .task-section-title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
   min-width: 0;
 }
@@ -988,16 +988,31 @@ a.external .ext-icon { font-size: 0.75rem; }
   font-size: 0.95rem;
 }
 .task-section-rename-btn {
+  flex: 0 0 auto;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
   border: none;
   background: transparent;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  padding: 0.1rem 0.35rem;
+  box-shadow: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-soft-box);
   cursor: pointer;
+  color: var(--text-muted);
+}
+.task-section-rename-btn svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .task-section-rename-btn:hover {
-  color: var(--accent-blue-deep, var(--accent));
-  text-decoration: underline;
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
 }
 .task-move-field {
   margin: 0;
