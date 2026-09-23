@@ -1,7 +1,9 @@
 import { pool } from "./db.js";
 import { getBoardRefresh } from "./boardRefresh.js";
-import { listInterviewThreads } from "./interviews.js";
-import { listOpenTasksForHome } from "./tasks.js";
+import {
+  getUpcomingThisWeek,
+  type HomeUpcomingThisWeek,
+} from "./homeUpcoming.js";
 
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
@@ -23,64 +25,6 @@ export type HomeJobPick = {
   pickKind: "top" | "newly_ranked" | "new_to_digest";
 };
 
-export type HomeInterviewAttention = {
-  threadId: string;
-  company: string | null;
-  primaryTitle: string | null;
-  nextStepTitle: string | null;
-  deadlineLabel: string | null;
-  deadlineIso: string | null;
-};
-
-export type HomeTaskAttention = {
-  id: string;
-  title: string;
-  organization: string | null;
-  location: string | null;
-  category: string;
-  dueLabel: string | null;
-  dueIso: string | null;
-};
-
-function taskDueLabel(dueAt: string | null): string | null {
-  if (!dueAt) return null;
-  const formatted = formatDeadlineLong(dueAt);
-  if (!formatted) return null;
-  return `Due: ${formatted}`;
-}
-
-function formatDeadlineLong(value: string): string | null {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function interviewDeadlineIso(
-  step: { dueAt: string | null; scheduledAt: string | null; status: string } | null | undefined,
-): string | null {
-  if (!step) return null;
-  if (step.status === "scheduled" && step.scheduledAt) return step.scheduledAt;
-  return step.dueAt;
-}
-
-function interviewDeadlineLabel(
-  step: { dueAt: string | null; scheduledAt: string | null; status: string } | null | undefined,
-): string | null {
-  const at = interviewDeadlineIso(step);
-  if (!at) return null;
-  const formatted = formatDeadlineLong(at);
-  if (!formatted) return null;
-  const prefix = step?.status === "scheduled" ? "Scheduled" : "Due";
-  return `${prefix}: ${formatted}`;
-}
-
 export type HomeDashboard = {
   greetingName: string;
   lastDigest: {
@@ -94,12 +38,7 @@ export type HomeDashboard = {
     newlyRanked: HomeJobPick[];
     newToDigest: HomeJobPick[];
   };
-  needsAttention: {
-    interviews: HomeInterviewAttention[];
-    interviewActionCount: number;
-    tasks: HomeTaskAttention[];
-    taskTotal: number;
-  };
+  upcomingThisWeek: HomeUpcomingThisWeek;
 };
 
 type JobRow = {
@@ -131,12 +70,12 @@ function mapPick(row: JobRow, pickKind: HomeJobPick["pickKind"]): HomeJobPick {
   };
 }
 
-const HOME_ATTENTION_LIMIT = 4;
+const HOME_PICKS_LIMIT = 4;
 
 async function loadJobRows(
   whereExtra: string,
   orderBy: string,
-  limit = HOME_ATTENTION_LIMIT,
+  limit = HOME_PICKS_LIMIT,
   excludeIds: string[] = [],
 ): Promise<JobRow[]> {
   const params: unknown[] = [];
@@ -177,20 +116,20 @@ async function loadJobRows(
   return result.rows;
 }
 
-export async function getHomeDashboard(): Promise<HomeDashboard> {
+export async function getHomeDashboard(tz: string): Promise<HomeDashboard> {
   const board = await getBoardRefresh();
 
   const topRankedRows = await loadJobRows(
     `AND p.ranked_at IS NOT NULL`,
     `p.rank_score DESC NULLS LAST, p.ranked_at DESC`,
-    HOME_ATTENTION_LIMIT,
+    HOME_PICKS_LIMIT,
   );
   const topIds = topRankedRows.map((r) => r.id);
 
   const newlyRankedRows = await loadJobRows(
     `AND p.ranked_at IS NOT NULL AND p.ranked_at > now() - interval '7 days'`,
     `p.ranked_at DESC`,
-    HOME_ATTENTION_LIMIT,
+    HOME_PICKS_LIMIT,
     topIds,
   );
   const excludeNew = [...topIds, ...newlyRankedRows.map((r) => r.id)];
@@ -198,32 +137,11 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
   const newToDigestRows = await loadJobRows(
     `AND p.first_seen_at > now() - interval '14 days'`,
     `p.first_seen_at DESC`,
-    HOME_ATTENTION_LIMIT,
+    HOME_PICKS_LIMIT,
     excludeNew,
   );
 
-  const interviewData = await listInterviewThreads(pool, "active");
-  const interviews: HomeInterviewAttention[] = interviewData.actionRequired
-    .slice(0, HOME_ATTENTION_LIMIT)
-    .map((row) => ({
-      threadId: row.id,
-      company: row.company,
-      primaryTitle: row.primaryTitle,
-      nextStepTitle: row.nextStep?.title ?? null,
-      deadlineLabel: interviewDeadlineLabel(row.nextStep),
-      deadlineIso: interviewDeadlineIso(row.nextStep),
-    }));
-
-  const openTasks = await listOpenTasksForHome(pool, HOME_ATTENTION_LIMIT);
-  const tasks: HomeTaskAttention[] = openTasks.tasks.map((row) => ({
-    id: row.id,
-    title: row.title,
-    organization: row.organization,
-    location: row.location,
-    category: row.category,
-    dueLabel: taskDueLabel(row.dueAt),
-    dueIso: row.dueAt,
-  }));
+  const upcomingThisWeek = await getUpcomingThisWeek(pool, tz);
 
   const greetingName = process.env.DIGEST_GREETING_NAME?.trim() ?? "";
 
@@ -240,11 +158,6 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       newlyRanked: newlyRankedRows.map((r) => mapPick(r, "newly_ranked")),
       newToDigest: newToDigestRows.map((r) => mapPick(r, "new_to_digest")),
     },
-    needsAttention: {
-      interviews,
-      interviewActionCount: interviewData.actionRequired.length,
-      tasks,
-      taskTotal: openTasks.total,
-    },
+    upcomingThisWeek,
   };
 }

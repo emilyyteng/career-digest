@@ -5,6 +5,7 @@ import {
   getProgressToday,
   type HomeDashboard,
   type HomeJobPick,
+  type HomeUpcomingItem,
   type ProgressToday,
 } from "../api";
 import InterviewCountdown from "../features/interviews/InterviewCountdown";
@@ -16,8 +17,6 @@ import {
   greetingLabelForPeriod,
   greetingPeriodFromHour,
 } from "../pageTheme";
-
-const ATTENTION_LIMIT = 4;
 
 function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -54,11 +53,43 @@ function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
   );
 }
 
-function SeeMore({ to, label }: { to: string; label: string }) {
+function upcomingItemKey(item: HomeUpcomingItem): string {
+  return item.kind === "interview" ? `interview:${item.stepId}` : `task:${item.id}`;
+}
+
+function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
+  if (item.kind === "interview") {
+    const secondary = [item.stepTitle].filter(Boolean).join(" · ");
+    return (
+      <li className="home-job-row home-interview-row">
+        <Link to={`/interviews/${item.threadId}`} className="home-job-main">
+          <span className="home-upcoming-chip">Interview</span>
+          <span className="home-job-title">
+            {item.company ?? "Unknown"} · {item.primaryTitle ?? "Untitled"}
+          </span>
+          {secondary && <span className="muted home-job-meta">{secondary}</span>}
+        </Link>
+        <div className="home-interview-deadline">
+          <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
+          <InterviewCountdown target={item.at} />
+        </div>
+      </li>
+    );
+  }
+
+  const secondary = [item.categoryName, item.organization].filter(Boolean).join(" · ");
   return (
-    <div className="home-see-more-row">
-      <Link to={to} className="home-see-more">{label}</Link>
-    </div>
+    <li className="home-job-row home-interview-row">
+      <Link to="/tasks" className="home-job-main">
+        <span className="home-upcoming-chip">Task</span>
+        <span className="home-job-title">{item.title}</span>
+        {secondary && <span className="muted home-job-meta">{secondary}</span>}
+      </Link>
+      <div className="home-interview-deadline">
+        <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
+        <InterviewCountdown target={item.at} />
+      </div>
+    </li>
   );
 }
 
@@ -68,8 +99,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getHomeDashboard().then(setData).catch((err: Error) => setError(err.message));
-    getProgressToday(browserTz())
+    const tz = browserTz();
+    getHomeDashboard(tz).then(setData).catch((err: Error) => setError(err.message));
+    getProgressToday(tz)
       .then(setProgress)
       .catch(() => setProgress(null));
   }, []);
@@ -77,10 +109,8 @@ export default function Home() {
   if (error && !data) return <p className="error">{error}</p>;
   if (!data) return <p className="muted">Loading…</p>;
 
-  const attention = data.needsAttention;
+  const upcoming = data.upcomingThisWeek;
   const digestWhen = formatWhen(data.lastDigest.lastOkAt ?? data.lastDigest.finishedAt);
-  const interviewTotal = attention.interviewActionCount;
-  const taskTotal = attention.taskTotal;
   const greetingPeriod = currentGreetingPeriod();
 
   return (
@@ -128,77 +158,21 @@ export default function Home() {
       </header>
 
       <section className="card home-section home-attention-card">
-        <h3 className="home-section-title">Needs attention</h3>
-
-        <div className="home-attention-subsection">
-          <h4 className="home-subheading">Interviews</h4>
-          {attention.interviews.length === 0 ? (
-            <p className="muted home-pick-empty">No interviews need action.</p>
-          ) : (
-            <>
+        <h3 className="home-section-title">Upcoming this week</h3>
+        {upcoming.groups.length === 0 ? (
+          <p className="muted home-pick-empty">Nothing due this week.</p>
+        ) : (
+          upcoming.groups.map((group) => (
+            <div key={group.key} className="home-attention-subsection">
+              <h4 className="home-subheading">{group.label}</h4>
               <ul className="home-list">
-                {attention.interviews.map((row) => (
-                  <li key={row.threadId} className="home-job-row home-interview-row">
-                    <Link to={`/interviews/${row.threadId}`} className="home-job-main">
-                      <span className="home-job-title">
-                        {row.company ?? "Unknown"} · {row.primaryTitle ?? "Untitled"}
-                      </span>
-                      {row.nextStepTitle && (
-                        <span className="muted home-job-meta">{row.nextStepTitle}</span>
-                      )}
-                    </Link>
-                    {row.deadlineIso && (
-                      <div className="home-interview-deadline">
-                        {row.deadlineLabel && (
-                          <div className="home-interview-deadline-date">{row.deadlineLabel}</div>
-                        )}
-                        <InterviewCountdown target={row.deadlineIso} />
-                      </div>
-                    )}
-                  </li>
+                {group.items.map((item) => (
+                  <UpcomingRow key={upcomingItemKey(item)} item={item} />
                 ))}
               </ul>
-              {interviewTotal > ATTENTION_LIMIT && (
-                <SeeMore to="/interviews" label="See more →" />
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="home-attention-subsection">
-          <h4 className="home-subheading">Tasks</h4>
-          {attention.tasks.length === 0 ? (
-            <p className="muted home-pick-empty">No open tasks.</p>
-          ) : (
-            <>
-              <ul className="home-list">
-                {attention.tasks.map((row) => (
-                  <li key={row.id} className="home-job-row home-interview-row">
-                    <Link to="/tasks" className="home-job-main">
-                      <span className="home-job-title">{row.title}</span>
-                      {(row.organization || row.location) && (
-                        <span className="muted home-job-meta">
-                          {[row.organization, row.location].filter(Boolean).join(" · ")}
-                        </span>
-                      )}
-                    </Link>
-                    {row.dueIso && (
-                      <div className="home-interview-deadline">
-                        {row.dueLabel && (
-                          <div className="home-interview-deadline-date">{row.dueLabel}</div>
-                        )}
-                        <InterviewCountdown target={row.dueIso} />
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              {taskTotal > ATTENTION_LIMIT && (
-                <SeeMore to="/tasks" label="See more →" />
-              )}
-            </>
-          )}
-        </div>
+            </div>
+          ))
+        )}
       </section>
 
       <section className="card home-section home-picks-card">

@@ -2,6 +2,10 @@
 
 Development history for Career Digest. For setup, see [docs/SETUP.md](./SETUP.md).
 
+## Milestone 12 — Home upcoming this week
+
+Home **Upcoming this week** replaces Needs attention: overdue + next 7 local days, interviews and tasks in one list grouped by day (Today / Tomorrow / weekday · date), dated items only, no 4-cap.
+
 ## Milestone 11 — Tasks categories board (pass 1)
 
 Stacked Open sections by category (Applications first; School / Reading / Writing / Admin + custom), per-section Add, refile misc tasks, migrate school→School and personal→Admin.

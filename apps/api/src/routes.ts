@@ -167,8 +167,9 @@ api.post("/demo/reset", async (_req, res) => {
   }
 });
 
-api.get("/home", async (_req, res) => {
-  res.json(await getHomeDashboard());
+api.get("/home", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? "")) ?? "UTC";
+  res.json(await getHomeDashboard(tz));
 });
 
 api.get("/jobs/rerank-queue", async (_req, res) => {

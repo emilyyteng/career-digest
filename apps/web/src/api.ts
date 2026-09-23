@@ -239,6 +239,27 @@ export type HomeJobPick = {
   pickKind: "top" | "newly_ranked" | "new_to_digest";
 };
 
+export type HomeUpcomingItem =
+  | {
+      kind: "interview";
+      at: string;
+      deadlineLabel: string;
+      threadId: string;
+      stepId: string;
+      company: string | null;
+      primaryTitle: string | null;
+      stepTitle: string | null;
+    }
+  | {
+      kind: "task";
+      at: string;
+      deadlineLabel: string;
+      id: string;
+      title: string;
+      organization: string | null;
+      categoryName: string;
+    };
+
 export type HomeDashboard = {
   greetingName: string;
   lastDigest: {
@@ -252,30 +273,19 @@ export type HomeDashboard = {
     newlyRanked: HomeJobPick[];
     newToDigest: HomeJobPick[];
   };
-  needsAttention: {
-    interviews: Array<{
-      threadId: string;
-      company: string | null;
-      primaryTitle: string | null;
-      nextStepTitle: string | null;
-      deadlineLabel: string | null;
-      deadlineIso: string | null;
+  upcomingThisWeek: {
+    groups: Array<{
+      key: string;
+      label: string;
+      items: HomeUpcomingItem[];
     }>;
-    interviewActionCount: number;
-    tasks: Array<{
-      id: string;
-      title: string;
-      organization: string | null;
-      location: string | null;
-      category: string;
-      dueLabel: string | null;
-      dueIso: string | null;
-    }>;
-    taskTotal: number;
   };
 };
 
-export const getHomeDashboard = () => parse<HomeDashboard>(api("/api/home"));
+export const getHomeDashboard = (tz?: string) => {
+  const query = tz ? `?tz=${encodeURIComponent(tz)}` : "";
+  return parse<HomeDashboard>(api(`/api/home${query}`));
+};
 
 export const startBoardRefresh = async () => {
   const response = await api("/api/board/refresh", { method: "POST" });
