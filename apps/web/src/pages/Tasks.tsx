@@ -6,6 +6,7 @@ import {
   deleteTask,
   getTasks,
   patchTask,
+  renameTaskCategory,
   reopenTask,
   type TaskCategoryRow,
   type TaskRow,
@@ -64,6 +65,9 @@ export default function Tasks() {
   const [addingCategory, setAddingCategory] = useState<TaskCategoryRow | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
+  const [renamingCategoryId, setRenamingCategoryId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
+  const [renamingSaving, setRenamingSaving] = useState(false);
   const [editing, setEditing] = useState<TaskRow | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<TaskRow | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
@@ -303,6 +307,45 @@ export default function Tasks() {
     }
   }
 
+  function startRename(category: TaskCategoryRow) {
+    if (category.kind === "application" || category.system) return;
+    setRenamingCategoryId(category.id);
+    setRenameDraft(category.name);
+  }
+
+  async function saveRename(categoryId: string) {
+    const name = renameDraft.trim();
+    if (!name) return;
+    setRenamingSaving(true);
+    setError(null);
+    try {
+      await renameTaskCategory(categoryId, name);
+      setRenamingCategoryId(null);
+      invalidateListCache("tasks:");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not rename category");
+    } finally {
+      setRenamingSaving(false);
+    }
+  }
+
+  async function moveTask(row: TaskRow, nextCategoryId: string) {
+    if (row.category === "application" || nextCategoryId === row.categoryId) return;
+    setPendingId(row.id);
+    setError(null);
+    try {
+      const updated = await patchTask(row.id, { categoryId: nextCategoryId });
+      setRows((current) => current.map((item) => (item.id === row.id ? updated : item)));
+      invalidateListCache("tasks:");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not move task");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   function renderTaskCard(row: TaskRow) {
     const completedLabel = formatShortDate(row.completedAt);
     const application = isApplicationTask(row);
@@ -423,6 +466,24 @@ export default function Tasks() {
                   {application ? "Mark applied" : "Complete"}
                 </button>
               )}
+              {view === "open" && !application && (
+                <label className="task-move-field">
+                  <span className="visually-hidden">Move to category</span>
+                  <select
+                    className="task-move-select"
+                    value={row.categoryId}
+                    disabled={pendingId === row.id}
+                    aria-label="Move to category"
+                    onChange={(event) => void moveTask(row, event.target.value)}
+                  >
+                    {miscCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {view === "completed" && !application && (
                 <button
                   type="button"
@@ -483,8 +544,56 @@ export default function Tasks() {
               >
                 <header className="task-section-header">
                   <div className="task-section-title-row">
-                    <h2 className="task-section-title">{category.name}</h2>
-                    <span className="task-section-count">{sectionTasks.length}</span>
+                    {renamingCategoryId === category.id ? (
+                      <form
+                        className="task-section-rename"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void saveRename(category.id);
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={renameDraft}
+                          autoFocus
+                          aria-label="Category name"
+                          disabled={renamingSaving}
+                          onChange={(event) => setRenameDraft(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              event.preventDefault();
+                              setRenamingCategoryId(null);
+                            }
+                          }}
+                        />
+                        <button type="submit" className="secondary" disabled={renamingSaving || !renameDraft.trim()}>
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary"
+                          disabled={renamingSaving}
+                          onClick={() => setRenamingCategoryId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <>
+                        <h2 className="task-section-title">{category.name}</h2>
+                        <span className="task-section-count">{sectionTasks.length}</span>
+                        {category.kind === "misc" && !category.system && (
+                          <button
+                            type="button"
+                            className="task-section-rename-btn"
+                            aria-label={`Rename ${category.name}`}
+                            onClick={() => startRename(category)}
+                          >
+                            Rename
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                   <button
                     type="button"
