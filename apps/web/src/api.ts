@@ -657,6 +657,9 @@ export const patchTask = (id: string, body: Record<string, unknown>) =>
 export const completeTask = (id: string) =>
   parse<TaskRow>(api(`/api/tasks/${id}/complete`, { method: "POST" }));
 
+export const duplicateTask = (id: string) =>
+  parse<TaskRow>(api(`/api/tasks/${id}/duplicate`, { method: "POST" }));
+
 export const reopenTask = (id: string) =>
   parse<TaskRow>(api(`/api/tasks/${id}/reopen`, { method: "POST" }));
 

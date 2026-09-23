@@ -58,6 +58,7 @@ import {
   createTaskFromPosting,
   deleteTask,
   deleteTaskByPostingId,
+  duplicateTask,
   isTaskView,
   listTasks,
   parseCreateTaskBody,
@@ -769,6 +770,24 @@ api.post("/tasks/:id/complete", async (req, res) => {
     return;
   }
   res.json(task);
+});
+
+api.post("/tasks/:id/duplicate", async (req, res) => {
+  try {
+    const task = await duplicateTask(pool, req.params.id);
+    if (!task) {
+      res.status(404).json({ error: "Task not found" });
+      return;
+    }
+    res.status(201).json(task);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
 });
 
 api.post("/tasks/:id/reopen", async (req, res) => {

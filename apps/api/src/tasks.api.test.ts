@@ -388,4 +388,53 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     ]);
     expect(orphans.rows).toHaveLength(0);
   });
+
+  it("POST /api/tasks/:id/duplicate copies misc task fields and subtasks", async () => {
+    const schoolId = await categoryIdByName("School");
+    const parent = await apiClient()
+      .post("/api/tasks")
+      .send({
+        categoryId: schoolId,
+        title: "Exam template",
+        notes: "Shared outline",
+        priority: 1,
+        estimateMinutes: 90,
+      })
+      .expect(201);
+
+    const outline = await apiClient()
+      .post(`/api/tasks/${parent.body.id}/subtasks`)
+      .send({ title: "Outline", estimateMinutes: 20 })
+      .expect(201);
+    await apiClient()
+      .post(`/api/tasks/${parent.body.id}/subtasks`)
+      .send({ title: "Practice", priorityOverride: 0 })
+      .expect(201);
+    await apiClient()
+      .post(`/api/tasks/${parent.body.id}/subtasks/${outline.body.id}/complete`)
+      .expect(200);
+
+    const copied = await apiClient()
+      .post(`/api/tasks/${parent.body.id}/duplicate`)
+      .expect(201);
+
+    expect(copied.body.id).not.toBe(parent.body.id);
+    expect(copied.body).toMatchObject({
+      title: "Exam template (copy)",
+      notes: "Shared outline",
+      priority: 1,
+      estimateMinutes: 90,
+      categoryId: schoolId,
+      status: "open",
+      subtaskProgress: { completed: 1, total: 2 },
+    });
+    expect(copied.body.subtasks).toHaveLength(2);
+    expect(copied.body.subtasks.map((s: { title: string; status: string }) => [s.title, s.status])).toEqual(
+      [
+        ["Practice", "open"],
+        ["Outline", "completed"],
+      ],
+    );
+    expect(copied.body.subtasks.every((s: { id: string }) => s.id !== outline.body.id)).toBe(true);
+  });
 });

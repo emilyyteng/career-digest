@@ -4,6 +4,7 @@ import {
   completeTask,
   createTaskCategory,
   deleteTask,
+  duplicateTask,
   getTasks,
   patchTask,
   renameTaskCategory,
@@ -179,6 +180,33 @@ export default function Tasks() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete task");
       await load().catch(() => undefined);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function onDuplicate(row: TaskRow) {
+    if (pendingId) return;
+    setPendingId(row.id);
+    setError(null);
+    try {
+      const copy = await duplicateTask(row.id);
+      invalidateListCache("tasks:");
+      invalidateListCache("applications:");
+      if (view === "open") {
+        setRows((current) => {
+          const index = current.findIndex((item) => item.id === row.id);
+          if (index < 0) return [copy, ...current];
+          const next = [...current];
+          next.splice(index + 1, 0, copy);
+          return next;
+        });
+        setCounts((current) => ({ ...current, open: current.open + 1 }));
+      } else {
+        await load();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not duplicate task");
     } finally {
       setPendingId(null);
     }
@@ -385,6 +413,19 @@ export default function Tasks() {
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" />
                   <path d="M13.5 6.5l3 3" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="task-duplicate-btn"
+                aria-label="Duplicate task"
+                title="Duplicate task"
+                disabled={pendingId === row.id}
+                onClick={() => void onDuplicate(row)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="8" y="8" width="11" height="11" rx="1.5" />
+                  <path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15" />
                 </svg>
               </button>
               <button

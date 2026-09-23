@@ -363,11 +363,11 @@ button {
   font-weight: 500;
   font-family: var(--font-sans);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss):not(.hide-board-remove) {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss):not(.hide-board-remove) {
   border-radius: var(--radius-soft);
   box-shadow: var(--shadow-button);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.hide-board-remove):not(:disabled):hover {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.hide-board-remove):not(:disabled):hover {
   background: var(--accent-blue);
   border-color: var(--accent-blue);
   box-shadow: 0 3px 10px rgba(91, 124, 153, 0.28);
@@ -873,10 +873,12 @@ a.external .ext-icon { font-size: 0.75rem; }
   }
 }
 .task-card-toolbar .todo-remove-btn,
-.task-card-toolbar .task-edit-btn {
+.task-card-toolbar .task-edit-btn,
+.task-card-toolbar .task-duplicate-btn {
   position: static;
 }
-.task-edit-btn {
+.task-edit-btn,
+.task-duplicate-btn {
   width: 1.65rem;
   height: 1.65rem;
   padding: 0;
@@ -887,8 +889,10 @@ a.external .ext-icon { font-size: 0.75rem; }
   place-items: center;
   border-radius: var(--radius-soft-box);
 }
-.task-edit-btn:disabled { opacity: 0.55; }
-.task-edit-btn svg {
+.task-edit-btn:disabled,
+.task-duplicate-btn:disabled { opacity: 0.55; }
+.task-edit-btn svg,
+.task-duplicate-btn svg {
   width: 1rem;
   height: 1rem;
   fill: transparent;
@@ -897,7 +901,8 @@ a.external .ext-icon { font-size: 0.75rem; }
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.task-edit-btn:hover:not(:disabled) {
+.task-edit-btn:hover:not(:disabled),
+.task-duplicate-btn:hover:not(:disabled) {
   background: var(--surface-2);
   border-color: var(--accent-pink);
 }

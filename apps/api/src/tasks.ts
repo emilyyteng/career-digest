@@ -339,6 +339,128 @@ export async function createTask(db: Queryable, input: CreateTaskInput): Promise
   return (await fetchTaskRow(db, rows[0]!.id))!;
 }
 
+/** Deep-copy a task (and its subtasks) into a new open task titled "{title} (copy)". */
+export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow | null> {
+  const source = await fetchTaskRow(db, id);
+  if (!source) return null;
+
+  const copyTitle = `${source.title} (copy)`;
+  const client = "connect" in db ? await db.connect() : null;
+  const queryable = client ?? db;
+
+  try {
+    if (client) await client.query("BEGIN");
+
+    let newTaskId: string;
+    if (source.category === "application") {
+      if (!source.organization?.trim()) {
+        throw Object.assign(new Error("organization is required for application tasks"), {
+          status: 400,
+        });
+      }
+      const dueAt = source.dueAt ? new Date(source.dueAt) : null;
+      const appResult = await queryable.query<{ id: string }>(
+        `INSERT INTO applications (
+           status, notes, company_name, title, location, url, due_at, description_html, status_changed_at
+         )
+         VALUES ('todo', $1, $2, $3, $4, $5, $6, $7, now())
+         RETURNING id`,
+        [
+          source.notes ?? null,
+          source.organization,
+          copyTitle,
+          source.location ?? null,
+          source.url ?? null,
+          dueAt,
+          source.descriptionHtml ?? null,
+        ],
+      );
+      const appsCategory = await getApplicationTaskCategory(queryable);
+      const { rows } = await queryable.query<{ id: string }>(
+        `INSERT INTO tasks (
+           category, category_id, status, title, organization, url, notes, due_at, application_id
+         )
+         VALUES ('application', $1, 'open', $2, $3, $4, $5, $6, $7)
+         RETURNING id`,
+        [
+          appsCategory.id,
+          copyTitle,
+          source.organization,
+          source.url ?? null,
+          source.notes ?? null,
+          dueAt,
+          appResult.rows[0]!.id,
+        ],
+      );
+      newTaskId = rows[0]!.id;
+    } else {
+      const { rows } = await queryable.query<{ id: string }>(
+        `INSERT INTO tasks (
+           category, category_id, status, title, organization, url, notes, due_at, priority, estimate_minutes
+         )
+         VALUES ('misc', $1, 'open', $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id`,
+        [
+          source.categoryId,
+          copyTitle,
+          source.organization ?? null,
+          source.url ?? null,
+          source.notes ?? null,
+          source.dueAt ? new Date(source.dueAt) : null,
+          source.priority ?? null,
+          source.estimateMinutes ?? null,
+        ],
+      );
+      newTaskId = rows[0]!.id;
+
+      const { rows: subRows } = await queryable.query<{
+        title: string;
+        status: "open" | "completed";
+        due_at: Date | string | null;
+        estimate_minutes: number | null;
+        priority_override: number | null;
+        sort_order: number;
+        completed_at: Date | string | null;
+      }>(
+        `SELECT title, status, due_at, estimate_minutes, priority_override, sort_order, completed_at
+         FROM task_subtasks
+         WHERE task_id = $1 AND parent_subtask_id IS NULL
+         ORDER BY
+           CASE status WHEN 'open' THEN 0 ELSE 1 END,
+           sort_order ASC,
+           created_at ASC`,
+        [id],
+      );
+
+      for (const sub of subRows) {
+        await queryable.query(
+          `INSERT INTO task_subtasks (
+             task_id, title, status, due_at, estimate_minutes, priority_override, sort_order, completed_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            newTaskId,
+            sub.title,
+            sub.status,
+            sub.due_at,
+            sub.estimate_minutes,
+            sub.priority_override,
+            sub.sort_order,
+            sub.status === "completed" ? sub.completed_at ?? new Date() : null,
+          ],
+        );
+      }
+    }
+
+    if (client) await client.query("COMMIT");
+    return (await fetchTaskRow(db, newTaskId))!;
+  } catch (error) {
+    if (client) await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    if (client) client.release();
+  }
+}
+
 async function linkApplicationToPosting(
   db: PoolClient,
   applicationId: string,
