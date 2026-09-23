@@ -362,9 +362,9 @@ export default function Tasks() {
     return (
       <article key={row.id} className="card application-card task-card">
         <div className="task-card-header">
-          <h2 className="application-card-title task-card-header-title">
-            <PriorityBadge priority={row.priority} className="task-title-priority" />
-            {row.title}
+          <h2 className="application-card-title task-card-header-title task-title-line">
+            <PriorityBadge priority={row.priority} />
+            <span className="task-title-text">{row.title}</span>
             {formatEstimateMinutes(row.estimateMinutes) && (
               <span className="task-estimate-inline">
                 {formatEstimateMinutes(row.estimateMinutes)}

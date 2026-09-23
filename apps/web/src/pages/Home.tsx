@@ -62,25 +62,26 @@ function upcomingItemKey(item: HomeUpcomingItem): string {
 
 function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
   const estimate = formatEstimateMinutes(item.estimateMinutes);
-  const badges = (
-    <span className="home-upcoming-badges">
-      <PriorityBadge priority={item.priority} />
-      {estimate && <span className="home-estimate">{estimate}</span>}
-    </span>
-  );
+
+  function TitleLine({ text }: { text: string }) {
+    return (
+      <span className="home-job-title home-upcoming-title task-title-line">
+        <PriorityBadge priority={item.priority} />
+        <span className="task-title-text">{text}</span>
+        {estimate && <span className="task-estimate-inline">{estimate}</span>}
+      </span>
+    );
+  }
 
   if (item.kind === "interview") {
     const secondary = ["Interview", item.stepTitle].filter(Boolean).join(" · ");
     return (
       <li className="home-job-row home-interview-row">
         <Link to={`/interviews/${item.threadId}`} className="home-job-main">
-          <span className="home-job-title home-upcoming-title">
-            {item.company ?? "Unknown"} · {item.primaryTitle ?? "Untitled"}
-          </span>
+          <TitleLine text={`${item.company ?? "Unknown"} · ${item.primaryTitle ?? "Untitled"}`} />
           <span className="muted home-job-meta">{secondary}</span>
         </Link>
         <div className="home-interview-deadline">
-          {badges}
           <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
           <InterviewCountdown target={item.at} />
         </div>
@@ -88,19 +89,15 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
     );
   }
 
-  const secondary =
-    item.kind === "subtask"
-      ? [item.categoryName, item.organization].filter(Boolean).join(" · ")
-      : [item.categoryName, item.organization].filter(Boolean).join(" · ");
+  const secondary = [item.categoryName, item.organization].filter(Boolean).join(" · ");
 
   return (
     <li className="home-job-row home-interview-row">
       <Link to="/tasks" className="home-job-main">
-        <span className="home-job-title home-upcoming-title">{item.title}</span>
+        <TitleLine text={item.title} />
         {secondary && <span className="muted home-job-meta">{secondary}</span>}
       </Link>
       <div className="home-interview-deadline">
-        {badges}
         <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
         <InterviewCountdown target={item.at} />
       </div>
