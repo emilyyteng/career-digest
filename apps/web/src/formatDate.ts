@@ -138,7 +138,7 @@ export function formatEstimateMinutes(mins: number | null | undefined): string |
   return `${h}h ${m}m`;
 }
 
-/** Compact subtask due: "Sat, Sep 26 11:59 PM". */
+/** Compact subtask due: "Sat, Sep 26, 11:59 PM". */
 export function formatSubtaskDueShort(value: string | null | undefined): string | null {
   if (!value) return null;
   const date = new Date(value);
@@ -152,5 +152,5 @@ export function formatSubtaskDueShort(value: string | null | undefined): string 
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
-  return `${weekday}, ${monthDay} ${time}`;
+  return `${weekday}, ${monthDay}, ${time}`;
 }

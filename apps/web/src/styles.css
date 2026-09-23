@@ -2743,7 +2743,6 @@ textarea { min-height: 10rem; width: 100%; }
   color: var(--text-muted);
   cursor: grab;
   opacity: 0;
-  pointer-events: none;
   flex: none;
 }
 .task-subtask-handle-btn:disabled {
@@ -2752,7 +2751,6 @@ textarea { min-height: 10rem; width: 100%; }
 .task-subtask-row:hover .task-subtask-handle-btn,
 .task-subtask-handle-btn:focus-visible {
   opacity: 0.75;
-  pointer-events: auto;
 }
 .task-subtask-handle-btn:active {
   cursor: grabbing;
