@@ -2716,7 +2716,10 @@ textarea { min-height: 10rem; width: 100%; }
 .task-subtask-row.is-dragging {
   opacity: 0.55;
 }
-.task-subtask-row.is-drag-over {
+.task-subtask-row.is-drag-over-before {
+  box-shadow: inset 0 2px 0 var(--accent-blue, #5b7cfa);
+}
+.task-subtask-row.is-drag-over-after {
   box-shadow: inset 0 -2px 0 var(--accent-blue, #5b7cfa);
 }
 .task-subtask-row.is-done {

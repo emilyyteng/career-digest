@@ -40,6 +40,7 @@ export default function TaskSubtasksPanel({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [dragOverEdge, setDragOverEdge] = useState<"before" | "after" | null>(null);
   const draggingIdRef = useRef<string | null>(null);
   const reorderingRef = useRef(false);
 
@@ -68,6 +69,12 @@ export default function TaskSubtasksPanel({
     draggingIdRef.current = null;
     setDraggingId(null);
     setDragOverId(null);
+    setDragOverEdge(null);
+  }
+
+  function edgeFromEvent(event: DragEvent<HTMLElement>): "before" | "after" {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
   }
 
   function onDragStart(event: DragEvent, subId: string) {
@@ -81,17 +88,20 @@ export default function TaskSubtasksPanel({
     setDraggingId(subId);
   }
 
-  function onDragOver(event: DragEvent, subId: string) {
+  function onDragOver(event: DragEvent<HTMLLIElement>, subId: string) {
     const sourceId = draggingIdRef.current;
     if (!sourceId || sourceId === subId) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
+    const edge = edgeFromEvent(event);
     setDragOverId(subId);
+    setDragOverEdge(edge);
   }
 
-  function onDrop(event: DragEvent, targetId: string) {
+  function onDrop(event: DragEvent<HTMLLIElement>, targetId: string) {
     event.preventDefault();
     const sourceId = draggingIdRef.current ?? event.dataTransfer.getData("text/plain");
+    const edge = edgeFromEvent(event);
     clearDragState();
     if (!sourceId || sourceId === targetId || disabled || reorderingRef.current) return;
 
@@ -99,10 +109,13 @@ export default function TaskSubtasksPanel({
     const from = ids.indexOf(sourceId);
     const to = ids.indexOf(targetId);
     if (from < 0 || to < 0) return;
-    // Drop on a row = place below it (indicator is a bottom edge line).
+
+    // Top half of a row = insert before (allows becoming first); bottom = after.
     const next = [...ids];
     next.splice(from, 1);
-    const insertAt = from < to ? to : to + 1;
+    let insertAt = to;
+    if (from < to) insertAt -= 1;
+    if (edge === "after") insertAt += 1;
     next.splice(insertAt, 0, sourceId);
     if (next.every((id, index) => id === ids[index])) return;
 
@@ -164,7 +177,8 @@ export default function TaskSubtasksPanel({
               className={[
                 "task-subtask-row",
                 draggingId === sub.id ? "is-dragging" : "",
-                dragOverId === sub.id ? "is-drag-over" : "",
+                dragOverId === sub.id && dragOverEdge === "before" ? "is-drag-over-before" : "",
+                dragOverId === sub.id && dragOverEdge === "after" ? "is-drag-over-after" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
