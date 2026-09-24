@@ -3662,40 +3662,46 @@ button.progress-cal-cell.effort::after {
 .home-progress-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.45rem;
   margin-top: 0.85rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--border);
 }
 .home-progress-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem 1rem;
   flex-wrap: wrap;
 }
 .home-progress-row-week {
-  align-items: flex-end;
-  gap: 0.75rem 1rem;
+  align-items: center;
 }
 .weekly-goals-block.compact {
-  display: grid;
-  grid-template-columns: max-content repeat(2, minmax(0, 1fr));
-  column-gap: 1.15rem;
-  row-gap: 0.4rem;
+  display: flex;
   align-items: center;
-  flex: 1 1 auto;
+  gap: 0.55rem 0.85rem;
+  width: 100%;
   min-width: 0;
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
-.weekly-goals-compact-spacer {
-  visibility: hidden;
-  white-space: nowrap;
-  pointer-events: none;
-  user-select: none;
+.weekly-goals-compact-goals {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 0.75rem 1.75rem;
+  min-width: 0;
+}
+.weekly-goal-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 .weekly-goals-kicker {
   font-family: inherit;
@@ -3706,6 +3712,7 @@ button.progress-cal-cell.effort::after {
   letter-spacing: 0;
   padding-top: 0;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .weekly-goals-list {
   display: flex;
@@ -3727,29 +3734,28 @@ button.progress-cal-cell.effort::after {
   gap: 0.35rem 0.55rem;
   min-width: 0;
 }
-.weekly-goals-block.compact .weekly-goal-row-head {
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
 .weekly-goal-title {
   font-size: 0.9rem;
 }
 .weekly-goals-block.compact .weekly-goal-title {
   font-size: inherit;
   font-weight: 600;
+  white-space: nowrap;
 }
 .weekly-goal-fraction {
   font-size: 0.8rem;
 }
 .weekly-goals-block.compact .weekly-goal-fraction {
   font-size: inherit;
+  white-space: nowrap;
 }
 .weekly-pace {
   font-size: 0.78rem;
   font-weight: 600;
 }
 .weekly-goals-block.compact .weekly-pace {
-  font-size: 0.8rem;
+  font-size: inherit;
+  white-space: nowrap;
 }
 .weekly-pace.on-track {
   color: var(--accent-blue-deep, #3d5a80);
@@ -3764,9 +3770,9 @@ button.progress-cal-cell.effort::after {
   overflow: hidden;
 }
 .weekly-goals-block.compact .weekly-goal-bar {
-  height: 0.4rem;
-  width: 100%;
-  align-self: center;
+  width: 3.75rem;
+  height: 0.35rem;
+  flex: 0 0 auto;
 }
 .weekly-goal-bar > span {
   display: block;
@@ -3774,10 +3780,9 @@ button.progress-cal-cell.effort::after {
   background: var(--accent-blue, #5b7cfa);
   border-radius: inherit;
 }
-.home-progress-row-week .home-section-link {
+.home-progress-row .home-section-link {
   flex-shrink: 0;
   white-space: nowrap;
-  padding-bottom: 0.05rem;
 }
 .weekly-goals-card {
   margin-top: 0.75rem;

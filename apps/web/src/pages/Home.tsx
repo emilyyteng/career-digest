@@ -201,6 +201,9 @@ export default function Home() {
                 prefix="Today: "
                 className="home-progress-strip"
               />
+              <Link to="/progress" className="home-section-link">
+                Update progress →
+              </Link>
             </div>
             <div className="home-progress-row home-progress-row-week">
               <WeeklyGoalsBlock
@@ -208,9 +211,6 @@ export default function Home() {
                 compact
                 onChange={setWeeklyGoals}
               />
-              <Link to="/progress" className="home-section-link">
-                Update progress →
-              </Link>
             </div>
           </div>
         )}

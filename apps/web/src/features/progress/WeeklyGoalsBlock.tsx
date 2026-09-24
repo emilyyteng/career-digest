@@ -149,16 +149,21 @@ export default function WeeklyGoalsBlock({
   if (compact) {
     return (
       <div className="weekly-goals-block compact">
-        <span className="weekly-goals-compact-spacer" aria-hidden="true">
-          This week:
-        </span>
-        {snapshot.goals.map((goal) => (
-          <GoalBar key={`bar-${goal.id}`} done={goal.done} total={goal.total} />
-        ))}
         <span className="weekly-goals-kicker">This week:</span>
-        {snapshot.goals.map((goal) => (
-          <GoalHead key={`label-${goal.id}`} goal={goal} />
-        ))}
+        <div className="weekly-goals-compact-goals">
+          {snapshot.goals.map((goal) => (
+            <div key={goal.id} className="weekly-goal-inline">
+              <strong className="weekly-goal-title">{goal.title}</strong>
+              <span className="weekly-goal-fraction muted">
+                {goal.done}/{goal.total}
+              </span>
+              <GoalBar done={goal.done} total={goal.total} />
+              <span className={paceClass(goal.pace.label)}>
+                {paceText(goal.pace.label, goal.pace.amount)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
