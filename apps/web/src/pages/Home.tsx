@@ -62,7 +62,13 @@ function upcomingItemKey(item: HomeUpcomingItem): string {
   return `task:${item.id}`;
 }
 
-function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
+function UpcomingRow({
+  item,
+  showSchedule = true,
+}: {
+  item: HomeUpcomingItem;
+  showSchedule?: boolean;
+}) {
   const estimate = formatEstimateMinutes(item.estimateMinutes);
 
   function TitleLine({ text }: { text: string }) {
@@ -89,10 +95,12 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
           />
           <span className="muted home-job-meta">{secondary}</span>
         </Link>
-        <div className="home-interview-deadline">
-          <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
-          <InterviewCountdown target={item.at} />
-        </div>
+        {showSchedule && (
+          <div className="home-interview-deadline">
+            <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
+            <InterviewCountdown target={item.at} />
+          </div>
+        )}
       </li>
     );
   }
@@ -107,12 +115,21 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
           </span>
         )}
       </Link>
-      <div className="home-interview-deadline">
-        <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
-        <InterviewCountdown target={item.at} />
-      </div>
+      {showSchedule && (
+        <div className="home-interview-deadline">
+          <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
+          <InterviewCountdown target={item.at} />
+        </div>
+      )}
     </li>
   );
+}
+
+function sectionIsEmpty(section: HomeDashboard["upcomingThisWeek"]["sections"][number]): boolean {
+  if (section.layout === "by_day") {
+    return (section.dayGroups ?? []).every((g) => g.items.length === 0);
+  }
+  return section.items.length === 0;
 }
 
 export default function Home() {
@@ -197,18 +214,39 @@ export default function Home() {
 
       <section className="card home-section home-attention-card">
         <h3 className="home-section-title">Upcoming this week</h3>
-        {sections.every((s) => s.items.length === 0) ? (
+        {sections.every(sectionIsEmpty) ? (
           <p className="muted home-pick-empty">Nothing due this week.</p>
         ) : (
           sections.map((section) =>
-            section.items.length === 0 ? null : (
+            sectionIsEmpty(section) ? null : (
               <div key={section.key} className="home-attention-subsection">
                 <h4 className="home-subheading">{section.label}</h4>
-                <ul className="home-list">
-                  {section.items.map((item) => (
-                    <UpcomingRow key={upcomingItemKey(item)} item={item} />
-                  ))}
-                </ul>
+                {section.layout === "by_day" ? (
+                  <div className="home-target-days">
+                    {(section.dayGroups ?? []).map((group) =>
+                      group.items.length === 0 ? null : (
+                        <div key={group.key} className="home-target-day">
+                          <h5 className="home-target-day-label">{group.label}</h5>
+                          <ul className="home-list">
+                            {group.items.map((item) => (
+                              <UpcomingRow
+                                key={upcomingItemKey(item)}
+                                item={item}
+                                showSchedule={false}
+                              />
+                            ))}
+                          </ul>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                ) : (
+                  <ul className="home-list">
+                    {section.items.map((item) => (
+                      <UpcomingRow key={upcomingItemKey(item)} item={item} />
+                    ))}
+                  </ul>
+                )}
               </div>
             ),
           )

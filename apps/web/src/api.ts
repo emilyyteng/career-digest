@@ -342,7 +342,13 @@ export type HomeDashboard = {
     sections: Array<{
       key: "deadlines" | "targets";
       label: string;
+      layout?: "flat" | "by_day";
       items: HomeUpcomingItem[];
+      dayGroups?: Array<{
+        key: string;
+        label: string;
+        items: HomeUpcomingItem[];
+      }>;
     }>;
   };
   weeklyGoals: WeeklyGoalsSnapshot | null;

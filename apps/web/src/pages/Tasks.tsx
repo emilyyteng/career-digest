@@ -142,6 +142,7 @@ export default function Tasks() {
         if (cancelled) return;
         applyTasksData(data, cacheKey);
         setError(null);
+        void refreshWeeklyAppTargets();
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
@@ -178,6 +179,7 @@ export default function Tasks() {
     setEditing(null);
     invalidateListCache("tasks:");
     setRows((current) => current.map((item) => (item.id === row.id ? row : item)));
+    void refreshWeeklyAppTargets();
   }
 
   async function confirmRemove() {
@@ -262,6 +264,16 @@ export default function Tasks() {
     const draft = dueDraftFor(row);
     const dueAt = draft.date ? combineApplyByDateTime(draft.date, draft.time) : null;
     const dueKind = dueAt ? draft.kind : null;
+    const savedDate = toDateInputValue(row.dueAt);
+    const savedTime = applyByTimeInputValue(row.dueAt);
+    const savedKind = (row.dueKind ?? "deadline") as TaskDueKind;
+    if (
+      draft.date === savedDate &&
+      draft.time === savedTime &&
+      (dueAt == null || draft.kind === savedKind)
+    ) {
+      return;
+    }
     setPendingId(row.id);
     try {
       const updated = await patchTask(row.id, { dueAt, dueKind });
@@ -269,6 +281,11 @@ export default function Tasks() {
         current.map((item) => (item.id === row.id ? updated : item)),
       );
       invalidateListCache("tasks:");
+      setDueDrafts((current) => {
+        const next = { ...current };
+        delete next[row.id];
+        return next;
+      });
       setDueFlash((current) => ({ ...current, [row.id]: true }));
       window.setTimeout(() => {
         setDueFlash((current) => {
@@ -282,6 +299,19 @@ export default function Tasks() {
     } finally {
       setPendingId(null);
     }
+  }
+
+  function dueSaveEnabled(row: TaskRow): boolean {
+    if (pendingId === row.id) return false;
+    const draft = dueDraftFor(row);
+    const savedDate = toDateInputValue(row.dueAt);
+    const savedTime = applyByTimeInputValue(row.dueAt);
+    const savedKind = (row.dueKind ?? "deadline") as TaskDueKind;
+    return (
+      draft.date !== savedDate ||
+      draft.time !== savedTime ||
+      (Boolean(draft.date) && draft.kind !== savedKind)
+    );
   }
 
   async function toggleWeeklyAppTarget(row: TaskRow, member: boolean) {
@@ -500,10 +530,12 @@ export default function Tasks() {
                 onSubmit={(event) => void saveDueAt(event, row)}
               >
                 <label className="application-apply-by-field">
-                  <span className="application-apply-by-field-label">Kind</span>
+                  <span className="visually-hidden">Date kind</span>
                   <select
+                    className="application-apply-by-kind"
                     value={dueDraft.kind}
                     disabled={pendingId === row.id || !dueDraft.date}
+                    aria-label="Date kind"
                     onChange={(event) =>
                       setDueDraft(row.id, { kind: event.target.value as TaskDueKind })
                     }
@@ -513,27 +545,29 @@ export default function Tasks() {
                   </select>
                 </label>
                 <label className="application-apply-by-field">
-                  <span className="application-apply-by-field-label">Date</span>
+                  <span className="visually-hidden">Date</span>
                   <input
                     type="date"
                     value={dueDraft.date}
                     disabled={pendingId === row.id}
+                    aria-label="Due date"
                     onChange={(event) => setDueDraft(row.id, { date: event.target.value })}
                   />
                 </label>
                 <label className="application-apply-by-field">
-                  <span className="application-apply-by-field-label">Time</span>
+                  <span className="visually-hidden">Time</span>
                   <input
                     type="time"
                     value={dueDraft.time}
-                    disabled={pendingId === row.id}
+                    disabled={pendingId === row.id || !dueDraft.date}
+                    aria-label="Due time"
                     onChange={(event) => setDueDraft(row.id, { time: event.target.value })}
                   />
                 </label>
                 <button
                   type="submit"
                   className="secondary"
-                  disabled={pendingId === row.id || !dueDraft.date}
+                  disabled={!dueSaveEnabled(row)}
                 >
                   Save
                 </button>
@@ -651,7 +685,15 @@ export default function Tasks() {
       {view === "open" && loaded && (
         <div className="task-board">
           {categories.map((category) => {
-            const sectionTasks = rows.filter((row) => row.categoryId === category.id);
+            const sectionTasks = rows
+              .filter((row) => row.categoryId === category.id)
+              .slice()
+              .sort((a, b) => {
+                if (category.kind !== "application") return 0;
+                const aTarget = weeklyAppTargetIds.has(a.id) ? 0 : 1;
+                const bTarget = weeklyAppTargetIds.has(b.id) ? 0 : 1;
+                return aTarget - bTarget;
+              });
             const empty = sectionTasks.length === 0;
             const clamp = sectionTasks.length > SECTION_CLAMP_AFTER;
             return (

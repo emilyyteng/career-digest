@@ -254,32 +254,36 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
             <option value="target">Target</option>
           </select>
         </label>
-        <label>
-          Due date
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(event) => setDueDate(event.target.value)}
-          />
-        </label>
-        <label>
-          Due time
-          <input
-            type="time"
-            value={dueTime}
-            disabled={!dueDate}
-            onChange={(event) => setDueTime(event.target.value)}
-          />
-        </label>
-        {isApplication && (
-          <label className="task-weekly-target-toggle">
+        <div className="task-due-datetime-row">
+          <label>
+            Due date
             <input
-              type="checkbox"
-              checked={weeklyTarget}
-              onChange={(event) => setWeeklyTarget(event.target.checked)}
+              type="date"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
             />
-            <span>Target this week</span>
           </label>
+          <label>
+            Due time
+            <input
+              type="time"
+              value={dueTime}
+              disabled={!dueDate}
+              onChange={(event) => setDueTime(event.target.value)}
+            />
+          </label>
+        </div>
+        {isApplication && (
+          <div className="task-weekly-target-row">
+            <label className="task-weekly-target-toggle">
+              <input
+                type="checkbox"
+                checked={weeklyTarget}
+                onChange={(event) => setWeeklyTarget(event.target.checked)}
+              />
+              <span>Target this week</span>
+            </label>
+          </div>
         )}
         <div className="task-due-fields">
           <label>

@@ -274,13 +274,13 @@ export async function resetDemoDatabase(db: Pool): Promise<DemoSeedSummary> {
   }
 
   await db.query(
-    `INSERT INTO tasks (category, category_id, status, title, organization, notes, due_at)
+    `INSERT INTO tasks (category, category_id, status, title, organization, notes, due_at, due_kind)
      VALUES
-       ('misc', $4, 'open', 'Finish networks problem set', 'Campus University', 'Chapters 4–5', $1),
-       ('misc', $4, 'open', 'Office hours — compilers', 'Campus University', NULL, $2),
-       ('misc', $5, 'open', 'Book dentist cleaning', NULL, NULL, $3),
-       ('misc', $5, 'open', 'Update resume bullet for Parcel Grove', NULL, 'Demo personal task', NULL),
-       ('misc', $4, 'completed', 'Submit systems lab', 'Campus University', NULL, NULL)`,
+       ('misc', $4, 'open', 'Finish networks problem set', 'Campus University', 'Chapters 4–5', $1, 'deadline'),
+       ('misc', $4, 'open', 'Office hours — compilers', 'Campus University', NULL, $2, 'deadline'),
+       ('misc', $5, 'open', 'Book dentist cleaning', NULL, NULL, $3, 'deadline'),
+       ('misc', $5, 'open', 'Update resume bullet for Parcel Grove', NULL, 'Demo personal task', NULL, NULL),
+       ('misc', $4, 'completed', 'Submit systems lab', 'Campus University', NULL, NULL, NULL)`,
     [daysAgo(-2), daysAgo(-1), daysAgo(-3), schoolCategoryId, adminCategoryId],
   );
   await db.query(

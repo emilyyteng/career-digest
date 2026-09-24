@@ -40,7 +40,11 @@ export type HomeUpcomingGroup = {
 export type HomeUpcomingSection = {
   key: "deadlines" | "targets";
   label: string;
+  /** Flat list (deadlines). Empty when layout is by_day. */
   items: HomeUpcomingItem[];
+  /** Day buckets for targets (and unused for deadlines). */
+  dayGroups: HomeUpcomingGroup[];
+  layout: "flat" | "by_day";
 };
 
 export type HomeUpcomingThisWeek = {
@@ -388,12 +392,16 @@ export async function getUpcomingThisWeek(
       {
         key: "deadlines",
         label: "Deadlines",
+        layout: "flat",
         items: buildFlatSectionItems(deadlines, now, tz),
+        dayGroups: [],
       },
       {
         key: "targets",
         label: "Targets",
-        items: buildFlatSectionItems(targets, now, tz),
+        layout: "by_day",
+        items: [],
+        dayGroups: buildUpcomingGroups(targets, now, tz),
       },
     ],
   };

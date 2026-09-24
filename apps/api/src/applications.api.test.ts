@@ -200,7 +200,7 @@ describe.skipIf(!integrationReady)("applications API", () => {
 
     await pool.query(`
       INSERT INTO tasks (
-        category, category_id, status, title, organization, url, notes, due_at, posting_id, application_id
+        category, category_id, status, title, organization, url, notes, due_at, due_kind, posting_id, application_id
       )
       SELECT
         'application',
@@ -211,6 +211,7 @@ describe.skipIf(!integrationReady)("applications API", () => {
         COALESCE(a.url, p.url),
         a.notes,
         a.due_at,
+        CASE WHEN a.due_at IS NOT NULL THEN 'deadline' ELSE NULL END,
         a.posting_id,
         a.id
       FROM applications a
