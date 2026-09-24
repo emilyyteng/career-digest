@@ -152,7 +152,10 @@ export default function WeeklyGoalsBlock({
         <span className="weekly-goals-kicker">This week:</span>
         <div className="weekly-goals-compact-goals">
           {snapshot.goals.map((goal) => (
-            <div key={goal.id} className="weekly-goal-inline">
+            <div
+              key={goal.id}
+              className={`weekly-goal-inline weekly-goal-inline-${goal.slot}`}
+            >
               <strong className="weekly-goal-title">{goal.title}</strong>
               <span className="weekly-goal-fraction muted">
                 {goal.done}/{goal.total}

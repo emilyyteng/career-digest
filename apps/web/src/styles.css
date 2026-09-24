@@ -3692,7 +3692,7 @@ button.progress-cal-cell.effort::after {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 1.5rem;
   min-width: 0;
 }
@@ -3701,7 +3701,10 @@ button.progress-cal-cell.effort::after {
   align-items: center;
   gap: 0.45rem;
   min-width: 0;
-  flex: 1 1 0;
+  flex: 0 1 auto;
+}
+.weekly-goal-inline-apps {
+  margin-left: auto;
 }
 .weekly-goals-kicker {
   font-family: inherit;
@@ -3770,9 +3773,10 @@ button.progress-cal-cell.effort::after {
   overflow: hidden;
 }
 .weekly-goals-block.compact .weekly-goal-bar {
-  width: 3.75rem;
+  flex: 1 1 5rem;
+  min-width: 4rem;
+  max-width: 10rem;
   height: 0.35rem;
-  flex: 0 0 auto;
 }
 .weekly-goal-bar > span {
   display: block;
