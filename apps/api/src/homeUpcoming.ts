@@ -373,6 +373,32 @@ export function buildFlatSectionItems(
   return [...sortItems(overdue), ...sortItems(upcoming)];
 }
 
+/** For targets: only the earliest subtask per parent, so later steps do not clutter the week. */
+export function keepEarliestSubtaskPerParent(
+  items: HomeUpcomingItem[],
+): HomeUpcomingItem[] {
+  const nonSubtasks: HomeUpcomingItem[] = [];
+  const subtasks: HomeUpcomingItem[] = [];
+  for (const item of items) {
+    if (item.kind === "subtask" && item.parentId) subtasks.push(item);
+    else nonSubtasks.push(item);
+  }
+  subtasks.sort((a, b) => {
+    const atDiff = new Date(a.at).getTime() - new Date(b.at).getTime();
+    if (atDiff !== 0) return atDiff;
+    return (a.subtaskId ?? "").localeCompare(b.subtaskId ?? "");
+  });
+  const seenParents = new Set<string>();
+  const keptSubtasks: HomeUpcomingItem[] = [];
+  for (const sub of subtasks) {
+    const parentId = sub.parentId!;
+    if (seenParents.has(parentId)) continue;
+    seenParents.add(parentId);
+    keptSubtasks.push(sub);
+  }
+  return [...nonSubtasks, ...keptSubtasks];
+}
+
 export async function getUpcomingThisWeek(
   db: Queryable,
   tz: string,
@@ -385,7 +411,9 @@ export async function getUpcomingThisWeek(
   ]);
   const all = [...tasks, ...subtasks, ...interviews];
   const deadlines = all.filter((i) => i.dueKind === "deadline");
-  const targets = all.filter((i) => i.dueKind === "target");
+  const targets = keepEarliestSubtaskPerParent(
+    all.filter((i) => i.dueKind === "target"),
+  );
   return {
     groups: buildUpcomingGroups(all, now, tz),
     sections: [

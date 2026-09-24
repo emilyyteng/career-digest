@@ -3829,16 +3829,26 @@ button.progress-cal-cell.effort::after {
   grid-template-columns: none;
 }
 .home-target-days {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.75rem;
+  align-items: start;
+}
+.home-target-day {
+  min-width: 0;
 }
 .home-target-day-label {
-  margin: 0 0 0.2rem;
+  margin: 0 0 0.4rem;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
 }
-.home-target-day + .home-target-day {
-  margin-top: 0.15rem;
+.home-target-day .home-list {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .home-target-days {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+  }
 }

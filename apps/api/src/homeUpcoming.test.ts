@@ -4,6 +4,7 @@ import {
   buildFlatSectionItems,
   buildUpcomingGroups,
   interviewStepAt,
+  keepEarliestSubtaskPerParent,
   upcomingDayLabel,
   type HomeUpcomingItem,
 } from "./homeUpcoming.js";
@@ -117,5 +118,65 @@ describe("homeUpcoming helpers", () => {
       TZ,
     );
     expect(items.map((i) => i.id)).toEqual(["over", "today", "target"]);
+  });
+
+  it("buildUpcomingGroups includes Overdue then Today / Tomorrow labels", () => {
+    const now = new Date("2026-09-22T17:00:00.000Z"); // Tue 10:00 PT
+    const groups = buildUpcomingGroups(
+      [
+        item({ id: "over", at: "2026-09-20T12:00:00.000Z" }),
+        item({ id: "today", at: "2026-09-23T02:00:00.000Z" }),
+        item({ id: "tmw", at: "2026-09-23T20:00:00.000Z" }),
+      ],
+      now,
+      TZ,
+    );
+    expect(groups.map((g) => g.label)).toEqual(["Overdue", "Today", "Tomorrow"]);
+  });
+
+  it("keepEarliestSubtaskPerParent keeps only the soonest subtask per parent", () => {
+    const kept = keepEarliestSubtaskPerParent([
+      item({
+        kind: "subtask",
+        id: "parent-1",
+        parentId: "parent-1",
+        subtaskId: "s-late",
+        title: "Step 2",
+        at: "2026-09-25T18:00:00.000Z",
+        dueKind: "target",
+      }),
+      item({
+        kind: "subtask",
+        id: "parent-1",
+        parentId: "parent-1",
+        subtaskId: "s-early",
+        title: "Step 1",
+        at: "2026-09-23T18:00:00.000Z",
+        dueKind: "target",
+      }),
+      item({
+        kind: "subtask",
+        id: "parent-2",
+        parentId: "parent-2",
+        subtaskId: "s-other",
+        title: "Only step",
+        at: "2026-09-24T18:00:00.000Z",
+        dueKind: "target",
+      }),
+      item({
+        kind: "task",
+        id: "solo",
+        title: "Parent task with date",
+        at: "2026-09-24T12:00:00.000Z",
+        dueKind: "target",
+      }),
+    ]);
+    expect(
+      kept
+        .filter((i) => i.kind === "subtask")
+        .map((i) => i.subtaskId)
+        .sort(),
+    ).toEqual(["s-early", "s-other"]);
+    expect(kept.some((i) => i.id === "solo")).toBe(true);
   });
 });
