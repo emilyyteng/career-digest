@@ -151,33 +151,33 @@ export default function WeeklyGoalsBlock({
     const gridTemplateColumns = snapshot.goals.map(() => clusterCols).join(" ");
 
     return (
-      <div className="weekly-goals-block compact">
-        <span className="weekly-goals-kicker">This week:</span>
-        <div
-          className="weekly-goals-compact-goals"
-          style={{ gridTemplateColumns }}
-        >
-          {snapshot.goals.map((goal, index) => (
-            <div key={goal.id} style={{ display: "contents" }}>
-              <strong
-                className={
-                  index > 0
-                    ? "weekly-goal-title weekly-goal-cluster-start"
-                    : "weekly-goal-title"
-                }
-              >
-                {goal.title}
-              </strong>
-              <span className="weekly-goal-fraction muted">
-                {goal.done}/{goal.total}
-              </span>
-              <GoalBar done={goal.done} total={goal.total} />
-              <span className={paceClass(goal.pace.label)}>
-                {paceText(goal.pace.label, goal.pace.amount)}
-              </span>
-            </div>
-          ))}
-        </div>
+      <div
+        className="weekly-goals-block compact"
+        style={{ gridTemplateColumns }}
+      >
+        {snapshot.goals.map((goal, index) => (
+          <div key={goal.id} style={{ display: "contents" }}>
+            <span
+              className={
+                index > 0
+                  ? "weekly-goal-title-cluster weekly-goal-cluster-start"
+                  : "weekly-goal-title-cluster"
+              }
+            >
+              {index === 0 && (
+                <span className="weekly-goals-kicker">This week: </span>
+              )}
+              <strong className="weekly-goal-title">{goal.title}</strong>
+            </span>
+            <span className="weekly-goal-fraction muted">
+              {goal.done}/{goal.total}
+            </span>
+            <GoalBar done={goal.done} total={goal.total} />
+            <span className={paceClass(goal.pace.label)}>
+              {paceText(goal.pace.label, goal.pace.amount)}
+            </span>
+          </div>
+        ))}
       </div>
     );
   }

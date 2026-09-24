@@ -3678,9 +3678,9 @@ button.progress-cal-cell.effort::after {
   align-items: center;
 }
 .weekly-goals-block.compact {
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: 0.55rem 0.85rem;
+  column-gap: 0.35rem;
   width: 100%;
   min-width: 0;
   font-family: var(--font-mono);
@@ -3688,13 +3688,14 @@ button.progress-cal-cell.effort::after {
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
-.weekly-goals-compact-goals {
-  display: grid;
-  flex: 1 1 auto;
-  align-items: center;
-  column-gap: 0.4rem;
+.weekly-goal-title-cluster {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
   min-width: 0;
-  width: 100%;
+}
+.weekly-goals-block.compact .weekly-goal-cluster-start {
+  margin-left: 1.15rem;
 }
 .weekly-goals-kicker {
   font-family: inherit;
@@ -3735,8 +3736,12 @@ button.progress-cal-cell.effort::after {
   font-weight: 600;
   white-space: nowrap;
 }
-.weekly-goals-block.compact .weekly-goal-cluster-start {
-  margin-left: 1.15rem;
+.weekly-goals-block.compact .weekly-goal-bar {
+  width: auto;
+  min-width: 0;
+  height: 0.35rem;
+  align-self: center;
+  margin-inline: 0.45rem;
 }
 .weekly-goal-fraction {
   font-size: 0.8rem;
@@ -3760,12 +3765,6 @@ button.progress-cal-cell.effort::after {
   border-radius: 999px;
   background: var(--surface-2);
   overflow: hidden;
-}
-.weekly-goals-block.compact .weekly-goal-bar {
-  width: auto;
-  min-width: 0;
-  height: 0.35rem;
-  align-self: center;
 }
 .weekly-goals-block.compact .weekly-pace {
   font-size: inherit;
