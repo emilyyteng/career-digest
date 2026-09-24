@@ -2637,6 +2637,21 @@ textarea { min-height: 10rem; width: 100%; }
   text-overflow: ellipsis;
   white-space: normal;
 }
+.home-upcoming-title-oneline.task-title-line {
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
+}
+.home-upcoming-title-oneline.task-title-line .task-title-text {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+}
 .priority-badge {
   display: inline-flex;
   align-items: center;
@@ -3847,6 +3862,20 @@ button.progress-cal-cell.effort::after {
 }
 .home-target-day .home-list {
   margin: 0;
+}
+.home-target-day .home-job-row {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+.home-target-day .home-job-main {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.home-target-day .home-job-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 @media (max-width: 640px) {
   .home-target-days {
