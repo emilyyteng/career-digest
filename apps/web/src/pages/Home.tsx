@@ -73,7 +73,11 @@ function UpcomingRow({
 
   function TitleLine({ text }: { text: string }) {
     return (
-      <span className="home-job-title home-upcoming-title task-title-line">
+      <span
+        className={`home-job-title home-upcoming-title task-title-line${
+          showSchedule ? "" : " home-upcoming-title-oneline"
+        }`}
+      >
         <PriorityBadge priority={item.priority} />
         <span className="task-title-text">{text}</span>
         {estimate && <span className="task-estimate-inline">{estimate}</span>}

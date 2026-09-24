@@ -1038,8 +1038,10 @@ a.external .ext-icon { font-size: 0.75rem; }
   align-items: center;
 }
 .task-move-select {
-  font-size: 0.85rem;
-  max-width: 9.5rem;
+  font-size: 0.75rem;
+  padding: 0.28rem 0.4rem;
+  line-height: 1.2;
+  max-width: 6.5rem;
 }
 .visually-hidden {
   position: absolute;
