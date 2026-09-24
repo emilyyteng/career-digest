@@ -11,6 +11,7 @@ export type TaskSubtaskRow = {
   title: string;
   status: "open" | "completed";
   dueAt: string | null;
+  dueKind: "deadline" | "target" | null;
   estimateMinutes: number | null;
   /** Explicit override; null means inherit parent. */
   priorityOverride: TaskPriority | null;
@@ -29,6 +30,7 @@ const subtaskSelect = `
     s.title,
     s.status,
     s.due_at AS "dueAt",
+    s.due_kind AS "dueKind",
     s.estimate_minutes AS "estimateMinutes",
     s.priority_override AS "priorityOverride",
     s.sort_order AS "sortOrder",
@@ -79,6 +81,8 @@ function mapSubtask(row: SubtaskDbRow): TaskSubtaskRow {
     title: row.title,
     status: row.status,
     dueAt,
+    dueKind:
+      row.dueKind === "deadline" || row.dueKind === "target" ? row.dueKind : null,
     estimateMinutes: row.estimateMinutes,
     priorityOverride,
     priority: priorityOverride ?? parentPriority,
@@ -203,6 +207,7 @@ export async function createSubtask(
   input: {
     title: string;
     dueAt?: string | null;
+    dueKind?: "deadline" | "target" | null;
     estimateMinutes?: number | null;
     priorityOverride?: TaskPriority | null;
   },
@@ -214,6 +219,13 @@ export async function createSubtask(
     input.dueAt !== undefined ? parseDueAt(input.dueAt) : null;
   if (input.dueAt != null && input.dueAt !== "" && dueAt === null) {
     throw Object.assign(new Error("Invalid dueAt"), { status: 400 });
+  }
+  let dueKind: "deadline" | "target" | null = null;
+  if (dueAt) {
+    dueKind =
+      input.dueKind === "deadline" || input.dueKind === "target"
+        ? input.dueKind
+        : "target";
   }
   const estimateMinutes =
     input.estimateMinutes !== undefined
@@ -234,10 +246,10 @@ export async function createSubtask(
 
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO task_subtasks (
-       task_id, title, due_at, estimate_minutes, priority_override, sort_order
-     ) VALUES ($1, $2, $3, $4, $5, $6)
+       task_id, title, due_at, due_kind, estimate_minutes, priority_override, sort_order
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id`,
-    [taskId, title, dueAt, estimateMinutes, priorityOverride, sortOrder],
+    [taskId, title, dueAt, dueKind, estimateMinutes, priorityOverride, sortOrder],
   );
   return (await fetchSubtask(db, rows[0]!.id))!;
 }
@@ -249,6 +261,7 @@ export async function patchSubtask(
   patch: {
     title?: string;
     dueAt?: string | null;
+    dueKind?: "deadline" | "target" | null;
     estimateMinutes?: number | null;
     priorityOverride?: TaskPriority | null;
   },
@@ -269,6 +282,14 @@ export async function patchSubtask(
     }
   }
 
+  let dueKind: "deadline" | "target" | null = existing.dueKind;
+  if (patch.dueKind !== undefined) {
+    dueKind =
+      patch.dueKind === "deadline" || patch.dueKind === "target" ? patch.dueKind : null;
+  }
+  if (!dueAt) dueKind = null;
+  else if (!dueKind) dueKind = "target";
+
   let estimateMinutes = existing.estimateMinutes;
   if (patch.estimateMinutes !== undefined) {
     estimateMinutes = parseEstimateMinutes(patch.estimateMinutes) ?? null;
@@ -283,11 +304,12 @@ export async function patchSubtask(
     `UPDATE task_subtasks
      SET title = $2,
          due_at = $3,
-         estimate_minutes = $4,
-         priority_override = $5,
+         due_kind = $4,
+         estimate_minutes = $5,
+         priority_override = $6,
          updated_at = now()
      WHERE id = $1`,
-    [subtaskId, title, dueAt, estimateMinutes, priorityOverride],
+    [subtaskId, title, dueAt, dueKind, estimateMinutes, priorityOverride],
   );
   return fetchSubtask(db, subtaskId);
 }

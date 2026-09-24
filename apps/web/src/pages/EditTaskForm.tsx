@@ -5,7 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { patchTask, getJobs, type JobCard, type TaskCategoryRow, type TaskPriority, type TaskRow } from "../api";
+import { patchTask, getJobs, setWeeklyAppTargetMember, getWeeklyGoals, type JobCard, type TaskCategoryRow, type TaskDueKind, type TaskPriority, type TaskRow } from "../api";
 import { Link } from "react-router-dom";
 import {
   combineApplyByDateTime,
@@ -41,6 +41,9 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
   const [descriptionHtml, setDescriptionHtml] = useState(task.descriptionHtml ?? "");
   const [dueDate, setDueDate] = useState(toDateInputValue(task.dueAt));
   const [dueTime, setDueTime] = useState(applyByTimeInputValue(task.dueAt));
+  const [dueKind, setDueKind] = useState<TaskDueKind>(task.dueKind ?? "deadline");
+  const [weeklyTarget, setWeeklyTarget] = useState(false);
+  const [weeklyTargetInitial, setWeeklyTargetInitial] = useState<boolean | null>(null);
   const [categoryId, setCategoryId] = useState(task.categoryId);
   const [priority, setPriority] = useState<TaskPriority | null>(task.priority ?? null);
   const [estimateMinutes, setEstimateMinutes] = useState(
@@ -63,9 +66,11 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
     descriptionHtml !== (task.descriptionHtml ?? "") ||
     dueDate !== toDateInputValue(task.dueAt) ||
     dueTime !== applyByTimeInputValue(task.dueAt) ||
+    dueKind !== (task.dueKind ?? "deadline") ||
     categoryId !== task.categoryId ||
     priority !== (task.priority ?? null) ||
-    estimateMinutes !== (task.estimateMinutes != null ? String(task.estimateMinutes) : "");
+    estimateMinutes !== (task.estimateMinutes != null ? String(task.estimateMinutes) : "") ||
+    (weeklyTargetInitial != null && weeklyTarget !== weeklyTargetInitial);
 
   function requestClose() {
     if (!onCancel) return;
@@ -78,6 +83,19 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
   }
 
   useImperativeHandle(ref, () => ({ requestClose }), [confirmDiscard, dirty, onCancel]);
+
+  useEffect(() => {
+    if (!isApplication) return;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    getWeeklyGoals(tz)
+      .then((snap) => {
+        const apps = snap.goals.find((g) => g.slot === "apps");
+        const tagged = Boolean(apps?.members.some((m) => m.taskId === task.id));
+        setWeeklyTarget(tagged);
+        setWeeklyTargetInitial(tagged);
+      })
+      .catch(() => undefined);
+  }, [isApplication, task.id]);
 
   useEffect(() => {
     if (!confirmDiscard) return;
@@ -130,6 +148,7 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
         url: url.trim() || null,
         notes: notes.trim() || null,
         dueAt,
+        dueKind: dueAt ? dueKind : null,
         priority,
         estimateMinutes: estimate,
       };
@@ -143,6 +162,10 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
         }
       }
       const row = await patchTask(task.id, body);
+      if (isApplication) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+        await setWeeklyAppTargetMember(tz, task.id, weeklyTarget);
+      }
       onSaved(row);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save task");
@@ -221,6 +244,17 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
           </label>
         )}
         <label>
+          Date kind
+          <select
+            value={dueKind}
+            disabled={!dueDate}
+            onChange={(event) => setDueKind(event.target.value as TaskDueKind)}
+          >
+            <option value="deadline">Deadline</option>
+            <option value="target">Target</option>
+          </select>
+        </label>
+        <label>
           Due date
           <input
             type="date"
@@ -237,6 +271,16 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
             onChange={(event) => setDueTime(event.target.value)}
           />
         </label>
+        {isApplication && (
+          <label className="task-weekly-target-toggle">
+            <input
+              type="checkbox"
+              checked={weeklyTarget}
+              onChange={(event) => setWeeklyTarget(event.target.checked)}
+            />
+            <span>Target this week</span>
+          </label>
+        )}
         <div className="task-due-fields">
           <label>
             Priority

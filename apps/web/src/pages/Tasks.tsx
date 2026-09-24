@@ -6,10 +6,13 @@ import {
   deleteTask,
   duplicateTask,
   getTasks,
+  getWeeklyGoals,
   patchTask,
   renameTaskCategory,
   reopenTask,
+  setWeeklyAppTargetMember,
   type TaskCategoryRow,
+  type TaskDueKind,
   type TaskRow,
   type TaskView,
 } from "../api";
@@ -80,11 +83,26 @@ export default function Tasks() {
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
   const [reopenConfirm, setReopenConfirm] = useState<TaskRow | null>(null);
   const [dueDrafts, setDueDrafts] = useState<
-    Record<string, { date: string; time: string }>
+    Record<string, { date: string; time: string; kind: TaskDueKind }>
   >({});
   const [dueFlash, setDueFlash] = useState<Record<string, boolean>>({});
+  const [weeklyAppTargetIds, setWeeklyAppTargetIds] = useState<Set<string>>(() => new Set());
   const addFormRef = useRef<AddTaskFormHandle>(null);
   const editFormRef = useRef<EditTaskFormHandle>(null);
+
+  function browserTz(): string {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  }
+
+  async function refreshWeeklyAppTargets() {
+    try {
+      const snap = await getWeeklyGoals(browserTz());
+      const apps = snap.goals.find((g) => g.slot === "apps");
+      setWeeklyAppTargetIds(new Set((apps?.members ?? []).map((m) => m.taskId)));
+    } catch {
+      /* non-blocking */
+    }
+  }
 
   function applyTasksData(data: Awaited<ReturnType<typeof getTasks>>, cacheKey: string) {
     const snapshot: TasksSnapshot = {
@@ -103,6 +121,7 @@ export default function Tasks() {
     const cacheKey = tasksCacheKey(view);
     const data = await getTasks(view);
     applyTasksData(data, cacheKey);
+    void refreshWeeklyAppTargets();
   }
 
   useEffect(() => {
@@ -218,15 +237,20 @@ export default function Tasks() {
     return {
       date: toDateInputValue(row.dueAt),
       time: applyByTimeInputValue(row.dueAt),
+      kind: (row.dueKind ?? "deadline") as TaskDueKind,
     };
   }
 
-  function setDueDraft(rowId: string, patch: Partial<{ date: string; time: string }>) {
+  function setDueDraft(
+    rowId: string,
+    patch: Partial<{ date: string; time: string; kind: TaskDueKind }>,
+  ) {
     setDueDrafts((current) => {
       const row = rows.find((item) => item.id === rowId);
       const base = current[rowId] ?? {
         date: toDateInputValue(row?.dueAt),
         time: applyByTimeInputValue(row?.dueAt),
+        kind: (row?.dueKind ?? "deadline") as TaskDueKind,
       };
       return { ...current, [rowId]: { ...base, ...patch } };
     });
@@ -237,9 +261,10 @@ export default function Tasks() {
     if (pendingId) return;
     const draft = dueDraftFor(row);
     const dueAt = draft.date ? combineApplyByDateTime(draft.date, draft.time) : null;
+    const dueKind = dueAt ? draft.kind : null;
     setPendingId(row.id);
     try {
-      const updated = await patchTask(row.id, { dueAt });
+      const updated = await patchTask(row.id, { dueAt, dueKind });
       setRows((current) =>
         current.map((item) => (item.id === row.id ? updated : item)),
       );
@@ -254,6 +279,20 @@ export default function Tasks() {
       }, 2200);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save due date");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function toggleWeeklyAppTarget(row: TaskRow, member: boolean) {
+    if (pendingId) return;
+    setPendingId(row.id);
+    try {
+      const snap = await setWeeklyAppTargetMember(browserTz(), row.id, member);
+      const apps = snap.goals.find((g) => g.slot === "apps");
+      setWeeklyAppTargetIds(new Set((apps?.members ?? []).map((m) => m.taskId)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update weekly target");
     } finally {
       setPendingId(null);
     }
@@ -461,6 +500,19 @@ export default function Tasks() {
                 onSubmit={(event) => void saveDueAt(event, row)}
               >
                 <label className="application-apply-by-field">
+                  <span className="application-apply-by-field-label">Kind</span>
+                  <select
+                    value={dueDraft.kind}
+                    disabled={pendingId === row.id || !dueDraft.date}
+                    onChange={(event) =>
+                      setDueDraft(row.id, { kind: event.target.value as TaskDueKind })
+                    }
+                  >
+                    <option value="deadline">Deadline</option>
+                    <option value="target">Target</option>
+                  </select>
+                </label>
+                <label className="application-apply-by-field">
                   <span className="application-apply-by-field-label">Date</span>
                   <input
                     type="date"
@@ -491,6 +543,19 @@ export default function Tasks() {
                   </span>
                 )}
               </form>
+            )}
+            {view === "open" && application && (
+              <label className="task-weekly-target-toggle">
+                <input
+                  type="checkbox"
+                  checked={weeklyAppTargetIds.has(row.id)}
+                  disabled={pendingId === row.id}
+                  onChange={(event) =>
+                    void toggleWeeklyAppTarget(row, event.target.checked)
+                  }
+                />
+                <span>Target this week</span>
+              </label>
             )}
             <div className="application-card-footer-actions">
               {row.url && (

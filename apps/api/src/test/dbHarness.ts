@@ -291,9 +291,9 @@ export async function seedTask(input: {
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO tasks (
        category, category_id, status, title, organization, url, notes,
-       due_at, completed_at, created_at, posting_id, application_id
+       due_at, due_kind, completed_at, created_at, posting_id, application_id
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10, now()), $11, $12)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, now()), $12, $13)
      RETURNING id`,
     [
       kind,
@@ -304,6 +304,7 @@ export async function seedTask(input: {
       input.url ?? null,
       input.notes ?? null,
       input.dueAt ?? null,
+      input.dueAt ? "deadline" : null,
       input.completedAt ?? null,
       input.createdAt ?? null,
       input.postingId ?? null,

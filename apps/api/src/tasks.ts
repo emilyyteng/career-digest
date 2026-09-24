@@ -27,6 +27,8 @@ export type TaskCategory = TaskKind;
 export const TASK_VIEWS = ["open", "completed"] as const;
 export type TaskView = (typeof TASK_VIEWS)[number];
 
+export type TaskDueKind = "deadline" | "target";
+
 export type TaskRow = {
   id: string;
   category: TaskKind;
@@ -38,6 +40,7 @@ export type TaskRow = {
   url: string | null;
   notes: string | null;
   dueAt: string | null;
+  dueKind: TaskDueKind | null;
   priority: TaskPriority | null;
   estimateMinutes: number | null;
   postingId: string | null;
@@ -69,6 +72,7 @@ const taskListSelect = `
     COALESCE(t.url, a.url, p.url) AS url,
     t.notes,
     t.due_at AS "dueAt",
+    t.due_kind AS "dueKind",
     t.priority,
     t.estimate_minutes AS "estimateMinutes",
     t.posting_id AS "postingId",
@@ -143,6 +147,28 @@ function parseDueAt(value: unknown): Date | null {
   if (typeof value !== "string") return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseDueKind(value: unknown): TaskDueKind | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  if (value === "deadline" || value === "target") return value;
+  throw Object.assign(new Error("dueKind must be deadline or target"), { status: 400 });
+}
+
+function resolveDuePair(
+  dueAt: string | null | undefined,
+  dueKind: TaskDueKind | null | undefined,
+  existingAt: string | null,
+  existingKind: TaskDueKind | null,
+): { dueAt: string | null; dueKind: TaskDueKind | null } {
+  const nextAt = dueAt !== undefined ? dueAt : existingAt;
+  let nextKind = dueKind !== undefined ? dueKind : existingKind;
+  if (!nextAt) return { dueAt: null, dueKind: null };
+  if (!nextKind) {
+    nextKind = existingKind ?? "deadline";
+  }
+  return { dueAt: nextAt, dueKind: nextKind };
 }
 
 function parseHttpUrl(value: unknown, opts?: { allowEmpty?: boolean }): string | null {
@@ -253,6 +279,7 @@ export type CreateTaskInput = {
   url?: string | null;
   notes?: string | null;
   dueAt?: string | null;
+  dueKind?: TaskDueKind | null;
   priority?: TaskPriority | null;
   estimateMinutes?: number | null;
   location?: string | null;
@@ -263,7 +290,9 @@ async function createManualApplicationTask(
   db: Queryable,
   input: CreateTaskInput,
 ): Promise<TaskRow> {
-  const dueAt = input.dueAt ? new Date(input.dueAt) : null;
+  const duePair = resolveDuePair(input.dueAt ?? null, input.dueKind, null, null);
+  const dueAt = duePair.dueAt ? new Date(duePair.dueAt) : null;
+  const dueKind = duePair.dueKind;
   const client = "connect" in db ? await db.connect() : null;
   const queryable = client ?? db;
   try {
@@ -288,9 +317,9 @@ async function createManualApplicationTask(
     const appsCategory = await getApplicationTaskCategory(queryable);
     const { rows } = await queryable.query<{ id: string }>(
       `INSERT INTO tasks (
-         category, category_id, status, title, organization, url, notes, due_at, application_id
+         category, category_id, status, title, organization, url, notes, due_at, due_kind, application_id
        )
-       VALUES ('application', $1, 'open', $2, $3, $4, $5, $6, $7)
+       VALUES ('application', $1, 'open', $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
       [
         appsCategory.id,
@@ -299,6 +328,7 @@ async function createManualApplicationTask(
         input.url ?? null,
         input.notes ?? null,
         dueAt,
+        dueKind,
         applicationId,
       ],
     );
@@ -321,9 +351,10 @@ export async function createTask(db: Queryable, input: CreateTaskInput): Promise
     }
     return createManualApplicationTask(db, input);
   }
+  const duePair = resolveDuePair(input.dueAt ?? null, input.dueKind, null, null);
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO tasks (category, category_id, title, organization, url, notes, due_at, priority, estimate_minutes)
-     VALUES ('misc', $1, $2, $3, $4, $5, $6, $7, $8)
+    `INSERT INTO tasks (category, category_id, title, organization, url, notes, due_at, due_kind, priority, estimate_minutes)
+     VALUES ('misc', $1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING id`,
     [
       category.id,
@@ -331,7 +362,8 @@ export async function createTask(db: Queryable, input: CreateTaskInput): Promise
       input.organization ?? null,
       input.url ?? null,
       input.notes ?? null,
-      input.dueAt ? new Date(input.dueAt) : null,
+      duePair.dueAt ? new Date(duePair.dueAt) : null,
+      duePair.dueKind,
       input.priority ?? null,
       input.estimateMinutes ?? null,
     ],
@@ -358,7 +390,8 @@ export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow 
           status: 400,
         });
       }
-      const dueAt = source.dueAt ? new Date(source.dueAt) : null;
+      const duePair = resolveDuePair(source.dueAt, source.dueKind, null, null);
+      const dueAt = duePair.dueAt ? new Date(duePair.dueAt) : null;
       const appResult = await queryable.query<{ id: string }>(
         `INSERT INTO applications (
            status, notes, company_name, title, location, url, due_at, description_html, status_changed_at
@@ -378,9 +411,9 @@ export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow 
       const appsCategory = await getApplicationTaskCategory(queryable);
       const { rows } = await queryable.query<{ id: string }>(
         `INSERT INTO tasks (
-           category, category_id, status, title, organization, url, notes, due_at, application_id
+           category, category_id, status, title, organization, url, notes, due_at, due_kind, application_id
          )
-         VALUES ('application', $1, 'open', $2, $3, $4, $5, $6, $7)
+         VALUES ('application', $1, 'open', $2, $3, $4, $5, $6, $7, $8)
          RETURNING id`,
         [
           appsCategory.id,
@@ -389,16 +422,18 @@ export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow 
           source.url ?? null,
           source.notes ?? null,
           dueAt,
+          duePair.dueKind,
           appResult.rows[0]!.id,
         ],
       );
       newTaskId = rows[0]!.id;
     } else {
+      const duePair = resolveDuePair(source.dueAt, source.dueKind, null, null);
       const { rows } = await queryable.query<{ id: string }>(
         `INSERT INTO tasks (
-           category, category_id, status, title, organization, url, notes, due_at, priority, estimate_minutes
+           category, category_id, status, title, organization, url, notes, due_at, due_kind, priority, estimate_minutes
          )
-         VALUES ('misc', $1, 'open', $2, $3, $4, $5, $6, $7, $8)
+         VALUES ('misc', $1, 'open', $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING id`,
         [
           source.categoryId,
@@ -406,7 +441,8 @@ export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow 
           source.organization ?? null,
           source.url ?? null,
           source.notes ?? null,
-          source.dueAt ? new Date(source.dueAt) : null,
+          duePair.dueAt ? new Date(duePair.dueAt) : null,
+          duePair.dueKind,
           source.priority ?? null,
           source.estimateMinutes ?? null,
         ],
@@ -417,12 +453,13 @@ export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow 
         title: string;
         status: "open" | "completed";
         due_at: Date | string | null;
+        due_kind: string | null;
         estimate_minutes: number | null;
         priority_override: number | null;
         sort_order: number;
         completed_at: Date | string | null;
       }>(
-        `SELECT title, status, due_at, estimate_minutes, priority_override, sort_order, completed_at
+        `SELECT title, status, due_at, due_kind, estimate_minutes, priority_override, sort_order, completed_at
          FROM task_subtasks
          WHERE task_id = $1 AND parent_subtask_id IS NULL
          ORDER BY
@@ -435,13 +472,14 @@ export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow 
       for (const sub of subRows) {
         await queryable.query(
           `INSERT INTO task_subtasks (
-             task_id, title, status, due_at, estimate_minutes, priority_override, sort_order, completed_at
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+             task_id, title, status, due_at, due_kind, estimate_minutes, priority_override, sort_order, completed_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
           [
             newTaskId,
             sub.title,
             sub.status,
             sub.due_at,
+            sub.due_at ? sub.due_kind ?? "target" : null,
             sub.estimate_minutes,
             sub.priority_override,
             sub.sort_order,
@@ -581,6 +619,7 @@ export type PatchTaskInput = {
   url?: string | null;
   notes?: string | null;
   dueAt?: string | null;
+  dueKind?: TaskDueKind | null;
   priority?: TaskPriority | null;
   estimateMinutes?: number | null;
   location?: string | null;
@@ -609,11 +648,30 @@ export async function patchTask(
     if (patch.url !== null && patch.url !== "" && parsed === null) return null;
     url = parsed;
   }
-  let dueAt: Date | null = existing.dueAt ? new Date(existing.dueAt) : null;
+  let patchDueAt: string | null | undefined = undefined;
   if (patch.dueAt !== undefined) {
-    dueAt = parseDueAt(patch.dueAt);
-    if (patch.dueAt !== null && patch.dueAt !== "" && dueAt === null) return null;
+    if (patch.dueAt === null || patch.dueAt === "") {
+      patchDueAt = null;
+    } else {
+      const parsed = parseDueAt(patch.dueAt);
+      if (!parsed) return null;
+      patchDueAt = parsed.toISOString();
+    }
   }
+  let patchDueKind: TaskDueKind | null | undefined;
+  try {
+    patchDueKind = parseDueKind(patch.dueKind);
+  } catch {
+    return null;
+  }
+  const duePair = resolveDuePair(
+    patchDueAt,
+    patch.dueKind !== undefined ? (patchDueKind ?? null) : undefined,
+    existing.dueAt,
+    existing.dueKind,
+  );
+  const dueAt = duePair.dueAt ? new Date(duePair.dueAt) : null;
+  const dueKind = duePair.dueKind;
 
   let nextCategoryId = existing.categoryId;
   if (patch.categoryId !== undefined) {
@@ -656,10 +714,11 @@ export async function patchTask(
            url = $4,
            notes = $5,
            due_at = $6,
-           category_id = $7,
-           priority = $8,
-           estimate_minutes = $9,
-           posting_id = CASE WHEN $10::boolean THEN $11::uuid ELSE posting_id END,
+           due_kind = $7,
+           category_id = $8,
+           priority = $9,
+           estimate_minutes = $10,
+           posting_id = CASE WHEN $11::boolean THEN $12::uuid ELSE posting_id END,
            updated_at = now()
        WHERE id = $1`,
       [
@@ -669,6 +728,7 @@ export async function patchTask(
         url,
         notes,
         dueAt,
+        dueKind,
         nextCategoryId,
         priority,
         estimateMinutes,
@@ -874,6 +934,15 @@ export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskIn
     if (!parsed) return null;
     dueAt = parsed.toISOString();
   }
+  let dueKind: TaskDueKind | null = null;
+  try {
+    const parsedKind = parseDueKind(body.dueKind);
+    if (parsedKind !== undefined) dueKind = parsedKind;
+  } catch {
+    return null;
+  }
+  if (dueAt && !dueKind) dueKind = "deadline";
+  if (!dueAt) dueKind = null;
 
   const location = parseOptionalText(body.location);
   let descriptionHtml: string | null = null;
@@ -899,6 +968,7 @@ export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskIn
     url,
     notes: notes ?? null,
     dueAt,
+    dueKind,
     priority: priority === undefined ? null : priority,
     estimateMinutes: estimateMinutes === undefined ? null : estimateMinutes,
     location: location ?? null,
@@ -945,6 +1015,15 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     }
   }
 
+  if (body.dueKind !== undefined) {
+    try {
+      const kind = parseDueKind(body.dueKind);
+      patch.dueKind = kind === undefined ? null : kind;
+    } catch {
+      return null;
+    }
+  }
+
   if (body.postingId !== undefined) {
     if (body.postingId !== null && typeof body.postingId !== "string") return null;
     patch.postingId = body.postingId === null ? null : body.postingId;
@@ -982,6 +1061,7 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     patch.notes === undefined &&
     patch.url === undefined &&
     patch.dueAt === undefined &&
+    patch.dueKind === undefined &&
     patch.location === undefined &&
     patch.descriptionHtml === undefined &&
     patch.postingId === undefined &&

@@ -3,6 +3,7 @@ import {
   createSubtask,
   deleteSubtask,
   patchSubtask,
+  type TaskDueKind,
   type TaskPriority,
   type TaskRow,
   type TaskSubtaskRow,
@@ -22,6 +23,7 @@ type DraftRow = {
   title: string;
   dueDate: string;
   dueTime: string;
+  dueKind: TaskDueKind;
   estimateMinutes: string;
   priorityOverride: TaskPriority | null;
   status: "open" | "completed";
@@ -34,6 +36,7 @@ function fromSubtask(sub: TaskSubtaskRow): DraftRow {
     title: sub.title,
     dueDate: toDateInputValue(sub.dueAt),
     dueTime: applyByTimeInputValue(sub.dueAt) || DEFAULT_APPLY_BY_TIME,
+    dueKind: sub.dueKind ?? "target",
     estimateMinutes: sub.estimateMinutes != null ? String(sub.estimateMinutes) : "",
     priorityOverride: sub.priorityOverride,
     status: sub.status,
@@ -47,6 +50,7 @@ function emptyRow(): DraftRow {
     title: "",
     dueDate: "",
     dueTime: DEFAULT_APPLY_BY_TIME,
+    dueKind: "target",
     estimateMinutes: "",
     priorityOverride: null,
     status: "open",
@@ -58,6 +62,7 @@ function snapshot(row: DraftRow): string {
     title: row.title.trim(),
     dueDate: row.dueDate,
     dueTime: row.dueDate ? row.dueTime : "",
+    dueKind: row.dueDate ? row.dueKind : null,
     estimateMinutes: row.estimateMinutes.trim(),
     priorityOverride: row.priorityOverride,
   });
@@ -136,6 +141,7 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
         const body = {
           title: row.title.trim(),
           dueAt,
+          dueKind: dueAt ? row.dueKind : null,
           estimateMinutes,
           priorityOverride: row.priorityOverride,
         };
@@ -176,6 +182,7 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
         <div className="edit-subtasks-table" role="table" aria-label="Subtasks">
           <div className="edit-subtasks-head" role="row">
             <span role="columnheader">Title</span>
+            <span role="columnheader">Kind</span>
             <span role="columnheader">Due</span>
             <span role="columnheader">Time</span>
             <span role="columnheader">Est.</span>
@@ -198,6 +205,17 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
                 aria-label="Title"
                 onChange={(event) => updateRow(row.key, { title: event.target.value })}
               />
+              <select
+                value={row.dueKind}
+                disabled={saving || !row.dueDate}
+                aria-label="Date kind"
+                onChange={(event) =>
+                  updateRow(row.key, { dueKind: event.target.value as TaskDueKind })
+                }
+              >
+                <option value="deadline">Deadline</option>
+                <option value="target">Target</option>
+              </select>
               <input
                 type="date"
                 value={row.dueDate}

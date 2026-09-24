@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 export default function LeetcodeStepper({
   value,
   disabled,
+  max,
   onCommit,
 }: {
   value: number;
   disabled?: boolean;
+  max?: number;
   onCommit: (next: number) => Promise<void> | void;
 }) {
   const [draft, setDraft] = useState(String(value));
@@ -17,7 +19,8 @@ export default function LeetcodeStepper({
   }, [value]);
 
   async function commit(next: number) {
-    const clamped = Math.max(0, Math.floor(next));
+    let clamped = Math.max(0, Math.floor(next));
+    if (max != null) clamped = Math.min(clamped, max);
     if (clamped === value) {
       setDraft(String(value));
       return;
@@ -29,6 +32,8 @@ export default function LeetcodeStepper({
       setBusy(false);
     }
   }
+
+  const atMax = max != null && value >= max;
 
   return (
     <div className="progress-lc-stepper">
@@ -44,6 +49,7 @@ export default function LeetcodeStepper({
       <input
         type="number"
         min={0}
+        max={max}
         inputMode="numeric"
         disabled={disabled || busy}
         value={draft}
@@ -66,7 +72,7 @@ export default function LeetcodeStepper({
       <button
         type="button"
         className="secondary"
-        disabled={disabled || busy}
+        disabled={disabled || busy || atMax}
         onClick={() => void commit(value + 1)}
         aria-label="Increase LeetCode count"
       >

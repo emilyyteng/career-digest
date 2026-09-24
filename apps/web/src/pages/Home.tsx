@@ -7,9 +7,11 @@ import {
   type HomeJobPick,
   type HomeUpcomingItem,
   type ProgressToday,
+  type WeeklyGoalsSnapshot,
 } from "../api";
 import InterviewCountdown from "../features/interviews/InterviewCountdown";
 import TodayStrip from "../features/progress/TodayStrip";
+import WeeklyGoalsBlock from "../features/progress/WeeklyGoalsBlock";
 import PriorityBadge from "../PriorityBadge";
 import ThemeEmoji from "../ThemeEmoji";
 import { formatEstimateMinutes, formatStepWhen } from "../formatDate";
@@ -78,7 +80,13 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
     return (
       <li className="home-job-row home-interview-row">
         <Link to={`/interviews/${item.threadId}`} className="home-job-main">
-          <TitleLine text={`${item.company ?? "Unknown"} · ${item.primaryTitle ?? "Untitled"}`} />
+          <TitleLine
+            text={
+              item.company
+                ? `${item.company}${item.primaryTitle ? ` · ${item.primaryTitle}` : ""}`
+                : (item.primaryTitle ?? "Interview")
+            }
+          />
           <span className="muted home-job-meta">{secondary}</span>
         </Link>
         <div className="home-interview-deadline">
@@ -89,13 +97,15 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
     );
   }
 
-  const secondary = [item.categoryName, item.organization].filter(Boolean).join(" · ");
-
   return (
-    <li className="home-job-row home-interview-row">
+    <li className="home-job-row">
       <Link to="/tasks" className="home-job-main">
         <TitleLine text={item.title} />
-        {secondary && <span className="muted home-job-meta">{secondary}</span>}
+        {(item.organization || item.categoryName) && (
+          <span className="muted home-job-meta">
+            {[item.organization, item.categoryName].filter(Boolean).join(" · ")}
+          </span>
+        )}
       </Link>
       <div className="home-interview-deadline">
         <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
@@ -108,11 +118,17 @@ function UpcomingRow({ item }: { item: HomeUpcomingItem }) {
 export default function Home() {
   const [data, setData] = useState<HomeDashboard | null>(null);
   const [progress, setProgress] = useState<ProgressToday | null>(null);
+  const [weeklyGoals, setWeeklyGoals] = useState<WeeklyGoalsSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const tz = browserTz();
-    getHomeDashboard(tz).then(setData).catch((err: Error) => setError(err.message));
+    getHomeDashboard(tz)
+      .then((dash) => {
+        setData(dash);
+        setWeeklyGoals(dash.weeklyGoals);
+      })
+      .catch((err: Error) => setError(err.message));
     getProgressToday(tz)
       .then(setProgress)
       .catch(() => setProgress(null));
@@ -124,6 +140,7 @@ export default function Home() {
   const upcoming = data.upcomingThisWeek;
   const digestWhen = formatWhen(data.lastDigest.lastOkAt ?? data.lastDigest.finishedAt);
   const greetingPeriod = currentGreetingPeriod();
+  const sections = upcoming.sections ?? [];
 
   return (
     <section className="home-page">
@@ -156,34 +173,45 @@ export default function Home() {
           </div>
         </div>
         {progress && (
-          <div className="home-progress-row">
-            <TodayStrip
-              today={progress}
-              prefix="Today: "
-              className="home-progress-strip"
-            />
-            <Link to="/progress" className="home-section-link">
-              Update progress →
-            </Link>
+          <div className="home-progress-stack">
+            <div className="home-progress-row">
+              <TodayStrip
+                today={progress}
+                prefix="Today: "
+                className="home-progress-strip"
+              />
+            </div>
+            <div className="home-progress-row home-progress-row-week">
+              <WeeklyGoalsBlock
+                snapshot={weeklyGoals}
+                compact
+                onChange={setWeeklyGoals}
+              />
+              <Link to="/progress" className="home-section-link">
+                Update progress →
+              </Link>
+            </div>
           </div>
         )}
       </header>
 
       <section className="card home-section home-attention-card">
         <h3 className="home-section-title">Upcoming this week</h3>
-        {upcoming.groups.length === 0 ? (
+        {sections.every((s) => s.items.length === 0) ? (
           <p className="muted home-pick-empty">Nothing due this week.</p>
         ) : (
-          upcoming.groups.map((group) => (
-            <div key={group.key} className="home-attention-subsection">
-              <h4 className="home-subheading">{group.label}</h4>
-              <ul className="home-list">
-                {group.items.map((item) => (
-                  <UpcomingRow key={upcomingItemKey(item)} item={item} />
-                ))}
-              </ul>
-            </div>
-          ))
+          sections.map((section) =>
+            section.items.length === 0 ? null : (
+              <div key={section.key} className="home-attention-subsection">
+                <h4 className="home-subheading">{section.label}</h4>
+                <ul className="home-list">
+                  {section.items.map((item) => (
+                    <UpcomingRow key={upcomingItemKey(item)} item={item} />
+                  ))}
+                </ul>
+              </div>
+            ),
+          )
         )}
       </section>
 

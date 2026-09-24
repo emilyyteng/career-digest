@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
+  completeTask,
   createProgressReflection,
   getProgressDay,
   getProgressHeatmap,
   getProgressOutcome,
   getProgressToday,
+  getWeeklyGoals,
   patchProgressLeetcode,
   patchProgressReflection,
   type ProgressDayDetail,
@@ -13,6 +15,7 @@ import {
   type ProgressLane,
   type ProgressOutcome,
   type ProgressToday,
+  type WeeklyGoalsSnapshot,
 } from "../../api";
 import HistoryCalendar, { type CalendarDayMark } from "./HistoryCalendar";
 import LeetcodeStepper from "./LeetcodeStepper";
@@ -21,6 +24,7 @@ import ReflectionAccordion, {
   ReflectionCompose,
 } from "./ReflectionAccordion";
 import TodayStrip from "./TodayStrip";
+import WeeklyGoalsBlock from "./WeeklyGoalsBlock";
 import ModalLayer from "../../ModalLayer";
 import StepActionConfirm from "../../StepActionConfirm";
 import { useBeforeUnloadDraftGuard } from "../../useUnsavedDraftGuard";
@@ -82,6 +86,7 @@ export default function Progress() {
   const [today, setToday] = useState<ProgressToday | null>(null);
   const [week, setWeek] = useState<ProgressOutcome | null>(null);
   const [month, setMonth] = useState<ProgressOutcome | null>(null);
+  const [weeklyGoals, setWeeklyGoals] = useState<WeeklyGoalsSnapshot | null>(null);
   const [appHeat, setAppHeat] = useState<ProgressHeatmapDay[]>([]);
   const [techHeat, setTechHeat] = useState<ProgressHeatmapDay[]>([]);
   const [todayDetail, setTodayDetail] = useState<ProgressDayDetail | null>(null);
@@ -163,18 +168,20 @@ export default function Progress() {
   }
 
   const reloadOverview = useCallback(async () => {
-    const [todayRow, weekRow, monthRow, appRow, techRow] = await Promise.all([
+    const [todayRow, weekRow, monthRow, appRow, techRow, goals] = await Promise.all([
       getProgressToday(tz),
       getProgressOutcome(tz, "week"),
       getProgressOutcome(tz, "month"),
       getProgressHeatmap(tz, "application", 400),
       getProgressHeatmap(tz, "technical", 400),
+      getWeeklyGoals(tz),
     ]);
     setToday(todayRow);
     setWeek(weekRow);
     setMonth(monthRow);
     setAppHeat(appRow.days);
     setTechHeat(techRow.days);
+    setWeeklyGoals(goals);
     setHistoryDate((prev) => prev ?? todayRow.localDate);
     setMonthAnchor((prev) => prev ?? `${todayRow.localDate.slice(0, 7)}-01`);
     const detail = await getProgressDay(tz, todayRow.localDate);
@@ -312,6 +319,19 @@ export default function Progress() {
               </strong>
             </div>
           </div>
+
+          {weeklyGoals && (
+            <WeeklyGoalsBlock
+              snapshot={weeklyGoals}
+              onChange={setWeeklyGoals}
+              onCompleteTask={async (taskId) => {
+                await completeTask(taskId);
+                const next = await getWeeklyGoals(tz);
+                setWeeklyGoals(next);
+                await refreshAfterWrite(today.localDate);
+              }}
+            />
+          )}
 
           <div className="progress-today-band">
             <div className="progress-heat-stack">

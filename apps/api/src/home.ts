@@ -4,6 +4,7 @@ import {
   getUpcomingThisWeek,
   type HomeUpcomingThisWeek,
 } from "./homeUpcoming.js";
+import { getWeeklyGoalsSnapshot, type WeeklyGoalsSnapshot } from "./weeklyGoals.js";
 
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
@@ -39,6 +40,7 @@ export type HomeDashboard = {
     newToDigest: HomeJobPick[];
   };
   upcomingThisWeek: HomeUpcomingThisWeek;
+  weeklyGoals: WeeklyGoalsSnapshot | null;
 };
 
 type JobRow = {
@@ -142,6 +144,7 @@ export async function getHomeDashboard(tz: string): Promise<HomeDashboard> {
   );
 
   const upcomingThisWeek = await getUpcomingThisWeek(pool, tz);
+  const weeklyGoals = await getWeeklyGoalsSnapshot(pool, tz);
 
   const greetingName = process.env.DIGEST_GREETING_NAME?.trim() ?? "";
 
@@ -159,5 +162,6 @@ export async function getHomeDashboard(tz: string): Promise<HomeDashboard> {
       newToDigest: newToDigestRows.map((r) => mapPick(r, "new_to_digest")),
     },
     upcomingThisWeek,
+    weeklyGoals,
   };
 }

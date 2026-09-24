@@ -240,12 +240,14 @@ export type HomeJobPick = {
 };
 
 export type TaskPriority = 0 | 1 | 2;
+export type TaskDueKind = "deadline" | "target";
 
 export type HomeUpcomingItem =
   | {
       kind: "interview";
       at: string;
       deadlineLabel: string;
+      dueKind: TaskDueKind;
       priority: TaskPriority | null;
       estimateMinutes: number | null;
       threadId: string;
@@ -258,6 +260,7 @@ export type HomeUpcomingItem =
       kind: "task";
       at: string;
       deadlineLabel: string;
+      dueKind: TaskDueKind;
       priority: TaskPriority | null;
       estimateMinutes: number | null;
       id: string;
@@ -269,6 +272,7 @@ export type HomeUpcomingItem =
       kind: "subtask";
       at: string;
       deadlineLabel: string;
+      dueKind: TaskDueKind;
       priority: TaskPriority | null;
       estimateMinutes: number | null;
       id: string;
@@ -279,6 +283,42 @@ export type HomeUpcomingItem =
       organization: string | null;
       categoryName: string;
     };
+
+export type WeeklyPaceLabel = "on_track" | "ahead" | "behind";
+
+export type WeeklyGoalMember = {
+  taskId: string;
+  title: string;
+  organization: string | null;
+  status: "open" | "completed";
+  url: string | null;
+};
+
+export type WeeklyGoalView = {
+  id: string;
+  weekStart: string;
+  slot: "lc" | "apps";
+  kind: "count" | "task_set";
+  title: string;
+  targetCount: number | null;
+  progressCount: number;
+  done: number;
+  total: number;
+  pace: {
+    label: WeeklyPaceLabel;
+    amount: number;
+    expected: number;
+    fractionElapsed: number;
+  };
+  members: WeeklyGoalMember[];
+};
+
+export type WeeklyGoalsSnapshot = {
+  tz: string;
+  weekStart: string;
+  weekEnd: string;
+  goals: WeeklyGoalView[];
+};
 
 export type HomeDashboard = {
   greetingName: string;
@@ -299,7 +339,13 @@ export type HomeDashboard = {
       label: string;
       items: HomeUpcomingItem[];
     }>;
+    sections: Array<{
+      key: "deadlines" | "targets";
+      label: string;
+      items: HomeUpcomingItem[];
+    }>;
   };
+  weeklyGoals: WeeklyGoalsSnapshot | null;
 };
 
 export const getHomeDashboard = (tz?: string) => {
@@ -567,6 +613,7 @@ export type TaskSubtaskRow = {
   title: string;
   status: "open" | "completed";
   dueAt: string | null;
+  dueKind: TaskDueKind | null;
   estimateMinutes: number | null;
   priorityOverride: TaskPriority | null;
   priority: TaskPriority | null;
@@ -587,6 +634,7 @@ export type TaskRow = {
   url: string | null;
   notes: string | null;
   dueAt: string | null;
+  dueKind: TaskDueKind | null;
   priority: TaskPriority | null;
   estimateMinutes: number | null;
   postingId: string | null;
@@ -802,6 +850,30 @@ const progressTz = (tz: string) =>
 
 export const getProgressToday = (tz: string) =>
   parse<ProgressToday>(api(`/api/progress/today?${progressTz(tz)}`));
+
+export const getWeeklyGoals = (tz: string) =>
+  parse<WeeklyGoalsSnapshot>(api(`/api/weekly-goals?${progressTz(tz)}`));
+
+export const patchWeeklyLcGoal = (
+  tz: string,
+  body: { targetCount?: number; progressCount?: number },
+) =>
+  parse<WeeklyGoalsSnapshot>(
+    api(`/api/weekly-goals/lc?${progressTz(tz)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const setWeeklyAppTargetMember = (tz: string, taskId: string, member: boolean) =>
+  parse<WeeklyGoalsSnapshot>(
+    api(`/api/weekly-goals/apps/members/${taskId}?${progressTz(tz)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ member }),
+    }),
+  );
 
 export const getProgressHeatmap = (
   tz: string,

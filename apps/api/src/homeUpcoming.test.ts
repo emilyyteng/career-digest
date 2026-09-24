@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addCivilDays,
+  buildFlatSectionItems,
   buildUpcomingGroups,
   interviewStepAt,
   upcomingDayLabel,
@@ -16,6 +17,7 @@ function item(partial: Partial<HomeUpcomingItem> & { at: string }): HomeUpcoming
     title: partial.title ?? "Task",
     categoryName: "Admin",
     deadlineLabel: "Due",
+    dueKind: "deadline",
     priority: null,
     estimateMinutes: null,
     ...partial,
@@ -100,5 +102,20 @@ describe("homeUpcoming helpers", () => {
       "UTC",
     );
     expect(groups[0]!.items.map((i) => i.id)).toEqual(["p0", "p2", "none", "later"]);
+  });
+
+  it("buildFlatSectionItems is overdue then by date within the week", () => {
+    const now = new Date("2026-09-22T17:00:00.000Z");
+    const items = buildFlatSectionItems(
+      [
+        item({ id: "over", at: "2026-09-20T12:00:00.000Z", dueKind: "deadline" }),
+        item({ id: "today", at: "2026-09-23T02:00:00.000Z", dueKind: "deadline" }),
+        item({ id: "far", at: "2026-10-05T18:00:00.000Z", dueKind: "deadline" }),
+        item({ id: "target", at: "2026-09-24T18:00:00.000Z", dueKind: "target" }),
+      ],
+      now,
+      TZ,
+    );
+    expect(items.map((i) => i.id)).toEqual(["over", "today", "target"]);
   });
 });

@@ -11,6 +11,7 @@ export type HomeUpcomingItem = {
   /** Shared sort / countdown instant (ISO). */
   at: string;
   deadlineLabel: string;
+  dueKind: "deadline" | "target";
   priority: TaskPriority | null;
   estimateMinutes: number | null;
   // interview
@@ -36,8 +37,16 @@ export type HomeUpcomingGroup = {
   items: HomeUpcomingItem[];
 };
 
+export type HomeUpcomingSection = {
+  key: "deadlines" | "targets";
+  label: string;
+  items: HomeUpcomingItem[];
+};
+
 export type HomeUpcomingThisWeek = {
+  /** Legacy day groups (still filled for tests / transition). */
   groups: HomeUpcomingGroup[];
+  sections: HomeUpcomingSection[];
 };
 
 const WINDOW_DAYS = 7;
@@ -78,9 +87,10 @@ export function upcomingDayLabel(ymd: string, todayYmd: string): string {
   return `${weekday} · ${monthDay}`;
 }
 
-function taskDueLabel(dueAt: string): string {
+function taskDueLabel(dueAt: string, kind: "deadline" | "target"): string {
   const formatted = formatDeadlineLong(dueAt);
-  return formatted ? `Due: ${formatted}` : "Due";
+  const prefix = kind === "deadline" ? "Deadline" : "Target";
+  return formatted ? `${prefix}: ${formatted}` : prefix;
 }
 
 function interviewDeadlineLabel(at: string, scheduled: boolean): string {
@@ -164,6 +174,7 @@ type TaskDueRow = {
   organization: string | null;
   categoryName: string;
   dueAt: string;
+  dueKind: "deadline" | "target" | null;
   priority: number | null;
   estimateMinutes: number | null;
 };
@@ -176,6 +187,7 @@ type SubtaskDueRow = {
   organization: string | null;
   categoryName: string;
   dueAt: string;
+  dueKind: "deadline" | "target" | null;
   parentPriority: number | null;
   priorityOverride: number | null;
   estimateMinutes: number | null;
@@ -200,6 +212,7 @@ async function loadDatedOpenTasks(db: Queryable): Promise<HomeUpcomingItem[]> {
        COALESCE(t.organization, a.company_name, c.name) AS organization,
        tc.name AS "categoryName",
        t.due_at AS "dueAt",
+       t.due_kind AS "dueKind",
        t.priority,
        t.estimate_minutes AS "estimateMinutes"
      FROM tasks t
@@ -211,17 +224,21 @@ async function loadDatedOpenTasks(db: Queryable): Promise<HomeUpcomingItem[]> {
        AND t.due_at IS NOT NULL
      ORDER BY t.due_at ASC`,
   );
-  return rows.map((row) => ({
-    kind: "task" as const,
-    id: row.id,
-    title: row.title,
-    organization: row.organization,
-    categoryName: row.categoryName,
-    at: row.dueAt,
-    deadlineLabel: taskDueLabel(row.dueAt),
-    priority: asPriority(row.priority),
-    estimateMinutes: row.estimateMinutes,
-  }));
+  return rows.map((row) => {
+    const dueKind = row.dueKind === "target" ? "target" : "deadline";
+    return {
+      kind: "task" as const,
+      id: row.id,
+      title: row.title,
+      organization: row.organization,
+      categoryName: row.categoryName,
+      at: row.dueAt,
+      dueKind,
+      deadlineLabel: taskDueLabel(row.dueAt, dueKind),
+      priority: asPriority(row.priority),
+      estimateMinutes: row.estimateMinutes,
+    };
+  });
 }
 
 async function loadDatedOpenSubtasks(db: Queryable): Promise<HomeUpcomingItem[]> {
@@ -234,6 +251,7 @@ async function loadDatedOpenSubtasks(db: Queryable): Promise<HomeUpcomingItem[]>
        COALESCE(t.organization, a.company_name, c.name) AS organization,
        tc.name AS "categoryName",
        s.due_at AS "dueAt",
+       s.due_kind AS "dueKind",
        t.priority AS "parentPriority",
        s.priority_override AS "priorityOverride",
        s.estimate_minutes AS "estimateMinutes"
@@ -250,20 +268,24 @@ async function loadDatedOpenSubtasks(db: Queryable): Promise<HomeUpcomingItem[]>
        AND s.due_at IS NOT NULL
      ORDER BY s.due_at ASC`,
   );
-  return rows.map((row) => ({
-    kind: "subtask" as const,
-    id: row.taskId,
-    parentId: row.taskId,
-    parentTitle: row.parentTitle,
-    subtaskId: row.subtaskId,
-    title: `${row.parentTitle} · ${row.subtaskTitle}`,
-    organization: row.organization,
-    categoryName: row.categoryName,
-    at: row.dueAt,
-    deadlineLabel: taskDueLabel(row.dueAt),
-    priority: asPriority(row.priorityOverride) ?? asPriority(row.parentPriority),
-    estimateMinutes: row.estimateMinutes,
-  }));
+  return rows.map((row) => {
+    const dueKind = row.dueKind === "deadline" ? "deadline" : "target";
+    return {
+      kind: "subtask" as const,
+      id: row.taskId,
+      parentId: row.taskId,
+      parentTitle: row.parentTitle,
+      subtaskId: row.subtaskId,
+      title: `${row.parentTitle} · ${row.subtaskTitle}`,
+      organization: row.organization,
+      categoryName: row.categoryName,
+      at: row.dueAt,
+      dueKind,
+      deadlineLabel: taskDueLabel(row.dueAt, dueKind),
+      priority: asPriority(row.priorityOverride) ?? asPriority(row.parentPriority),
+      estimateMinutes: row.estimateMinutes,
+    };
+  });
 }
 
 async function loadDatedInterviewSteps(db: Queryable): Promise<HomeUpcomingItem[]> {
@@ -304,12 +326,47 @@ async function loadDatedInterviewSteps(db: Queryable): Promise<HomeUpcomingItem[
       primaryTitle: row.primaryTitle,
       stepTitle: row.stepTitle,
       at,
+      dueKind: "deadline",
       deadlineLabel: interviewDeadlineLabel(at, scheduled),
       priority: null,
       estimateMinutes: null,
     });
   }
   return items;
+}
+
+/** Flat list for a dueKind section: overdue first, then by date within the week window. */
+export function buildFlatSectionItems(
+  items: HomeUpcomingItem[],
+  now: Date,
+  tz: string,
+): HomeUpcomingItem[] {
+  const todayYmd = localDateInTimezone(now, tz);
+  const lastYmd = addCivilDays(todayYmd, WINDOW_DAYS - 1);
+  const nowMs = now.getTime();
+  const overdue: HomeUpcomingItem[] = [];
+  const upcoming: HomeUpcomingItem[] = [];
+
+  for (const item of items) {
+    const atMs = new Date(item.at).getTime();
+    if (Number.isNaN(atMs)) continue;
+    if (atMs < nowMs) {
+      overdue.push(item);
+      continue;
+    }
+    const day = localDateInTimezone(new Date(item.at), tz);
+    if (day < todayYmd || day > lastYmd) continue;
+    upcoming.push(item);
+  }
+
+  const sortItems = (rows: HomeUpcomingItem[]) =>
+    [...rows].sort((a, b) => {
+      const atDiff = new Date(a.at).getTime() - new Date(b.at).getTime();
+      if (atDiff !== 0) return atDiff;
+      return priorityRank(a.priority) - priorityRank(b.priority);
+    });
+
+  return [...sortItems(overdue), ...sortItems(upcoming)];
 }
 
 export async function getUpcomingThisWeek(
@@ -322,7 +379,22 @@ export async function getUpcomingThisWeek(
     loadDatedOpenSubtasks(db),
     loadDatedInterviewSteps(db),
   ]);
+  const all = [...tasks, ...subtasks, ...interviews];
+  const deadlines = all.filter((i) => i.dueKind === "deadline");
+  const targets = all.filter((i) => i.dueKind === "target");
   return {
-    groups: buildUpcomingGroups([...tasks, ...subtasks, ...interviews], now, tz),
+    groups: buildUpcomingGroups(all, now, tz),
+    sections: [
+      {
+        key: "deadlines",
+        label: "Deadlines",
+        items: buildFlatSectionItems(deadlines, now, tz),
+      },
+      {
+        key: "targets",
+        label: "Targets",
+        items: buildFlatSectionItems(targets, now, tz),
+      },
+    ],
   };
 }

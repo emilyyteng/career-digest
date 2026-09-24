@@ -95,6 +95,11 @@ import {
   setLeetcodeDaily,
   updateReflectionLog,
 } from "./progress.js";
+import {
+  getWeeklyGoalsSnapshot,
+  patchLcGoal,
+  setAppTargetMembership,
+} from "./weeklyGoals.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -818,6 +823,7 @@ api.post("/tasks/:taskId/subtasks", async (req, res) => {
     const subtask = await createSubtask(pool, req.params.taskId, {
       title: body.title,
       dueAt: body.dueAt as string | null | undefined,
+      dueKind: body.dueKind as "deadline" | "target" | null | undefined,
       estimateMinutes: body.estimateMinutes as number | null | undefined,
       priorityOverride: body.priorityOverride as 0 | 1 | 2 | null | undefined,
     });
@@ -838,6 +844,7 @@ api.patch("/tasks/:taskId/subtasks/:subtaskId", async (req, res) => {
     const subtask = await patchSubtask(pool, req.params.taskId, req.params.subtaskId, {
       title: typeof body.title === "string" ? body.title : undefined,
       dueAt: body.dueAt as string | null | undefined,
+      dueKind: body.dueKind as "deadline" | "target" | null | undefined,
       estimateMinutes: body.estimateMinutes as number | null | undefined,
       priorityOverride: body.priorityOverride as 0 | 1 | 2 | null | undefined,
     });
@@ -963,6 +970,87 @@ api.get("/progress/today", async (req, res) => {
     return;
   }
   res.json(await getProgressToday(pool, tz));
+});
+
+api.get("/weekly-goals", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const snapshot = await getWeeklyGoalsSnapshot(pool, tz);
+  if (!snapshot) {
+    res.status(400).json({ error: "Invalid timezone" });
+    return;
+  }
+  res.json(snapshot);
+});
+
+api.patch("/weekly-goals/lc", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const body = req.body as { targetCount?: unknown; progressCount?: unknown };
+  const patch: { targetCount?: number; progressCount?: number } = {};
+  if (body.targetCount !== undefined) {
+    if (typeof body.targetCount !== "number") {
+      res.status(400).json({ error: "targetCount must be a number" });
+      return;
+    }
+    patch.targetCount = body.targetCount;
+  }
+  if (body.progressCount !== undefined) {
+    if (typeof body.progressCount !== "number") {
+      res.status(400).json({ error: "progressCount must be a number" });
+      return;
+    }
+    patch.progressCount = body.progressCount;
+  }
+  try {
+    const snapshot = await patchLcGoal(pool, tz, patch);
+    if (!snapshot) {
+      res.status(400).json({ error: "Invalid timezone" });
+      return;
+    }
+    res.json(snapshot);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.put("/weekly-goals/apps/members/:taskId", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const body = req.body as { member?: unknown };
+  if (typeof body.member !== "boolean") {
+    res.status(400).json({ error: "member boolean required" });
+    return;
+  }
+  try {
+    const snapshot = await setAppTargetMembership(pool, tz, req.params.taskId, body.member);
+    if (!snapshot) {
+      res.status(400).json({ error: "Invalid timezone" });
+      return;
+    }
+    res.json(snapshot);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status =
+      typeof (err as { status?: number }).status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    res.status(status).json({ error: message });
+  }
 });
 
 api.get("/progress/heatmap", async (req, res) => {
