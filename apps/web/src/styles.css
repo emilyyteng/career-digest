@@ -3689,8 +3689,6 @@ button.progress-cal-cell.effort::after {
   color: var(--text);
 }
 .weekly-goal-title-cluster {
-  display: inline-flex;
-  align-items: baseline;
   white-space: nowrap;
   min-width: 0;
 }
@@ -3704,9 +3702,6 @@ button.progress-cal-cell.effort::after {
   color: inherit;
   text-transform: none;
   letter-spacing: 0;
-  padding-top: 0;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 .weekly-goals-list {
   display: flex;
