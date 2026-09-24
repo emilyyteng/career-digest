@@ -27,33 +27,37 @@ function GoalBar({ done, total }: { done: number; total: number }) {
   );
 }
 
+function GoalHead({ goal }: { goal: WeeklyGoalView }) {
+  const fraction = `${goal.done}/${goal.total}`;
+  return (
+    <div className="weekly-goal-row-head">
+      <strong className="weekly-goal-title">{goal.title}</strong>
+      <span className="weekly-goal-fraction muted">{fraction}</span>
+      <span className={paceClass(goal.pace.label)}>
+        {paceText(goal.pace.label, goal.pace.amount)}
+      </span>
+    </div>
+  );
+}
+
 function GoalRow({
   goal,
-  compact,
   onLcProgress,
   onLcTarget,
   onUnlink,
   onCompleteTask,
 }: {
   goal: WeeklyGoalView;
-  compact?: boolean;
   onLcProgress?: (n: number) => Promise<void>;
   onLcTarget?: (n: number) => Promise<void>;
   onUnlink?: (taskId: string) => Promise<void>;
   onCompleteTask?: (taskId: string) => Promise<void>;
 }) {
-  const fraction = `${goal.done}/${goal.total}`;
   return (
-    <div className={`weekly-goal-row${compact ? " compact" : ""}`}>
-      <div className="weekly-goal-row-head">
-        <strong className="weekly-goal-title">{goal.title}</strong>
-        <span className="weekly-goal-fraction muted">{fraction}</span>
-        <span className={paceClass(goal.pace.label)}>
-          {paceText(goal.pace.label, goal.pace.amount)}
-        </span>
-      </div>
+    <div className="weekly-goal-row">
+      <GoalHead goal={goal} />
       <GoalBar done={goal.done} total={goal.total} />
-      {!compact && goal.slot === "lc" && onLcProgress && onLcTarget && (
+      {goal.slot === "lc" && onLcProgress && onLcTarget && (
         <div className="weekly-goal-lc-controls">
           <LeetcodeStepper
             value={goal.progressCount}
@@ -75,7 +79,7 @@ function GoalRow({
           </label>
         </div>
       )}
-      {!compact && goal.slot === "apps" && (
+      {goal.slot === "apps" && (
         <div className="weekly-goal-apps">
           {goal.members.length === 0 ? (
             <p className="muted weekly-goal-empty">
@@ -142,30 +146,40 @@ export default function WeeklyGoalsBlock({
     onChange?.(next);
   }
 
+  if (compact) {
+    return (
+      <div className="weekly-goals-block compact">
+        <span className="weekly-goals-compact-spacer" aria-hidden="true">
+          This week:
+        </span>
+        {snapshot.goals.map((goal) => (
+          <GoalBar key={`bar-${goal.id}`} done={goal.done} total={goal.total} />
+        ))}
+        <span className="weekly-goals-kicker">This week:</span>
+        {snapshot.goals.map((goal) => (
+          <GoalHead key={`label-${goal.id}`} goal={goal} />
+        ))}
+      </div>
+    );
+  }
+
   const body = (
-    <div className={`weekly-goals-block${compact ? " compact" : ""}`}>
-      {!compact && <h3 className="weekly-goals-heading">Weekly goals</h3>}
-      {compact && <span className="weekly-goals-kicker">This week:</span>}
+    <div className="weekly-goals-block">
+      <h3 className="weekly-goals-heading">Weekly goals</h3>
       <div className="weekly-goals-list">
         {snapshot.goals.map((goal) => (
           <GoalRow
             key={goal.id}
             goal={goal}
-            compact={compact}
-            onLcProgress={
-              compact
-                ? undefined
-                : (n) => patchLc({ progressCount: n })
-            }
-            onLcTarget={compact ? undefined : (n) => patchLc({ targetCount: n })}
-            onUnlink={compact ? undefined : unlink}
-            onCompleteTask={compact ? undefined : onCompleteTask}
+            onLcProgress={(n) => patchLc({ progressCount: n })}
+            onLcTarget={(n) => patchLc({ targetCount: n })}
+            onUnlink={unlink}
+            onCompleteTask={onCompleteTask}
           />
         ))}
       </div>
     </div>
   );
 
-  if (compact) return body;
   return <section className="card weekly-goals-card">{body}</section>;
 }

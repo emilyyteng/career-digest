@@ -3676,18 +3676,26 @@ button.progress-cal-cell.effort::after {
 }
 .home-progress-row-week {
   align-items: flex-end;
+  gap: 0.75rem 1rem;
 }
 .weekly-goals-block.compact {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.45rem 0.85rem;
+  display: grid;
+  grid-template-columns: max-content repeat(2, minmax(0, 1fr));
+  column-gap: 1.15rem;
+  row-gap: 0.4rem;
+  align-items: center;
   flex: 1 1 auto;
   min-width: 0;
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+}
+.weekly-goals-compact-spacer {
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
 }
 .weekly-goals-kicker {
   font-family: inherit;
@@ -3697,6 +3705,7 @@ button.progress-cal-cell.effort::after {
   text-transform: none;
   letter-spacing: 0;
   padding-top: 0;
+  white-space: nowrap;
 }
 .weekly-goals-list {
   display: flex;
@@ -3705,26 +3714,22 @@ button.progress-cal-cell.effort::after {
   flex: 1 1 14rem;
   min-width: 0;
 }
-.weekly-goals-block.compact .weekly-goals-list {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.55rem 1rem;
-}
 .weekly-goal-row {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   min-width: 0;
 }
-.weekly-goal-row.compact {
-  min-width: 11rem;
-  flex: 1 1 11rem;
-}
 .weekly-goal-row-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.35rem 0.55rem;
+  min-width: 0;
+}
+.weekly-goals-block.compact .weekly-goal-row-head {
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .weekly-goal-title {
   font-size: 0.9rem;
@@ -3758,11 +3763,21 @@ button.progress-cal-cell.effort::after {
   background: var(--surface-2);
   overflow: hidden;
 }
+.weekly-goals-block.compact .weekly-goal-bar {
+  height: 0.4rem;
+  width: 100%;
+  align-self: center;
+}
 .weekly-goal-bar > span {
   display: block;
   height: 100%;
   background: var(--accent-blue, #5b7cfa);
   border-radius: inherit;
+}
+.home-progress-row-week .home-section-link {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding-bottom: 0.05rem;
 }
 .weekly-goals-card {
   margin-top: 0.75rem;
