@@ -3744,6 +3744,7 @@ button.progress-cal-cell.effort::after {
 .weekly-goals-block.compact .weekly-goal-fraction {
   font-size: inherit;
   white-space: nowrap;
+  margin-left: 0.2rem;
 }
 .weekly-pace {
   font-size: 0.78rem;
