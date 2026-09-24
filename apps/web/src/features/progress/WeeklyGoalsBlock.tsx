@@ -147,16 +147,27 @@ export default function WeeklyGoalsBlock({
   }
 
   if (compact) {
+    const clusterCols = "max-content max-content minmax(2.75rem, 1fr) max-content";
+    const gridTemplateColumns = snapshot.goals.map(() => clusterCols).join(" ");
+
     return (
       <div className="weekly-goals-block compact">
         <span className="weekly-goals-kicker">This week:</span>
-        <div className="weekly-goals-compact-goals">
-          {snapshot.goals.map((goal) => (
-            <div
-              key={goal.id}
-              className={`weekly-goal-inline weekly-goal-inline-${goal.slot}`}
-            >
-              <strong className="weekly-goal-title">{goal.title}</strong>
+        <div
+          className="weekly-goals-compact-goals"
+          style={{ gridTemplateColumns }}
+        >
+          {snapshot.goals.map((goal, index) => (
+            <div key={goal.id} style={{ display: "contents" }}>
+              <strong
+                className={
+                  index > 0
+                    ? "weekly-goal-title weekly-goal-cluster-start"
+                    : "weekly-goal-title"
+                }
+              >
+                {goal.title}
+              </strong>
               <span className="weekly-goal-fraction muted">
                 {goal.done}/{goal.total}
               </span>
