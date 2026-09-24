@@ -3692,16 +3692,16 @@ button.progress-cal-cell.effort::after {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
-  justify-content: space-evenly;
-  gap: 0.75rem 1.75rem;
+  justify-content: flex-start;
+  gap: 1.5rem;
   min-width: 0;
 }
 .weekly-goal-inline {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   min-width: 0;
-  flex: 0 1 auto;
+  flex: 1 1 0;
 }
 .weekly-goals-kicker {
   font-family: inherit;
