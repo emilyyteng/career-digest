@@ -2,7 +2,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { fetchBoardJobs, fetchMissingDescription } from "./adapters/index.js";
 import { fetchSimplifyMiscellaneousJobs } from "./adapters/simplify.js";
-import { companies } from "./config/companies.js";
 import { migrate, pool } from "./db.js";
 import {
   isExpiredInternTerm,
@@ -12,6 +11,10 @@ import {
 import { isAllowedUsLocation } from "./location.js";
 import type { CompanyConfig, NormalizedPosting } from "./types.js";
 import { runMergeDuplicatePostings } from "./mergeDuplicatePostings.js";
+import {
+  listActiveTrackedBoards,
+  loadConfiguredBoardKeys,
+} from "./trackedBoards.js";
 
 async function upsertCompany(company: CompanyConfig): Promise<string> {
   const result = await pool.query<{ id: string }>(
@@ -166,6 +169,8 @@ export async function runIngest(): Promise<IngestStats> {
   let deleted = 0;
   let retainedClosed = 0;
 
+  const companies = await listActiveTrackedBoards();
+  const configuredBoardKeys = await loadConfiguredBoardKeys();
   const sourceFilter = process.env.INGEST_SOURCES?.split(",")
     .map((s) => s.trim())
     .filter(Boolean);
@@ -228,7 +233,7 @@ export async function runIngest(): Promise<IngestStats> {
 
   try {
     const companyId = await upsertCompany(simplifyCompany);
-    const { postings, seenIds } = await fetchSimplifyMiscellaneousJobs();
+    const { postings, seenIds } = await fetchSimplifyMiscellaneousJobs(configuredBoardKeys);
     simplifySeenIds = seenIds;
     simplifyListed = postings.length;
     listed += postings.length;

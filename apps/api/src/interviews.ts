@@ -6,6 +6,7 @@ import {
   isStepKind,
   isStepStatus,
   isThreadResolution,
+  isThreadStatus,
   type StepKind,
   type StepStatus,
   type ThreadResolution,
@@ -314,18 +315,54 @@ export async function resolveThreadsForApplication(
   applicationId: string,
   resolution: ThreadResolution,
 ): Promise<void> {
-  await db.query(
-    `UPDATE interview_threads t
-     SET status = 'resolved',
-         resolution = $2,
-         resolved_at = now(),
-         updated_at = now()
-     FROM application_thread_members m
+  const threads = await db.query<{
+    id: string;
+    primaryApplicationId: string;
+  }>(
+    `SELECT t.id, t.primary_application_id AS "primaryApplicationId"
+     FROM interview_threads t
+     JOIN application_thread_members m ON m.thread_id = t.id
      WHERE m.application_id = $1
-       AND m.thread_id = t.id
        AND t.status = 'active'`,
-    [applicationId, resolution],
+    [applicationId],
   );
+
+  for (const thread of threads.rows) {
+    const inProcess = await db.query<{ id: string }>(
+      `SELECT a.id
+       FROM application_thread_members m
+       JOIN applications a ON a.id = m.application_id
+       WHERE m.thread_id = $1
+         AND a.status IN ('applied', 'interviewing')
+       ORDER BY CASE a.status WHEN 'interviewing' THEN 0 ELSE 1 END, a.updated_at DESC`,
+      [thread.id],
+    );
+
+    if (inProcess.rows.length === 0) {
+      await db.query(
+        `UPDATE interview_threads
+         SET status = 'resolved',
+             resolution = $2,
+             resolved_at = now(),
+             updated_at = now()
+         WHERE id = $1
+           AND status = 'active'`,
+        [thread.id, resolution],
+      );
+      continue;
+    }
+
+    if (!inProcess.rows.some((row) => row.id === thread.primaryApplicationId)) {
+      await db.query(
+        `UPDATE interview_threads
+         SET primary_application_id = $2,
+             updated_at = now()
+         WHERE id = $1
+           AND status = 'active'`,
+        [thread.id, inProcess.rows[0].id],
+      );
+    }
+  }
 }
 
 export async function createInterviewThread(
@@ -493,6 +530,10 @@ export async function patchInterviewThread(
     [threadId],
   );
   if (!current.rows[0]) throw new Error("Interview thread not found");
+
+  if (body.status && !isThreadStatus(body.status)) {
+    throw new Error("Invalid thread status");
+  }
 
   if (body.primaryApplicationId) {
     const member = await db.query(

@@ -37,7 +37,7 @@ type OracleDetailsResponse = {
   items?: OracleDetailItem[];
 };
 
-/** Split `{apiHost}|{siteNumber}` board tokens from companies.ts. */
+/** Split `{apiHost}|{siteNumber}` board tokens from tracked_boards. */
 export function parseOracleBoardToken(boardToken: string): {
   apiHost: string;
   siteNumber: string;

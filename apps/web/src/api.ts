@@ -101,7 +101,7 @@ export type BoardRefreshLastRun = {
 
 export type BoardRefreshStatus = {
   status: "idle" | "running" | "ok" | "error";
-  phase: "ingest" | "scrape" | "rank" | null;
+  phase: "discover" | "ingest" | "scrape" | "rank" | null;
   startedAt: string | null;
   finishedAt: string | null;
   lastOkAt: string | null;

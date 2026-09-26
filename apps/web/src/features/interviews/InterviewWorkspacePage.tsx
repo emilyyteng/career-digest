@@ -192,6 +192,17 @@ export default function InterviewWorkspace() {
     }
   }
 
+  async function reopenThread() {
+    if (!threadId) return;
+    setError(null);
+    try {
+      await patchInterviewThread(threadId, { status: "active" });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reopen thread");
+    }
+  }
+
   async function setPrimary(applicationId: string) {
     if (!threadId) return;
     setError(null);
@@ -264,6 +275,15 @@ export default function InterviewWorkspace() {
             onClick={() => void resolveThread()}
           >
             Resolve interview
+          </button>
+        )}
+        {thread.status === "resolved" && (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void reopenThread()}
+          >
+            Reopen interview
           </button>
         )}
       </div>

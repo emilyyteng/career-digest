@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   getOpsStatus,
@@ -43,7 +43,6 @@ export default function Status() {
   const [refreshBusy, setRefreshBusy] = useState(false);
   const [backupBusy, setBackupBusy] = useState(false);
   const [rankBacklogBusy, setRankBacklogBusy] = useState(false);
-  const wasRefreshing = useRef(false);
   const demo = useDemoMode();
   const demoGateTitle = demoGatedTitle(demo);
   async function load() {
@@ -57,15 +56,6 @@ export default function Status() {
   }, []);
 
   useEffect(() => {
-    if (ops?.boardRefresh.status !== "running") return;
-    wasRefreshing.current = true;
-    const timer = window.setInterval(() => {
-      load().catch(() => undefined);
-    }, 2000);
-    return () => window.clearInterval(timer);
-  }, [ops?.boardRefresh.status]);
-
-  useEffect(() => {
     const rankActive =
       ops?.rankBatch.status === "running" || ops?.rankBatch.status === "ready";
     const refreshActive = ops?.boardRefresh.status === "running";
@@ -74,11 +64,13 @@ export default function Status() {
     );
     const backupActive = ops?.backupJob.status === "running";
     const liveBacklogActive = ops?.liveRankBacklog.status === "running";
-    if (!rankActive && !refreshActive && !rerankActive && !backupActive && !liveBacklogActive) {
-      return;
-    }
-    const ms =
-      rankActive || refreshActive || liveBacklogActive ? 2500 : backupActive ? 2000 : 8000;
+    const ms = refreshActive || rankActive || liveBacklogActive
+      ? 2500
+      : backupActive
+        ? 2000
+        : rerankActive
+          ? 8000
+          : 10_000;
     const timer = window.setInterval(() => {
       load().catch(() => undefined);
     }, ms);
@@ -215,7 +207,8 @@ export default function Status() {
             </dl>
             {board.error && <p className="error ops-card-error">{board.error}</p>}
             <p className="muted ops-card-hint">
-              Ingest → scrape Simplify blanks → rank up to {ops.boardRankLimit} unranked
+              Discover boards → ingest → scrape Simplify blanks → rank up to{" "}
+              {ops.boardRankLimit} unranked
               postings (live API, not batch).
             </p>
           </div>

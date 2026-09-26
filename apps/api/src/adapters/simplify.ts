@@ -1,6 +1,4 @@
-import type { NormalizedPosting } from "../types.js";
-import type { Source } from "../types.js";
-import { companies } from "../config/companies.js";
+import type { NormalizedPosting, Source } from "../types.js";
 import { parseOracleBoardFromUrl } from "./oracle.js";
 import { parseSmartrecruitersBoardFromUrl } from "./smartrecruiters.js";
 import { extractGreenhouseBoardToken } from "../greenhouseUrls.js";
@@ -32,10 +30,6 @@ function atsFamily(
   return null;
 }
 
-const CONFIGURED_BOARD_KEYS = new Set(
-  companies.map((company) => `${company.source}:${company.boardToken.toLowerCase()}`),
-);
-
 function decodeToken(token: string): string {
   try {
     return decodeURIComponent(token);
@@ -44,7 +38,7 @@ function decodeToken(token: string): string {
   }
 }
 
-/** Map a direct ATS apply URL to a companies.ts board key when parseable. */
+/** Map a direct ATS apply URL to a tracked board key when parseable. */
 export function boardConfigKeyFromAtsUrl(url: string): string | null {
   const family = atsFamily(url);
   if (!family) return null;
@@ -78,9 +72,12 @@ export function boardConfigKeyFromAtsUrl(url: string): string | null {
   return null;
 }
 
-export function isConfiguredAtsBoardUrl(url: string): boolean {
+export function isConfiguredAtsBoardUrl(
+  url: string,
+  configuredBoardKeys: Set<string>,
+): boolean {
   const key = boardConfigKeyFromAtsUrl(url);
-  return key != null && CONFIGURED_BOARD_KEYS.has(key);
+  return key != null && configuredBoardKeys.has(key);
 }
 
 function parseUnix(value: number | undefined): Date | null {
@@ -158,10 +155,12 @@ export async function fetchSimplifyListings(): Promise<{
 
 /**
  * Ingest path: Workday/custom careers + any active Simplify listing not covered by board ingest.
- * Direct ATS URLs are ingested from Simplify when the board is not in companies.ts; configured
+ * Direct ATS URLs are ingested from Simplify when the board is not tracked; configured
  * boards rely on adapter ingest and only contribute listing ids to seenIds until merge dedupes.
  */
-export async function fetchSimplifyMiscellaneousJobs(): Promise<{
+export async function fetchSimplifyMiscellaneousJobs(
+  configuredBoardKeys: Set<string>,
+): Promise<{
   postings: NormalizedPosting[];
   seenIds: string[];
 }> {
@@ -174,7 +173,8 @@ export async function fetchSimplifyMiscellaneousJobs(): Promise<{
     if (!listing.active) continue;
 
     const coveredByBoardIngest =
-      !isMiscellaneousApplyUrl(listing.url) && isConfiguredAtsBoardUrl(listing.url);
+      !isMiscellaneousApplyUrl(listing.url) &&
+      isConfiguredAtsBoardUrl(listing.url, configuredBoardKeys);
 
     seenIds.push(listing.id);
     if (coveredByBoardIngest) continue;

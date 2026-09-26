@@ -1,4 +1,3 @@
-import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -11,8 +10,12 @@ import {
   parseSmartrecruitersBoardFromUrl,
   probeSmartrecruitersBoardJobCount,
 } from "./adapters/smartrecruiters.js";
-import { companies as configuredCompanies } from "./config/companies.js";
 import { SIMPLIFY_LISTINGS_URL } from "./adapters/simplify.js";
+import { migrate, pool } from "./db.js";
+import {
+  insertTrackedBoards,
+  listActiveTrackedBoards,
+} from "./trackedBoards.js";
 import type { CompanyConfig, Source } from "./types.js";
 
 type SimplifyListing = {
@@ -458,43 +461,6 @@ function formatEntry(board: DiscoveredBoard): string {
   return `  { name: "${name}", source: "${board.source}", boardToken: "${token}" },`;
 }
 
-function writeCompaniesFile(companiesPath: string, toAdd: DiscoveredBoard[]): void {
-  const content = readFileSync(companiesPath, "utf8");
-  const parsed = parseCompaniesFile(content);
-  const seen = existingKeys(parsed);
-  const linesToAdd: string[] = [];
-
-  for (const board of toAdd) {
-    const id = key(board.source, board.boardToken);
-    if (seen.has(id)) continue;
-    seen.add(id);
-    linesToAdd.push(formatEntry(board));
-  }
-
-  if (linesToAdd.length === 0) return;
-
-  const insertion = `\n${linesToAdd.join("\n")}`;
-  const updated = content.replace(/\n];\s*$/, `${insertion}\n];\n`);
-  if (updated === content) {
-    throw new Error(`Could not find companies array closing in ${companiesPath}`);
-  }
-  writeFileSync(companiesPath, updated, "utf8");
-}
-
-function parseCompaniesFile(content: string): CompanyConfig[] {
-  const re =
-    /\{\s*name:\s*"((?:\\.|[^"\\])*)",\s*source:\s*"(greenhouse|lever|ashby|oracle|smartrecruiters)",\s*boardToken:\s*"((?:\\.|[^"\\])*)"\s*\}/g;
-  const out: CompanyConfig[] = [];
-  for (const match of content.matchAll(re)) {
-    out.push({
-      name: match[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\"),
-      source: match[2] as Source,
-      boardToken: match[3].replace(/\\"/g, '"').replace(/\\\\/g, "\\"),
-    });
-  }
-  return out;
-}
-
 function printReport(
   configured: CompanyConfig[],
   result: Awaited<ReturnType<typeof discoverBoards>>,
@@ -540,7 +506,7 @@ function printReport(
       if (board.sampleUrl) console.log(`    sample: ${board.sampleUrl}`);
     }
     console.log("");
-    console.log("Suggested companies.ts lines:");
+    console.log("Suggested tracked_boards rows:");
     for (const board of newBoards) {
       console.log(formatEntry(board));
     }
@@ -592,7 +558,7 @@ function printReport(
   if (unresolvedEmbed.length > 0) {
     console.log("== Unresolved Greenhouse embeds (manual board token) ==");
     console.log(
-      "  Add manually to companies.ts, then re-run ingest. Probe with:",
+      "  Add manually to tracked_boards, then re-run ingest. Probe with:",
     );
     console.log(
       "  curl https://boards-api.greenhouse.io/v1/boards/TOKEN/jobs/GH_JID",
@@ -643,21 +609,57 @@ function printReport(
   );
 }
 
+/**
+ * Discover new ATS boards from Simplify and optionally persist them to tracked_boards.
+ * Used by CLI (`--write`) and daily board refresh (always writes).
+ */
+export async function runDiscoverBoards(opts?: {
+  write?: boolean;
+  quiet?: boolean;
+}): Promise<{
+  configuredCount: number;
+  newBoards: number;
+  inserted: number;
+}> {
+  await migrate();
+  const configured = await listActiveTrackedBoards();
+  const result = await discoverBoards(configured);
+  if (!opts?.quiet) {
+    printReport(configured, result);
+  }
+
+  let inserted = 0;
+  if (opts?.write) {
+    if (result.newBoards.length > 0) {
+      inserted = await insertTrackedBoards(
+        result.newBoards.map((board) => ({
+          name: board.name,
+          source: board.source,
+          boardToken: board.boardToken,
+          discoveryMethod: board.method,
+        })),
+      );
+      console.log(
+        `Upserted ${inserted} new board(s) into tracked_boards (${result.newBoards.length} discovered).`,
+      );
+    } else {
+      console.log("No new boards to write.");
+    }
+  }
+
+  return {
+    configuredCount: configured.length,
+    newBoards: result.newBoards.length,
+    inserted,
+  };
+}
+
 async function main(): Promise<void> {
   const write = process.argv.includes("--write");
-  const companiesPath = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "config/companies.ts",
-  );
-
-  const result = await discoverBoards(configuredCompanies);
-  printReport(configuredCompanies, result);
-
-  if (write && result.newBoards.length > 0) {
-    writeCompaniesFile(companiesPath, result.newBoards);
-    console.log(`Wrote ${result.newBoards.length} new board(s) to ${companiesPath}`);
-  } else if (write) {
-    console.log("No new boards to write.");
+  try {
+    await runDiscoverBoards({ write });
+  } finally {
+    await pool.end();
   }
 }
 

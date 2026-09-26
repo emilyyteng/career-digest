@@ -137,6 +137,134 @@ describe.skipIf(!integrationReady)("interviews API", () => {
     expect(closedStep?.completedAt).toBeTruthy();
   });
 
+  it("does not resolve a thread when another linked role is still interviewing", async () => {
+    const backend = await seedManualApplication({
+      status: "interviewing",
+      company: "TikTok",
+      title: "Backend Intern",
+    });
+    const fullstack = await seedManualApplication({
+      status: "interviewing",
+      company: "TikTok",
+      title: "Fullstack Intern",
+    });
+
+    const createRes = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [backend.id, fullstack.id],
+        primaryApplicationId: fullstack.id,
+        step: { title: "Recruiter screen", kind: "phone" },
+      })
+      .expect(201);
+    const threadId = createRes.body.id as string;
+
+    await apiClient()
+      .patch(`/api/applications/${backend.id}`)
+      .send({ status: "declined" })
+      .expect(200);
+
+    const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    expect(detail.body.status).toBe("active");
+    expect(detail.body.resolution).toBeNull();
+    expect(detail.body.primaryApplicationId).toBe(fullstack.id);
+  });
+
+  it("moves primary to the remaining in-process role when the primary is declined", async () => {
+    const backend = await seedManualApplication({
+      status: "interviewing",
+      company: "TikTok",
+      title: "Backend Intern",
+    });
+    const fullstack = await seedManualApplication({
+      status: "interviewing",
+      company: "TikTok",
+      title: "Fullstack Intern",
+    });
+
+    const createRes = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [backend.id, fullstack.id],
+        primaryApplicationId: backend.id,
+        step: { title: "Recruiter screen", kind: "phone" },
+      })
+      .expect(201);
+    const threadId = createRes.body.id as string;
+
+    await apiClient()
+      .patch(`/api/applications/${backend.id}`)
+      .send({ status: "declined" })
+      .expect(200);
+
+    const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    expect(detail.body.status).toBe("active");
+    expect(detail.body.primaryApplicationId).toBe(fullstack.id);
+  });
+
+  it("resolves a thread when the last in-process linked role is declined", async () => {
+    const backend = await seedManualApplication({
+      status: "interviewing",
+      company: "TikTok",
+      title: "Backend Intern",
+    });
+    const fullstack = await seedManualApplication({
+      status: "interviewing",
+      company: "TikTok",
+      title: "Fullstack Intern",
+    });
+
+    const createRes = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [backend.id, fullstack.id],
+        step: { title: "Recruiter screen", kind: "phone" },
+      })
+      .expect(201);
+    const threadId = createRes.body.id as string;
+
+    await apiClient()
+      .patch(`/api/applications/${backend.id}`)
+      .send({ status: "declined" })
+      .expect(200);
+    await apiClient()
+      .patch(`/api/applications/${fullstack.id}`)
+      .send({ status: "declined" })
+      .expect(200);
+
+    const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    expect(detail.body.status).toBe("resolved");
+    expect(detail.body.resolution).toBe("declined");
+  });
+
+  it("PATCH /api/interviews/:threadId can reopen a resolved thread", async () => {
+    const application = await seedManualApplication({ status: "interviewing" });
+
+    const createRes = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [application.id],
+        step: { title: "Phone screen", kind: "phone" },
+      })
+      .expect(201);
+    const threadId = createRes.body.id as string;
+
+    await apiClient()
+      .patch(`/api/interviews/${threadId}`)
+      .send({ status: "resolved", resolution: "declined" })
+      .expect(200);
+
+    await apiClient()
+      .patch(`/api/interviews/${threadId}`)
+      .send({ status: "active" })
+      .expect(200);
+
+    const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    expect(detail.body.status).toBe("active");
+    expect(detail.body.resolution).toBeNull();
+    expect(detail.body.resolvedAt).toBeNull();
+  });
+
   it("lists awaitingStep when the open step is waiting on the employer", async () => {
     const application = await seedManualApplication({ status: "interviewing" });
 

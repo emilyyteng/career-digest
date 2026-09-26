@@ -13,6 +13,13 @@ import {
 
 const fixturesDir = path.join(fileURLToPath(new URL(".", import.meta.url)), "__fixtures__");
 
+/** Mirrors boards that cover hybrid fixture listings (formerly in companies.ts). */
+const FIXTURE_CONFIGURED_KEYS = new Set([
+  "oracle:elxb.fa.us2.oraclecloud.com|cx",
+  "smartrecruiters:westerndigital",
+  "greenhouse:imc",
+]);
+
 describe("fetchSimplifyMiscellaneousJobs", () => {
   beforeEach(() => {
     vi.stubGlobal(
@@ -33,7 +40,7 @@ describe("fetchSimplifyMiscellaneousJobs", () => {
   });
 
   it("ingests misc URLs and ATS URLs without configured board ingest", async () => {
-    const { postings, seenIds } = await fetchSimplifyMiscellaneousJobs();
+    const { postings, seenIds } = await fetchSimplifyMiscellaneousJobs(FIXTURE_CONFIGURED_KEYS);
 
     expect(postings).toHaveLength(3);
     expect(postings.map((p) => p.externalId)).toEqual(
@@ -112,19 +119,29 @@ describe("isConfiguredAtsBoardUrl", () => {
     expect(
       isConfiguredAtsBoardUrl(
         "https://elxb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/1910",
+        FIXTURE_CONFIGURED_KEYS,
       ),
     ).toBe(true);
     expect(
       isConfiguredAtsBoardUrl(
         "https://jobs.smartrecruiters.com/WesternDigital/744000143171017",
+        FIXTURE_CONFIGURED_KEYS,
       ),
     ).toBe(true);
   });
 
   it("treats unconfigured ATS boards as not covered by ingest", () => {
-    expect(isConfiguredAtsBoardUrl("https://boards.greenhouse.io/acme/jobs/1")).toBe(false);
     expect(
-      isConfiguredAtsBoardUrl("https://jobs.smartrecruiters.com/BoschGroup/744000100000001"),
+      isConfiguredAtsBoardUrl(
+        "https://boards.greenhouse.io/acme/jobs/1",
+        FIXTURE_CONFIGURED_KEYS,
+      ),
+    ).toBe(false);
+    expect(
+      isConfiguredAtsBoardUrl(
+        "https://jobs.smartrecruiters.com/BoschGroup/744000100000001",
+        FIXTURE_CONFIGURED_KEYS,
+      ),
     ).toBe(false);
   });
 });
@@ -146,7 +163,10 @@ describe("boardConfigKeyFromAtsUrl", () => {
 
   it("treats regional greenhouse boards as covered when configured", () => {
     expect(
-      isConfiguredAtsBoardUrl("https://job-boards.eu.greenhouse.io/imc/jobs/4780585101"),
+      isConfiguredAtsBoardUrl(
+        "https://job-boards.eu.greenhouse.io/imc/jobs/4780585101",
+        FIXTURE_CONFIGURED_KEYS,
+      ),
     ).toBe(true);
   });
 });

@@ -1,122 +1,62 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  blankBoardRefresh,
+  snapshotFromDisk,
+  type BoardRefreshLastRun,
+  type BoardRefreshPhase,
+  type BoardRefreshSnapshot,
+} from "./boardRefreshState.js";
 import { DailyCapError } from "./openaiRateLimit.js";
 import { hasPendingRankBatch, runLiveRank } from "./rank.js";
 import { recordRankBatchSuccess } from "./rankBatchStatus.js";
+import { runDiscoverBoards } from "./discoverBoards.js";
 import { runIngest } from "./ingest.js";
 import { runScrape } from "./scrape.js";
+
+export type { BoardRefreshLastRun, BoardRefreshPhase, BoardRefreshSnapshot };
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const STATE_PATH = path.join(root, "data/board-refresh.json");
 const DEFAULT_BOARD_RANK_LIMIT = 40;
-
-export type BoardRefreshPhase = "ingest" | "scrape" | "rank";
-
-/** Summary of the most recent successful board refresh ingest phase. */
-export type BoardRefreshLastRun = {
-  leftBoard: number;
-  leftBoardDeleted: number;
-  leftBoardRetained: number;
-  mergeDeduped: number;
-  rankedProcessed: number;
-};
-
-export type BoardRefreshSnapshot = {
-  status: "idle" | "running" | "ok" | "error";
-  phase: BoardRefreshPhase | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-  lastOkAt: string | null;
-  error: string | null;
-  lastRun: BoardRefreshLastRun | null;
-};
-
-function blank(): BoardRefreshSnapshot {
-  return {
-    status: "idle",
-    phase: null,
-    startedAt: null,
-    finishedAt: null,
-    lastOkAt: null,
-    error: null,
-    lastRun: null,
-  };
-}
 
 function boardRankLimit(): number {
   const n = Number(process.env.BOARD_RANK_LIMIT);
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_BOARD_RANK_LIMIT;
 }
 
-let state = blank();
+let state = blankBoardRefresh();
 let running: Promise<void> | null = null;
-let loaded = false;
 
 async function persist(): Promise<void> {
   await mkdir(path.dirname(STATE_PATH), { recursive: true });
   await writeFile(STATE_PATH, `${JSON.stringify(state)}\n`);
 }
 
-function parseLastRun(raw: unknown): BoardRefreshLastRun | null {
-  if (!raw || typeof raw !== "object") return null;
-  const row = raw as Partial<BoardRefreshLastRun>;
-  const leftBoardDeleted = Number(row.leftBoardDeleted);
-  const leftBoardRetained = Number(row.leftBoardRetained);
-  const mergeDeduped = Number(row.mergeDeduped);
-  const rankedProcessed = Number(row.rankedProcessed);
-  if (
-    !Number.isFinite(leftBoardDeleted) ||
-    !Number.isFinite(leftBoardRetained) ||
-    !Number.isFinite(mergeDeduped) ||
-    !Number.isFinite(rankedProcessed)
-  ) {
-    return null;
-  }
-  const leftBoard =
-    Number.isFinite(Number(row.leftBoard)) && row.leftBoard != null
-      ? Number(row.leftBoard)
-      : leftBoardDeleted + leftBoardRetained;
-  return {
-    leftBoard,
-    leftBoardDeleted,
-    leftBoardRetained,
-    mergeDeduped,
-    rankedProcessed,
-  };
-}
-
-async function ensureLoaded(): Promise<void> {
-  if (loaded) return;
-  loaded = true;
+async function readDisk(): Promise<BoardRefreshSnapshot> {
   try {
     const raw = JSON.parse(await readFile(STATE_PATH, "utf8")) as Partial<BoardRefreshSnapshot>;
-    state = {
-      status: raw.status === "running" ? "error" : raw.status === "ok" || raw.status === "error" ? raw.status : "idle",
-      phase: null,
-      startedAt: typeof raw.startedAt === "string" ? raw.startedAt : null,
-      finishedAt:
-        raw.status === "running"
-          ? new Date().toISOString()
-          : typeof raw.finishedAt === "string"
-            ? raw.finishedAt
-            : null,
-      lastOkAt: typeof raw.lastOkAt === "string" ? raw.lastOkAt : null,
-      error:
-        raw.status === "running"
-          ? "Refresh interrupted by API restart"
-          : typeof raw.error === "string"
-            ? raw.error
-            : null,
-      lastRun: parseLastRun(raw.lastRun),
-    };
-    if (raw.status === "running") await persist();
+    const { snapshot, persistStaleRunning } = snapshotFromDisk(raw);
+    if (persistStaleRunning) {
+      state = snapshot;
+      await persist();
+    }
+    return snapshot;
   } catch {
-    state = blank();
+    return blankBoardRefresh();
   }
 }
 
 async function executeBoardRefresh(): Promise<void> {
+  console.log("board refresh: discover boards starting");
+  state = { ...state, phase: "discover" };
+  await persist();
+  const discovered = await runDiscoverBoards({ write: true, quiet: false });
+  console.log(
+    `board refresh: discover done (configured=${discovered.configuredCount}, new=${discovered.newBoards}, inserted=${discovered.inserted})`,
+  );
+
   console.log("board refresh: ingest starting");
   state = { ...state, phase: "ingest" };
   await persist();
@@ -174,7 +114,8 @@ async function executeBoardRefresh(): Promise<void> {
 }
 
 export async function getBoardRefresh(): Promise<BoardRefreshSnapshot> {
-  await ensureLoaded();
+  if (running) return { ...state };
+  state = await readDisk();
   return { ...state };
 }
 
@@ -182,14 +123,18 @@ export async function startBoardRefresh(): Promise<{
   started: boolean;
   snapshot: BoardRefreshSnapshot;
 }> {
-  await ensureLoaded();
-  if (state.status === "running" || running) {
+  if (running) {
+    return { started: false, snapshot: { ...state } };
+  }
+
+  state = await readDisk();
+  if (state.status === "running") {
     return { started: false, snapshot: { ...state } };
   }
 
   state = {
     status: "running",
-    phase: "ingest",
+    phase: "discover",
     startedAt: new Date().toISOString(),
     finishedAt: null,
     lastOkAt: state.lastOkAt,

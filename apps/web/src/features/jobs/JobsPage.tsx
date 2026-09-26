@@ -100,6 +100,7 @@ function parseSort(value: string | null, view: JobView): JobSort {
 
 function refreshLabel(status: BoardRefreshStatus | null): string {
   if (!status || status.status !== "running") return "Refresh board";
+  if (status.phase === "discover") return "Refreshing… discovering boards";
   if (status.phase === "scrape") return "Refreshing… scraping";
   if (status.phase === "ingest") return "Refreshing… ingesting";
   if (status.phase === "rank") return "Refreshing… ranking";
@@ -664,7 +665,9 @@ export default function Jobs() {
         <p className="refresh-banner" role="status">
           <span className="spinner" aria-hidden="true" />
           Refreshing board
-          {refresh.phase === "ingest"
+          {refresh.phase === "discover"
+            ? " — discovering boards"
+            : refresh.phase === "ingest"
             ? " — ingesting listings"
             : refresh.phase === "scrape"
               ? " — scraping descriptions"

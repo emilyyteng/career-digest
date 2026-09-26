@@ -85,7 +85,7 @@ Use this to verify the app boots on a fresh clone without ingest or OpenAI.
 
 ```bash
 npm run dev:api    # http://localhost:3000
-npm run dev:web    # http://localhost:5173
+npm run dev:web    # http://localhost:5174
 ```
 
 **Expected:**
@@ -93,9 +93,9 @@ npm run dev:web    # http://localhost:5173
 | Check | URL / action | Result |
 |-------|----------------|--------|
 | API health | `GET http://localhost:3000/health` | `{ "ok": true }` |
-| Home loads | http://localhost:5173/ | Greeting, empty job picks, progress strip |
-| Jobs empty | http://localhost:5173/jobs | Empty ranked tab |
-| Status page | http://localhost:5173/status | Ops dashboard (no digest run yet) |
+| Home loads | http://localhost:5174/ | Greeting, empty job picks, progress strip |
+| Jobs empty | http://localhost:5174/jobs | Empty ranked tab |
+| Status page | http://localhost:5174/status | Ops dashboard (no digest run yet) |
 
 Manual tasks, applications, and progress logging work without ingest. Jobs board stays empty until Path B.
 
@@ -121,7 +121,7 @@ npm run board-refresh
 - Jobs UI shows tabs: ranked, mismatches, unranked, needs description
 - Status page shows last board refresh metadata
 
-**Company list:** `apps/api/src/config/companies.ts` — edit before ingest to match boards you want.
+**Tracked boards:** Postgres table `tracked_boards` (seeded by migration). Daily board refresh discovers new Simplify ATS boards and upserts them before ingest. Manual: `npm run discover-boards -- --write`.
 
 ## Tests
 

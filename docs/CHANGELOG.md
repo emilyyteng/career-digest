@@ -2,6 +2,10 @@
 
 Development history for Career Digest. For setup, see [docs/SETUP.md](./SETUP.md).
 
+## Milestone 14 — Tracked boards in Postgres
+
+ATS board list moves from `config/companies.ts` to `tracked_boards`. Daily board refresh runs Simplify discover (with write) before ingest; `npm run discover-boards -- --write` upserts the same table.
+
 ## Milestone 13 — Tasks subtasks, priority, estimates
 
 Misc task checklists (one-level) with own due dates on Home Upcoming; P0/P1/P2 stoplight + minute estimates on tasks/subtasks; parent complete auto-completes open children. Daily Progress apps/LC cap **3**.
