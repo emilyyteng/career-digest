@@ -30,7 +30,7 @@ export default function FinishInterviewStepModal({
   busy = false,
 }: Props) {
   const awaitingResponse = mode === "awaiting_response";
-  const [outcome, setOutcome] = useState<FinishStepOutcome>("round_done");
+  const [outcome, setOutcome] = useState<FinishStepOutcome>("waiting");
   const [addNextStep, setAddNextStep] = useState(awaitingResponse);
   const [nextFields, setNextFields] = useState<InterviewStepFieldValues>(() =>
     emptyInterviewStepFields("technical"),
