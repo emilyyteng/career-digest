@@ -334,6 +334,7 @@ export type HomeDashboard = {
     newToDigest: HomeJobPick[];
   };
   upcomingThisWeek: {
+    windowDays?: 7 | 14;
     groups: Array<{
       key: string;
       label: string;
@@ -354,8 +355,11 @@ export type HomeDashboard = {
   weeklyGoals: WeeklyGoalsSnapshot | null;
 };
 
-export const getHomeDashboard = (tz?: string) => {
-  const query = tz ? `?tz=${encodeURIComponent(tz)}` : "";
+export const getHomeDashboard = (tz?: string, upcomingDays?: 7 | 14) => {
+  const params = new URLSearchParams();
+  if (tz) params.set("tz", tz);
+  if (upcomingDays) params.set("upcomingDays", String(upcomingDays));
+  const query = params.toString() ? `?${params.toString()}` : "";
   return parse<HomeDashboard>(api(`/api/home${query}`));
 };
 

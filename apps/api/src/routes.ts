@@ -19,6 +19,7 @@ import {
 } from "./applications.js";
 import { pool } from "./db.js";
 import { getHomeDashboard } from "./home.js";
+import { normalizeUpcomingWindowDays } from "./homeUpcoming.js";
 import { DemoGatedError, assertDemoAllowsMutation, isDemoMode } from "./demoMode.js";
 import { markDemoResetDone } from "./demoScheduler.js";
 import { resetDemoDatabase } from "./demoSeed.js";
@@ -184,7 +185,8 @@ api.post("/demo/reset", async (_req, res) => {
 
 api.get("/home", async (req, res) => {
   const tz = resolveTimezone(String(req.query.tz ?? "")) ?? "UTC";
-  res.json(await getHomeDashboard(tz));
+  const upcomingDays = normalizeUpcomingWindowDays(req.query.upcomingDays);
+  res.json(await getHomeDashboard(tz, upcomingDays));
 });
 
 api.get("/jobs/rerank-queue", async (_req, res) => {

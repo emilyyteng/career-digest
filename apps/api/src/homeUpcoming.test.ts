@@ -120,6 +120,24 @@ describe("homeUpcoming helpers", () => {
     expect(items.map((i) => i.id)).toEqual(["over", "today", "target"]);
   });
 
+  it("14-day window includes the second week", () => {
+    const now = new Date("2026-09-22T17:00:00.000Z");
+    const inTwoWeeks = item({
+      id: "week2",
+      at: "2026-10-02T18:00:00.000Z",
+      dueKind: "deadline",
+    });
+    const beyond = item({
+      id: "beyond",
+      at: "2026-10-10T18:00:00.000Z",
+      dueKind: "deadline",
+    });
+    const week1 = buildFlatSectionItems([inTwoWeeks, beyond], now, TZ, 7);
+    const week2 = buildFlatSectionItems([inTwoWeeks, beyond], now, TZ, 14);
+    expect(week1.map((i) => i.id)).toEqual([]);
+    expect(week2.map((i) => i.id)).toEqual(["week2"]);
+  });
+
   it("buildUpcomingGroups includes Overdue then Today / Tomorrow labels", () => {
     const now = new Date("2026-09-22T17:00:00.000Z"); // Tue 10:00 PT
     const groups = buildUpcomingGroups(

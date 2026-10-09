@@ -3,6 +3,8 @@ import { getBoardRefresh } from "./boardRefresh.js";
 import {
   getUpcomingThisWeek,
   type HomeUpcomingThisWeek,
+  type UpcomingWindowDays,
+  UPCOMING_WINDOW_DAYS_DEFAULT,
 } from "./homeUpcoming.js";
 import { getWeeklyGoalsSnapshot, type WeeklyGoalsSnapshot } from "./weeklyGoals.js";
 
@@ -118,7 +120,10 @@ async function loadJobRows(
   return result.rows;
 }
 
-export async function getHomeDashboard(tz: string): Promise<HomeDashboard> {
+export async function getHomeDashboard(
+  tz: string,
+  upcomingDays: UpcomingWindowDays = UPCOMING_WINDOW_DAYS_DEFAULT,
+): Promise<HomeDashboard> {
   const board = await getBoardRefresh();
 
   const topRankedRows = await loadJobRows(
@@ -143,7 +148,7 @@ export async function getHomeDashboard(tz: string): Promise<HomeDashboard> {
     excludeNew,
   );
 
-  const upcomingThisWeek = await getUpcomingThisWeek(pool, tz);
+  const upcomingThisWeek = await getUpcomingThisWeek(pool, tz, new Date(), upcomingDays);
   const weeklyGoals = await getWeeklyGoalsSnapshot(pool, tz);
 
   const greetingName = process.env.DIGEST_GREETING_NAME?.trim() ?? "";

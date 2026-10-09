@@ -130,7 +130,7 @@ export default function WeeklyGoalsBlock({
 }: {
   snapshot: WeeklyGoalsSnapshot | null;
   compact?: boolean;
-  onChange?: (next: WeeklyGoalsSnapshot) => void;
+  onChange?: (next: WeeklyGoalsSnapshot) => void | Promise<void>;
   onCompleteTask?: (taskId: string) => Promise<void>;
 }) {
   if (!snapshot) return null;
@@ -138,12 +138,12 @@ export default function WeeklyGoalsBlock({
 
   async function patchLc(body: { targetCount?: number; progressCount?: number }) {
     const next = await patchWeeklyLcGoal(tz, body);
-    onChange?.(next);
+    await onChange?.(next);
   }
 
   async function unlink(taskId: string) {
     const next = await setWeeklyAppTargetMember(tz, taskId, false);
-    onChange?.(next);
+    await onChange?.(next);
   }
 
   if (compact) {

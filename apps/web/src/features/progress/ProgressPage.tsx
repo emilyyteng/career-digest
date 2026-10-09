@@ -323,7 +323,11 @@ export default function Progress() {
           {weeklyGoals && (
             <WeeklyGoalsBlock
               snapshot={weeklyGoals}
-              onChange={setWeeklyGoals}
+              onChange={async (next) => {
+                setWeeklyGoals(next);
+                // Weekly LC bumps daily LC server-side — refresh strip, stepper, outcomes.
+                await refreshAfterWrite(today.localDate);
+              }}
               onCompleteTask={async (taskId) => {
                 await completeTask(taskId);
                 const next = await getWeeklyGoals(tz);

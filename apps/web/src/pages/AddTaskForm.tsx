@@ -5,7 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { createTask, type TaskKind, type TaskRow } from "../api";
+import { createTask, type TaskDueKind, type TaskKind, type TaskRow } from "../api";
 import {
   combineApplyByDateTime,
   DEFAULT_APPLY_BY_TIME,
@@ -41,6 +41,7 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
   const [descriptionHtml, setDescriptionHtml] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState(DEFAULT_APPLY_BY_TIME);
+  const [dueKind, setDueKind] = useState<TaskDueKind>("deadline");
   const [priority, setPriority] = useState<TaskPriority | null>(null);
   const [estimateMinutes, setEstimateMinutes] = useState("");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -56,6 +57,7 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
     !isEmptyRichHtml(descriptionHtml) ||
     dueDate !== "" ||
     dueTime !== DEFAULT_APPLY_BY_TIME ||
+    dueKind !== "deadline" ||
     priority != null ||
     estimateMinutes.trim() !== "";
 
@@ -106,6 +108,7 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
         descriptionHtml:
           isApplication && !isEmptyRichHtml(descriptionHtml) ? descriptionHtml : null,
         dueAt,
+        dueKind: dueAt ? dueKind : null,
         priority,
         estimateMinutes: estimate,
       });
@@ -173,7 +176,7 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
           Notes
           <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
         </label>
-        <div className="task-due-fields">
+        <div className="task-due-datetime-row">
           <label>
             Due date
             <input
@@ -187,7 +190,7 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
             />
           </label>
           <label>
-            Time
+            Due time
             <input
               type="time"
               value={dueTime}
@@ -196,6 +199,17 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
             />
           </label>
         </div>
+        <label>
+          Date kind
+          <select
+            value={dueKind}
+            disabled={!dueDate}
+            onChange={(event) => setDueKind(event.target.value as TaskDueKind)}
+          >
+            <option value="deadline">Deadline</option>
+            <option value="target">Target</option>
+          </select>
+        </label>
         <div className="task-due-fields">
           <label>
             Priority

@@ -4,6 +4,7 @@ import { apiClient } from "./test/apiClient.js";
 import { seedTask } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
 import { addCivilDays } from "./homeUpcoming.js";
+import { localDateInTimezone } from "./progress.js";
 import { mondayOfLocalWeek } from "./weeklyGoals.js";
 
 const TZ = "UTC";
@@ -26,6 +27,45 @@ describe.skipIf(!integrationReady)("weekly goals API", () => {
     expect(lc2.targetCount).toBe(12);
     expect(lc2.progressCount).toBe(3);
     expect(lc2.done).toBe(3);
+  });
+
+  it("weekly LC progress delta bumps today's daily LC stepper", async () => {
+    const today = localDateInTimezone(new Date(), TZ);
+    await pool.query(`DELETE FROM leetcode_daily WHERE local_date = $1::date`, [today]);
+
+    await apiClient()
+      .patch(`/api/weekly-goals/lc?tz=${encodeURIComponent(TZ)}`)
+      .send({ targetCount: 20, progressCount: 2 })
+      .expect(200);
+
+    const afterSet = await pool.query<{ count: number }>(
+      `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
+      [today],
+    );
+    // Absolute set from whatever prior weekly value — only assert the next delta.
+    const baseline = afterSet.rows[0]?.count ?? 0;
+
+    await apiClient()
+      .patch(`/api/weekly-goals/lc?tz=${encodeURIComponent(TZ)}`)
+      .send({ progressCount: 5 })
+      .expect(200);
+
+    const bumped = await pool.query<{ count: number }>(
+      `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
+      [today],
+    );
+    expect(bumped.rows[0]?.count).toBe(baseline + 3);
+
+    await apiClient()
+      .patch(`/api/weekly-goals/lc?tz=${encodeURIComponent(TZ)}`)
+      .send({ progressCount: 4 })
+      .expect(200);
+
+    const reduced = await pool.query<{ count: number }>(
+      `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
+      [today],
+    );
+    expect(reduced.rows[0]?.count).toBe(baseline + 2);
   });
 
   it("tags application tasks into apps set and carries open members", async () => {

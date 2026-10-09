@@ -136,4 +136,31 @@ describe.skipIf(!integrationReady)("home API", () => {
       expect(group.key).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
   });
+
+  it("GET /api/home upcomingDays=14 includes the second week", async () => {
+    const inTenDays = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+    const task = await seedTask({
+      category: "school",
+      title: "Two-week window item",
+      dueAt: inTenDays,
+    });
+
+    const week1 = await apiClient()
+      .get(`/api/home?tz=${encodeURIComponent(TZ)}&upcomingDays=7`)
+      .expect(200);
+    expect(week1.body.upcomingThisWeek.windowDays).toBe(7);
+    const week1Ids = (week1.body.upcomingThisWeek.groups as Array<{ items: Array<{ id?: string }> }>)
+      .flatMap((g) => g.items)
+      .map((i) => i.id);
+    expect(week1Ids).not.toContain(task.id);
+
+    const week2 = await apiClient()
+      .get(`/api/home?tz=${encodeURIComponent(TZ)}&upcomingDays=14`)
+      .expect(200);
+    expect(week2.body.upcomingThisWeek.windowDays).toBe(14);
+    const week2Ids = (week2.body.upcomingThisWeek.groups as Array<{ items: Array<{ id?: string }> }>)
+      .flatMap((g) => g.items)
+      .map((i) => i.id);
+    expect(week2Ids).toContain(task.id);
+  });
 });

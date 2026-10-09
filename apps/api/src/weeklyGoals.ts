@@ -303,6 +303,7 @@ export async function patchLcGoal(
 
   let target = row.target_count;
   let progress = row.progress_count;
+  const prevProgress = progress;
   if (patch.targetCount !== undefined) {
     if (!Number.isInteger(patch.targetCount) || patch.targetCount < 1) {
       throw Object.assign(new Error("targetCount must be a positive integer"), { status: 400 });
@@ -325,6 +326,33 @@ export async function patchLcGoal(
      WHERE id = $1`,
     [row.id, target, progress],
   );
+
+  // Keep today's daily LC stepper in sync: weekly delta applies to today
+  // so daily stays a ceiling for what the week claims.
+  const delta = progress - prevProgress;
+  if (delta !== 0) {
+    const today = localDateInTimezone(new Date(), tz);
+    if (delta > 0) {
+      await db.query(
+        `INSERT INTO leetcode_daily (local_date, count, updated_at)
+         VALUES ($1::date, $2, now())
+         ON CONFLICT (local_date) DO UPDATE SET
+           count = leetcode_daily.count + EXCLUDED.count,
+           updated_at = now()`,
+        [today, delta],
+      );
+    } else {
+      await db.query(
+        `INSERT INTO leetcode_daily (local_date, count, updated_at)
+         VALUES ($1::date, 0, now())
+         ON CONFLICT (local_date) DO UPDATE SET
+           count = GREATEST(0, leetcode_daily.count + $2::int),
+           updated_at = now()`,
+        [today, delta],
+      );
+    }
+  }
+
   return getWeeklyGoalsSnapshot(db, tz);
 }
 

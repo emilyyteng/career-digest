@@ -87,6 +87,8 @@ export default function Tasks() {
   >({});
   const [dueFlash, setDueFlash] = useState<Record<string, boolean>>({});
   const [weeklyAppTargetIds, setWeeklyAppTargetIds] = useState<Set<string>>(() => new Set());
+  /** Sort boost frozen on load — toggling target must not jump the card. */
+  const [weeklySortBoostIds, setWeeklySortBoostIds] = useState<Set<string>>(() => new Set());
   const addFormRef = useRef<AddTaskFormHandle>(null);
   const editFormRef = useRef<EditTaskFormHandle>(null);
 
@@ -94,11 +96,15 @@ export default function Tasks() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   }
 
-  async function refreshWeeklyAppTargets() {
+  async function refreshWeeklyAppTargets(opts?: { resort?: boolean }) {
     try {
       const snap = await getWeeklyGoals(browserTz());
       const apps = snap.goals.find((g) => g.slot === "apps");
-      setWeeklyAppTargetIds(new Set((apps?.members ?? []).map((m) => m.taskId)));
+      const next = new Set((apps?.members ?? []).map((m) => m.taskId));
+      setWeeklyAppTargetIds(next);
+      if (opts?.resort !== false) {
+        setWeeklySortBoostIds(next);
+      }
     } catch {
       /* non-blocking */
     }
@@ -179,7 +185,8 @@ export default function Tasks() {
     setEditing(null);
     invalidateListCache("tasks:");
     setRows((current) => current.map((item) => (item.id === row.id ? row : item)));
-    void refreshWeeklyAppTargets();
+    // Keep list order stable after edit; checkbox state still updates.
+    void refreshWeeklyAppTargets({ resort: false });
   }
 
   async function confirmRemove() {
@@ -320,6 +327,7 @@ export default function Tasks() {
     try {
       const snap = await setWeeklyAppTargetMember(browserTz(), row.id, member);
       const apps = snap.goals.find((g) => g.slot === "apps");
+      // Update checkbox only — do not refresh sort boost (avoids jump to top).
       setWeeklyAppTargetIds(new Set((apps?.members ?? []).map((m) => m.taskId)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update weekly target");
@@ -442,7 +450,7 @@ export default function Tasks() {
         : dueLabel(row.dueAt)
       : null;
     return (
-      <article key={row.id} className="card application-card task-card">
+      <article key={row.id} className="card application-card task-card" data-task-id={row.id}>
         <div className="task-card-header">
           <h2 className="application-card-title task-card-header-title task-title-line">
             <PriorityBadge priority={row.priority} />
@@ -690,8 +698,8 @@ export default function Tasks() {
               .slice()
               .sort((a, b) => {
                 if (category.kind !== "application") return 0;
-                const aTarget = weeklyAppTargetIds.has(a.id) ? 0 : 1;
-                const bTarget = weeklyAppTargetIds.has(b.id) ? 0 : 1;
+                const aTarget = weeklySortBoostIds.has(a.id) ? 0 : 1;
+                const bTarget = weeklySortBoostIds.has(b.id) ? 0 : 1;
                 return aTarget - bTarget;
               });
             const empty = sectionTasks.length === 0;

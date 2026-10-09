@@ -25,6 +25,26 @@ function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
+const UPCOMING_DAYS_KEY = "home.upcomingDays";
+
+function readUpcomingDays(): 7 | 14 {
+  try {
+    const raw = localStorage.getItem(UPCOMING_DAYS_KEY);
+    if (raw === "14") return 14;
+  } catch {
+    /* ignore */
+  }
+  return 7;
+}
+
+function writeUpcomingDays(days: 7 | 14) {
+  try {
+    localStorage.setItem(UPCOMING_DAYS_KEY, String(days));
+  } catch {
+    /* ignore */
+  }
+}
+
 function currentGreetingPeriod() {
   return greetingPeriodFromHour(new Date().getHours());
 }
@@ -140,20 +160,30 @@ export default function Home() {
   const [data, setData] = useState<HomeDashboard | null>(null);
   const [progress, setProgress] = useState<ProgressToday | null>(null);
   const [weeklyGoals, setWeeklyGoals] = useState<WeeklyGoalsSnapshot | null>(null);
+  const [upcomingDays, setUpcomingDays] = useState<7 | 14>(() => readUpcomingDays());
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const tz = browserTz();
-    getHomeDashboard(tz)
+    getHomeDashboard(tz, upcomingDays)
       .then((dash) => {
         setData(dash);
         setWeeklyGoals(dash.weeklyGoals);
       })
       .catch((err: Error) => setError(err.message));
+  }, [upcomingDays]);
+
+  useEffect(() => {
+    const tz = browserTz();
     getProgressToday(tz)
       .then(setProgress)
       .catch(() => setProgress(null));
   }, []);
+
+  function onUpcomingDaysChange(days: 7 | 14) {
+    writeUpcomingDays(days);
+    setUpcomingDays(days);
+  }
 
   if (error && !data) return <p className="error">{error}</p>;
   if (!data) return <p className="muted">Loading…</p>;
@@ -162,6 +192,11 @@ export default function Home() {
   const digestWhen = formatWhen(data.lastDigest.lastOkAt ?? data.lastDigest.finishedAt);
   const greetingPeriod = currentGreetingPeriod();
   const sections = upcoming.sections ?? [];
+  const windowDays = upcoming.windowDays ?? upcomingDays;
+  const upcomingTitle =
+    windowDays === 14 ? "Upcoming · 2 weeks" : "Upcoming · 1 week";
+  const upcomingEmpty =
+    windowDays === 14 ? "Nothing due in the next two weeks." : "Nothing due this week.";
 
   return (
     <section className="home-page">
@@ -217,9 +252,37 @@ export default function Home() {
       </header>
 
       <section className="card home-section home-attention-card">
-        <h3 className="home-section-title">Upcoming this week</h3>
+        <div className="home-section-head home-upcoming-head">
+          <h3 className="home-section-title">{upcomingTitle}</h3>
+          <div className="home-upcoming-range" role="group" aria-label="Upcoming range">
+            <button
+              type="button"
+              className={
+                upcomingDays === 7
+                  ? "secondary home-upcoming-range-btn is-active"
+                  : "secondary home-upcoming-range-btn"
+              }
+              aria-pressed={upcomingDays === 7}
+              onClick={() => onUpcomingDaysChange(7)}
+            >
+              1 week
+            </button>
+            <button
+              type="button"
+              className={
+                upcomingDays === 14
+                  ? "secondary home-upcoming-range-btn is-active"
+                  : "secondary home-upcoming-range-btn"
+              }
+              aria-pressed={upcomingDays === 14}
+              onClick={() => onUpcomingDaysChange(14)}
+            >
+              2 weeks
+            </button>
+          </div>
+        </div>
         {sections.every(sectionIsEmpty) ? (
-          <p className="muted home-pick-empty">Nothing due this week.</p>
+          <p className="muted home-pick-empty">{upcomingEmpty}</p>
         ) : (
           sections.map((section) =>
             sectionIsEmpty(section) ? null : (

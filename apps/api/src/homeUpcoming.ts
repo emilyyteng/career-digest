@@ -48,12 +48,22 @@ export type HomeUpcomingSection = {
 };
 
 export type HomeUpcomingThisWeek = {
+  /** Inclusive local-day window starting today (7 or 14). */
+  windowDays: UpcomingWindowDays;
   /** Legacy day groups (still filled for tests / transition). */
   groups: HomeUpcomingGroup[];
   sections: HomeUpcomingSection[];
 };
 
-const WINDOW_DAYS = 7;
+export const UPCOMING_WINDOW_DAYS_DEFAULT = 7;
+export const UPCOMING_WINDOW_DAYS_OPTIONS = [7, 14] as const;
+export type UpcomingWindowDays = (typeof UPCOMING_WINDOW_DAYS_OPTIONS)[number];
+
+export function normalizeUpcomingWindowDays(value: unknown): UpcomingWindowDays {
+  const n = typeof value === "number" ? value : Number(value);
+  if (n === 14) return 14;
+  return 7;
+}
 
 function formatDeadlineLong(value: string): string | null {
   const date = new Date(value);
@@ -127,9 +137,10 @@ export function buildUpcomingGroups(
   items: HomeUpcomingItem[],
   now: Date,
   tz: string,
+  windowDays: number = UPCOMING_WINDOW_DAYS_DEFAULT,
 ): HomeUpcomingGroup[] {
   const todayYmd = localDateInTimezone(now, tz);
-  const lastYmd = addCivilDays(todayYmd, WINDOW_DAYS - 1);
+  const lastYmd = addCivilDays(todayYmd, windowDays - 1);
   const nowMs = now.getTime();
 
   const overdue: HomeUpcomingItem[] = [];
@@ -344,9 +355,10 @@ export function buildFlatSectionItems(
   items: HomeUpcomingItem[],
   now: Date,
   tz: string,
+  windowDays: number = UPCOMING_WINDOW_DAYS_DEFAULT,
 ): HomeUpcomingItem[] {
   const todayYmd = localDateInTimezone(now, tz);
-  const lastYmd = addCivilDays(todayYmd, WINDOW_DAYS - 1);
+  const lastYmd = addCivilDays(todayYmd, windowDays - 1);
   const nowMs = now.getTime();
   const overdue: HomeUpcomingItem[] = [];
   const upcoming: HomeUpcomingItem[] = [];
@@ -403,6 +415,7 @@ export async function getUpcomingThisWeek(
   db: Queryable,
   tz: string,
   now: Date = new Date(),
+  windowDays: UpcomingWindowDays = UPCOMING_WINDOW_DAYS_DEFAULT,
 ): Promise<HomeUpcomingThisWeek> {
   const [tasks, subtasks, interviews] = await Promise.all([
     loadDatedOpenTasks(db),
@@ -415,13 +428,14 @@ export async function getUpcomingThisWeek(
     all.filter((i) => i.dueKind === "target"),
   );
   return {
-    groups: buildUpcomingGroups(all, now, tz),
+    windowDays,
+    groups: buildUpcomingGroups(all, now, tz, windowDays),
     sections: [
       {
         key: "deadlines",
         label: "Deadlines",
         layout: "flat",
-        items: buildFlatSectionItems(deadlines, now, tz),
+        items: buildFlatSectionItems(deadlines, now, tz, windowDays),
         dayGroups: [],
       },
       {
@@ -429,7 +443,7 @@ export async function getUpcomingThisWeek(
         label: "Targets",
         layout: "by_day",
         items: [],
-        dayGroups: buildUpcomingGroups(targets, now, tz),
+        dayGroups: buildUpcomingGroups(targets, now, tz, windowDays),
       },
     ],
   };

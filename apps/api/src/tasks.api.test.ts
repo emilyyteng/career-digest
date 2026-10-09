@@ -103,6 +103,7 @@ describe.skipIf(!integrationReady)("tasks API", () => {
         url: "https://canvas.stanford.edu/assignments/1",
         notes: "Due before section",
         dueAt: "2025-10-01T17:00:00.000Z",
+        dueKind: "deadline",
       })
       .expect(201);
 
@@ -116,6 +117,21 @@ describe.skipIf(!integrationReady)("tasks API", () => {
       url: "https://canvas.stanford.edu/assignments/1",
       notes: "Due before section",
       dueAt: "2025-10-01T17:00:00.000Z",
+      dueKind: "deadline",
+    });
+
+    const targetTask = await apiClient()
+      .post("/api/tasks")
+      .send({
+        categoryId: schoolId,
+        title: "Outline essay",
+        dueAt: "2025-10-08T17:00:00.000Z",
+        dueKind: "target",
+      })
+      .expect(201);
+    expect(targetTask.body).toMatchObject({
+      title: "Outline essay",
+      dueKind: "target",
     });
 
     const admin = await apiClient()
@@ -264,11 +280,12 @@ describe.skipIf(!integrationReady)("tasks API", () => {
   });
 
   it("task categories: create, block delete with open tasks, delete when empty", async () => {
+    const name = `Club ${Date.now()}`;
     const created = await apiClient()
       .post("/api/task-categories")
-      .send({ name: "Club" })
+      .send({ name })
       .expect(201);
-    expect(created.body).toMatchObject({ name: "Club", kind: "misc", system: false });
+    expect(created.body).toMatchObject({ name, kind: "misc", system: false });
 
     const task = await apiClient()
       .post("/api/tasks")

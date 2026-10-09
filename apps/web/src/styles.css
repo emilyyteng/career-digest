@@ -2618,6 +2618,22 @@ textarea { min-height: 10rem; width: 100%; }
 .home-attention-card .home-section-title {
   margin-bottom: 0.15rem;
 }
+.home-upcoming-head {
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+.home-upcoming-range {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+.home-upcoming-range-btn {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+}
+.home-upcoming-range-btn.is-active {
+  border-color: var(--accent, #7c6bb5);
+  background: color-mix(in srgb, var(--accent, #7c6bb5) 14%, transparent);
+}
 .home-attention-subsection + .home-attention-subsection {
   margin-top: 0.65rem;
   padding-top: 0.65rem;

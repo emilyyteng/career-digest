@@ -243,17 +243,6 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
             />
           </label>
         )}
-        <label>
-          Date kind
-          <select
-            value={dueKind}
-            disabled={!dueDate}
-            onChange={(event) => setDueKind(event.target.value as TaskDueKind)}
-          >
-            <option value="deadline">Deadline</option>
-            <option value="target">Target</option>
-          </select>
-        </label>
         <div className="task-due-datetime-row">
           <label>
             Due date
@@ -273,6 +262,17 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
             />
           </label>
         </div>
+        <label>
+          Date kind
+          <select
+            value={dueKind}
+            disabled={!dueDate}
+            onChange={(event) => setDueKind(event.target.value as TaskDueKind)}
+          >
+            <option value="deadline">Deadline</option>
+            <option value="target">Target</option>
+          </select>
+        </label>
         {isApplication && (
           <div className="task-weekly-target-row">
             <label className="task-weekly-target-toggle">

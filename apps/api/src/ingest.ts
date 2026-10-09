@@ -91,11 +91,60 @@ async function upsertPosting(
   );
 }
 
+/**
+ * When a posting leaves the ATS board, drop open application tasks and their
+ * legacy todo tracker rows so the posting can be deleted. Applied+ applications
+ * still retain the posting (removed_from_board_at).
+ */
+export async function clearTodoPipelineForGonePostings(
+  companyId: string,
+  seenExternalIds: string[],
+): Promise<{ tasksDeleted: number; todoAppsDeleted: number }> {
+  const gone = await pool.query<{ id: string }>(
+    `SELECT id FROM postings
+     WHERE company_id = $1
+       AND NOT (external_id = ANY($2::text[]))`,
+    [companyId, seenExternalIds],
+  );
+  const goneIds = gone.rows.map((r) => r.id);
+  if (goneIds.length === 0) {
+    return { tasksDeleted: 0, todoAppsDeleted: 0 };
+  }
+
+  const tasks = await pool.query(
+    `DELETE FROM tasks
+     WHERE status = 'open'
+       AND category = 'application'
+       AND (
+         posting_id = ANY($1::uuid[])
+         OR application_id IN (
+           SELECT id FROM applications
+           WHERE posting_id = ANY($1::uuid[]) AND status = 'todo'
+         )
+       )`,
+    [goneIds],
+  );
+
+  const apps = await pool.query(
+    `DELETE FROM applications
+     WHERE status = 'todo'
+       AND posting_id = ANY($1::uuid[])`,
+    [goneIds],
+  );
+
+  return {
+    tasksDeleted: tasks.rowCount ?? 0,
+    todoAppsDeleted: apps.rowCount ?? 0,
+  };
+}
+
 /** Drop listings that left the board unless they have an application/notes row. */
 export async function reconcileRemovedFromBoard(
   companyId: string,
   seenExternalIds: string[],
 ): Promise<{ deleted: number; retained: number }> {
+  await clearTodoPipelineForGonePostings(companyId, seenExternalIds);
+
   const retained = await pool.query(
     `UPDATE postings
      SET removed_from_board_at = COALESCE(removed_from_board_at, now())
@@ -141,6 +190,16 @@ export async function dropUntrackedRejected(companyId: string): Promise<number> 
     .map((row) => row.id);
 
   if (dropIds.length === 0) return 0;
+
+  // Same cleanup as board-gone: open app tasks / todo rows would otherwise SET NULL
+  // posting_id and leave orphan to-apply tasks.
+  await pool.query(
+    `DELETE FROM tasks
+     WHERE status = 'open'
+       AND category = 'application'
+       AND posting_id = ANY($1::uuid[])`,
+    [dropIds],
+  );
   await pool.query(`DELETE FROM postings WHERE id = ANY($1::uuid[])`, [dropIds]);
   return dropIds.length;
 }
