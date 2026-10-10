@@ -1,4 +1,5 @@
-import { Link, NavLink, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
+import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
 import ApplicationDetail from "./features/applications/ApplicationDetailPage";
 import Applications from "./features/applications/ApplicationsPage";
 import Home from "./pages/Home";
@@ -8,10 +9,21 @@ import JobDetail from "./features/jobs/JobDetailPage";
 import Jobs from "./features/jobs/JobsPage";
 import Status from "./pages/Status";
 import Tasks from "./pages/Tasks";
+import TaskDetailPage from "./pages/TaskDetailPage";
 import Progress from "./features/progress/ProgressPage";
 import ThemeEmoji from "./ThemeEmoji";
 import { DemoModeProvider, useDemoMode } from "./demoMode";
 import { HEADER_BRAND_EMOJI } from "./pageTheme";
+
+/** Dev-only prototype pages — dead-code eliminated from production builds. */
+const proto = import.meta.env.DEV
+  ? {
+      Hub: lazy(() => import("./prototype/m1/M1PrototypeHub")),
+      MiscTask: lazy(() => import("./prototype/m1/MiscTaskPrototypePage")),
+      AppTask: lazy(() => import("./prototype/m1/AppTaskPrototypePage")),
+      Application: lazy(() => import("./prototype/m1/ApplicationPrototypePage")),
+    }
+  : null;
 
 function DemoBanner() {
   const demo = useDemoMode();
@@ -25,6 +37,14 @@ function DemoBanner() {
       {" "}
       Live ranking and board refresh are disabled.
     </div>
+  );
+}
+
+function ProtoPage({ page: Page }: { page: LazyExoticComponent<ComponentType> }) {
+  return (
+    <Suspense fallback={<p className="muted">Loading prototype…</p>}>
+      <Page />
+    </Suspense>
   );
 }
 
@@ -48,6 +68,7 @@ export default function App() {
             <NavLink to="/interviews">Interviews</NavLink>
             <NavLink to="/progress">Progress</NavLink>
             <NavLink to="/status">Status</NavLink>
+            {proto && <NavLink to="/prototype/m1">Prototype</NavLink>}
           </nav>
         </header>
         <main>
@@ -58,10 +79,24 @@ export default function App() {
             <Route path="/applications" element={<Applications />} />
             <Route path="/applications/:id" element={<ApplicationDetail />} />
             <Route path="/tasks" element={<Tasks />} />
+            <Route path="/tasks/:taskId" element={<TaskDetailPage />} />
             <Route path="/interviews" element={<Interviews />} />
             <Route path="/interviews/:threadId" element={<InterviewWorkspace />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/status" element={<Status />} />
+            {proto ? (
+              <>
+                <Route path="/prototype/m1" element={<ProtoPage page={proto.Hub} />} />
+                <Route path="/prototype/m1/misc-task" element={<ProtoPage page={proto.MiscTask} />} />
+                <Route path="/prototype/m1/app-task" element={<ProtoPage page={proto.AppTask} />} />
+                <Route
+                  path="/prototype/m1/application"
+                  element={<ProtoPage page={proto.Application} />}
+                />
+              </>
+            ) : (
+              <Route path="/prototype/*" element={<Navigate to="/" replace />} />
+            )}
           </Routes>
         </main>
       </div>

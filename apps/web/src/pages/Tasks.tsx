@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { listLinkState } from "../navigationReturn";
 import {
   completeTask,
   createTaskCategory,
@@ -49,6 +50,18 @@ function tasksCacheKey(view: TaskView): string {
   return `tasks:${view}`;
 }
 
+/** Survive remounts so Applications doesn't flash a re-sort on every visit. */
+const WEEKLY_TARGETS_CACHE = "weekly:appTargetIds";
+const WEEKLY_BOOST_CACHE = "weekly:appSortBoostIds";
+
+function readIdSet(key: string): Set<string> {
+  return new Set(readListCache<string[]>(key) ?? []);
+}
+
+function writeIdSet(key: string, ids: Set<string>) {
+  writeListCache(key, [...ids]);
+}
+
 function isApplicationTask(row: TaskRow): boolean {
   return row.category === "application";
 }
@@ -56,6 +69,7 @@ function isApplicationTask(row: TaskRow): boolean {
 const SECTION_CLAMP_AFTER = 6;
 
 export default function Tasks() {
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawView = searchParams.get("view") ?? "open";
   const view: TaskView = rawView === "completed" ? "completed" : "open";
@@ -86,9 +100,13 @@ export default function Tasks() {
     Record<string, { date: string; time: string; kind: TaskDueKind }>
   >({});
   const [dueFlash, setDueFlash] = useState<Record<string, boolean>>({});
-  const [weeklyAppTargetIds, setWeeklyAppTargetIds] = useState<Set<string>>(() => new Set());
+  const [weeklyAppTargetIds, setWeeklyAppTargetIds] = useState<Set<string>>(() =>
+    readIdSet(WEEKLY_TARGETS_CACHE),
+  );
   /** Sort boost frozen on load — toggling target must not jump the card. */
-  const [weeklySortBoostIds, setWeeklySortBoostIds] = useState<Set<string>>(() => new Set());
+  const [weeklySortBoostIds, setWeeklySortBoostIds] = useState<Set<string>>(() =>
+    readIdSet(WEEKLY_BOOST_CACHE),
+  );
   const addFormRef = useRef<AddTaskFormHandle>(null);
   const editFormRef = useRef<EditTaskFormHandle>(null);
 
@@ -96,15 +114,20 @@ export default function Tasks() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   }
 
+  function applyWeeklyTargets(next: Set<string>, opts?: { resort?: boolean }) {
+    setWeeklyAppTargetIds(next);
+    writeIdSet(WEEKLY_TARGETS_CACHE, next);
+    if (opts?.resort !== false) {
+      setWeeklySortBoostIds(next);
+      writeIdSet(WEEKLY_BOOST_CACHE, next);
+    }
+  }
+
   async function refreshWeeklyAppTargets(opts?: { resort?: boolean }) {
     try {
       const snap = await getWeeklyGoals(browserTz());
       const apps = snap.goals.find((g) => g.slot === "apps");
-      const next = new Set((apps?.members ?? []).map((m) => m.taskId));
-      setWeeklyAppTargetIds(next);
-      if (opts?.resort !== false) {
-        setWeeklySortBoostIds(next);
-      }
+      applyWeeklyTargets(new Set((apps?.members ?? []).map((m) => m.taskId)), opts);
     } catch {
       /* non-blocking */
     }
@@ -125,9 +148,12 @@ export default function Tasks() {
 
   async function load() {
     const cacheKey = tasksCacheKey(view);
-    const data = await getTasks(view);
+    const [data, snap] = await Promise.all([getTasks(view), getWeeklyGoals(browserTz()).catch(() => null)]);
+    if (snap) {
+      const apps = snap.goals.find((g) => g.slot === "apps");
+      applyWeeklyTargets(new Set((apps?.members ?? []).map((m) => m.taskId)));
+    }
     applyTasksData(data, cacheKey);
-    void refreshWeeklyAppTargets();
   }
 
   useEffect(() => {
@@ -143,12 +169,15 @@ export default function Tasks() {
       setLoaded(false);
     }
 
-    getTasks(view)
-      .then((data) => {
+    Promise.all([getTasks(view), getWeeklyGoals(browserTz()).catch(() => null)])
+      .then(([data, snap]) => {
         if (cancelled) return;
+        if (snap) {
+          const apps = snap.goals.find((g) => g.slot === "apps");
+          applyWeeklyTargets(new Set((apps?.members ?? []).map((m) => m.taskId)));
+        }
         applyTasksData(data, cacheKey);
         setError(null);
-        void refreshWeeklyAppTargets();
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
@@ -328,7 +357,9 @@ export default function Tasks() {
       const snap = await setWeeklyAppTargetMember(browserTz(), row.id, member);
       const apps = snap.goals.find((g) => g.slot === "apps");
       // Update checkbox only — do not refresh sort boost (avoids jump to top).
-      setWeeklyAppTargetIds(new Set((apps?.members ?? []).map((m) => m.taskId)));
+      applyWeeklyTargets(new Set((apps?.members ?? []).map((m) => m.taskId)), {
+        resort: false,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update weekly target");
     } finally {
@@ -454,7 +485,13 @@ export default function Tasks() {
         <div className="task-card-header">
           <h2 className="application-card-title task-card-header-title task-title-line">
             <PriorityBadge priority={row.priority} />
-            <span className="task-title-text">{row.title}</span>
+            <Link
+              to={`/tasks/${row.id}`}
+              state={listLinkState(location)}
+              className="task-title-text task-title-link"
+            >
+              {row.title}
+            </Link>
             {formatEstimateMinutes(row.estimateMinutes) && (
               <span className="task-estimate-inline">
                 {formatEstimateMinutes(row.estimateMinutes)}
@@ -519,10 +556,10 @@ export default function Tasks() {
             </div>
           )}
         </div>
-        {view === "open" && !application && (
+        {!application && (view === "open" || (row.subtasks?.length ?? 0) > 0) && (
           <TaskSubtasksPanel
             task={row}
-            disabled={pendingId === row.id}
+            disabled={pendingId === row.id || view === "completed"}
             onChanged={() => {
               invalidateListCache("tasks:");
               void load().catch((err: Error) => setError(err.message));

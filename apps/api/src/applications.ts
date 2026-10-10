@@ -1,3 +1,4 @@
+import { unlink } from "node:fs/promises";
 import path from "node:path";
 import type { Pool, PoolClient } from "pg";
 import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
@@ -479,4 +480,23 @@ export async function getApplicationDocument(
     originalName: result.rows[0].original_name,
     mimeType: result.rows[0].mime_type,
   };
+}
+
+export async function deleteApplicationDocument(
+  db: Queryable,
+  applicationId: string,
+  docId: string,
+  uploadDir: string,
+): Promise<boolean> {
+  const result = await db.query<{ stored_name: string }>(
+    `DELETE FROM application_documents
+     WHERE id = $1 AND application_id = $2
+     RETURNING stored_name`,
+    [docId, applicationId],
+  );
+  if (!result.rows[0]) return false;
+  await unlink(applicationDocumentPath(uploadDir, result.rows[0].stored_name)).catch(
+    () => undefined,
+  );
+  return true;
 }

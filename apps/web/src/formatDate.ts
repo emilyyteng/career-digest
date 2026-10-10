@@ -8,6 +8,17 @@ export function formatShortDate(value: string | null | undefined): string | null
   return `${mm}/${dd}/${yy}`;
 }
 
+/** Local calendar date as mm/dd/yyyy for detail meta lines. */
+export function formatDueDateMdY(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const yyyy = String(date.getFullYear());
+  return `${mm}/${dd}/${yyyy}`;
+}
+
 export function formatStepWhen(value: string | null | undefined): string | null {
   if (!value) return null;
   const date = new Date(value);

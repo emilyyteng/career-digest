@@ -249,31 +249,39 @@ No **Result** yet; plan below is the working roadmap. Items tagged **[Upcoming]*
 
 *Deferred from M0:* weekly goal target dates on Home → Milestone 5 (needs Progress label/note design).
 
-### Milestone 1 — Detail pages (three surfaces) **[Upcoming]**
+### Milestone 1 — Detail pages (three surfaces)
 
-Design spike first (three proposals), then implement. **No shared completion-modal work here** — keep existing complete / mark-applied behavior working end-to-end; modal unification moves to Milestone 2.
+Prototype pass (dev `/prototype/m1`) locked the layout; production surfaces shipped. **No shared completion-modal work here** — modal unification moves to Milestone 2.
 
-1. **Misc / non-app task detail** (`/tasks/:taskId`) — compact layout; subtasks with completion state; clock/bar time viz from estimates (detail only, not Home cards)
-2. **Application-task detail** — same family as misc where it helps; call out differences (mark-applied path, posting link, etc.)
-3. **Application pipeline page** redesign (distinct from application *task*) — less clutter: status as **selector + Save** (not a row of action buttons); denser notes / job description
+**Shipped**
 
-Also:
+1. **`/tasks/:taskId`** — misc + application tasks: contained header, compact Complete/Mark applied, weekly ★ for app tasks, **Deadline/Target: mm/dd/yyyy** + live **12h pie-circles + countdown** (deadlines), checkable/draggable subtasks (earliest-due urgency subtitle) or scrollable JD, **Edit details | Reflections** placeholder, equal-height columns
+2. **Application pipeline** (`/applications/:id`) — status **rail**: Stage + Documents (Upload… / remove) + Link posting; main column fixed-height JD scroll / Notes / Reflections placeholder; subtitle `org · location · Applied: date` + badges
+3. Home Upcoming + Tasks titles → detail; Completed tab shows checked subtasks
+4. `GET /api/tasks/:id` (+ JD coalesce from posting description); weekly-target sort boost cached across Tasks remounts (no Applications re-sort flash)
 
-- Home Upcoming items link to the **individual** task or application (not only `/tasks`)
-- Tasks page: clicking a task **title** opens that task’s detail page
-- Completed tab: clicking a completed task opens its detail page; show checked subtasks
+Dev prototypes remain under `/prototype/m1` for reference until cleanup.
 
-### Milestone 2 — Reflections, stickies & completion modals **[Upcoming]**
+### Milestone 2 — Reflections, stickies & completion modals **[In progress]**
 
-Attach reflections to work; dedupe and beautify completion flows. Order: detail pages first, then this, then recurring (sectioned stickies UI is reused for dates).
+Attach reflections to work; ship **Other** lane + deep-work-as-field; then dedupe/beautify completion modals. Prototype pass first (dev `/prototype/m2`) — design for linking + strip surfacing still open.
 
-**Data / linking**
+**Clarified (building toward)**
+
+- Reflections optionally link to **misc task**, **app task**, or **application** (unattached allowed). On app-task → Mark applied, linked reflections **transfer** to the application page
+- Detail Reflections section: **Link existing** + **Create reflection** (two actions, not a single Add)
+- **Other** lane ships with this milestone: Home strip + Progress strip show **three** deep-work checks (application / technical / other). Heatmaps stay application vs technical only
+- **Deep work** is a field on the reflection (toggle). ≥1 deep-work reflection for that lane & local day ⇒ checkmark. Non-deep-work reflections allowed. Backfill: all existing reflections → deep work on, unlinked
+- Edit reflection: toggle deep work (+ save updates strip/calendar checks). Retroactive link from task/app pages and Progress → History. Create (Progress → Today): deep work toggle + optional link to task or application
+- Interview-step linking / sectioned stickies + completion-modal polish remain in-scope for this milestone after the prototype lock
+
+**Data / linking (prototype focus)**
 
 - Reflections optionally link to task, application, and/or interview step; **unattached** allowed
-- **Retroactive link** from task/application pages and from wherever reflection logs are shown (exact host page TBD with Progress IA)
+- **Retroactive link** from task/application pages and Progress → History
 - Multiple stickies per task/application; on application surfaces, section by interview step (or “application” when not step-specific)
-- Deep work: **toggle** (not checkbox), default on when the reflection panel is engaged for interview steps; never auto-grant a deep-work unit without a corresponding reflection
-- Pending design: optional **“Other”** reflection category for deep work that is neither application nor technical — heatmap / Home checkmark behavior TBD
+- Deep work: **toggle** on the reflection; never auto-grant a deep-work unit without a corresponding deep-work reflection
+- **Other** category: strip checkmarks only (heatmap unchanged)
 
 **Modals (functionality + visual polish together)**
 

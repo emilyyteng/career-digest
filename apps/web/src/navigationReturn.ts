@@ -6,7 +6,7 @@ export type ListReturnState = {
 
 export function listReturnTo(
   location: Location,
-  listPath: "/jobs" | "/applications",
+  listPath: "/jobs" | "/applications" | "/tasks",
 ): string {
   const from = (location.state as ListReturnState | null)?.from;
   if (from?.pathname === listPath) {

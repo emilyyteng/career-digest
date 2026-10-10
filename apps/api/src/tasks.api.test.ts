@@ -249,6 +249,34 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     expect(app.rows[0].applied_at).toBeTruthy();
   });
 
+  it("GET /api/tasks/:id returns a hydrated task with subtasks", async () => {
+    const schoolId = await categoryIdByName("School");
+    const created = await apiClient()
+      .post("/api/tasks")
+      .send({
+        categoryId: schoolId,
+        title: "Detail page task",
+        dueAt: "2026-10-12T17:00:00.000Z",
+        dueKind: "deadline",
+      })
+      .expect(201);
+
+    await apiClient()
+      .post(`/api/tasks/${created.body.id}/subtasks`)
+      .send({ title: "Step one", dueKind: "target" })
+      .expect(201);
+
+    const res = await apiClient().get(`/api/tasks/${created.body.id}`).expect(200);
+    expect(res.body).toMatchObject({
+      id: created.body.id,
+      title: "Detail page task",
+      dueKind: "deadline",
+      category: "misc",
+    });
+    expect(res.body.subtasks).toHaveLength(1);
+    expect(res.body.subtaskProgress).toMatchObject({ completed: 0, total: 1 });
+  });
+
   it("PATCH /api/tasks/:id updates fields and can refile misc categories", async () => {
     const created = await seedTask({
       category: "school",

@@ -79,7 +79,7 @@ const taskListSelect = `
     t.application_id AS "applicationId",
     COALESCE(a.location, p.location) AS location,
     p.source,
-    a.description_html AS "descriptionHtml",
+    COALESCE(a.description_html, p.description_html) AS "descriptionHtml",
     t.completed_at AS "completedAt",
     t.created_at AS "createdAt",
     t.updated_at AS "updatedAt"

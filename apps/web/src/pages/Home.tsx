@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   getHomeDashboard,
   getProgressToday,
@@ -20,6 +20,7 @@ import {
   greetingLabelForPeriod,
   greetingPeriodFromHour,
 } from "../pageTheme";
+import { listLinkState } from "../navigationReturn";
 
 function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -89,6 +90,7 @@ function UpcomingRow({
   item: HomeUpcomingItem;
   showSchedule?: boolean;
 }) {
+  const location = useLocation();
   const estimate = formatEstimateMinutes(item.estimateMinutes);
 
   function TitleLine({ text }: { text: string }) {
@@ -129,9 +131,11 @@ function UpcomingRow({
     );
   }
 
+  const taskPath = item.id ? `/tasks/${item.id}` : "/tasks";
+
   return (
     <li className="home-job-row">
-      <Link to="/tasks" className="home-job-main">
+      <Link to={taskPath} state={listLinkState(location)} className="home-job-main">
         <TitleLine text={item.title} />
         {(item.organization || item.categoryName) && (
           <span className="muted home-job-meta">

@@ -503,6 +503,13 @@ export const uploadDocument = (applicationId: string, file: File) => {
   );
 };
 
+export const deleteDocument = (applicationId: string, docId: string) =>
+  parse<{ ok: boolean }>(
+    api(`/api/applications/${applicationId}/documents/${docId}`, {
+      method: "DELETE",
+    }),
+  );
+
 export type InterviewPickerApplication = {
   id: string;
   postingId: string | null;
@@ -669,6 +676,8 @@ export type TasksPage = {
 
 export const getTasks = (view: TaskView = "open") =>
   parse<TasksPage>(api(`/api/tasks?view=${encodeURIComponent(view)}`));
+
+export const getTask = (id: string) => parse<TaskRow>(api(`/api/tasks/${id}`));
 
 export const getTaskCategories = () =>
   parse<{ categories: TaskCategoryRow[] }>(api("/api/task-categories"));

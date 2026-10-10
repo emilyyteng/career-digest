@@ -11,6 +11,7 @@ import {
   addApplicationDocument,
   createApplication,
   deleteApplication,
+  deleteApplicationDocument,
   getApplication,
   getApplicationDocument,
   listApplicationLocations,
@@ -60,6 +61,7 @@ import {
   deleteTask,
   deleteTaskByPostingId,
   duplicateTask,
+  getTaskById,
   isTaskView,
   listTasks,
   parseCreateTaskBody,
@@ -623,6 +625,20 @@ api.get("/applications/:id/documents/:docId", async (req, res) => {
   res.download(doc.filePath, doc.originalName);
 });
 
+api.delete("/applications/:id/documents/:docId", async (req, res) => {
+  const deleted = await deleteApplicationDocument(
+    pool,
+    req.params.id,
+    req.params.docId,
+    uploadDir,
+  );
+  if (!deleted) {
+    res.status(404).json({ error: "Document not found" });
+    return;
+  }
+  res.json({ ok: true });
+});
+
 api.get("/tasks", async (req, res) => {
   const view = String(req.query.view ?? "open");
   if (!isTaskView(view)) {
@@ -743,6 +759,15 @@ api.post("/tasks", async (req, res) => {
       : 400;
     res.status(status).json({ error: message });
   }
+});
+
+api.get("/tasks/:id", async (req, res) => {
+  const task = await getTaskById(pool, req.params.id);
+  if (!task) {
+    res.status(404).json({ error: "Task not found" });
+    return;
+  }
+  res.json(task);
 });
 
 api.patch("/tasks/:id", async (req, res) => {
