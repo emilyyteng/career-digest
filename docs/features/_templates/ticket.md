@@ -1,6 +1,6 @@
 # M<n>-<NN>: <Ticket title>
 
-(Save as `tickets/M<n>/M<n>-<NN>-<slug>.md` and add a row to `../../board.md`. Maintenance tickets use `MT-<NN>` instead.)
+(Save as `tickets/M<n>/M<n>-<NN>-<slug>.md` and add a row to `../../board.md`. Maintenance tickets use `MT-<NN>` instead, saved as `maintenance/tickets/MT-<NN>-<slug>.md` with a row in `maintenance/board.md`.)
 
 **Status:** Draft | Ready | In progress | Blocked | Done
 **Blocked by:** (none) | M<n>-<NN>

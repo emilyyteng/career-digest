@@ -42,7 +42,7 @@ IDs F01–F09 were assigned on 2026-10-12 in order of each feature's first appea
 
 | Area | Summary | Spec |
 |------|---------|------|
-| Maintenance | Agreed work no feature owns (type health, docs upkeep, cleanup). Tickets `MT-<NN>` | [spec](./maintenance/spec.md) |
+| Maintenance | Agreed work no feature owns (type health, docs upkeep, cleanup). Tickets `MT-<NN>` | [spec](./maintenance/spec.md) · [board](./maintenance/board.md) |
 | Triage | Surfaced issues still waiting on a decision | [triage.md](./triage.md) |
 
 ## Numbering
