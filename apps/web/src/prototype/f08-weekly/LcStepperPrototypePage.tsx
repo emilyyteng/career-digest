@@ -244,8 +244,8 @@ export default function LcStepperPrototypePage() {
           <p>
             Counts per tier are today&apos;s day counts (types aren&apos;t stored per day, R5.17). A weekly
             remove needs weekly progress above 0; a misc remove only lowers the day. Weekly can go past
-            10 (R5.14); the bar shows the extra as a +N tail. Tier points are placeholders (easy 20,
-            medium 30, hard 45) until Q32. Weekly +20s are paid at week close, so the banner only shows
+            10 (R5.14); the bar shows the extra as a +N tail. Tier points: easy 20, medium 30,
+            hard 50 (Q32). Weekly +20s are paid at week close, so the banner only shows
             tier points.
           </p>
         </>

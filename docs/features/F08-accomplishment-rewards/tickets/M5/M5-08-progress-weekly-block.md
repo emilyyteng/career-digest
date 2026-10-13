@@ -1,8 +1,8 @@
 # M5-08: Progress weekly goals block
 
-**Status:** Draft (acceptance criteria drafted 2026-10-13; waits on M5-05 and open questions 2–3)
-**Blocked by:** M5-05 (uncapped LC progress, so 12/10 is verified with real data; decided 2026-10-13). M5-06 done
-**Implements:** R5.3, R5.4, R5.5 (Progress), R5.13 (label clears), R5.14 (display) (from `../../spec.md`)
+**Status:** Draft (streak display criteria wait on M5-07 Q5; everything else is final)
+**Blocked by:** M5-05 (uncapped LC progress and the weekly-streak count, so this UI is verified with real data), M5-01 (removes the weekly stepper, so this block never handles LeetCode logging), M5-07 (Q5 designs the weekly-streak display). Decided 2026-10-13; M5-06 done
+**Implements:** R5.3, R5.4, R5.5 (Progress), R5.13 (label clears), R5.14 (display), R5.28 (Progress display) (from `../../spec.md`)
 **Type:** build
 
 ## What to build
@@ -20,6 +20,9 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 - Bar: fills to the target. Past the target it stays full and shows a `+N` tail (12/10 → `+2`).
 - The target field keeps today's behavior: a positive whole number, committed on blur; an invalid value reverts.
 
+- No LeetCode stepper: M5-01 already moved logging to the Progress LeetCode card. The row updates without a reload after each LeetCode change.
+- **Weekly streak (R5.28):** each goal (LC and apps) shows its current run of met weeks, read from M5-05's records, as designed in M5-07 Q5. Display only; no points.
+
 **Apps goal row**
 
 - Head line: `Weekly apps`, `done/total`, pace text (same rules as LC), and a bar. With 0 tagged: no bar and no pace, just `No tagged applications. Tag application tasks as “Target this week” on Tasks.`
@@ -32,12 +35,11 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 - A new week's LC row starts with no label, while the target still carries forward (R5.13). Past weeks keep their label in the database, but it isn't shown anywhere.
 - The label shows only in this block and in the Home target row (M5-09). Home's compact hero block doesn't show it.
 
-**Look (`docs/design-system.md` → Interim decisions):** flat; Save is a tinted purple primary; Cancel, `+ Add label` and `Edit label` are ghost buttons. These come from one shared set of interim button classes built on `.secondary` (tinted primary, ghost; decided 2026-10-13). Whichever ticket needs them first adds them, reused by M5-01, M5-02 and M5-09, and logs them in the F09 spec's Current behavior table for F09's pass. The target field keeps today's size (logged in F09).
+**Look (`docs/design-system.md` → Interim decisions):** flat; Save is a tinted purple primary; Cancel, `+ Add label` and `Edit label` are ghost buttons. These come from one shared set of interim button classes built on `.secondary` (tinted primary, ghost; decided 2026-10-13). M5-01 adds them and logs them in F09; this ticket, M5-09 and M5-02 reuse them. The target field keeps today's size (logged in F09).
 
 **Not in this ticket:**
-- The LC stepper and its type × tier control (M5-01).
-- Uncapping LC progress (M5-05 item 5; this ticket waits for it).
-- The weekly streak display (open question 3: Proposed to move into this ticket).
+- The LC stepper and its type × tier control (M5-01, which also removes the old weekly stepper from this block).
+- Uncapping LC progress and the weekly-streak count (M5-05; this ticket waits for them).
 - Home's compact block and target rows (M5-09).
 
 ## Acceptance criteria
@@ -63,6 +65,10 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 - [ ] 12/10, reached through the app, shows `12/10`, `met`, a full bar and a `+2` tail.
 - [ ] Pace text has normal weight in every state.
 
+**Weekly streak**
+- [ ] Both goals show their current run of met weeks from M5-05's API, in M5-07 Q5's design. (Finalize the wording and placement after M5-07.)
+- [ ] A goal with no current run shows what M5-07 decides (nothing, or a zero state).
+
 **Target field**
 - [ ] It sits at the right end of the label line, in both the reading and the editing state, and with a 50-character label (wrapping allowed on narrow screens).
 - [ ] Changing the target updates the count, bar and pace without a reload. 0, negative or non-whole values revert.
@@ -73,18 +79,15 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 
 ## Open questions
 
-Decided 2026-10-13:
+None. All decided 2026-10-13:
 
-- **Waits for M5-05** (was questions 1 and 3): build the data and API first, so this UI is verified against real data. 12/10 comes from M5-05's uncapping.
-- **Interim buttons** (was 4): one shared set of tinted purple primary and ghost classes, logged in F09.
+- **Waits for M5-05** (was 1): build the data and API first, so this UI is verified against real data. 12/10 comes from M5-05's uncapping.
+- **Interim buttons** (was 4): one shared set of tinted purple primary, ghost and toggle classes, added by M5-01 and logged in F09.
 - **Apps members** (was 5): link to the task, green `applied` tag, applied listed last, no checkbox or untag (spec R5.4).
 - **Target field size** (was 6): today's size, logged in F09.
 - **Character count** (was 7): user-visible characters.
-
-Still open (depend on the M5 build order):
-
-2. **The weekly stepper until M5-01.** M5-06 Q1 makes this block's LC row read-only, with the one LC control in the LeetCode card (M5-01). If this ticket ships first, it either keeps today's weekly stepper (M5-01 then comes back to remove it) or removes it (no way to log weekly progress until M5-01). Proposed: build M5-01 first; it removes the weekly stepper as part of replacing both controls, and this ticket never touches the stepper.
-3. **The weekly streak display (R5.28) in this block.** No build ticket owns it. Proposed: this ticket owns it and also waits on M5-07 Q5 for its design, so the block is built once.
+- **Weekly stepper** (was 2): M5-01 comes first and removes it; this ticket never touches LeetCode logging.
+- **Weekly streak display** (was 3): owned here. Its look comes from M5-07 Q5, so this ticket waits on M5-07.
 
 ## Reuse notes
 

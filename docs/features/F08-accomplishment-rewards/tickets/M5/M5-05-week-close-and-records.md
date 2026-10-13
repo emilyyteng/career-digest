@@ -2,12 +2,12 @@
 
 **Status:** Ready
 **Blocked by:** M4-01 (done: one mark-applied hook for weekly apps progress)
-**Implements:** R5.7, R5.8, R5.9, R5.11, R5.12, R5.14, R5.15, R5.22, R5.23, R5.24, R5.28 (data), B1 (from `../../spec.md`)
+**Implements:** R5.7, R5.8 (data; display is M5-15), R5.9, R5.11, R5.12, R5.14, R5.15, R5.22, R5.23, R5.24, R5.28 (data), B1 (from `../../spec.md`)
 **Type:** build
 
 ## What to build
 
-When a week ends, each goal's result is recorded once, points are awarded from that record, and open app tasks carry forward. Everything after it (the congrats banner, the completion log entry, streaks of met weeks) reads the record instead of recomputing.
+When a week ends, each goal's result is recorded once, points are awarded from that record, and open app tasks carry forward. Everything after it (the congrats banner, the completion log entries in M5-15, streaks of met weeks) reads the record instead of recomputing.
 
 1. **A stored week record per goal:** target, progress (or done/total for apps), whether it was met, the points awarded, and when it closed. Today nothing stores a week's result: `weekly_goal_members` allows a task in only one week (unique `task_id`, migration 021), and carry-over moves it out of last week ([`weeklyGoals.ts` L246–266](../../../../../apps/api/src/weeklyGoals.ts)).
 2. **Closing (R5.23):** the first request after a week ends closes every unclosed week, oldest first, then carries open tagged tasks into the current week. This also fixes stranded members after a week with no visits. A closed week isn't closed twice, even with two requests at once.
@@ -16,12 +16,12 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 5. **LC progress past the target (R5.14):** stop capping progress at the target ([`weeklyGoals.ts` L304–321](../../../../../apps/api/src/weeklyGoals.ts)).
 6. **Apps membership (R5.24):** untagging an open task shrinks the goal; a deleted tagged task drops out.
 7. **Start and switch-over (R5.22):** records start with the week this ships. Earlier weeks are never closed or scored. In the switch-over week, a flat +100 already paid the old way isn't paid again.
-8. **Completion log (R5.8):** each closed week adds one entry per goal (for example `Apps 6/10`, `LC 12/10`, with its points) to the completions diary ([`completionsDiary.ts`](../../../../../apps/api/src/completionsDiary.ts)) as a new kind. Its look comes from M5-06.
+8. **Completion log data (R5.8):** the completions diary API ([`completionsDiary.ts`](../../../../../apps/api/src/completionsDiary.ts), `GET /progress/completions`) returns each closed week as one entry per goal, of a new kind `weekly` (`CompletionKind`, L6). Each entry carries the goal (apps or LC), progress or done, target, whether it was met, points awarded, the week it covers, and the close date it's listed on. The ledger rows and filter tab are M5-15.
 9. **After close (R5.23):** a closed week's record is fixed. A weekly solve logged late counts toward the current week; a carried-over task counts toward the week it's completed in.
 10. **Weekly-goal streak (R5.28):** expose each goal's current run of met weeks from the records, for display only (no points).
 11. **Local time zone everywhere (B2, 2026-10-13):** every request that reads, scores or closes weeks uses the browser's time zone (`tz`), never a UTC fallback. Today the Tasks and Jobs mark-applied calls send no `tz` (`completeTask` and `createApplication` in [`api.ts`](../../../../../apps/web/src/api.ts)), so their weekly check runs in UTC ([`routes.ts` `requestTimezone`](../../../../../apps/api/src/routes.ts)). The web sends `browserTz()` on those calls. (Proposed: a weekly read without a valid `tz` is rejected rather than defaulting to UTC.)
 
-**Completion log design (M5-06 verdict, Q5 variant A, 2026-10-13):** ledger rows of kind `weekly` on the close day, plus a `weekly` filter tab. Titles are `Apps 6/10` and `LC 12/10`. Meta: `Week of Oct 5 · 6 × 20` (missed), `Week of Oct 5 · 12 × 20 + 100 · target met` (met), `Week of Oct 5 · no tagged applications` (0/0, which gets an entry with no points). Reference: `/prototype/f08/weekly/weekly-record`.
+This ticket is backend only (split 2026-10-13). Item 11 changes web API calls but no UI.
 
 ## Acceptance criteria
 
@@ -34,7 +34,7 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 - [ ] No weekly points are awarded when a target is hit mid-week, from any path.
 - [ ] LC progress can exceed the target and is shown as such by the API.
 - [ ] The switch-over week doesn't pay the flat bonus twice; weeks before it get no record.
-- [ ] Closed weeks appear in the completions diary, one entry per goal.
+- [ ] `GET /progress/completions` returns one `weekly` entry per goal per closed week, on its close date, with goal, progress, target, met and points (0/0 apps included, with 0 points).
 - [ ] After close, no action changes a closed week's record or points; a late weekly solve raises the current week instead.
 - [ ] Each goal's run of consecutive met weeks is available from the API.
 - [ ] Mark applied from Tasks and Jobs sends the browser's time zone, so weekly apps progress and scoring use local weeks.
@@ -48,7 +48,6 @@ Extend `weeklyGoals.ts` (`ensurePair` is the natural place to close weeks before
 
 - [ ] Acceptance criteria met and checked
 - [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (completion log entry)
 - [ ] Reuse check done
 - [ ] Committed as `F08 M5-05: …`
 - [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**

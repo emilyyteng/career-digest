@@ -1,8 +1,8 @@
 # M5-01: Log LeetCode as weekly or misc, by difficulty tier, through one write path
 
-**Status:** Draft (open: spec Q32)
-**Blocked by:** (none)
-**Implements:** R5.14, R5.17, R5.20, R8.3 (function only; visual polish stays in M8) (from `../../spec.md`)
+**Status:** Ready (after M5-05)
+**Blocked by:** M5-05 (build order, 2026-10-13: both change `setLeetcodeDaily`; M5-05 removes the instant weekly bonus and the cap first, so this ticket writes the single path once)
+**Implements:** R5.10, R5.14, R5.17, R5.20, R8.3 (function only; visual polish stays in M8) (from `../../spec.md`)
 **Type:** build
 
 ## Found during (bug tickets only)
@@ -24,7 +24,7 @@ LeetCode solves come in two types, **weekly** (part of the week's planned proble
 
 - Every change, of either type, goes through one server function that:
   - updates the day's LeetCode count
-  - syncs LeetCode points at the tier's value (Q32), reversing on decrement
+  - syncs LeetCode points at the tier's value (R5.20: easy +20, medium +30, hard +50), reversing on decrement
   - returns the points change so the UI can show the banner
 - A weekly change also updates the week's LC progress. That progress can exceed the target (R5.14).
 - **Storage (user, 2026-10-13):** the type is not stored per day. A day stores its LeetCode counts per tier; the week stores its LC progress, and the week-close record keeps count out of target (R5.8).
@@ -38,32 +38,35 @@ LeetCode solves come in two types, **weekly** (part of the week's planned proble
 
 **Design (M5-06 verdict, Q1 variant A, 2026-10-13):** one control in the Progress LeetCode card: a weekly/misc switch (blue when active, per Interim decisions), then easy/medium/hard steppers showing today's per-tier counts. A decrement removes that tier, of the type the switch shows. It replaces both of today's steppers, so the weekly block's LC row becomes read-only. Reference: `/prototype/f08/weekly/lc-stepper`.
 
-## Acceptance criteria
+- **Stepper placement:** the new control lives in the Progress LeetCode card ([`ProgressPage.tsx` L485–492](../../../../../apps/web/src/features/progress/ProgressPage.tsx)). This ticket removes the weekly block's stepper ([`WeeklyGoalsBlock.tsx` L60–80](../../../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx)); the block's LC row keeps its count, bar, pace and target field, and M5-08 rebuilds the block later without touching LeetCode logging.
+- **The switch:** weekly is selected when the page loads, and it stays as chosen while the page is open (Proposed).
+- **Interim button classes (decided 2026-10-13):** this ticket adds the shared interim classes from `docs/design-system.md` → Interim decisions: a tinted purple primary, a ghost button, and a segmented toggle whose active option uses the goal-bar blue. They're built on `.secondary` so the global `button:not(...)` chain doesn't apply. M5-08, M5-09 and M5-02 reuse them. Log them in the F09 spec's Current behavior table for F09's pass.
+- **R5.10 check:** before this ticket closes, the user logs a few solves of each type and tier on Progress and confirms that logging feels right with points.
 
-(Draft. Finalize after Q32.)
+## Acceptance criteria
 
 - [ ] +1 and −1 on either type each call the same server function; there's no other code path that writes LeetCode counts or LeetCode points.
 - [ ] +1 weekly raises today's count for the tier, weekly progress and points by one solve at its tier's value; +1 misc raises today's count for the tier and points only.
+- [ ] Tier values: easy +20, medium +30, hard +50. The banner shows that amount, and −1 reverses the same amount.
 - [ ] −1 removes one solve of the chosen tier and reverses that tier's points; no tier's count goes below 0.
 - [ ] Misc −1 never changes weekly progress, even when it leaves the day's count below that day's weekly solves.
 - [ ] Weekly progress can exceed the target.
-- [ ] The points banner shows after every LeetCode change that moves points, wherever the stepper is (Progress and Home). Today no LeetCode change shows one.
+- [ ] The points banner shows after every LeetCode change that moves points, from the Progress LeetCode card and from History.
 - [ ] LeetCode 1 → 0 → 1 → 0 on one day: the banner shows each of the four changes (moved here from M4-03, 2026-10-13).
 - [ ] History edits a day's count per tier, without a per-type control.
 - [ ] Past days keep their existing points; no migration rewrites them.
+- [ ] Progress has exactly one LeetCode logging control, in the LeetCode card: a weekly/misc switch and easy, medium and hard steppers showing today's per-tier counts. The weekly block has no stepper; its LC row still shows the count, bar, pace and target field, and updates without a reload after each change.
+- [ ] A tier's − is disabled at 0. With weekly selected, − is also disabled when weekly progress is 0.
+- [ ] The switch's active option uses the interim blue toggle; buttons use the interim classes, which are logged in the F09 spec.
+- [ ] The day total (strip, heatmaps, Home) equals easy + medium + hard.
+- [ ] R5.10: the user has tried logging with points on Progress and confirmed it feels right (or the changes they asked for are made).
 - [ ] Tests cover both types, each tier, decrements, the day total, and that misc changes don't touch weekly progress.
-
-## Design questions (prototype tickets only)
-
-To be settled in the M5 design pass:
-
-1. How type × tier appears in the Progress weekly block and the daily strip, with the fewest clicks per solve.
-2. How a decrement picks its tier.
 
 ## Reuse notes
 
 - `syncLeetcodeDailyPoints` and `setLeetcodeDaily` become, or feed, the single write path.
 - `LeetcodeStepper` ([`apps/web/src/features/progress/LeetcodeStepper.tsx`](../../../../../apps/web/src/features/progress/LeetcodeStepper.tsx)) is the existing control.
+- Prototype reference: `apps/web/src/prototype/f08-weekly/LcStepperPrototypePage.tsx` (variant A; don't import it).
 - `EarnFlash` is the banner.
 - Coordinate with M4-02 and M4-03, which change how reversed earns are stored and fix re-raising a day's count from 0. Keep M4-03's LeetCode acceptance criteria passing.
 

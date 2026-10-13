@@ -1,7 +1,7 @@
 # M5-09: Weekly goal rows under Home Targets
 
-**Status:** Draft (M5-06 verdict in; finalize acceptance criteria before building)
-**Blocked by:** (none; M5-06 done)
+**Status:** Draft (after M5-08; finalize acceptance criteria before building)
+**Blocked by:** M5-08 (the LC label API; decided 2026-10-13). M5-06 done
 **Implements:** R5.5 (Home), R5.6, R5.7, R5.24 (Home row) (from `../../spec.md`)
 **Type:** build
 

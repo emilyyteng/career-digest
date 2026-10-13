@@ -232,7 +232,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   - **Applications store their time on the application,** since some have no task (2026-10-13). An application task's actual time shows the application's.
   - **Existing data:** minutes on reflections written with an application or interview step are copied onto that work if it has no time yet. All other reflection minutes stay in the database, unused, so no history is lost. Past earns keep their points, including misc earns that got 15 for blank time. An earn is re-scored under the current formula only when its work's time is next edited, or when a reopened misc task is re-completed (2026-10-13). For example, a task that earned 15 for blank time and is re-completed blank goes to 10; edited to 30 minutes, it goes to 40.
   - Applications never reverse (R4.10): a lower time is an adjust down, not a reverse. Re-finishing an interview step still earns nothing again (R4.11).
-- **R5.20** (Established; values pending Q32) LeetCode points vary by difficulty tier (easy, medium, hard). Tiers are built in M5, in the same stepper rework as R5.17, because they change points from then on; their visual polish is M8 (R8.3). Existing untiered counts aren't migrated and keep their points. Wherever past days are shown by tier, they count as medium. Ticket: M5-01.
+- **R5.20** (Established; values 2026-10-13, Q32) LeetCode points vary by difficulty tier: easy +20, medium +30, hard +50 per solve. Tiers are built in M5, in the same stepper rework as R5.17, because they change points from then on; their visual polish is M8 (R8.3). Existing untiered counts aren't migrated and keep their points. Wherever past days are shown by tier, they count as medium. Ticket: M5-01.
 - **R5.21** (Established 2026-10-13) The points breakdown splits its single task row by task category (School, Reading, Writing, Admin, custom), because tasks make up most of the total and a single row isn't informative. A task's points belong to its category at completion, recorded on the earn. Earns from before M5-03 fall back to the task's current category (2026-10-13). Earns whose task was since deleted go to one "Deleted tasks" row, shown only when it isn't 0 (2026-10-13). Ticket: M5-03.
 
 **Streaks and achievements**
@@ -272,7 +272,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   - History can edit a past day's count per tier, but never per type.
   - The UI shows the new counts and the points banner immediately.
   - This replaces R0.4 and fixes the weekly-stepper points bug. Ticket: M5-01.
-- **R5.10** (Established) Check that LeetCode logging feels right with points once R5.17 lands.
+- **R5.10** (Established) Check that LeetCode logging feels right with points once R5.17 lands. Ticket: M5-01 (the user tries it before the ticket closes).
 
 ### M6: Board departures log (Not started)
 
@@ -323,7 +323,7 @@ M8 follows M7, so Progress is redesigned knowing what Rewards covers.
 
 - **RX.1** (Established) Remove the Prototype nav tab (`App.tsx`). Prototypes are reached by URL only.
 - **RX.2** (Established) New F08 prototypes live under `apps/web/src/prototype/f08-<topic>/`, at routes `/prototype/f08/<topic>`, per `AGENTS.md`.
-- **RX.3** (Established; clarified 2026-10-13) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it: `f08-weekly` stays until M5-01, M5-02, M5-05, M5-08 and M5-09 are Done. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
+- **RX.3** (Established; clarified 2026-10-13) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it: `f08-weekly` stays until M5-01, M5-02, M5-05, M5-08, M5-09 and M5-15 are Done. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
 
 ## Behavior rules
 
@@ -442,7 +442,6 @@ Nothing that depends on an open question may be implemented.
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
 | Q7 | Keep the completion flourish at all? You lean toward removing it after the first prototype. If kept: which events trigger it, and does it replace `EarnFlash`? | R5.2 | M5 design |
-| Q32 | LeetCode tier point values (easy, medium, hard). Medium is the reference, since past solves count as medium (today +30). Settled during M5 work, before M5-01's build. | R5.20, M5-01 | M5-01 build |
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
 | Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
 | Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (more once R5.31 counts application and interview time without a reflection and gives misc tasks a +10 base) (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
@@ -451,7 +450,7 @@ Nothing that depends on an open question may be implemented.
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (46)</summary>
+<summary>Resolved questions (47)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -483,6 +482,7 @@ Nothing that depends on an open question may be implemented.
 | Q30 | Which logs move to Rewards | The points log, with an earn/pull/both filter; completions stay on Progress (2026-10-13) | R7.8, R8.2 |
 | Q31 | Prototype deletion vs milestone close | The feature, not the milestone, waits on deletion; `AGENTS.md` updated (2026-10-13) | RX.3 |
 | Q32 (part) | Migrate existing LC counts to tiers? | No (2026-10-13). Point values stay open | R5.20 |
+| Q32 | LeetCode tier point values | Easy +20, medium +30 (today's value, so past solves counted as medium are unchanged), hard +50 (2026-10-13) | R5.20, M5-01 |
 | Q33 | Re-completing a reopened misc task | Earns by the change in actual time, like an actual-time edit; the same time nets 0 (2026-10-13) | R4.13, M4-03 |
 | Q34 | Difficulty tiers in M5 or M8? | Built in M5, since they change points going forward; polish in M8 (2026-10-13) | R5.20, R8.3, M5-01 |
 | Q36 | Name for the non-weekly LeetCode type | "misc": weekly + misc (2026-10-13) | R5.17 |
@@ -536,4 +536,5 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Time belongs to the work, not the reflection (R5.31). Applications and interview steps get their own editable time, which counts with or without a reflection; every reflection is a flat +20 note. The Progress summary counts reflections. This replaces R5.19 and R5.30 and raises application and interview earns.
 - **2026-10-13:** Blank time adds 0 for every kind of work; the misc 15-minute default is removed so there's one consistent baseline. Misc tasks get a flat +10 base, like applications' +5. Application time is stored on the application. Old earns are re-scored only when their time is next edited or a reopened misc task is re-completed. Study time without a task is logged as a misc task.
 - **2026-10-13:** Application merges keep everything from the removed application on the survivor, including its time and its earn when the survivor has none; points never change at a merge (R2.22, M2-02, which also covers M2-01).
-- **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs.
+- **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs. (Superseded later the same day: F09 M0 waits until after M7 and M8; M5 uses interim decisions in `docs/design-system.md`.)
+- **2026-10-13:** LeetCode tiers are worth easy +20, medium +30, hard +50 (Q32). M5 build order: M5-03, M5-05, M5-15, M5-01, M5-10, M5-07, M5-08, M5-09, M5-02, M5-12, M5-11, M5-13. Data and API come before the UI that depends on them, and each surface is built once. M5-05 is split: week close stays backend-only, and the completion-log entries move to M5-15. M5-08 owns the Progress weekly-streak display (R5.28), designed in M5-07.

@@ -1,7 +1,7 @@
 # M5-10: Daily LC and apps streaks
 
-**Status:** Ready (after M4-03)
-**Blocked by:** M4-03 (LC day earns must survive going to 0 and back)
+**Status:** Ready (after M5-01)
+**Blocked by:** M5-01 (the LC streak's first-solve and back-to-0 hooks go in its single LeetCode write path, reading per-tier day counts; decided 2026-10-13). M4-03 done
 **Implements:** R5.16, R5.25 (from `../../spec.md`)
 **Type:** build
 

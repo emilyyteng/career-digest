@@ -10,8 +10,8 @@ export const TIERS: Tier[] = ["easy", "medium", "hard"];
 export const TIER_LABEL: Record<Tier, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
 export const TIER_SHORT: Record<Tier, string> = { easy: "E", medium: "M", hard: "H" };
 
-/** Placeholder tier points until Q32 is settled; medium matches today's +30. */
-export const TIER_POINTS: Record<Tier, number> = { easy: 20, medium: 30, hard: 45 };
+/** Tier points (spec R5.20, Q32); medium matches the pre-tier +30. */
+export const TIER_POINTS: Record<Tier, number> = { easy: 20, medium: 30, hard: 50 };
 
 export const WEEKLY_UNIT_POINTS = 20;
 export const WEEKLY_MET_BONUS = 100;

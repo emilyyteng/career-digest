@@ -1,7 +1,7 @@
 # M5-02: Weekly targets congrats banner on Home
 
-**Status:** Draft (waits on M5-05; M5-06 verdict in)
-**Blocked by:** M5-05 (M5-06 done)
+**Status:** Draft (waits on M5-05, M5-07; M5-06 verdict in)
+**Blocked by:** M5-05 (week records and streak count), M5-07 (Q5 streak wording). M5-06 done
 **Implements:** R5.18 (from `../../spec.md`)
 **Type:** build
 

@@ -1,7 +1,7 @@
 # M5-11: Count-based achievements
 
 **Status:** Draft (display waits on M5-07)
-**Blocked by:** M5-07
+**Blocked by:** M5-07 (display and unlock moment), M5-01 (LC solve counts across tiers)
 **Implements:** R5.16, R5.26 (from `../../spec.md`)
 **Type:** build
 
