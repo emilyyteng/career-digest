@@ -1,6 +1,6 @@
 # M4-03: Reversed earns can be revived: re-completed tasks and re-raised LeetCode days
 
-**Status:** Done (LeetCode banner question open)
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R4.4 (LeetCode row), R4.12, R4.13 (from `../../spec.md`)
 **Type:** bug
@@ -49,7 +49,7 @@ Fix this once in the ledger (a way to reinstate a superseded earn), not separate
 - [x] The completion banner shows the net change, not a fresh full earn. (See verification notes: the banner states both.)
 - [x] LeetCode 1 → 0 → 1 on the same day: the day's points equal one solve, and the `leetcode` category total matches.
 - [x] LeetCode 2 → 0 → 3 on the same day: the day's points equal three solves.
-- [ ] LeetCode 1 → 0 → 1 → 0: the day's points are 0; every step appears in the points log ✔, and the points banner shows each change ✘ (no LeetCode banner exists; see verification notes).
+- [x] LeetCode 1 → 0 → 1 → 0: the day's points are 0 and every step appears in the points log. The banner part moved to M5-01 (user, 2026-10-13), since no LeetCode banner exists yet.
 - [x] The balance equals the sum of category totals after each sequence above.
 - [x] Tests cover each case above, for both misc tasks and LeetCode.
 
@@ -73,6 +73,6 @@ Fix this once in the ledger (a way to reinstate a superseded earn), not separate
 - Misc: `awardMiscTaskComplete` checks for a superseded earn first and reinstates it at the misc formula's value (`miscTaskBreakdown`, the same formula `adjustTaskCompleteActual` uses). The reflection add-on stays if the original earn had one or the new completion has one.
 - LeetCode: `syncLeetcodeDailyPoints` reinstates the day's superseded earn when the count rises above 0.
 - Points log for complete 30 → reopen → complete 45: earn +30, reverse −30, adjust +45 "Essay complete again · +45 points (30 before reopen, net +15)". The completion banner shows that same message, so it gives the net change and the amount just added. Reopen still has no banner.
-- Open: no banner exists for LeetCode changes (`PATCH /api/progress/leetcode` returns no points info), so "the points banner shows each change" isn't met for LeetCode. Every step is in the points log. Adding a LeetCode banner is new UI, so it's raised with the user rather than built here.
+- Open: no banner exists for LeetCode changes (`PATCH /api/progress/leetcode` returns no points info), so "the points banner shows each change" isn't met for LeetCode. Every step is in the points log. The user moved the banner to M5-01 (2026-10-13).
 - Tests: 8 integration tests in `points.api.test.ts` (`reversed earns can be reinstated (M4-03)`). All 8 fail against the previous `pointsAwards.ts` and pass with the fix (checked by running both).
 - Full suite: 204 tests. The `career_digest_test` database can't run integration tests at the moment (see Issues found in the report: `postings` has hit Postgres's 1600-column limit), so the suite was run on a fresh scratch database `career_digest_scratch_test`. There, about 1 run in 2–3 has a single random 404 in an unrelated file. The same happens on the commit before this change (2 of 5 runs), so it's existing flakiness.

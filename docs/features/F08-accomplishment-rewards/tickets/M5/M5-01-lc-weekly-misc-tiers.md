@@ -45,7 +45,8 @@ LeetCode solves come in two types, **weekly** (part of the week's planned proble
 - [ ] −1 removes one solve of the chosen tier and reverses that tier's points; no tier's count goes below 0.
 - [ ] Misc −1 never changes weekly progress, even when it leaves the day's count below that day's weekly solves.
 - [ ] Weekly progress can exceed the target.
-- [ ] The points banner shows after every LeetCode change that moves points.
+- [ ] The points banner shows after every LeetCode change that moves points, wherever the stepper is (Progress and Home). Today no LeetCode change shows one.
+- [ ] LeetCode 1 → 0 → 1 → 0 on one day: the banner shows each of the four changes (moved here from M4-03, 2026-10-13).
 - [ ] History edits a day's count per tier, without a per-type control.
 - [ ] Past days keep their existing points; no migration rewrites them.
 - [ ] Tests cover both types, each tier, decrements, the day total, and that misc changes don't touch weekly progress.
