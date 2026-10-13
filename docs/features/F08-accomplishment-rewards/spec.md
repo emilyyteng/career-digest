@@ -405,7 +405,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | LC progress is capped at the target | [`weeklyGoals.ts` L304–321](../../../apps/api/src/weeklyGoals.ts), [`WeeklyGoalsBlock.tsx` L62–66](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) | Conflicts R5.14 | Planned M5 change |
 | Progress apps list has checkboxes (completing the task with no modal) and an Untag button | [`WeeklyGoalsBlock.tsx` L82–118](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) | Conflicts R5.4 | Planned M5 change |
 | No LC label, weekly targets on Home, weekly records, congrats banner, partial points, streaks or achievements | none | Conflicts R5.5, R5.6, R5.8, R5.15, R5.16, R5.18 | Planned M5 work |
-| M5 prototypes: two of three weekly-goal variants lack the LC label; Home targets render as overdue | `apps/web/src/prototype/m5/` | Conflicts R5.5, R5.7 | Superseded; redo under RX.2 |
+| M5 weekly-surface prototypes live under the RX.2 path; the superseded `prototype/m5` is deleted | `apps/web/src/prototype/f08-weekly/` | Conforms R5.5, R5.7, RX.2, RX.3 | Verdict in M5-06 (2026-10-13) |
 
 ### M6
 
@@ -426,7 +426,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 |----------|-------|--------|-------|
 | No Prototype nav link; prototypes are reached by URL only | [`App.tsx`](../../../apps/web/src/App.tsx) | Conforms RX.1 | Removed in M5-06 |
 | No production code imports from `prototype/` | `apps/web/src` | Conforms | Deleting prototype folders is safe |
-| The M1, M2 and M4 prototypes are still routed; the M5 and rewards prototypes import `prototype/m4/prototype-m4.css` | `apps/web/src/prototype/`, [`App.tsx` L18–160](../../../apps/web/src/App.tsx) | Conforms RX.3 | Deferred cleanup |
+| The M1, M2 and M4 prototypes are still routed; the F08 weekly and rewards prototypes import `prototype/m4/prototype-m4.css` | `apps/web/src/prototype/`, [`App.tsx` L18–160](../../../apps/web/src/App.tsx) | Conforms RX.3 | Deferred cleanup |
 
 ## Out of scope
 

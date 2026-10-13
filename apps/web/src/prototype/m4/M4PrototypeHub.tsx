@@ -31,7 +31,7 @@ export default function M4PrototypeHub() {
       <p className="prototype-banner">
         M4 throwaway prototypes · Progress Ledger (Completions + Points) and shared
         reflection+minutes. ← / → flips variants.{" "}
-        <Link to="/prototype/m5">M5 hub</Link>
+        <Link to="/prototype/f08/weekly">F08 weekly hub</Link>
         {" · "}
         <Link to="/prototype/m2">M2 hub</Link>
         {" · "}

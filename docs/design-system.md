@@ -12,6 +12,7 @@ The source of truth for visual and interaction conventions in `apps/web`. **Read
 4. **One modal standard.** Every dialog renders inside `ModalLayer` (`apps/web/src/ModalLayer.tsx`). Don't build a backdrop, Escape handling or a discard guard yourself.
 5. **Reuse before adding.** Check the component catalogue below and existing `features/*` components before creating a new visual pattern.
 6. **Unknowns go to the user.** If a needed decision isn't covered here, ask, then record the answer in this file.
+7. **Log styling issues in F09; don't fix them in place.** An inconsistency found while doing other work goes into the Current behavior table of `docs/features/F09-design-system-migration/spec.md`, for F09's app-wide pass. Fix it now only if the ticket can't work without the fix.
 
 ## Principles
 

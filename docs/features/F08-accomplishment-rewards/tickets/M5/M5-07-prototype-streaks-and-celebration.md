@@ -26,7 +26,7 @@ Use the numbers in R5.25 and R5.26 as mock values.
 2. **Streak and achievement surface:** where they're seen before M8 (for example a block on Progress) and how locked, unlocked and next achievements look.
 3. **Unlock moment:** how a streak milestone or achievement is announced (`EarnFlash`, the one-time notice, or something else).
 4. **Completion flourish (Q7):** keep or drop; if kept, which events trigger it and whether it replaces `EarnFlash`.
-5. **Weekly-goal streak display (R5.28):** how "3 weeks in a row" reads in the congrats banner and the Progress weekly block.
+5. **Weekly-goal streak display (R5.28):** how "3 weeks in a row" reads in the congrats banner and the Progress weekly block. The user wants it more visible than M5-06's placeholders (small grey text after the LC title; a mint line in the congrats banner, shown from 2 weeks) (2026-10-13). Design it for both goals, in the chosen M5-06 layouts: Progress block A2 and congrats banner B.
 
 Prototype URL: `/prototype/f08/streaks`
 

@@ -4,7 +4,7 @@
  * Must satisfy R5.3 (bars, counts, pace), R5.4 (apps as a plain list: no
  * checkmarks, no untag), R5.5 (LC-only label, 50 characters), R5.14 (past
  * target) and R5.28 (weekly streak, display only).
- * Verdict so far: variant A; these variants compare where the target field sits.
+ * Verdict (2026-10-13): A2, i.e. variant A with the target on the label line.
  */
 import { useState } from "react";
 import F08Shell, { btn, ParamToggle, useParam, useVariant } from "./F08Shell";
@@ -20,8 +20,8 @@ import {
 import { GoalBar, PaceText } from "./parts";
 
 const VARIANTS = [
-  { key: "A", name: "Chosen A · target below the bar, left" },
-  { key: "A2", name: "A · target right, on the label line above the bar" },
+  { key: "A2", name: "Chosen · target right, on the label line above the bar" },
+  { key: "A", name: "A · target below the bar, left" },
   { key: "A3", name: "A · target right, below the bar" },
 ] as const;
 
@@ -246,7 +246,7 @@ export default function ProgressWeeklyPrototypePage() {
     >
       <WeeklyBlock
         key={`${variant}-${lcKey}-${labelKey}`}
-        placement={PLACEMENT[variant] ?? "below-left"}
+        placement={PLACEMENT[variant] ?? "label-row"}
         initialDone={done}
         initialLabel={initialLabel}
         members={appsKey === "none" ? [] : APP_MEMBERS}

@@ -32,7 +32,7 @@ export default function RewardsPrototypeHub() {
     <section className="prototype-hub">
       <p className="prototype-banner">
         Rewards throwaway prototypes · cat cake gacha. Design only; nothing writes to the points ledger.{" "}
-        <Link to="/prototype/m5">M5 hub</Link>
+        <Link to="/prototype/f08/weekly">F08 weekly hub</Link>
       </p>
       <h2>Rewards · Cat Cake Collection</h2>
       <div className="rw-thumb-strip" aria-hidden>

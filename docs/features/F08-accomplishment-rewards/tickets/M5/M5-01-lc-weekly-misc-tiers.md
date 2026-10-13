@@ -36,6 +36,8 @@ LeetCode solves come in two types, **weekly** (part of the week's planned proble
 - The one-way weekly-to-daily copy (R0.4) is removed.
 - The stepper shows the type and tier clearly and is usable; making it visually appealing is M8 (R8.3).
 
+**Design (M5-06 verdict, Q1 variant A, 2026-10-13):** one control in the Progress LeetCode card: a weekly/misc switch (blue when active, per Interim decisions), then easy/medium/hard steppers showing today's per-tier counts. A decrement removes that tier, of the type the switch shows. It replaces both of today's steppers, so the weekly block's LC row becomes read-only. Reference: `/prototype/f08/weekly/lc-stepper`.
+
 ## Acceptance criteria
 
 (Draft. Finalize after Q32.)

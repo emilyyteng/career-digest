@@ -18,7 +18,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
-| M0 | Agree on visual direction and component rules; record them in `docs/design-system.md`. Runs alongside the F08 M5 design pass, using its prototypes as the test case (2026-10-13) | Not started |
+| M0 | Agree on visual direction and component rules; record them in `docs/design-system.md`. One comprehensive design pass across the whole app, in scoped chunks if needed, after F08 M7 and M8 settle what the rewards and Progress pages contain and how they're laid out (2026-10-13). The F08 M5-06 prototypes are a test case | Not started |
 | M1 | Build the components F08 M5 (Accomplishment, detail pages & rewards) depends on, and migrate only the surfaces F08 M5 touches | Not started |
 | M2+ | Broader migration, scoped later | Not scoped |
 
@@ -48,6 +48,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | `ModalLayer` provides the shared backdrop, Escape handling and dirty-discard guard; nearly every dialog renders inside it | `apps/web/src/ModalLayer.tsx` | Conforms R.4 (layer only) | Inner anatomy (header, body, footer, button order and size) unaudited; likely source of modal inconsistency |
 | Each prototype milestone has its own stylesheet (`prototype-m1.css`, `-m2`, `-m4`, `-m5`, `-rewards`) | `apps/web/src/prototype/` | Conflicts R.2 | |
 | All styles live in one 5,211-line file | `styles.css` | Unspecified | Splitting is Q7 |
+| Number inputs inherit the global `input` padding and size, so a small number field such as the Progress weekly LC target (`.weekly-goal-target-field input`, width 4.5rem) looks too large next to its label | `styles.css` L336–343, L4121 | Conflicts R.1 | Found in the F08 M5-06 review (2026-10-13). Form-field sizes are Q3/Q5 |
 | The Jobs ranking banner stays until dismissed with ×, remembering dismissals per batch in `sessionStorage` (per tab); a successful batch hides on its own after 30 minutes | [`JobsPage.tsx` L114–175](../../../apps/web/src/features/jobs/JobsPage.tsx) | Conflicts R.6 | Checked by reading, 2026-10-13. Moves to the one-time notice once F08 M5-02 defines it |
 
 ## Out of scope (for now)
@@ -72,5 +73,6 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 - **2026-10-12:** Reference doc (`docs/design-system.md`) and migration (this spec) are kept separate: the reference is permanent, the migration is a bounded project.
 - **2026-10-12:** No full-app migration yet; scope M1 from F08 M5's dependencies.
 - **2026-10-13:** M0's questions (Q1–Q5) are settled during the F08 M5 design pass rather than before it. M1 then builds only what M5 needs (at least the one-time notice, the LC stepper and the Home target row).
+- **2026-10-13 (M5-06 close):** M0 waits until F08 M7 and M8 define the rewards and Progress pages, so the whole app's look can be judged together. Until then, styling issues found during other work are logged here (Current behavior) for M0 to resolve, not fixed in place, unless a ticket needs the fix to work.
 - **2026-10-13 (later):** The F08 M5-06 review didn't settle Q1–Q5; they stay in F09. F08 M5 uses interim working decisions (flat, tinted purple primary buttons, blue toggles, pace text never bold), recorded in `docs/design-system.md`. The `:not(...)` chain and the missing raised-surface shadow token stay in F09's scope. The M5-06 prototypes' direction page (`/prototype/f08/weekly/visual-direction`) and its conflicting-patterns audit remain the test case.
 - **2026-10-13:** Banner behavior is standardized. F08 M5-02 defines the one-time notice; F09 owns moving the Jobs ranking banner onto it (R.6).

@@ -30,10 +30,6 @@ const proto = import.meta.env.DEV
       LedgerCompletions: lazy(() => import("./prototype/m4/LedgerCompletionsPrototypePage")),
       LedgerPoints: lazy(() => import("./prototype/m4/LedgerPointsPrototypePage")),
       ReflectionMinutes: lazy(() => import("./prototype/m4/ReflectionMinutesPrototypePage")),
-      M5Hub: lazy(() => import("./prototype/m5/M5PrototypeHub")),
-      M5WeeklyGoals: lazy(() => import("./prototype/m5/WeeklyGoalsPrototypePage")),
-      M5HomeTargets: lazy(() => import("./prototype/m5/HomeTargetsPrototypePage")),
-      M5Celebration: lazy(() => import("./prototype/m5/CelebrationPrototypePage")),
       F08WeeklyHub: lazy(() => import("./prototype/f08-weekly/F08WeeklyHub")),
       F08LcStepper: lazy(() => import("./prototype/f08-weekly/LcStepperPrototypePage")),
       F08ProgressWeekly: lazy(() => import("./prototype/f08-weekly/ProgressWeeklyPrototypePage")),
@@ -140,19 +136,6 @@ export default function App() {
                 <Route
                   path="/prototype/m4/reflection-minutes"
                   element={<ProtoPage page={proto.ReflectionMinutes} />}
-                />
-                <Route path="/prototype/m5" element={<ProtoPage page={proto.M5Hub} />} />
-                <Route
-                  path="/prototype/m5/weekly-goals"
-                  element={<ProtoPage page={proto.M5WeeklyGoals} />}
-                />
-                <Route
-                  path="/prototype/m5/home-targets"
-                  element={<ProtoPage page={proto.M5HomeTargets} />}
-                />
-                <Route
-                  path="/prototype/m5/celebration"
-                  element={<ProtoPage page={proto.M5Celebration} />}
                 />
                 <Route path="/prototype/f08/weekly" element={<ProtoPage page={proto.F08WeeklyHub} />} />
                 <Route

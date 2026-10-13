@@ -53,11 +53,11 @@ export default function F08WeeklyHub() {
       </p>
       <h2>F08 M5 · Weekly goal surfaces</h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        Pick a variant (or a mix) per question. The old <code>/prototype/m5</code> pages are superseded
-        and get deleted after your verdict.
+        Verdict recorded in M5-06 (2026-10-13): Q1 A, Q2 A2, Q3 B, Q4 B, Q5 A, direction W. Kept as the
+        reference for the M5 builds.
       </p>
       {SURFACES.map((s) => (
-        <Link key={s.path} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}?variant=A`}>
+        <Link key={s.path} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}`}>
           <strong>{s.title}</strong>
           <span className="muted">{s.blurb}</span>
         </Link>

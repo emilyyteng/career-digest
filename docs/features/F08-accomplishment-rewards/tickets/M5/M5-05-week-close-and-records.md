@@ -21,6 +21,8 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 10. **Weekly-goal streak (R5.28):** expose each goal's current run of met weeks from the records, for display only (no points).
 11. **Local time zone everywhere (B2, 2026-10-13):** every request that reads, scores or closes weeks uses the browser's time zone (`tz`), never a UTC fallback. Today the Tasks and Jobs mark-applied calls send no `tz` (`completeTask` and `createApplication` in [`api.ts`](../../../../../apps/web/src/api.ts)), so their weekly check runs in UTC ([`routes.ts` `requestTimezone`](../../../../../apps/api/src/routes.ts)). The web sends `browserTz()` on those calls. (Proposed: a weekly read without a valid `tz` is rejected rather than defaulting to UTC.)
 
+**Completion log design (M5-06 verdict, Q5 variant A, 2026-10-13):** ledger rows of kind `weekly` on the close day, plus a `weekly` filter tab. Titles are `Apps 6/10` and `LC 12/10`. Meta: `Week of Oct 5 · 6 × 20` (missed), `Week of Oct 5 · 12 × 20 + 100 · target met` (met), `Week of Oct 5 · no tagged applications` (0/0, which gets an entry with no points). Reference: `/prototype/f08/weekly/weekly-record`.
+
 ## Acceptance criteria
 
 - [ ] Closing a week with 6/10 apps done records 6/10, not met, +120.

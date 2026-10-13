@@ -1,7 +1,7 @@
 # M5-09: Weekly goal rows under Home Targets
 
-**Status:** Draft (waits on the M5-06 verdict)
-**Blocked by:** M5-06
+**Status:** Draft (M5-06 verdict in; finalize acceptance criteria before building)
+**Blocked by:** (none; M5-06 done)
 **Implements:** R5.5 (Home), R5.6, R5.7, R5.24 (Home row) (from `../../spec.md`)
 **Type:** build
 
@@ -13,6 +13,8 @@ Home Upcoming's Targets section shows the week's goals as rows on Sunday, styled
 - The LC row includes the label when set: `Weekly LC goal · Grind 75 Week 4` (R5.5).
 - A goal's row disappears once that week's target is hit (R5.6). There's no apps row when no tasks are tagged (R5.24).
 - Rows follow the 1-week / 2-week range: Sunday of the current week only (next week's goals don't exist yet).
+
+**Design (M5-06 verdict, Q3 variant B, 2026-10-13):** each row has its title, a mini bar, `done/total` and pace text (never bold) in the meta line, and the Sunday date plus `resets Monday` on the right, with no countdown. The hero's "This week" bars are removed. Clicking a row opens Progress. Reference: `/prototype/f08/weekly/home-targets`.
 
 ## Acceptance criteria
 
