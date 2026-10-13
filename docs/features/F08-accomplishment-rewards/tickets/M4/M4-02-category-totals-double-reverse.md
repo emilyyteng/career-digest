@@ -1,6 +1,6 @@
 # M4-02: Category totals subtract a reversed earn twice
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R4.1 (from `../../spec.md`)
 **Type:** bug
@@ -28,11 +28,11 @@ Preferred fix: stop rewriting the earn's `amount` in `reverseEarn`, the same way
 
 ## Acceptance criteria
 
-- [ ] Earn, then reverse: the category total is 0 and the balance is unchanged from before the earn.
-- [ ] Earn, adjust, then reverse: the category total is 0.
-- [ ] Existing reversed earns in the database are repaired by a migration, and the summary of the real data then sums to the balance (before M7 spend events exist).
-- [ ] The points log still shows the earn and its reverse as two entries.
-- [ ] A test asserts that the category totals sum to the balance after a mix of earns, adjusts and reverses.
+- [x] Earn, then reverse: the category total is 0 and the balance is unchanged from before the earn.
+- [x] Earn, adjust, then reverse: the category total is 0.
+- [x] Existing reversed earns in the database are repaired by a migration, and the summary of the real data then sums to the balance (before M7 spend events exist).
+- [x] The points log still shows the earn and its reverse as two entries.
+- [x] A test asserts that the category totals sum to the balance after a mix of earns, adjusts and reverses.
 
 ## Reuse notes
 
@@ -42,14 +42,19 @@ Coordinate with M4-03, which changes what happens after a reversal.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
-- [ ] Reuse check done
-- [ ] Committed as `F08 M4-02: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run build` passes
+- [x] `npm test` passes (known baseline aside)
+- [x] API typecheck: no new errors
+- [x] Reuse check done
+- [x] Committed as `F08 M4-02: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+- `reverseEarn` now only merges `superseded`, `reversed_amount` and `clawback_applied` into the earn's meta; `amount` keeps the original value.
+- Migration `027_repair_reversed_earn_amounts.sql` restores `amount` on superseded earns stored as 0. It uses `meta.original_amount` first and falls back to `meta.reversed_amount`: for an earn that was adjusted before being reversed, `reversed_amount` is the adjusted value, while the stored `amount` must be the original one (adjust events carry the delta). Idempotent; re-runs match nothing.
+- Readers checked: `completionsDiary.ts` and `tasks.ts` read `effectiveEarnAmount` / `current_amount` and skip superseded earns, so they're unaffected. `LedgerPointsPanel.tsx` shows `amount`, so a reversed earn now shows its original +amount next to the −amount reverse, which is what the log should say.
+- Tests added in `points.api.test.ts`: earn then reverse; earn, adjust, reverse; mixed earns/adjusts/reverses across task and LeetCode with category totals summing to the balance; migration 027 repairs a zeroed earn and is a no-op on a second run. The first three fail against the old `reverseEarn` and pass with the fix (checked by running both).
+- Real data (dev database, read-only query, 2026-10-13): 0 zeroed reversed earns, so 027 changes nothing there; balance 1765 equals the sum of all events.
+- Full `npm test` 196/196, `npm run build` passes, API typecheck at the 17-error MT-01 baseline.

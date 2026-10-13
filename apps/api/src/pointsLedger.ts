@@ -222,7 +222,8 @@ export async function recordEarn(
 
 /**
  * Reverse an earn (uncomplete, LC down, etc.). Emits a reverse event; clamps to ≥0.
- * Marks earn meta.superseded = true. Idempotent if already fully reversed.
+ * Marks earn meta.superseded = true but keeps earn.amount, so category
+ * SUM(amount) nets the earn and its reverse. Idempotent if already fully reversed.
  */
 export async function reverseEarn(
   db: Queryable,
@@ -279,8 +280,7 @@ export async function reverseEarn(
 
   await db.query(
     `UPDATE points_events
-     SET amount = 0,
-         meta = meta || $2::jsonb
+     SET meta = meta || $2::jsonb
      WHERE id = $1`,
     [
       earn.id,

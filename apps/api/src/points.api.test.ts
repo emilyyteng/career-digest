@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { pool } from "./db.js";
 import {
@@ -16,6 +17,13 @@ import { POINTS } from "./pointsFormulas.js";
 import { apiClient } from "./test/apiClient.js";
 import { seedTask, truncateAll } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
+
+function categoryPoints(
+  summary: Awaited<ReturnType<typeof getPointsSummary>>,
+  category: string,
+): number {
+  return summary.categories.find((c) => c.category === category)?.points ?? 0;
+}
 
 describe.skipIf(!integrationReady)("points ledger", () => {
   it("recordEarn accumulates balance and is idempotent per source", async () => {
@@ -99,6 +107,119 @@ describe.skipIf(!integrationReady)("points ledger", () => {
     expect(clamped.requestedDelta).toBe(-20);
     expect(clamped.appliedDelta).toBe(-20);
     expect(await getPointsBalance(pool)).toBe(0);
+  });
+
+  it("a reversed earn nets to 0 in its category", async () => {
+    await truncateAll();
+    await recordEarn(pool, {
+      category: "task",
+      amount: 30,
+      message: "done",
+      sourceType: "task_complete",
+      sourceId: "t-rev",
+    });
+    await reverseEarn(pool, "task_complete", "t-rev", "reopened");
+
+    expect(await getPointsBalance(pool)).toBe(0);
+    const summary = await getPointsSummary(pool);
+    expect(categoryPoints(summary, "task")).toBe(0);
+
+    const events = await listPointsEvents(pool, { limit: 10 });
+    expect(events.find((e) => e.kind === "earn")?.amount).toBe(30);
+    expect(events.find((e) => e.kind === "reverse")?.amount).toBe(-30);
+  });
+
+  it("earn, adjust, then reverse nets to 0 in its category", async () => {
+    await truncateAll();
+    await recordEarn(pool, {
+      category: "task",
+      amount: 30,
+      message: "done",
+      sourceType: "task_complete",
+      sourceId: "t-adj-rev",
+    });
+    await adjustEarnAmount(pool, "task_complete", "t-adj-rev", 45, "actual updated");
+    await reverseEarn(pool, "task_complete", "t-adj-rev", "reopened");
+
+    expect(await getPointsBalance(pool)).toBe(0);
+    expect(categoryPoints(await getPointsSummary(pool), "task")).toBe(0);
+  });
+
+  it("category totals sum to the balance after mixed earns, adjusts and reverses", async () => {
+    await truncateAll();
+    await recordEarn(pool, {
+      category: "task",
+      amount: 40,
+      message: "a",
+      sourceType: "task_complete",
+      sourceId: "t-a",
+    });
+    await recordEarn(pool, {
+      category: "task",
+      amount: 25,
+      message: "b",
+      sourceType: "task_complete",
+      sourceId: "t-b",
+    });
+    await adjustEarnAmount(pool, "task_complete", "t-a", 55, "actual updated");
+    await reverseEarn(pool, "task_complete", "t-b", "reopened");
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 3);
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 1);
+    await syncLeetcodeDailyPoints(pool, "2026-03-11", 2);
+    await syncLeetcodeDailyPoints(pool, "2026-03-11", 0);
+
+    const summary = await getPointsSummary(pool);
+    const total = summary.categories.reduce((sum, c) => sum + c.points, 0);
+    expect(summary.balance).toBe(55 + 30);
+    expect(total).toBe(summary.balance);
+    expect(categoryPoints(summary, "task")).toBe(55);
+    expect(categoryPoints(summary, "leetcode")).toBe(30);
+  });
+
+  it("migration 027 repairs earns zeroed by the old reverse", async () => {
+    await truncateAll();
+    await recordEarn(pool, {
+      category: "task",
+      amount: 30,
+      message: "plain",
+      sourceType: "task_complete",
+      sourceId: "t-legacy-1",
+    });
+    await reverseEarn(pool, "task_complete", "t-legacy-1", "reopened");
+    await recordEarn(pool, {
+      category: "task",
+      amount: 30,
+      message: "adjusted",
+      sourceType: "task_complete",
+      sourceId: "t-legacy-2",
+    });
+    await adjustEarnAmount(pool, "task_complete", "t-legacy-2", 45, "actual updated");
+    await reverseEarn(pool, "task_complete", "t-legacy-2", "reopened");
+    await recordEarn(pool, {
+      category: "task",
+      amount: 20,
+      message: "kept",
+      sourceType: "task_complete",
+      sourceId: "t-kept",
+    });
+
+    // Simulate rows written before the fix: reversed earns had amount = 0.
+    await pool.query(
+      `UPDATE points_events SET amount = 0
+       WHERE kind = 'earn' AND source_id IN ('t-legacy-1', 't-legacy-2')`,
+    );
+    expect(categoryPoints(await getPointsSummary(pool), "task")).toBe(20 - 30 - 30);
+
+    const sql = await readFile(
+      new URL("./sql/027_repair_reversed_earn_amounts.sql", import.meta.url),
+      "utf8",
+    );
+    await pool.query(sql);
+    await pool.query(sql);
+
+    const summary = await getPointsSummary(pool);
+    expect(summary.balance).toBe(20);
+    expect(categoryPoints(summary, "task")).toBe(20);
   });
 
   it("awardMiscTaskComplete + GET /api/points", async () => {
