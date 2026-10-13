@@ -105,8 +105,6 @@ Surface everything; fix nothing outside the ticket's scope; create tickets only 
 **Known baseline (2026-10-12):**
 
 - `npx tsc --noEmit -p apps/api` reports **17 errors** (details and fix plan: `docs/features/maintenance/tickets/MT-01-api-typecheck-errors.md`).
-- API integration tests are intermittently flaky (0–2 failures per run; see `docs/features/maintenance/tickets/MT-03-flaky-api-tests.md`).
-
 Report the baseline; don't hide new failures behind it.
 
 ## Git

@@ -11,7 +11,7 @@ Standing home for agreed work that no feature owns: tooling, type health, docs u
 |--------|---------|--------|
 | [MT-01](./tickets/MT-01-api-typecheck-errors.md) | Fix all 17 API typecheck errors and add a typecheck command so they can't build up again | Ready |
 | [MT-02](./tickets/MT-02-legacy-docs.md) | Re-home or retire legacy local docs | Draft (deferred until after feature work) |
-| [MT-03](./tickets/MT-03-flaky-api-tests.md) | Make API integration tests deterministic | Ready |
+| [MT-03](./tickets/MT-03-flaky-api-tests.md) | Make API integration tests deterministic | Done |
 | [MT-04](./tickets/MT-04-shared-queryable-type.md) | Share one `Queryable` type instead of 11 private copies | Ready (after MT-01) |
 | [MT-05](./tickets/MT-05-unapply-delete-application-spike.md) | Spike: should applications be un-appliable or deletable, and what happens to their points and links? | Draft (not scheduled) |
 | [MT-06](./tickets/MT-06-migration-tracking.md) | Track applied migrations so each runs once | Done |

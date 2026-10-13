@@ -1,6 +1,6 @@
 # MT-03: Make API integration tests deterministic
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none; MT-06 is done)
 **Implements:** n/a (maintenance)
 **Type:** bug
@@ -32,10 +32,10 @@ The API test suite gives the same result on every run of unchanged code.
 
 ## Acceptance criteria
 
-- [ ] Root cause identified and written into Verification notes, with evidence
-- [ ] Fix addresses the cause; no retries, skips, or longer timeouts used to mask it
-- [ ] 10 consecutive `npm test` runs pass with 0 failures
-- [ ] `AGENTS.md` Known baseline no longer mentions flaky tests
+- [x] Root cause identified and written into Verification notes, with evidence
+- [x] Fix addresses the cause; no retries, skips, or longer timeouts used to mask it
+- [x] 10 consecutive `npm test` runs pass with 0 failures
+- [x] `AGENTS.md` Known baseline no longer mentions flaky tests
 
 ## Out of scope
 
@@ -44,11 +44,21 @@ The API test suite gives the same result on every run of unchanged code.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] Committed as `MT-03: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run build` passes
+- [x] Committed as `MT-03: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+**Root cause: the test requests sometimes reached a different program on the machine, not the API.** The database and the test ordering weren't involved.
+
+- `apiClient()` passed a fresh Express app to supertest. Supertest 7.2.2 starts it with `app.listen(0)`, which binds every interface (`::`), then always requests `http://127.0.0.1:<port>` (`node_modules/supertest/lib/test.js` L60–69).
+- On macOS, binding `[::]:P` succeeds even when another process already listens on `127.0.0.1:P`, and a connection to `127.0.0.1:P` then goes to that process. This machine runs many local listeners on high ports (Vite, editor helpers).
+- Proof: a standalone script listened on `127.0.0.1:P` with a stand-in server returning 404, then bound a second server with `listen(P)`. The bind succeeded on `::`; a request to `127.0.0.1:P` got the stand-in's 404, and a request to `[::1]:P` reached the second server.
+- Matching evidence: logging every 404 the app sent during 6 full runs showed only 404s that tests expect. None of the 3 failing requests in those runs reached the app at all.
+- The earlier non-404 failure (`rankContext.api.test.ts`, "unexpected HTTP status") fits the same cause.
+
+**Fix:** `test/apiClient.ts` now starts one server per test file in `beforeAll`, bound to `127.0.0.1` (so the OS only hands out ports free on that address), closes it in `afterAll`, and gives supertest the server's URL. No test changed, and nothing retries or waits longer.
+
+**Results:** 10 consecutive `npm test` runs: 208/208 each. Before the fix, 2 of 6 runs failed with the same code. Build passes; API typecheck at the 17-error MT-01 baseline. No new test: the collision depends on another process holding the same port, which a test can't arrange reliably.
