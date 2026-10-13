@@ -1,4 +1,9 @@
 import pg, { type Pool, type PoolClient } from "pg";
+import {
+  mergeApplicationInto,
+  mergeNotes,
+  type MergedApplicationFields,
+} from "./applicationMerge.js";
 import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import {
   getApplicationTaskCategory,
@@ -110,14 +115,6 @@ const taskReturnColumns = `
   updated_at AS "updatedAt"
 `;
 
-const STATUS_RANK: Record<string, number> = {
-  todo: 0,
-  applied: 1,
-  interviewing: 2,
-  accepted: 3,
-  declined: 1,
-};
-
 export function isTaskKind(value: string): value is TaskKind {
   return (TASK_KINDS as readonly string[]).includes(value);
 }
@@ -201,12 +198,6 @@ function parseRequiredText(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
-}
-
-function mergeNotes(a: string | null, b: string | null): string | null {
-  const parts = [a?.trim(), b?.trim()].filter(Boolean) as string[];
-  if (parts.length === 0) return null;
-  return [...new Set(parts)].join("\n\n");
 }
 
 async function countTasks(db: Queryable): Promise<{ open: number; completed: number }> {
@@ -569,40 +560,23 @@ async function linkApplicationToPosting(
   db: PoolClient,
   applicationId: string,
   postingId: string,
-): Promise<void> {
-  const current = await db.query<{
-    id: string;
-    notes: string | null;
-    status: string;
-  }>(`SELECT id, notes, status FROM applications WHERE id = $1`, [applicationId]);
+): Promise<MergedApplicationFields | null> {
+  const current = await db.query(`SELECT id FROM applications WHERE id = $1`, [applicationId]);
   if (!current.rows[0]) throw new Error("Application not found");
 
-  const other = await db.query<{
-    id: string;
-    notes: string | null;
-    status: string;
-  }>(
-    `SELECT id, notes, status FROM applications WHERE posting_id = $1 AND id <> $2`,
+  const other = await db.query<{ id: string }>(
+    `SELECT id FROM applications WHERE posting_id = $1 AND id <> $2`,
     [postingId, applicationId],
   );
-  let notes = current.rows[0].notes;
-  let status = current.rows[0].status;
-  if (other.rows[0]) {
-    notes = mergeNotes(notes, other.rows[0].notes);
-    const keepRank = STATUS_RANK[status] ?? 0;
-    const otherRank = STATUS_RANK[other.rows[0].status] ?? 0;
-    if (otherRank > keepRank) status = other.rows[0].status;
-    await db.query(
-      `UPDATE application_documents SET application_id = $1 WHERE application_id = $2`,
-      [applicationId, other.rows[0].id],
-    );
-    await db.query(`DELETE FROM applications WHERE id = $1`, [other.rows[0].id]);
-  }
+  const merged = other.rows[0]
+    ? await mergeApplicationInto(db, { survivorId: applicationId, removedId: other.rows[0].id })
+    : null;
 
   await db.query(
-    `UPDATE applications SET posting_id = $2, status = $3, notes = $4, updated_at = now() WHERE id = $1`,
-    [applicationId, postingId, status, notes],
+    `UPDATE applications SET posting_id = $2, updated_at = now() WHERE id = $1`,
+    [applicationId, postingId],
   );
+  return merged;
 }
 
 export async function createTaskFromPosting(db: Queryable, postingId: string): Promise<TaskRow> {
@@ -708,7 +682,7 @@ export async function patchTask(
 
   const organization =
     patch.organization !== undefined ? parseOptionalText(patch.organization) : existing.organization;
-  const notes = patch.notes !== undefined ? parseOptionalText(patch.notes) : existing.notes;
+  let notes = patch.notes !== undefined ? parseOptionalText(patch.notes) : existing.notes;
   let url = existing.url;
   if (patch.url !== undefined) {
     const parsed = parseHttpUrl(patch.url, { allowEmpty: true });
@@ -787,7 +761,13 @@ export async function patchTask(
       if (!existing.applicationId) return null;
       if (patch.postingId) {
         if (!client) throw new Error("Posting link requires transaction");
-        await linkApplicationToPosting(client, existing.applicationId, patch.postingId);
+        const merged = await linkApplicationToPosting(
+          client,
+          existing.applicationId,
+          patch.postingId,
+        );
+        // The task's notes are its application's notes, so they take the merged ones too.
+        if (merged) notes = mergeNotes(notes ?? null, merged.notes);
       }
     }
 
@@ -802,7 +782,7 @@ export async function patchTask(
            category_id = $8,
            priority = $9,
            estimate_minutes = $10,
-           actual_minutes = $11,
+           actual_minutes = CASE WHEN $14::boolean THEN $11::int ELSE actual_minutes END,
            posting_id = CASE WHEN $12::boolean THEN $13::uuid ELSE posting_id END,
            updated_at = now()
        WHERE id = $1`,
@@ -820,6 +800,7 @@ export async function patchTask(
         actualMinutes,
         patch.postingId !== undefined,
         patch.postingId ?? null,
+        patch.actualMinutes !== undefined,
       ],
     );
 
@@ -838,7 +819,7 @@ export async function patchTask(
            company_name = $3,
            url = $4,
            notes = $5,
-           due_at = $6,
+           due_at = CASE WHEN status = 'todo' THEN $6::timestamptz ELSE NULL END,
            location = CASE WHEN $7::boolean THEN $8 ELSE location END,
            description_html = CASE WHEN $9::boolean THEN $10 ELSE description_html END,
            updated_at = now()

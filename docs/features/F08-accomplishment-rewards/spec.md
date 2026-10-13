@@ -33,7 +33,7 @@ Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and
 |-----------|-------|--------|
 | M0 | Quick fixes and changelog restructure | Done |
 | M1 | Detail pages: misc task, application task, application | Done |
-| M2 | Reflections linked to work; shared completion modals | Done, with an open ticket (M2-01) |
+| M2 | Reflections linked to work; shared completion modals | Done |
 | M3 | Recurring tasks | Not started |
 | M4 | Global points ledger | Done; M4-01, M4-02 and M4-03 done |
 | M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | In progress |
@@ -86,6 +86,13 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R2.15** A reflection linked to an interview step keeps that link when the step or its thread is resolved.
 - **R2.16** Deleting the linked task, application or interview step never deletes the reflection; it becomes unattached. This includes Remove from tasks on Jobs and a posting leaving the board (R0.2).
 - **R2.17** When duplicate postings merge, reflections on the removed application move to the surviving one, the way interview threads already do.
+- **R2.22** (Established 2026-10-13) Every way two applications merge into one (the nightly duplicate-posting merge, or linking a posting that already has an application, from the application page or an application task) keeps everything the removed application had, on the survivor:
+  - its reflections, application tasks, documents, and interview threads with their steps
+  - its time, when the survivor has none (the survivor's application tasks then show it)
+  - its applied date, when the survivor has none
+  - its earn, when the survivor has none, so a later time edit adjusts that earn instead of creating a second one
+
+  Points never change at a merge: if both applications already earned, both earns stay. Ticket: M2-02.
 - **R2.18** Reopening a misc task keeps its reflections linked. Application tasks can't be reopened.
 - **R2.19** Linking, unlinking or re-linking an existing reflection never changes points.
 - **R2.20** The reflection written in the completion modal links to the work being completed: a misc task links to the task; an application task links to the application.
@@ -361,7 +368,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Migration 023 marked all existing reflections as deep work and cleared their links on first run | [`023_reflection_linking.sql` L1–23](../../../apps/api/src/sql/023_reflection_linking.sql) | Unspecified | Already applied; history only |
 | Detail pages can link existing reflections or create new ones; History edit can link to work; lists are flat by date created | [`ReflectionsPanel.tsx`](../../../apps/web/src/features/reflections/ReflectionsPanel.tsx), `ProgressPage.tsx` | Conforms R2.2, R2.3 | |
 | Deleting a task, application or interview step leaves its reflections unattached (`ON DELETE SET NULL`) | migrations 017, 023, 024 | Conforms R2.16 | |
-| When both postings have applications, merge moves interview threads but not reflections, then deletes the removed application, leaving its reflections unattached | [`mergeDuplicatePostings.ts` L184–217](../../../apps/api/src/mergeDuplicatePostings.ts) | Conflicts R2.17 | Ticket M2-01 |
+| Every application merge (nightly duplicate postings, linking a posting from the application page or an application task) runs one operation that moves the removed application's reflections, tasks, documents and interview threads (folding its thread into the survivor's if both have one), carries its time, applied date and earn over when the survivor has none, then deletes it. Tasks on a merged-away Simplify posting move to the surviving posting | [`applicationMerge.ts` `mergeApplicationInto`](../../../apps/api/src/applicationMerge.ts), called from [`mergeDuplicatePostings.ts`](../../../apps/api/src/mergeDuplicatePostings.ts), [`applications.ts` `patchApplication`](../../../apps/api/src/applications.ts), [`tasks.ts` `linkApplicationToPosting`](../../../apps/api/src/tasks.ts) | Conforms R2.17, R2.22 | Fixed by M2-01 and M2-02 (2026-10-13); checked by running `applicationMerge.api.test.ts`. Before, merges left reflections unattached and dropped the time, and the two linking paths deleted the removed application's interview threads and steps by cascade |
 | Only misc tasks can be reopened | [`tasks.ts` L947–961](../../../apps/api/src/tasks.ts) | Conforms R2.18 | |
 | The modal's reflection links to the application in mark-applied mode | [`markApplied.ts` L117](../../../apps/api/src/markApplied.ts) | Conforms R2.20 for applications | Misc-task link not re-verified |
 | Deep work is gone from the UI and the API: no toggle on any reflection form, no today-strip badges, and the API neither accepts nor returns it. Heatmap and History calendar lane marks count any reflection in the lane; the week and month summary shows the number of reflections written. The `deep_work` column stays, and new rows get its default | [`progress.ts` L288–302, L418, L743](../../../apps/api/src/progress.ts), [`TodayStrip.tsx`](../../../apps/web/src/features/progress/TodayStrip.tsx), [`ProgressPage.tsx` L440–452](../../../apps/web/src/features/progress/ProgressPage.tsx) | Conforms R5.29 | Done by M5-14 (2026-10-13); the API side is checked by running `progress.api.test.ts`, the UI by reading and the build, not in a browser |
@@ -528,4 +535,5 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Reflections in general replace deep work on Progress: marks count any reflection, and the summary shows reflection minutes. The reflection minutes model (R5.30) is confirmed and belongs to the points rules, in-app too.
 - **2026-10-13:** Time belongs to the work, not the reflection (R5.31). Applications and interview steps get their own editable time, which counts with or without a reflection; every reflection is a flat +20 note. The Progress summary counts reflections. This replaces R5.19 and R5.30 and raises application and interview earns.
 - **2026-10-13:** Blank time adds 0 for every kind of work; the misc 15-minute default is removed so there's one consistent baseline. Misc tasks get a flat +10 base, like applications' +5. Application time is stored on the application. Old earns are re-scored only when their time is next edited or a reopened misc task is re-completed. Study time without a task is logged as a misc task.
+- **2026-10-13:** Application merges keep everything from the removed application on the survivor, including its time and its earn when the survivor has none; points never change at a merge (R2.22, M2-02, which also covers M2-01).
 - **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs.

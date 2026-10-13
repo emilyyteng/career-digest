@@ -1,6 +1,7 @@
 import { unlink } from "node:fs/promises";
 import path from "node:path";
 import type { Pool, PoolClient } from "pg";
+import { mergeApplicationInto } from "./applicationMerge.js";
 import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { resolveThreadsForApplication } from "./interviews.js";
 import { applicationResolutionFromStatus } from "./interviewStatuses.js";
@@ -38,20 +39,6 @@ const applicationSelect = `
   LEFT JOIN postings p ON p.id = a.posting_id
   LEFT JOIN companies c ON c.id = p.company_id
 `;
-
-const STATUS_RANK: Record<string, number> = {
-  todo: 0,
-  applied: 1,
-  interviewing: 2,
-  accepted: 3,
-  declined: 1,
-};
-
-function mergeNotes(a: string | null, b: string | null): string | null {
-  const parts = [a?.trim(), b?.trim()].filter(Boolean) as string[];
-  if (parts.length === 0) return null;
-  return [...new Set(parts)].join("\n\n");
-}
 
 export type ApplicationRow = {
   id: string;
@@ -405,34 +392,31 @@ export async function patchApplication(
       descriptionHtml = normalizeDescriptionHtml(null, input.description);
     }
 
+    let previousAppliedAt = current.rows[0].applied_at;
+    let previousDueAt = current.rows[0].due_at;
     if (input.postingId) {
-      const other = await client.query<{
-        id: string;
-        notes: string | null;
-        status: string;
-        applied_at: Date | null;
-      }>(
-        `SELECT id, notes, status, applied_at FROM applications WHERE posting_id = $1 AND id <> $2`,
+      const other = await client.query<{ id: string }>(
+        `SELECT id FROM applications WHERE posting_id = $1 AND id <> $2`,
         [input.postingId, id],
       );
       if (other.rows[0]) {
-        notes = input.notes !== undefined ? input.notes : mergeNotes(notes, other.rows[0].notes);
-        if (!input.status) {
-          const keepRank = STATUS_RANK[status] ?? 0;
-          const otherRank = STATUS_RANK[other.rows[0].status] ?? 0;
-          if (otherRank > keepRank) status = other.rows[0].status;
+        const merged = await mergeApplicationInto(client, {
+          survivorId: id,
+          removedId: other.rows[0].id,
+        });
+        if (input.notes === undefined) notes = merged.notes;
+        if (!input.status) status = merged.status;
+        if (input.descriptionHtml === undefined && input.description === undefined) {
+          descriptionHtml = merged.descriptionHtml;
         }
-        await client.query(
-          `UPDATE application_documents SET application_id = $1 WHERE application_id = $2`,
-          [id, other.rows[0].id],
-        );
-        await client.query(`DELETE FROM applications WHERE id = $1`, [other.rows[0].id]);
+        previousAppliedAt = merged.appliedAt;
+        previousDueAt = merged.dueAt;
       }
     }
 
     const appliedAtFinal = resolveAppliedAt({
       status,
-      previousAppliedAt: current.rows[0].applied_at,
+      previousAppliedAt,
       explicit: input.appliedAt,
       explicitProvided: input.appliedAtProvided,
     });
@@ -441,7 +425,7 @@ export async function patchApplication(
         ? null
         : input.dueAtProvided
           ? parseDueAt(input.dueAt)
-          : current.rows[0].due_at;
+          : previousDueAt;
     const statusChanged = status !== previousStatus;
 
     const result = await client.query<{ id: string }>(

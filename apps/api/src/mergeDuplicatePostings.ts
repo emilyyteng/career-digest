@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PoolClient } from "pg";
+import { mergeApplicationInto } from "./applicationMerge.js";
 import { migrate, pool } from "./db.js";
 
 export {
@@ -20,8 +21,6 @@ type DuplicatePair = {
 type ApplicationRow = {
   id: string;
   posting_id: string | null;
-  notes: string | null;
-  status: string;
 };
 
 type FeedbackRow = {
@@ -134,37 +133,13 @@ async function loadSmartrecruitersPairs(client: PoolClient): Promise<DuplicatePa
   return rows;
 }
 
-function mergeNotes(a: string | null, b: string | null): string | null {
-  const left = a?.trim() ?? "";
-  const right = b?.trim() ?? "";
-  if (!left) return right || null;
-  if (!right) return left;
-  if (left.includes(right)) return left;
-  if (right.includes(left)) return right;
-  return `${left}\n\n${right}`;
-}
-
-const APPLICATION_STATUS_RANK: Record<string, number> = {
-  todo: 0,
-  applied: 1,
-  interviewing: 2,
-  accepted: 3,
-  declined: 1,
-};
-
-function pickMergedApplicationStatus(left: string, right: string): string {
-  const leftRank = APPLICATION_STATUS_RANK[left] ?? 0;
-  const rightRank = APPLICATION_STATUS_RANK[right] ?? 0;
-  return rightRank > leftRank ? right : left;
-}
-
 async function repointApplication(
   client: PoolClient,
   simplifyId: string,
   canonicalId: string,
 ): Promise<"moved" | "merged" | "none"> {
   const apps = await client.query<ApplicationRow>(
-    `SELECT id, posting_id, notes, status
+    `SELECT id, posting_id
      FROM applications
      WHERE posting_id = $1 OR posting_id = $2`,
     [simplifyId, canonicalId],
@@ -181,40 +156,10 @@ async function repointApplication(
     return "moved";
   }
 
-  await client.query(
-    `UPDATE application_documents SET application_id = $1 WHERE application_id = $2`,
-    [canonicalApp.id, simplifyApp.id],
-  );
-  await client.query(
-    `UPDATE interview_threads SET primary_application_id = $1 WHERE primary_application_id = $2`,
-    [canonicalApp.id, simplifyApp.id],
-  );
-  const canonicalMember = await client.query(
-    `SELECT 1 FROM application_thread_members WHERE application_id = $1 LIMIT 1`,
-    [canonicalApp.id],
-  );
-  if (canonicalMember.rows.length > 0) {
-    await client.query(`DELETE FROM application_thread_members WHERE application_id = $1`, [
-      simplifyApp.id,
-    ]);
-  } else {
-    await client.query(
-      `UPDATE application_thread_members SET application_id = $1 WHERE application_id = $2`,
-      [canonicalApp.id, simplifyApp.id],
-    );
-  }
-
-  const mergedNotes = mergeNotes(canonicalApp.notes, simplifyApp.notes);
-  const mergedStatus = pickMergedApplicationStatus(canonicalApp.status, simplifyApp.status);
-  await client.query(
-    `UPDATE applications
-     SET notes = $2,
-         status = $3,
-         updated_at = now()
-     WHERE id = $1`,
-    [canonicalApp.id, mergedNotes, mergedStatus],
-  );
-  await client.query(`DELETE FROM applications WHERE id = $1`, [simplifyApp.id]);
+  await mergeApplicationInto(client, {
+    survivorId: canonicalApp.id,
+    removedId: simplifyApp.id,
+  });
   return "merged";
 }
 
@@ -309,6 +254,11 @@ async function mergePairs(
       if (appResult === "moved") applicationsMoved.count += 1;
       if (appResult === "merged") applicationsMerged.count += 1;
       await repointFeedback(client, pair.simplify_id, pair.canonical_id);
+      // tasks.posting_id is ON DELETE SET NULL, so a task on the Simplify row would lose its posting.
+      await client.query(`UPDATE tasks SET posting_id = $2, updated_at = now() WHERE posting_id = $1`, [
+        pair.simplify_id,
+        pair.canonical_id,
+      ]);
       await absorbRanking(client, pair.simplify_id, pair.canonical_id);
       const deleted = await client.query(`DELETE FROM postings WHERE id = $1`, [
         pair.simplify_id,

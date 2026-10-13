@@ -1,6 +1,6 @@
 # M2-01: Merging duplicate postings moves reflections to the surviving application
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R2.17 (from `../../spec.md`)
 **Type:** bug
@@ -21,10 +21,10 @@ When two applications merge, every reflection linked to the removed application 
 
 ## Acceptance criteria
 
-- [ ] Merge where both postings have applications: reflections from the removed application end up linked to the surviving one, with their interview step links intact.
-- [ ] The surviving application's own reflections are unchanged.
-- [ ] Points don't change (R2.19).
-- [ ] An integration test covers the merge with reflections on both applications, one of them linked to an interview step.
+- [x] Merge where both postings have applications: reflections from the removed application end up linked to the surviving one, with their interview step links intact.
+- [x] The surviving application's own reflections are unchanged.
+- [x] Points don't change (R2.19).
+- [x] An integration test covers the merge with reflections on both applications, one of them linked to an interview step.
 
 ## Reuse notes
 
@@ -32,12 +32,12 @@ Add the update next to the existing `interview_threads` update in `mergeApplicat
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Reuse check done
-- [ ] Committed as `F08 M2-01: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Reuse check done
+- [x] Committed (in M2-02's commit, `F08 M2-02: …`, since it's the same operation)
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+Done 2026-10-13 as part of [M2-02](./M2-02-merge-keeps-everything.md), which replaced every merge path with one shared operation. The first test in `applicationMerge.api.test.ts` covers the reflection moves; M2-02's earn tests show the balance doesn't change at a merge.

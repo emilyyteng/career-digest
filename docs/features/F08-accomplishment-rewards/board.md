@@ -14,11 +14,19 @@ Milestones M0, M1, M2 and M4 shipped before tickets existed, so they have no tic
 
 ## M2: Reflections and completion modals
 
-**Milestone status:** Done, with open tickets
+**Milestone status:** Done
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
-| [M2-01](./tickets/M2/M2-01-merge-moves-reflections.md) | Merging duplicate postings moves reflections to the surviving application | bug | Ready | |
+No open tickets.
+
+<details>
+<summary>Done (2)</summary>
+
+| Ticket | Title | Commit |
+|--------|-------|--------|
+| [M2-01](./tickets/M2/M2-01-merge-moves-reflections.md) | Merging duplicate postings moves reflections to the surviving application | (pending; in M2-02's commit) |
+| [M2-02](./tickets/M2/M2-02-merge-keeps-everything.md) | Application merges keep everything from the removed application | (pending) |
+
+</details>
 
 ## M3: Recurring tasks
 
