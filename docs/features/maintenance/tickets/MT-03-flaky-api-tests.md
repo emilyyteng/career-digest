@@ -1,7 +1,7 @@
 # MT-03: Make API integration tests deterministic
 
 **Status:** Ready
-**Blocked by:** the test database fix (migration tracking; ticket to be created once the approach is agreed)
+**Blocked by:** (none; MT-06 is done)
 **Implements:** n/a (maintenance)
 **Type:** bug
 
@@ -22,7 +22,7 @@ Setup (`apps/api/vitest.config.ts`): two projects, **unit** and **integration**.
 
 - The failures are unexpected **404 Not Found** responses from valid routes, in a different file each run: `tasks.api.test.ts` (`GET /api/tasks?view=open`, complete on an application task), `demo.api.test.ts` (`GET /api/jobs?view=ranked`), `progress.api.test.ts` (`POST /api/progress/reflections`, the heatmap test), `interviews.api.test.ts` (`GET /api/interviews/:id`).
 - Rate: on a fresh scratch database, 2 of 5 runs failed on commit `84bf883` (before M4-03) and 5 of 8 with the M4-03 changes (`9d155a5`). Each failing run had exactly 1 failure out of 196 or 204 tests. Each file passes when run alone.
-- Not the cause, but it hides this: `career_digest_test` has hit Postgres's 1600-column limit on `postings` (see the migration-tracking ticket), so integration tests currently skip there. Fix that first, or the suite can't be measured.
+- Not the cause, but it hides this: `career_digest_test` has hit Postgres's 1600-column limit on `postings` (MT-06), so integration tests currently skip there. Fix that first, or the suite can't be measured.
 
 **Hypothesis (unconfirmed):** the two projects may run concurrently against the shared test database, or a test depends on state or ordering (time, sort order, leftover rows). Verify before fixing.
 

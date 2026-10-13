@@ -1,5 +1,9 @@
 import { migrate, pool } from "./db.js";
 
-await migrate();
+const { applied } = await migrate();
 await pool.end();
-console.log("Migration complete.");
+console.log(
+  applied.length
+    ? `Migration complete. Applied: ${applied.join(", ")}`
+    : "Migration complete. Nothing to apply.",
+);
