@@ -1,7 +1,7 @@
 # M5-04: Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base
 
 **Status:** Ready
-**Blocked by:** M4-01 (one mark-applied operation to extend, instead of two paths)
+**Blocked by:** M4-01 (done: one mark-applied operation to extend, `markApplied.ts`)
 **Implements:** R5.31 (from `../../spec.md`); supersedes R5.19 and R5.30
 **Type:** build
 
@@ -51,7 +51,7 @@ Per R5.31:
 
 - `adjustEarnAmount` and `adjustTaskCompleteActual` for edits; the breakdown helpers in `pointsFormulas.ts` for scoring.
 - `CompleteWorkModal`'s misc time field for the application and interview modals.
-- Extend M4-01's single mark-applied operation instead of the two current paths.
+- Extend M4-01's single mark-applied operation (`markApplied` in `markApplied.ts`): the time moves from the task's `actual_minutes` to the application there, in one place.
 - Coordinate with M5-14, which removes the deep-work toggle from the same reflection forms.
 
 ## Definition of done

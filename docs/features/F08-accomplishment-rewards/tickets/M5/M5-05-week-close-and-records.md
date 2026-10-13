@@ -1,7 +1,7 @@
 # M5-05: Week close and weekly records
 
-**Status:** Ready (after M4-01)
-**Blocked by:** M4-01 (one mark-applied hook for weekly apps progress)
+**Status:** Ready
+**Blocked by:** M4-01 (done: one mark-applied hook for weekly apps progress)
 **Implements:** R5.7, R5.8, R5.9, R5.11, R5.12, R5.14, R5.15, R5.22, R5.23, R5.24, R5.28 (data), B1 (from `../../spec.md`)
 **Type:** build
 
@@ -12,7 +12,7 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 1. **A stored week record per goal:** target, progress (or done/total for apps), whether it was met, the points awarded, and when it closed. Today nothing stores a week's result: `weekly_goal_members` allows a task in only one week (unique `task_id`, migration 021), and carry-over moves it out of last week ([`weeklyGoals.ts` L246–266](../../../../../apps/api/src/weeklyGoals.ts)).
 2. **Closing (R5.23):** the first request after a week ends closes every unclosed week, oldest first, then carries open tagged tasks into the current week. This also fixes stranded members after a week with no visits. A closed week isn't closed twice, even with two requests at once.
 3. **Scoring (R5.15):** +20 per completed tagged app or weekly LC solve, +100 flat when met. LC past the target keeps earning +20 per solve. A 0/0 apps week earns nothing (R5.12). One `weekly_goal` earn per goal per week, labelled "Week of …".
-4. **Stop awarding at the moment a target is hit:** remove the immediate bonuses ([`progress.ts` L556–570](../../../../../apps/api/src/progress.ts), [`routes.ts` L1067–1081](../../../../../apps/api/src/routes.ts), and the mark-applied hook M4-01 consolidates).
+4. **Stop awarding at the moment a target is hit:** remove the immediate bonuses ([`progress.ts` L556–570](../../../../../apps/api/src/progress.ts), and the mark-applied hook `checkWeeklyAppsGoal` in [`markApplied.ts` L141–156](../../../../../apps/api/src/markApplied.ts), which M4-01 made the only apps path).
 5. **LC progress past the target (R5.14):** stop capping progress at the target ([`weeklyGoals.ts` L304–321](../../../../../apps/api/src/weeklyGoals.ts)).
 6. **Apps membership (R5.24):** untagging an open task shrinks the goal; a deleted tagged task drops out.
 7. **Start and switch-over (R5.22):** records start with the week this ships. Earlier weeks are never closed or scored. In the switch-over week, a flat +100 already paid the old way isn't paid again.

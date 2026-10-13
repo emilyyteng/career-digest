@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   deleteDocument,
   getApplication,
@@ -34,6 +34,7 @@ type FlashTarget = "stage" | "notes" | "description" | "upload" | "link";
 
 export default function ApplicationDetail() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { id } = useParams();
   const [row, setRow] = useState<ApplicationRow | null>(null);
   const [notes, setNotes] = useState("");
@@ -81,6 +82,10 @@ export default function ApplicationDetail() {
       getApplication(id),
       getApplicationReflections(id),
     ]);
+    if (data.status === "todo" && data.openTaskId) {
+      navigate(`/tasks/${data.openTaskId}`, { replace: true });
+      return;
+    }
     setRow(data);
     setNotes(data.notes ?? "");
     setDescriptionHtml(data.descriptionHtml ?? "");

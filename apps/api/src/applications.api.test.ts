@@ -141,15 +141,15 @@ describe.skipIf(!integrationReady)("applications API", () => {
       companyId: company.id,
       url: "https://boards.greenhouse.io/acme/jobs/11",
     });
-    const application = await seedApplication({ postingId: posting.id, status: "todo" });
+    const application = await seedApplication({ postingId: posting.id, status: "applied" });
 
     await apiClient()
       .patch(`/api/applications/${application.id}`)
-      .send({ status: "applied", appliedAt: "2025-08-01" })
+      .send({ status: "interviewing", appliedAt: "2025-08-01" })
       .expect(200);
 
     const detail = await apiClient().get(`/api/applications/${application.id}`).expect(200);
-    expect(detail.body.status).toBe("applied");
+    expect(detail.body.status).toBe("interviewing");
     expect(detail.body.appliedAt).toMatch(/^2025-08-01/);
     expect(detail.body.dueAt).toBeNull();
   });

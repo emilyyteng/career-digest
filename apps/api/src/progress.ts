@@ -698,7 +698,7 @@ export async function listUnlinkedReflections(
 }
 
 export async function createReflectionLog(
-  pool: Pool,
+  pool: Queryable,
   input: {
     lane: ProgressLane;
     body: string;

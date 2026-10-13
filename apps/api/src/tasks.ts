@@ -1,8 +1,5 @@
 import pg, { type Pool, type PoolClient } from "pg";
 import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
-import { resolveThreadsForApplication } from "./interviews.js";
-import { applicationResolutionFromStatus } from "./interviewStatuses.js";
-import { transferTaskReflectionsToApplication } from "./progress.js";
 import {
   getApplicationTaskCategory,
   getTaskCategoryById,
@@ -884,40 +881,15 @@ export async function completeTask(
 ): Promise<TaskRow | null> {
   const existing = await getTaskById(db, id);
   if (!existing || existing.status !== "open") return null;
+  // Application tasks complete only through markApplied (M4-01).
+  if (!isMiscCategory(existing.category)) return null;
 
   const client = db instanceof pg.Pool ? await db.connect() : null;
   const queryable = client ?? db;
   try {
     if (client) await client.query("BEGIN");
 
-    if (isApplicationCategory(existing.category)) {
-      if (!existing.applicationId) return null;
-      await queryable.query(
-        `UPDATE applications
-         SET status = 'applied',
-             applied_at = now(),
-             due_at = NULL,
-             status_changed_at = now(),
-             updated_at = now()
-         WHERE id = $1`,
-        [existing.applicationId],
-      );
-      await transferTaskReflectionsToApplication(
-        queryable,
-        id,
-        existing.applicationId,
-      );
-      const resolution = applicationResolutionFromStatus("applied");
-      if (resolution && client) {
-        await resolveThreadsForApplication(client, existing.applicationId, resolution);
-      }
-    } else if (!isMiscCategory(existing.category)) {
-      return null;
-    }
-
-    if (isMiscCategory(existing.category)) {
-      await completeOpenSubtasksForTask(queryable, id);
-    }
+    await completeOpenSubtasksForTask(queryable, id);
 
     const actualMinutes =
       options.actualMinutes !== undefined

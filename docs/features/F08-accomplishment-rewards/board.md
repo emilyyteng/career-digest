@@ -26,17 +26,16 @@ Milestones M0, M1, M2 and M4 shipped before tickets existed, so they have no tic
 
 ## M4: Global points ledger
 
-**Milestone status:** Done, with open tickets
+**Milestone status:** Done
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
-| [M4-01](./tickets/M4/M4-01-unify-mark-applied.md) | Mark applied from Jobs has the same outcome as from Tasks | bug | In progress | Scheduled with M5; includes blocking edits on to-do-backed applications (R2.21) |
+No open tickets.
 
 <details>
-<summary>Done (2)</summary>
+<summary>Done (3)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M4-01](./tickets/M4/M4-01-unify-mark-applied.md) | Mark applied from Jobs has the same outcome as from Tasks | `F08 M4-01` |
 | [M4-02](./tickets/M4/M4-02-category-totals-double-reverse.md) | Category totals subtract a reversed earn twice | `84bf883` |
 | [M4-03](./tickets/M4/M4-03-recomplete-earns-delta.md) | Reversed earns can be revived: re-completed tasks and re-raised LeetCode days | `9d155a5` (LeetCode banner moved to M5-01 in `20ef208`) |
 
@@ -50,14 +49,14 @@ Milestones M0, M1, M2 and M4 shipped before tickets existed, so they have no tic
 |--------|-------|------|--------|-------|
 | [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Draft | After M5-06 (M4-03 done); open: Q32 (settle before build) |
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | build | Draft | After M5-05, M5-06; documents banner patterns in the design system |
-| [M5-03](./tickets/M5/M5-03-points-by-task-category.md) | Points breakdown splits tasks by task category | build | Ready | After M4-02 |
-| [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | build | Ready after M4-01 | Coordinate with M5-14 (same forms) |
-| [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | build | Ready | After M4-01 |
+| [M5-03](./tickets/M5/M5-03-points-by-task-category.md) | Points breakdown splits tasks by task category | build | Ready | M4-02 done, so unblocked |
+| [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | build | Ready | M4-01 done; coordinate with M5-14 (same forms) |
+| [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | build | Ready | M4-01 done, so unblocked |
 | [M5-06](./tickets/M5/M5-06-prototype-weekly-surfaces.md) | Prototype weekly goal surfaces | prototype | Ready | F09 M0 decided alongside |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | prototype | Ready | Mock numbers from R5.25–R5.26 |
 | [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Draft | After M5-06 |
 | [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | build | Draft | After M5-06 |
-| [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | build | Ready | After M4-03; includes the `streak` category migration |
+| [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | build | Ready | M4-03 done, so unblocked; includes the `streak` category migration |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Draft | After M5-07 |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Draft | After M5-07, M5-10, M5-14 |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | build | Draft | Only if Q7 keeps it after M5-07 |

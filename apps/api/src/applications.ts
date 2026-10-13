@@ -81,6 +81,8 @@ export type ApplicationDocumentRow = {
 
 export type ApplicationWithDocuments = ApplicationRow & {
   documents: ApplicationDocumentRow[];
+  /** The open application task backing a to-do row (R2.21); null once applied. */
+  openTaskId: string | null;
 };
 
 export async function listApplications(
@@ -172,7 +174,63 @@ export async function getApplication(
      FROM application_documents WHERE application_id = $1 ORDER BY created_at`,
     [id],
   );
-  return { ...result.rows[0], documents: docs.rows };
+  const openTask = await db.query<{ id: string }>(
+    `SELECT id FROM tasks
+     WHERE application_id = $1 AND status = 'open' AND category = 'application'
+     ORDER BY created_at
+     LIMIT 1`,
+    [id],
+  );
+  return { ...result.rows[0], documents: docs.rows, openTaskId: openTask.rows[0]?.id ?? null };
+}
+
+/**
+ * The application `markApplied` should act on: the posting's existing row, or a new
+ * to-do row (posting or manual) that `markApplied` then marks applied in the same
+ * transaction. An existing row that's already past to-do is returned as is; `markApplied`
+ * rejects it.
+ */
+export async function ensureApplicationToMarkApplied(
+  db: Queryable,
+  input: Omit<CreateApplicationInput, "status" | "appliedAt" | "appliedAtProvided">,
+): Promise<string> {
+  if (input.postingId) {
+    const existing = await db.query<{ id: string }>(
+      `UPDATE applications
+       SET notes = COALESCE($2, notes), updated_at = now()
+       WHERE posting_id = $1
+       RETURNING id`,
+      [input.postingId, input.notes ?? null],
+    );
+    if (existing.rows[0]) return existing.rows[0].id;
+    const inserted = await db.query<{ id: string }>(
+      `INSERT INTO applications (posting_id, status, notes, status_changed_at)
+       VALUES ($1, 'todo', $2, now())
+       RETURNING id`,
+      [input.postingId, input.notes ?? null],
+    );
+    return inserted.rows[0]!.id;
+  }
+
+  if (!input.company?.trim() || !input.title?.trim()) {
+    throw new Error("Manual applications need company and title");
+  }
+  const inserted = await db.query<{ id: string }>(
+    `INSERT INTO applications (
+       status, notes, company_name, title, location, url, description_html, status_changed_at
+     )
+     VALUES ('todo', $1, $2, $3, $4, $5, $6, now())
+     RETURNING id`,
+    [
+      input.notes ?? null,
+      input.company.trim(),
+      input.title.trim(),
+      input.location?.trim() || null,
+      input.url?.trim() || null,
+      normalizeDescriptionHtml(input.descriptionHtml, input.description),
+    ],
+  );
+  return inserted.rows[0]!.id;
 }
 
 export type CreateApplicationInput = {
@@ -189,6 +247,9 @@ export type CreateApplicationInput = {
   appliedAtProvided: boolean;
 };
 
+export const TODO_APPLICATION_STATUS_ERROR =
+  "This application is still a to-do on Tasks. Use Mark applied on its task instead.";
+
 export async function createApplication(
   db: Queryable,
   input: CreateApplicationInput,
@@ -201,6 +262,11 @@ export async function createApplication(
   const dueAt = null;
 
   if (input.postingId) {
+    const existing = await db.query<{ status: string }>(
+      `SELECT status FROM applications WHERE posting_id = $1`,
+      [input.postingId],
+    );
+    if (existing.rows[0]?.status === "todo") throw new Error(TODO_APPLICATION_STATUS_ERROR);
     const inserted = await db.query<{ id: string }>(
       `INSERT INTO applications (posting_id, status, notes, applied_at, due_at, status_changed_at)
        VALUES ($1, $2, $3, $4, $5, now())

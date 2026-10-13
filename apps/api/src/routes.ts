@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import multer from "multer";
+import type { Pool, PoolClient } from "pg";
 import { getBoardRefresh, startBoardRefresh } from "./boardRefresh.js";
 import { getBackupJob, startBackupJob } from "./backupJob.js";
 import { getLiveRankBacklogJob, startLiveRankBacklogJob } from "./liveRankBacklogJob.js";
@@ -12,7 +13,9 @@ import {
   createApplication,
   deleteApplication,
   deleteApplicationDocument,
+  ensureApplicationToMarkApplied,
   getApplication,
+  TODO_APPLICATION_STATUS_ERROR,
   getApplicationDocument,
   listApplicationLocations,
   listApplications,
@@ -36,7 +39,8 @@ import {
   patchJobUrl,
   upsertJobFeedback,
 } from "./jobs.js";
-import { parseHttpUrl } from "./parsing.js";
+import { MarkAppliedError, markApplied, type MarkAppliedReflection } from "./markApplied.js";
+import { parseHttpUrl, resolveAppliedAt } from "./parsing.js";
 import { getRerankQueueSnapshot, queueRerank } from "./rankRerankQueue.js";
 import {
   APPLICATION_STATUSES,
@@ -113,7 +117,6 @@ import {
   awardApplicationApplied,
   awardInterviewFinish,
   awardMiscTaskComplete,
-  awardWeeklyGoalIfNeeded,
   adjustTaskCompleteActual,
   reverseTaskComplete,
 } from "./pointsAwards.js";
@@ -140,6 +143,37 @@ const upload = multer({
 });
 
 export const api = express.Router();
+
+/** The optional reflection from a completion / mark-applied modal. */
+function parseModalReflection(
+  raw: { lane?: string; body?: string; deepWork?: boolean; actualMinutes?: number | null } | null | undefined,
+): { value: MarkAppliedReflection | null } | { error: string } {
+  if (!raw?.body || typeof raw.body !== "string") return { value: null };
+  const lane = raw.lane ?? "";
+  if (!isProgressLane(lane)) {
+    return { error: "reflection.lane must be application, technical, or other" };
+  }
+  const actualMinutes =
+    raw.actualMinutes === undefined || raw.actualMinutes === null
+      ? null
+      : Math.floor(raw.actualMinutes);
+  return { value: { lane, body: raw.body, deepWork: raw.deepWork, actualMinutes } };
+}
+
+function requestTimezone(req: express.Request): string {
+  return resolveTimezone(String(req.query.tz ?? "")) ?? "UTC";
+}
+
+async function appendTaskNotes(
+  db: Pool | PoolClient,
+  taskId: string,
+  existing: string | null,
+  incoming: unknown,
+): Promise<void> {
+  if (typeof incoming !== "string" || !incoming.trim()) return;
+  const merged = [existing?.trim(), incoming.trim()].filter(Boolean).join("\n\n");
+  await patchTask(db, taskId, { notes: merged });
+}
 
 api.get("/board/refresh", async (_req, res) => {
   res.json(await getBoardRefresh());
@@ -395,24 +429,40 @@ api.post("/applications", async (req, res) => {
     return;
   }
 
-  let withReflection = false;
-  let reflectionMinutes: number | null = null;
-  if (body.reflection?.body && typeof body.reflection.body === "string") {
-    const lane = body.reflection.lane ?? "";
-    if (!isProgressLane(lane)) {
-      res.status(400).json({ error: "reflection.lane must be application, technical, or other" });
-      return;
-    }
-    withReflection = true;
-    if (
-      body.reflection.actualMinutes !== undefined &&
-      body.reflection.actualMinutes !== null
-    ) {
-      reflectionMinutes = Math.floor(body.reflection.actualMinutes);
-    }
+  const reflection = parseModalReflection(body.reflection);
+  if ("error" in reflection) {
+    res.status(400).json({ error: reflection.error });
+    return;
   }
 
+  const appliedAtProvided = Object.prototype.hasOwnProperty.call(body, "appliedAt");
   try {
+    if (status === "applied") {
+      const appliedAt = resolveAppliedAt({
+        status,
+        explicit: body.appliedAt,
+        explicitProvided: appliedAtProvided,
+      });
+      const result = await markApplied(pool, {
+        resolveApplication: (client) =>
+          ensureApplicationToMarkApplied(client, {
+            postingId: body.postingId,
+            notes: body.notes ?? null,
+            company: body.company,
+            title: body.title,
+            location: body.location,
+            url: body.url,
+            description: body.description,
+            descriptionHtml: body.descriptionHtml,
+          }),
+        appliedAt,
+        reflection: reflection.value,
+        tz: requestTimezone(req),
+      });
+      res.status(201).json({ id: result.applicationId, points: serializePointsEarn(result.points) });
+      return;
+    }
+
     const created = await createApplication(pool, {
       postingId: body.postingId,
       status,
@@ -424,36 +474,23 @@ api.post("/applications", async (req, res) => {
       description: body.description,
       descriptionHtml: body.descriptionHtml,
       appliedAt: body.appliedAt,
-      appliedAtProvided: Object.prototype.hasOwnProperty.call(body, "appliedAt"),
+      appliedAtProvided,
     });
-    if (withReflection && body.reflection?.body) {
+    if (reflection.value) {
       await createReflectionLog(pool, {
-        lane: body.reflection.lane as ProgressLane,
-        body: body.reflection.body,
-        deepWork: body.reflection.deepWork,
-        actualMinutes: reflectionMinutes,
+        ...reflection.value,
         applicationId: created.id,
         awardPoints: false,
       });
     }
-    let points: PointsEarnInfo | null = null;
-    if (status === "applied") {
-      const app = await getApplication(pool, created.id);
-      const label = app?.company
-        ? `${app.company}${app.title ? ` · ${app.title}` : ""}`
-        : app?.title ?? "Application";
-      const event = await awardApplicationApplied(pool, {
-        applicationId: created.id,
-        label,
-        withReflection,
-        reflectionMinutes,
-      });
-      points = serializePointsEarn(event);
-    }
-    res.status(201).json({ ...created, points });
+    res.status(201).json({ ...created, points: null });
   } catch (err) {
+    if (err instanceof MarkAppliedError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
     const message = err instanceof Error ? err.message : "Bad request";
-    res.status(400).json({ error: message });
+    res.status(message === TODO_APPLICATION_STATUS_ERROR ? 409 : 400).json({ error: message });
   }
 });
 
@@ -479,6 +516,10 @@ api.patch("/applications/:id", async (req, res) => {
   try {
     const before = await getApplication(pool, req.params.id);
     const nextStatus = body.status ? normalizeApplicationStatus(body.status) : undefined;
+    if (before?.status === "todo" && nextStatus) {
+      res.status(409).json({ error: TODO_APPLICATION_STATUS_ERROR });
+      return;
+    }
     const result = await patchApplication(pool, req.params.id, {
       status: nextStatus,
       notes: body.notes,
@@ -502,11 +543,11 @@ api.patch("/applications/:id", async (req, res) => {
       const label = before.company
         ? `${before.company}${before.title ? ` · ${before.title}` : ""}`
         : before.title ?? "Application";
-      const event = await awardApplicationApplied(pool, {
+      const { event, created } = await awardApplicationApplied(pool, {
         applicationId: before.id,
         label,
       });
-      points = serializePointsEarn(event);
+      if (created) points = serializePointsEarn(event);
     }
     res.json({ ...result, points });
   } catch (err) {
@@ -1003,27 +1044,45 @@ api.post("/tasks/:id/complete", async (req, res) => {
     return;
   }
 
-  let withReflection = false;
-  let reflectionMinutes: number | null = null;
-  if (body.reflection?.body && typeof body.reflection.body === "string") {
-    const lane = body.reflection.lane ?? "";
-    if (!isProgressLane(lane)) {
-      res.status(400).json({ error: "reflection.lane must be application, technical, or other" });
+  const reflection = parseModalReflection(body.reflection);
+  if ("error" in reflection) {
+    res.status(400).json({ error: reflection.error });
+    return;
+  }
+  const withReflection = reflection.value != null;
+
+  if (before.category === "application") {
+    const applicationId = before.applicationId;
+    if (before.status !== "open" || !applicationId) {
+      res.status(404).json({ error: "Task not found or cannot complete" });
       return;
     }
-    withReflection = true;
-    if (
-      body.reflection.actualMinutes !== undefined &&
-      body.reflection.actualMinutes !== null
-    ) {
-      reflectionMinutes = Math.floor(body.reflection.actualMinutes);
+    try {
+      const result = await markApplied(pool, {
+        resolveApplication: async (client) => {
+          await appendTaskNotes(client, before.id, before.notes, body.notes);
+          return applicationId;
+        },
+        reflection: reflection.value,
+        tz: requestTimezone(req),
+      });
+      const task = await getTaskById(pool, before.id);
+      res.json({ ...task, points: serializePointsEarn(result.points) });
+    } catch (err) {
+      if (err instanceof MarkAppliedError) {
+        res.status(err.status).json({ error: err.message });
+        return;
+      }
+      const message = err instanceof Error ? err.message : "Bad request";
+      res.status(400).json({ error: message });
     }
+    return;
+  }
+
+  if (reflection.value) {
     try {
       await createReflectionLog(pool, {
-        lane,
-        body: body.reflection.body,
-        deepWork: body.reflection.deepWork,
-        actualMinutes: reflectionMinutes,
+        ...reflection.value,
         taskId: before.id,
         awardPoints: false,
       });
@@ -1034,10 +1093,7 @@ api.post("/tasks/:id/complete", async (req, res) => {
     }
   }
 
-  if (body.notes && typeof body.notes === "string" && body.notes.trim()) {
-    const merged = [before.notes?.trim(), body.notes.trim()].filter(Boolean).join("\n\n");
-    await patchTask(pool, before.id, { notes: merged });
-  }
+  await appendTaskNotes(pool, before.id, before.notes, body.notes);
 
   const task = await completeTask(pool, req.params.id, { actualMinutes });
   if (!task) {
@@ -1055,32 +1111,6 @@ api.post("/tasks/:id/complete", async (req, res) => {
         withReflection,
       });
       points = serializePointsEarn(event);
-    } else if (task.category === "application" && task.applicationId) {
-      const label = task.organization
-        ? `${task.organization}${task.title ? ` · ${task.title}` : ""}`
-        : task.title;
-      const event = await awardApplicationApplied(pool, {
-        applicationId: task.applicationId,
-        label,
-        withReflection,
-        reflectionMinutes,
-      });
-      points = serializePointsEarn(event);
-      try {
-        const tz = resolveTimezone(String(req.query.tz ?? "")) ?? "UTC";
-        const snap = await getWeeklyGoalsSnapshot(pool, tz);
-        const appsGoal = snap?.goals.find((g) => g.slot === "apps");
-        if (snap && appsGoal && appsGoal.done >= appsGoal.total && appsGoal.total > 0) {
-          await awardWeeklyGoalIfNeeded(pool, {
-            weekStart: snap.weekStart,
-            slot: "apps",
-            met: true,
-            label: "Weekly apps target met!",
-          });
-        }
-      } catch {
-        /* ignore */
-      }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Points error";

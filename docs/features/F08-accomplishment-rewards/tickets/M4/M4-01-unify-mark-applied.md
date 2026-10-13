@@ -1,6 +1,6 @@
 # M4-01: Mark applied from Jobs has the same outcome as from Tasks
 
-**Status:** In progress
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R2.1b, R2.10, R2.13, R2.21 (from `../../spec.md`)
 **Type:** bug
@@ -17,7 +17,7 @@ Both pages open the same `CompleteWorkModal`, but they call different endpoints.
 - **Tasks** calls `POST /api/tasks/:id/complete`, which uses `completeTask`:
   - marks the application applied
   - moves the task's reflections to it ([`tasks.ts` L880–916](../../../../../apps/api/src/tasks.ts), transfer at L905)
-  - saves reflection minutes as the task's actual time
+  - saves reflection minutes as the task's actual time (corrected 2026-10-13: it didn't. Both web callers send `actualMinutes: null` for application tasks, so `completeTask` cleared the task's time on this path too)
   - checks the weekly apps goal ([`routes.ts` L1067–1081](../../../../../apps/api/src/routes.ts))
 - **Jobs** (both the card and the job detail page) calls `POST /api/applications` ([`JobsPage.tsx` L509–543](../../../../../apps/web/src/features/jobs/JobsPage.tsx), [`JobDetailPage.tsx` L152–182](../../../../../apps/web/src/features/jobs/JobDetailPage.tsx)). `createApplication` then completes the open task with a bare update ([`applications.ts` L229–232](../../../../../apps/api/src/applications.ts) → [`tasks.ts` L999–1013](../../../../../apps/api/src/tasks.ts)). Compared with Tasks:
   - reflections already linked to the task stay on the completed task (conflicts with R2.1b)
@@ -54,16 +54,16 @@ Close the side door (R2.21): mark applied becomes the only way a to-do-backed ro
 
 ## Acceptance criteria
 
-- [ ] Marking applied from the Jobs card, job detail, Tasks card and task detail gives identical results for the same starting data: application status and `applied_at`, task status, task actual minutes, reflection links, points events, and weekly-goal effect.
-- [ ] A reflection linked to the task before marking applied ends up linked to the application, on every path.
-- [ ] With a reflection that has minutes, the task's `actual_minutes` equals the reflection's minutes, on every path.
-- [ ] Exactly one `application_applied` earn exists per application, whichever path is used, including if two paths are tried in a row.
-- [ ] A posting with no task, marked applied from Jobs, still creates the application and earns as today.
-- [ ] Changing an already-applied application's status on its own page earns nothing again (unchanged).
-- [ ] A status change on a to-do-backed application is rejected by the API (status, task, points and reflections unchanged), and the error says to use mark applied.
-- [ ] Opening a to-do-backed application's page by URL lands on its open task's detail page.
-- [ ] Applications at applied or later still change status on their own page as today.
-- [ ] Integration tests cover the Jobs path with an existing task that has a linked reflection and is tagged for the weekly apps goal, comparing it against the Tasks path.
+- [x] Marking applied from the Jobs card, job detail, Tasks card and task detail gives identical results for the same starting data: application status and `applied_at`, task status, task actual minutes, reflection links, points events, and weekly-goal effect.
+- [x] A reflection linked to the task before marking applied ends up linked to the application, on every path.
+- [x] With a reflection that has minutes, the task's `actual_minutes` equals the reflection's minutes, on every path.
+- [x] Exactly one `application_applied` earn exists per application, whichever path is used, including if two paths are tried in a row.
+- [x] A posting with no task, marked applied from Jobs, still creates the application and earns as today.
+- [x] Changing an already-applied application's status on its own page earns nothing again (unchanged).
+- [x] A status change on a to-do-backed application is rejected by the API (status, task, points and reflections unchanged), and the error says to use mark applied.
+- [x] Opening a to-do-backed application's page by URL lands on its open task's detail page. (Checked by reading and the build; not run in a browser.)
+- [x] Applications at applied or later still change status on their own page as today.
+- [x] Integration tests cover the Jobs path with an existing task that has a linked reflection and is tagged for the weekly apps goal, comparing it against the Tasks path.
 
 ## Reuse notes
 
@@ -75,14 +75,51 @@ MT-01 removed the dead `"todo"` check in `createApplication` (2026-10-13); creat
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M4-01: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M4-01: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+2026-10-13:
+
+- **One operation:** `markApplied` ([`markApplied.ts`](../../../../../apps/api/src/markApplied.ts)). Inside one transaction it:
+  1. locks the application and refuses it unless it's a to-do (409)
+  2. sets it to applied
+  3. completes its open application task, with the modal's reflection minutes as the task's actual time (or keeps the existing time if there's no reflection)
+  4. moves the task's reflections to the application
+  5. links the modal's reflection to the application
+  6. records one earn
+
+  After commit it runs the weekly apps check.
+- **Who calls it:**
+  - `POST /tasks/:id/complete` for application tasks
+  - `POST /applications` with status applied: Jobs card and detail, and the manual add form when it saves as applied
+  - `ensureApplicationToMarkApplied` finds or creates the to-do row inside the same transaction.
+  - `completeTask` now completes misc tasks only, so there's no second mark-applied implementation.
+- **Side door closed (R2.21):**
+  - `PATCH /applications/:id` with a status on a to-do row returns 409 with a "Use Mark applied" message.
+  - `POST /applications` with a non-applied status on a posting whose row is a to-do is refused the same way. The UI never sent that, but it was the same side door.
+  - `GET /applications/:id` returns `openTaskId`; the application page redirects to `/tasks/:openTaskId` for to-do rows.
+- **Fixed along the way:** changing an application to applied on its own page after it had already earned returned the old earn as `points`, so the page showed a "+N points" banner for nothing. `awardApplicationApplied` now reports whether it created the earn, and only a new earn is returned.
+- **Same as before:**
+  - Thread resolution: "applied" has no thread resolution (`applicationResolutionFromStatus`), so neither path ever resolved threads; the operation doesn't call it.
+  - Notes: modal notes still go to the task's notes from Tasks and to the application's notes from Jobs. The spec doesn't say which is right.
+  - Timezone: neither web caller sends `tz`, so the weekly apps check runs in UTC on both paths.
+- **Tests:** [`markApplied.api.test.ts`](../../../../../apps/api/src/markApplied.api.test.ts), 8 integration tests:
+  - Tasks and Jobs parity: a tagged task with a linked reflection, comparing application, task, reflections, points events and the weekly bonus
+  - a second mark applied from the other path, both orders
+  - a posting with no task
+  - to-do-backed status change refused, via `PATCH` and `POST`
+  - `openTaskId`
+  - status changes on applied rows
+  - manual applied
+  - no reflection keeps the task's existing time
+
+  Run against the code before this ticket, 7 of the 8 fail. The parity test shows Jobs missing the +100 weekly bonus and leaving the task's reflection on the task.
+- **Existing test updated:** `applications.api.test.ts` "PATCH updates status and appliedAt" relied on the side door (to-do → applied). It now moves an applied application to interviewing.
+- **`npm run check`:** typecheck 0 errors, web build OK, 216/216 tests.

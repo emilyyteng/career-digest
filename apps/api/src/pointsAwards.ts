@@ -123,12 +123,12 @@ export async function awardApplicationApplied(
     withReflection?: boolean;
     reflectionMinutes?: number | null;
   },
-): Promise<PointsEventRow> {
+): Promise<{ event: PointsEventRow; created: boolean }> {
   const { total, breakdown } = applicationAppliedBreakdown({
     withReflection: input.withReflection,
     reflectionMinutes: input.reflectionMinutes,
   });
-  const { event } = await recordEarn(db, {
+  return recordEarn(db, {
     category: "application",
     amount: total,
     message: `${input.label} application complete! +${total} points`,
@@ -140,7 +140,6 @@ export async function awardApplicationApplied(
       reflection_minutes: input.reflectionMinutes ?? null,
     },
   });
-  return event;
 }
 
 export async function awardInterviewFinish(

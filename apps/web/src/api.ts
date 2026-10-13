@@ -42,6 +42,8 @@ export type ApplicationRow = {
   sourceUpdatedAt?: string | null;
   descriptionHtml?: string | null;
   documents?: { id: string; originalName: string; mimeType: string | null }[];
+  /** Detail only: the open application task behind a to-do row. */
+  openTaskId?: string | null;
 };
 
 async function parse<T>(res: Response | Promise<Response>): Promise<T> {
