@@ -1,0 +1,19 @@
+---
+description: Design-system rules for any web UI change
+globs: apps/web/src/**/*.tsx,apps/web/src/**/*.css
+alwaysApply: false
+---
+
+You are editing web UI. Before changing anything, read `docs/design-system.md`. It is the source of truth for visual and interaction conventions.
+
+Hard rules:
+
+- Use explicit variants/components. Never rely on, or add to, global element styling (`button`, `input`, `a`, ...).
+- Never add classes to the global `button:not(...)` opt-out chain in `styles.css`.
+- Use `:root` tokens for color, radius and shadow. No raw hex or ad-hoc `box-shadow`.
+- Every dialog renders inside `ModalLayer` (`apps/web/src/ModalLayer.tsx`).
+- Search for an existing component before creating a new pattern.
+- If the design system doesn't cover a decision, ask the user and record the answer in `docs/design-system.md`.
+- Prototype code lives only under `apps/web/src/prototype/`, and production code never imports it.
+
+Run the UI review checklist in `docs/design-system.md` before calling the work done.

@@ -18,15 +18,17 @@ data/**
 !data/README.md
 
 # Local agent skills / Cursor tooling (not part of the app)
+# AGENTS.md and .cursor/rules/ are tracked: they define the development process.
 .agents/
-AGENTS.md
 CLAUDE.md
 skills-lock.json
-docs/agents/
+.cursor/*
+!.cursor/rules/
 
-# Local agent glossary / ADRs / specs (not part of the public project surface)
+# Legacy local docs, being folded into docs/features/ (see AGENTS.md → Legacy docs)
 CONTEXT.md
 docs/adr/
+docs/agents/
 docs/specs/
 
 # Local demo walkthrough / presentation notes
