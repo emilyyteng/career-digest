@@ -42,9 +42,7 @@ The API exposes the current length of each streak and whether today already coun
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Reuse check done
 - [ ] Committed as `F08 M5-10: …`
 - [ ] End-of-task report given, including tests added and **Issues found**

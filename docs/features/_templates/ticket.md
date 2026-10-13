@@ -41,9 +41,7 @@ Existing components/helpers this ticket uses or extends. If none fit, say why.
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
 - [ ] Reuse check done
 - [ ] No production imports of prototype code

@@ -34,9 +34,7 @@ Extend `getPointsSummary` rather than adding a second summary endpoint. The Rewa
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
 - [ ] Reuse check done
 - [ ] Committed as `F08 M5-03: …`

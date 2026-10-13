@@ -45,9 +45,7 @@ Build the one-time notice as a reusable design-system variant (not one-off CSS),
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
 - [ ] Banner patterns written into `docs/design-system.md`
 - [ ] Reuse check done

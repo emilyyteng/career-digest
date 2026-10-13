@@ -39,9 +39,7 @@ Counts already exist in `completionsDiary.ts` (L386–436) and `leetcode_daily`.
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md`
 - [ ] Reuse check done
 - [ ] No production imports of prototype code

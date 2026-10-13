@@ -36,7 +36,7 @@ One exported `Queryable` type in a shared API module. All 11 files import it ins
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
+- [ ] `npm run check` passes
 - [ ] Committed as `MT-04: …`
 - [ ] End-of-task report given, including tests added and **Issues found**
 

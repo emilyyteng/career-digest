@@ -32,9 +32,7 @@ Search for `deepWork`, `deep_work` and `effort*` across `apps/api/src` and `apps
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md`
 - [ ] Reuse check done
 - [ ] Committed as `F08 M5-14: …`

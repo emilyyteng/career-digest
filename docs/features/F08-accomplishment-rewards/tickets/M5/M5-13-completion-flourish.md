@@ -22,7 +22,7 @@ If the verdict drops it, close this ticket as won't-do, and mark R5.2 dropped in
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md`
 - [ ] No production imports of prototype code
 - [ ] Committed as `F08 M5-13: …`

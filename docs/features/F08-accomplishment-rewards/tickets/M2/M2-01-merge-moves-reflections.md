@@ -33,9 +33,7 @@ Add the update next to the existing `interview_threads` update in `mergeApplicat
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Reuse check done
 - [ ] Committed as `F08 M2-01: …`
 - [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**

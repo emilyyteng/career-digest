@@ -43,9 +43,7 @@ Extend `weeklyGoals.ts` (`ensurePair` is the natural place to close weeks before
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md` (completion log entry)
 - [ ] Reuse check done
 - [ ] Committed as `F08 M5-05: …`

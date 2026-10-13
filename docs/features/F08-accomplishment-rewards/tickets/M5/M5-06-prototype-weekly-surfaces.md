@@ -43,7 +43,7 @@ The existing `WeeklyGoalsBlock`, `LeetcodeStepper`, `TodayStrip`, Home Upcoming 
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
+- [ ] `npm run check` passes
 - [ ] Follows `docs/design-system.md`
 - [ ] No production imports of prototype code
 - [ ] Committed as `F08 M5-06: …`
