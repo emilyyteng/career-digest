@@ -2,7 +2,7 @@
 
 **ID:** F09
 **Status:** Planned
-**Last updated:** 2026-10-12
+**Last updated:** 2026-10-13
 
 ## Problem
 
@@ -31,6 +31,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 - **R.3** (Established) Discuss and agree on the visual direction and component rules before any broad migration.
 - **R.4** (Established) Modals follow one common standard.
 - **R.5** (Established) The design-system reference must be something agents consult proactively. It is referenced from `AGENTS.md` and auto-attached for web UI files via `.cursor/rules/design-system.mdc`.
+- **R.6** (Established 2026-10-13) Banners behave consistently across the app. F08 M5-02 introduces the "one-time notice" (shown once, × closes it early, marked seen per item in `localStorage`) and documents it in `docs/design-system.md` next to the transient flash (`EarnFlash`). F09 then moves the Jobs ranking banner onto the one-time notice: it has no reason to be more persistent than the weekly congrats banner. Scheduled in the broader migration (M2+), not done in F08.
 
 ### M1
 
@@ -47,6 +48,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | `ModalLayer` provides the shared backdrop, Escape handling and dirty-discard guard; nearly every dialog renders inside it | `apps/web/src/ModalLayer.tsx` | Conforms R.4 (layer only) | Inner anatomy (header, body, footer, button order and size) unaudited; likely source of modal inconsistency |
 | Each prototype milestone has its own stylesheet (`prototype-m1.css`, `-m2`, `-m4`, `-m5`, `-rewards`) | `apps/web/src/prototype/` | Conflicts R.2 | |
 | All styles live in one 5,211-line file | `styles.css` | Unspecified | Splitting is Q7 |
+| The Jobs ranking banner stays until dismissed with ×, remembering dismissals per batch in `sessionStorage` (per tab); a successful batch hides on its own after 30 minutes | [`JobsPage.tsx` L114–175](../../../apps/web/src/features/jobs/JobsPage.tsx) | Conflicts R.6 | Checked by reading, 2026-10-13. Moves to the one-time notice once F08 M5-02 defines it |
 
 ## Out of scope (for now)
 
@@ -69,3 +71,4 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 
 - **2026-10-12:** Reference doc (`docs/design-system.md`) and migration (this spec) are kept separate: the reference is permanent, the migration is a bounded project.
 - **2026-10-12:** No full-app migration yet; scope M1 from F08 M5's dependencies.
+- **2026-10-13:** Banner behavior is standardized. F08 M5-02 defines the one-time notice; F09 owns moving the Jobs ranking banner onto it (R.6).
