@@ -82,7 +82,7 @@ Cron helpers (`npm run cron:install`, `cron:install-backup`) target macOS launch
 
 ## Testing
 
-Integration and unit tests both require `TEST_DATABASE_URL` pointing at a **separate** `*_test` database — never `career_digest`. GitHub Actions runs the full API suite on every push to `main`.
+Integration and unit tests both require `TEST_DATABASE_URL` pointing at a **separate** `*_test` database — never `career_digest`. GitHub Actions runs `npm run check` (API typecheck, web build, full API suite) on every push to `main` and on pull requests.
 
 ```bash
 export TEST_DATABASE_URL=postgres://YOUR_USER@localhost:5432/career_digest_test
