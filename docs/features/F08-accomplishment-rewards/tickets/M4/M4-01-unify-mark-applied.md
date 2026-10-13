@@ -1,6 +1,6 @@
 # M4-01: Mark applied from Jobs has the same outcome as from Tasks
 
-**Status:** Ready
+**Status:** In progress
 **Blocked by:** (none)
 **Implements:** R2.1b, R2.10, R2.13, R2.21 (from `../../spec.md`)
 **Type:** bug

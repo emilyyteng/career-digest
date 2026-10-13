@@ -30,9 +30,17 @@ Milestones M0, M1, M2 and M4 shipped before tickets existed, so they have no tic
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M4-01](./tickets/M4/M4-01-unify-mark-applied.md) | Mark applied from Jobs has the same outcome as from Tasks | bug | Ready | Scheduled with M5; includes blocking edits on to-do-backed applications (R2.21) |
-| [M4-02](./tickets/M4/M4-02-category-totals-double-reverse.md) | Category totals subtract a reversed earn twice | bug | Done | Scheduled with M5; before M5-03 |
-| [M4-03](./tickets/M4/M4-03-recomplete-earns-delta.md) | Reversed earns can be revived: re-completed tasks and re-raised LeetCode days | bug | Done | LeetCode banner moved to M5-01 |
+| [M4-01](./tickets/M4/M4-01-unify-mark-applied.md) | Mark applied from Jobs has the same outcome as from Tasks | bug | In progress | Scheduled with M5; includes blocking edits on to-do-backed applications (R2.21) |
+
+<details>
+<summary>Done (2)</summary>
+
+| Ticket | Title | Commit |
+|--------|-------|--------|
+| [M4-02](./tickets/M4/M4-02-category-totals-double-reverse.md) | Category totals subtract a reversed earn twice | `84bf883` |
+| [M4-03](./tickets/M4/M4-03-recomplete-earns-delta.md) | Reversed earns can be revived: re-completed tasks and re-raised LeetCode days | `9d155a5` (LeetCode banner moved to M5-01 in `20ef208`) |
+
+</details>
 
 ## M5: Weekly goals, streaks & achievements, points rules, celebration
 
@@ -40,7 +48,7 @@ Milestones M0, M1, M2 and M4 shipped before tickets existed, so they have no tic
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Draft | After M5-06, M4-03; open: Q32 (settle before build) |
+| [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Draft | After M5-06 (M4-03 done); open: Q32 (settle before build) |
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | build | Draft | After M5-05, M5-06; documents banner patterns in the design system |
 | [M5-03](./tickets/M5/M5-03-points-by-task-category.md) | Points breakdown splits tasks by task category | build | Ready | After M4-02 |
 | [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | build | Ready after M4-01 | Coordinate with M5-14 (same forms) |
