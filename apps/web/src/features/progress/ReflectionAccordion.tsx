@@ -624,8 +624,6 @@ export function ReflectionCompose({
       />
       <div className="progress-compose-meta">
         <LaneChips value={lane} onChange={onLaneChange} disabled={busy} />
-      </div>
-      <div className="progress-compose-actions">
         <button
           type="submit"
           className="secondary"

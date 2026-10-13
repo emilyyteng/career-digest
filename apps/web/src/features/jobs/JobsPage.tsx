@@ -19,6 +19,7 @@ import {
   type RankBatchStatus,
   type RerankQueueSnapshot,
 } from "../../api";
+import { jobAlreadyApplied } from "./jobStatus";
 import CompleteWorkModal, {
   type CompleteWorkResult,
 } from "../completion/CompleteWorkModal";
@@ -760,7 +761,8 @@ export default function Jobs() {
               <button
                 type="button"
                 className="secondary"
-                disabled={pendingId === job.id}
+                disabled={pendingId === job.id || jobAlreadyApplied(job)}
+                title={jobAlreadyApplied(job) ? "Already marked applied" : undefined}
                 onClick={() => markApplied(job)}
               >
                 Applied<span className="btn-icon" aria-hidden="true">✓</span>
@@ -864,7 +866,8 @@ export default function Jobs() {
           description="This removes the role from Jobs and moves it to Applications."
           confirmLabel="Mark applied"
           defaultLane="application"
-                    pending={pendingId === appliedConfirm.id}
+          estimateMinutes={appliedConfirm.taskEstimateMinutes ?? null}
+          pending={pendingId === appliedConfirm.id}
           onCancel={() => setAppliedConfirm(null)}
           onConfirm={(result) => void confirmApplied(result)}
         />

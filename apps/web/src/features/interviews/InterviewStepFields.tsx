@@ -1,5 +1,6 @@
 import { combineDateAndTime, toDateInputValue, toTimeInputValue } from "../../formatDate";
 import type { InterviewStep } from "../../api";
+import { minutesInputFromDraft, parseMinutesInput } from "../completion/ReflectionDraftFields";
 
 export const STEP_TYPE_OPTIONS = [
   { value: "assessment", label: "Assessment", mode: "due" as const },
@@ -19,6 +20,8 @@ export type InterviewStepFieldValues = {
   scheduledTime: string;
   url: string;
   notes: string;
+  /** Planned length before the step, actual time after; the finish modal prefills it. */
+  actualMinutes: string;
 };
 
 export function stepScheduleMode(kind: string): "due" | "scheduled" {
@@ -36,6 +39,7 @@ export function emptyInterviewStepFields(kind = "technical"): InterviewStepField
     scheduledTime: "",
     url: "",
     notes: "",
+    actualMinutes: "",
   };
 }
 
@@ -49,6 +53,7 @@ export function interviewStepToFields(step: InterviewStep): InterviewStepFieldVa
     scheduledTime: toTimeInputValue(step.scheduledAt),
     url: step.url ?? "",
     notes: step.notes ?? "",
+    actualMinutes: minutesInputFromDraft(step.actualMinutes),
   };
 }
 
@@ -64,6 +69,7 @@ export function interviewStepFieldsToPayload(fields: InterviewStepFieldValues) {
         : null,
     url: fields.url.trim() || null,
     notes: fields.notes.trim() || null,
+    actualMinutes: parseMinutesInput(fields.actualMinutes),
   };
 }
 
@@ -190,6 +196,19 @@ export default function InterviewStepFields({
               ? "Assessment or portal URL"
               : "Meeting or calendar URL"
           }
+        />
+      </label>
+      <label>
+        <span className="form-field-label">Time (min)</span>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          inputMode="numeric"
+          placeholder="0"
+          value={values.actualMinutes}
+          disabled={disabled}
+          onChange={(event) => patch({ actualMinutes: event.target.value })}
         />
       </label>
       {showNotes && (

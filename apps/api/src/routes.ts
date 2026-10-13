@@ -640,10 +640,16 @@ api.post("/interviews", async (req, res) => {
         scheduledAt?: string | null;
         url?: string | null;
         notes?: string | null;
+        actualMinutes?: number | null;
       };
     };
     if (!body.step?.title?.trim()) {
       res.status(400).json({ error: "Step title is required" });
+      return;
+    }
+    const actualMinutes = parseActualMinutes(body.step.actualMinutes);
+    if ("error" in actualMinutes) {
+      res.status(400).json({ error: actualMinutes.error });
       return;
     }
     const threadId = await createInterviewThread(pool, {
@@ -658,6 +664,7 @@ api.post("/interviews", async (req, res) => {
         scheduledAt: body.step.scheduledAt,
         url: body.step.url,
         notes: body.step.notes,
+        actualMinutes: actualMinutes.value ?? null,
       },
     });
     res.status(201).json({ id: threadId });
@@ -707,9 +714,15 @@ api.post("/interviews/:threadId/steps", async (req, res) => {
       url?: string | null;
       notes?: string | null;
       prepNotes?: string | null;
+      actualMinutes?: number | null;
     };
     if (!body.title?.trim()) {
       res.status(400).json({ error: "Step title is required" });
+      return;
+    }
+    const actualMinutes = parseActualMinutes(body.actualMinutes);
+    if ("error" in actualMinutes) {
+      res.status(400).json({ error: actualMinutes.error });
       return;
     }
     const stepId = await addInterviewStep(pool, req.params.threadId, {
@@ -721,6 +734,7 @@ api.post("/interviews/:threadId/steps", async (req, res) => {
       url: body.url,
       notes: body.notes,
       prepNotes: body.prepNotes,
+      actualMinutes: actualMinutes.value ?? null,
     });
     res.status(201).json({ id: stepId });
   } catch (err) {
@@ -768,10 +782,6 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
     const finishedAfter = body.status
       ? finishStatuses.has(body.status)
       : before != null && finishStatuses.has(before.status);
-    if (actualMinutes.value !== undefined && !finishedAfter) {
-      res.status(400).json({ error: "Time can only be set on a finished step" });
-      return;
-    }
     await patchInterviewStep(pool, req.params.threadId, req.params.stepId, body);
     if (!before || !thread) {
       res.json({ ok: true, points: null });
@@ -810,12 +820,15 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
       }
     }
     // A re-finish earns nothing again (R4.11), but a changed time still re-scores the one earn.
+    // Time on an unfinished step is planned time: it re-scores an earn kept from an earlier
+    // finish but never creates one.
     if (minutes !== before.actualMinutes) {
       const { event } = await adjustInterviewFinishActual(pool, {
         stepId: before.id,
         label,
         kind,
         actualMinutes: minutes,
+        seedIfMissing: finishedAfter,
       });
       res.json({ ok: true, points: event ? serializePointsEarn(event) : null });
       return;

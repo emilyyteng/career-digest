@@ -56,7 +56,7 @@ function stepIsFinished(step: InterviewStep): boolean {
   return step.status === "completed" || step.status === "awaiting_employer";
 }
 
-/** A finished step's actual time; saving re-scores its earn (R5.31). */
+/** A previous step's time; saving re-scores a finished step's earn (R5.31). */
 function StepTimeEditor({
   step,
   onSave,
@@ -217,11 +217,12 @@ export default function InterviewWorkspace() {
     setError(null);
     setSavingStep(true);
     try {
-      await patchInterviewStep(
+      const saved = await patchInterviewStep(
         threadId,
         editingStepId,
         interviewStepFieldsToPayload(editStepFields),
       );
+      if (saved.points) setEarnFlash(saved.points);
       setEditingStepId(null);
       await load();
     } catch (err) {

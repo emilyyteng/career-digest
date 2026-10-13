@@ -176,9 +176,52 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
     expect(await balance()).toBe(80 + 60);
   });
 
-  it("a step that isn't finished can't take a time", async () => {
+  it("an unfinished step takes planned time without earning; finishing blank keeps it", async () => {
     const step = await technicalStep();
-    await step.patch({ actualMinutes: 20 }).expect(400);
+    const planned = await step.patch({ actualMinutes: 60 }).expect(200);
+    expect(planned.body.points).toBeNull();
+    expect(await earn("interview_finish", step.stepId)).toBeNull();
+    expect(await balance()).toBe(0);
+
+    const finished = await step.patch({ status: "completed", actualMinutes: null }).expect(200);
+    expect(finished.body.points.amount).toBe(80 + 60);
+  });
+
+  it("a new step can be created with planned time", async () => {
+    const step = await technicalStep();
+    await step.patch({ status: "skipped" }).expect(200);
+    await apiClient()
+      .post(`/api/interviews/${step.threadId}/steps`)
+      .send({ kind: "phone", title: "HM chat", actualMinutes: 30 })
+      .expect(201);
+    const thread = await apiClient().get(`/api/interviews/${step.threadId}`).expect(200);
+    const added = thread.body.steps.find((s: { title: string }) => s.title === "HM chat");
+    expect(added.actualMinutes).toBe(30);
+
+    const app = await seedManualApplication({ status: "applied", company: "New Co" });
+    const created = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [app.id],
+        step: { kind: "assessment", title: "HackerRank", actualMinutes: 90 },
+      })
+      .expect(201);
+    const fresh = await apiClient().get(`/api/interviews/${created.body.id}`).expect(200);
+    expect(fresh.body.steps[0].actualMinutes).toBe(90);
+  });
+
+  it("a reopened step's time edit re-scores the earn it kept, with a banner", async () => {
+    const step = await technicalStep();
+    await step.patch({ status: "completed", actualMinutes: 30 }).expect(200);
+    await step.patch({ status: "pending" }).expect(200);
+
+    const edited = await step.patch({ actualMinutes: 50 }).expect(200);
+    expect(edited.body.points).toMatchObject({ amount: 20 });
+    expect(await balance()).toBe(80 + 50);
+    const { rows } = await pool.query(
+      `SELECT 1 FROM points_events WHERE kind = 'earn' AND source_type = 'interview_finish'`,
+    );
+    expect(rows).toHaveLength(1);
   });
 
   it("misc scores +10 base + minutes, +20 with a reflection", async () => {

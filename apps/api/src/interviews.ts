@@ -382,6 +382,7 @@ export async function createInterviewThread(
       scheduledAt?: string | null;
       url?: string | null;
       notes?: string | null;
+      actualMinutes?: number | null;
     };
   },
 ): Promise<string> {
@@ -454,8 +455,8 @@ export async function createInterviewThread(
 
   await db.query(
     `INSERT INTO application_steps (
-       thread_id, kind, title, status, due_at, scheduled_at, url, notes, sort_order
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0)`,
+       thread_id, kind, title, status, due_at, scheduled_at, url, notes, actual_minutes, sort_order
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)`,
     [
       threadId,
       kind,
@@ -465,6 +466,7 @@ export async function createInterviewThread(
       scheduledAt ?? null,
       body.step.url?.trim() || null,
       body.step.notes?.trim() || null,
+      body.step.actualMinutes ?? null,
     ],
   );
 
@@ -627,6 +629,7 @@ export async function addInterviewStep(
     url?: string | null;
     notes?: string | null;
     prepNotes?: string | null;
+    actualMinutes?: number | null;
   },
 ): Promise<string> {
   const thread = await db.query(`SELECT id FROM interview_threads WHERE id = $1`, [threadId]);
@@ -657,8 +660,9 @@ export async function addInterviewStep(
 
   const inserted = await db.query<{ id: string }>(
     `INSERT INTO application_steps (
-       thread_id, kind, title, status, due_at, scheduled_at, url, notes, prep_notes, sort_order
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       thread_id, kind, title, status, due_at, scheduled_at, url, notes, prep_notes,
+       actual_minutes, sort_order
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING id`,
     [
       threadId,
@@ -670,6 +674,7 @@ export async function addInterviewStep(
       body.url?.trim() || null,
       body.notes?.trim() || null,
       body.prepNotes?.trim() || null,
+      body.actualMinutes ?? null,
       order.rows[0]?.max ?? 0,
     ],
   );

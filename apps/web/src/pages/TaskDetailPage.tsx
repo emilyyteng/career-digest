@@ -157,9 +157,9 @@ export default function TaskDetailPage() {
           actualMinutes.trim() === "" ? null : Number(actualMinutes.trim());
         if (
           actualMinutes.trim() !== "" &&
-          (!Number.isInteger(actual) || (actual ?? 0) <= 0)
+          (!Number.isInteger(actual) || (actual ?? 0) < 0)
         ) {
-          setError("Actual time must be a positive number of minutes");
+          setError("Actual time must be 0 or more minutes");
           setSaving(false);
           return;
         }
@@ -369,7 +369,7 @@ export default function TaskDetailPage() {
                       {" / "}
                       {task.actualMinutes != null
                         ? `actual ${task.actualMinutes}`
-                        : "actual —"}
+                        : "actual 0"}
                     </span>
                   )}
                   {task.pointsEarned != null && task.pointsEarned > 0 && (
@@ -565,10 +565,10 @@ export default function TaskDetailPage() {
                         Actual (min)
                         <input
                           type="number"
-                          min={1}
+                          min={0}
                           step={1}
                           inputMode="numeric"
-                          placeholder="15"
+                          placeholder="0"
                           value={actualMinutes}
                           onChange={(e) => setActualMinutes(e.target.value)}
                         />
@@ -667,7 +667,7 @@ export default function TaskDetailPage() {
           }
           confirmLabel={isApplication ? "Mark applied" : "Complete"}
           defaultLane={defaultLaneForTask(isApplication)}
-          estimateMinutes={isApplication ? null : task.estimateMinutes}
+          estimateMinutes={task.estimateMinutes}
           pending={saving}
           onCancel={() => setCompleteConfirm(false)}
           onConfirm={(result) => void onComplete(result)}

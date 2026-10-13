@@ -22,7 +22,7 @@ Use the numbers in R5.25 and R5.26 as mock values.
 
 ## Design questions (prototype tickets only)
 
-1. **Today strip with streaks (R5.27):** how the apps and LC streaks read at a glance, including "today not done yet", with the deep-work badges gone.
+1. **Today strip with streaks (R5.27):** how the apps and LC streaks read at a glance, including "today not done yet", with the deep-work badges gone. The user is considering bringing the strip's badges back to mark that a reflection was written that day (2026-10-13); include at least one variant with and one without, and decide here. The strip has no badges until then.
 2. **Streak and achievement surface:** where they're seen before M8 (for example a block on Progress) and how locked, unlocked and next achievements look.
 3. **Unlock moment:** how a streak milestone or achievement is announced (`EarnFlash`, the one-time notice, or something else).
 4. **Completion flourish (Q7):** keep or drop; if kept, which events trigger it and whether it replaces `EarnFlash`.

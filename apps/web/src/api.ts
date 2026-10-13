@@ -12,6 +12,8 @@ export type JobCard = {
   applicationId: string | null;
   applicationStatus: string | null;
   onTasks?: boolean;
+  /** The open application task's estimate; prefills the mark-applied time. */
+  taskEstimateMinutes?: number | null;
   rankScore: number | null;
   rankEligible: boolean | null;
   rankReason: string | null;

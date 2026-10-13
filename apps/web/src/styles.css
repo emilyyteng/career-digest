@@ -3821,11 +3821,6 @@ button.progress-lane-chip.is-on:not(:disabled):hover {
   margin: 0.35rem 0 0;
   font-size: 0.82rem;
 }
-.progress-compose-actions {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
 .progress-compose textarea,
 .progress-note-body textarea {
   width: 100%;

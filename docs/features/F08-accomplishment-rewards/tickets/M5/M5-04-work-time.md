@@ -21,7 +21,7 @@ Per R5.31:
    - Applications get an actual time, stored on the application, since some applications have no task (Proposed: a new `applications.actual_minutes` column). An application task's actual time shows the application's.
    - Interview steps get an actual time (new `application_steps.actual_minutes` column).
    - Both are entered in their completion modals, in the same place the misc modal has its time field, outside the reflection panel.
-   - Both are editable afterwards: on the application page, and on a finished step in the interview workspace (Proposed placements; settle in the M5 design pass if they don't fit).
+   - Both are editable afterwards: on the application page, and on a finished step in the interview workspace (Proposed placements; settle in the M5 design pass if they don't fit). A step's time can also be set before it's finished (follow-up below).
 2. **Scoring** (`pointsFormulas.ts`):
    - application: +5 + 1 × actual minutes + 20 if a reflection was written in the modal
    - interview step: kind points + 1 × actual minutes + 20 if a reflection was written
@@ -70,12 +70,19 @@ Done 2026-10-13. Checked by running `npm run check` (231 tests), including the n
 - **Schema.** Migration 028 adds `applications.actual_minutes` and `application_steps.actual_minutes`. For the copy, an application takes its completed application task's time first, else the minutes of reflections written with it in a completion modal; a step takes its modal reflections' minutes. Modal reflections are told apart by having no `reflection_create` earn (their points were bundled into the work's earn), which holds for every reflection with minutes, since minutes only exist since 025. Standalone reflections linked later aren't copied. The application task then gets its application's time if it had none. The migration only fills blanks, so re-running it changes nothing (the test runs it twice).
 - **Scoring** (`pointsFormulas.ts`): `POINTS.miscTaskBase` 10, `applicationBase` 5, `reflectionBonus` 20, with one `pointsForMinutes` (blank or negative → 0). `miscTaskDefaultMinutes` and `pointsForReflectionMinutes` are gone. Each breakdown keeps one work slice (base + minutes) and one reflection slice.
 - **Edits** (`pointsAwards.ts`): `adjustTaskCompleteActual`, `adjustApplicationActual` and `adjustInterviewFinishActual` share `adjustWorkEarn`, which re-scores under the current formula with one adjust event and returns it, so `PATCH /tasks/:id`, `PATCH /applications/:id` and `PATCH /interviews/:threadId/steps/:stepId` now return `points` for the banner. Whether the earn had a reflection comes from its `with_reflection` meta.
-- **Sync.** `setApplicationActualMinutes` writes the application and its completed application task together. A time edit sent to an application task is redirected to its application. A to-do application's time is refused (409); it's set by mark applied. A time on a step that isn't finished is refused (400).
+- **Sync.** `setApplicationActualMinutes` writes the application and its completed application task together. A time edit sent to an application task is redirected to its application. A to-do application's time is refused (409); it's set by mark applied. A step's time can be set at any status (see the follow-up below).
 - **Mark applied** takes the time at the top level (`actualMinutes`), not inside the reflection. The reflection is saved without minutes.
 - **Web.** The time field is outside the reflection in every completion modal. In the complete-work modal it's the misc field for every mode, and the "gated" mode is removed. The interview finish modal's page 2 is now "Reflection and time". `ReflectionDraft` has no minutes, and the Progress compose minutes field is removed. Edits: the application page's Stage form has "Actual time (min)" once applied; finished steps in the interview workspace's Previous steps have a time field with Save time; the task detail page and the Completed tab now show the adjust banner.
-- **Proposed** (behavior the ticket didn't specify):
+- **Confirmed by the user (2026-10-13)**, first shipped as Proposed:
   - Finishing a step with the time blank keeps its saved time, like mark applied keeps an open task's time. The finish modal is prefilled with the saved time, so re-finishing after a reopen doesn't silently clear it.
   - Re-finishing a step with a different time re-scores its one earn with an adjust (no second earn, R4.11).
   - Editing the time of an application or step finished before the ledger seeds its earn, as misc edits already do.
-  - The mark-applied modal isn't prefilled with the application task's estimate (the misc modal is), which is unchanged from before.
 - **Weekly and monthly "minutes worked"** in the Ledger completions now sum misc tasks, applications and interview steps instead of misc tasks and reflections.
+
+### Follow-up (user decisions, 2026-10-13)
+
+Checked by running `npm run check` (233 tests); the UI by reading and the build, not in a browser.
+
+- **Planned step time.** A step's time can be set before it's finished, since an interview's or assessment's length is usually known ahead. The add/edit step form (workspace, Add interview, and the finish modal's next step) has a "Time (min)" field, and the finish modal is prefilled with it. Time on an unfinished step never creates an earn; if the step kept an earn from an earlier finish (reopened), the edit re-scores that earn and shows the banner. Saving an edited step in the workspace now shows the banner too.
+- **Mark-applied prefill.** The mark-applied modal is prefilled with the application task's estimate, like the misc modal: on Tasks and the task page from the task, on Jobs from the posting's open application task (`taskEstimateMinutes` on the job).
+- **Placeholders.** Every actual-time field shows a `0` placeholder, and read-only "est / actual" lines show `actual 0` for blank time, since blank scores 0. The misc actual-time edits now accept 0, matching the other time fields.

@@ -319,6 +319,7 @@ export default function ApplicationDetail() {
                     min={0}
                     step={1}
                     inputMode="numeric"
+                    placeholder="0"
                     value={actualTime}
                     onChange={(e) => setActualTime(e.target.value)}
                   />

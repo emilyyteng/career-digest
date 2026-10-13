@@ -27,6 +27,7 @@ import CompleteWorkModal, {
   type CompleteWorkResult,
 } from "../completion/CompleteWorkModal";
 import RerankDialog from "./RerankDialog";
+import { jobAlreadyApplied } from "./jobStatus";
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -253,6 +254,7 @@ export default function JobDetail() {
 
   const mismatch = isMismatch(job);
   const needsDescription = isBlankJobDescription(job.descriptionHtml);
+  const alreadyApplied = jobAlreadyApplied(job);
   const showCompanyHide = !mismatch && !needsDescription && siblingCount >= 2;
   const rerank = rerankQueue.find((item) => item.postingId === job.id);
   const rerankBusy =
@@ -328,7 +330,13 @@ export default function JobDetail() {
             ? "Remove from tasks"
             : "Add to tasks"}
         </button>
-        <button type="button" className="secondary" disabled={pending} onClick={() => markApplied()}>
+        <button
+          type="button"
+          className="secondary"
+          disabled={pending || alreadyApplied}
+          title={alreadyApplied ? "Already marked applied" : undefined}
+          onClick={() => markApplied()}
+        >
           Applied<span className="btn-icon" aria-hidden="true">✓</span>
         </button>
         {showCompanyHide && (
@@ -409,7 +417,8 @@ export default function JobDetail() {
           description="This removes the role from Jobs and moves it to Applications."
           confirmLabel="Mark applied"
           defaultLane="application"
-                    pending={pending}
+          estimateMinutes={job.taskEstimateMinutes ?? null}
+          pending={pending}
           onCancel={() => setAppliedConfirm(false)}
           onConfirm={(result) => void confirmApplied(result)}
         />

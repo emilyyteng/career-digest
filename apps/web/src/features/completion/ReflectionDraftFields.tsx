@@ -16,7 +16,7 @@ export function MinutesField({
   onChange,
   disabled,
   label = "Actual time (min)",
-  placeholder,
+  placeholder = "0",
 }: {
   value: string;
   onChange: (next: string) => void;

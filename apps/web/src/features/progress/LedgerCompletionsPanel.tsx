@@ -126,7 +126,7 @@ function CompletionRow({
               {row.subtitle ? " · " : ""}
               {row.estimateMinutes != null ? `est ${row.estimateMinutes}` : "est —"}
               {" / "}
-              {row.actualMinutes != null ? `actual ${row.actualMinutes}` : "actual —"}
+              {row.actualMinutes != null ? `actual ${row.actualMinutes}` : "actual 0"}
               {disp && (
                 <span className={`ledger-disparity ${disp.tone}`}> · {disp.text}</span>
               )}

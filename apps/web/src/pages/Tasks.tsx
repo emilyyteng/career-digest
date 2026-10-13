@@ -441,15 +441,15 @@ export default function Tasks() {
     if (draft === saved) return false;
     if (draft === "") return true;
     const n = Number(draft);
-    return Number.isInteger(n) && n > 0;
+    return Number.isInteger(n) && n >= 0;
   }
 
   async function saveActualMinutes(row: TaskRow) {
     if (!actualSaveEnabled(row)) return;
     const draft = actualDraftFor(row).trim();
     const actualMinutes = draft === "" ? null : Number(draft);
-    if (draft !== "" && (!Number.isInteger(actualMinutes) || (actualMinutes ?? 0) <= 0)) {
-      setError("Actual time must be a positive number of minutes");
+    if (draft !== "" && (!Number.isInteger(actualMinutes) || (actualMinutes ?? 0) < 0)) {
+      setError("Actual time must be 0 or more minutes");
       return;
     }
     setPendingId(row.id);
@@ -579,7 +579,7 @@ export default function Tasks() {
                     {" / "}
                     {row.actualMinutes != null
                       ? `actual ${row.actualMinutes}`
-                      : "actual —"}
+                      : "actual 0"}
                   </span>
                 ) : null}
                 {row.estimateMinutes != null &&
@@ -789,10 +789,10 @@ export default function Tasks() {
                   <span>Actual (min)</span>
                   <input
                     type="number"
-                    min={1}
+                    min={0}
                     step={1}
                     inputMode="numeric"
-                    placeholder="15"
+                    placeholder="0"
                     value={actualDraftFor(row)}
                     disabled={pendingId === row.id}
                     aria-label="Actual time in minutes"
@@ -1040,11 +1040,7 @@ export default function Tasks() {
           }
           confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
           defaultLane={defaultLaneForTask(isApplicationTask(completeConfirm))}
-          estimateMinutes={
-            isApplicationTask(completeConfirm)
-              ? null
-              : completeConfirm.estimateMinutes
-          }
+          estimateMinutes={completeConfirm.estimateMinutes}
           pending={pendingId === completeConfirm.id}
           onCancel={() => setCompleteConfirm(null)}
           onConfirm={(result) => void confirmComplete(result)}

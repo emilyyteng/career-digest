@@ -227,6 +227,14 @@ export async function listJobs(params: ListJobsParams): Promise<{
            AND t.status = 'open'
            AND t.category = 'application'
        ) AS "onTasks",
+       (
+         SELECT t.estimate_minutes FROM tasks t
+         WHERE t.posting_id = p.id
+           AND t.status = 'open'
+           AND t.category = 'application'
+         ORDER BY t.created_at
+         LIMIT 1
+       ) AS "taskEstimateMinutes",
        f.kind AS "feedbackKind",
        COUNT(*) OVER()::int AS "totalCount"
      FROM postings p
@@ -282,6 +290,14 @@ export async function getJobById(id: string): Promise<Record<string, unknown> | 
            AND t.status = 'open'
            AND t.category = 'application'
        ) AS "onTasks",
+       (
+         SELECT t.estimate_minutes FROM tasks t
+         WHERE t.posting_id = p.id
+           AND t.status = 'open'
+           AND t.category = 'application'
+         ORDER BY t.created_at
+         LIMIT 1
+       ) AS "taskEstimateMinutes",
        a.notes AS "applicationNotes",
        f.kind AS "feedbackKind",
        f.note AS "feedbackNote"

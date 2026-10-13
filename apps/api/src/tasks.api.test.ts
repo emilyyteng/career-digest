@@ -208,6 +208,11 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     const job = jobs.body.jobs.find((row: { id: string }) => row.id === posting.id);
     expect(job?.onTasks).toBe(true);
     expect(job?.applicationStatus).toBe("todo");
+    expect(job?.taskEstimateMinutes).toBeNull();
+
+    await apiClient().patch(`/api/tasks/${res.body.id}`).send({ estimateMinutes: 45 }).expect(200);
+    const detail = await apiClient().get(`/api/jobs/${posting.id}`).expect(200);
+    expect(detail.body.taskEstimateMinutes).toBe(45);
   });
 
   it("DELETE /api/tasks/from-posting/:postingId removes task and todo application", async () => {

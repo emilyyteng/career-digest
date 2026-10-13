@@ -324,11 +324,12 @@ async function adjustWorkEarn(
     label: string;
     total: number;
     actualMinutes: number | null;
-    seed: () => Promise<{ event: PointsEventRow; created: boolean }>;
+    seed: (() => Promise<{ event: PointsEventRow; created: boolean }>) | null;
   },
 ): Promise<WorkTimeAdjustResult> {
   const existing = await findEarnEvent(db, input.sourceType, input.sourceId);
   if (!existing) {
+    if (!input.seed) return { event: null, appliedDelta: 0, requestedDelta: 0 };
     const { event, created } = await input.seed();
     return created
       ? { event, appliedDelta: event.amount, requestedDelta: event.amount }
@@ -429,6 +430,8 @@ export async function adjustInterviewFinishActual(
     label: string;
     kind: string | null | undefined;
     actualMinutes: number | null;
+    /** False for an unfinished step: re-score a kept earn, but don't create one. */
+    seedIfMissing?: boolean;
   },
 ): Promise<WorkTimeAdjustResult> {
   const sourceId = interviewFinishSourceId(input.stepId);
@@ -449,13 +452,16 @@ export async function adjustInterviewFinishActual(
     label: input.label,
     total,
     actualMinutes: input.actualMinutes,
-    seed: () =>
-      awardInterviewFinish(db, {
-        stepId: input.stepId,
-        label: input.label,
-        kind,
-        withReflection,
-        actualMinutes: input.actualMinutes,
-      }),
+    seed:
+      input.seedIfMissing === false
+        ? null
+        : () =>
+            awardInterviewFinish(db, {
+              stepId: input.stepId,
+              label: input.label,
+              kind,
+              withReflection,
+              actualMinutes: input.actualMinutes,
+            }),
   });
 }
