@@ -13,7 +13,7 @@ Deep work stops being a concept in the UI and the API's outputs:
 - The today strip's deep-work badges go ([`TodayStrip.tsx` L58–65](../../../../../apps/web/src/features/progress/TodayStrip.tsx)). M5-12 then replaces the `x/3` counts with streaks.
 - Reflections in general replace deep work on Progress (R5.29, Q49):
   - The per-lane marks on the heatmap and History calendar ([`progress.ts` L293–310](../../../../../apps/api/src/progress.ts), `effortDaysByLane`; drawn in `ProgressHeatmap.tsx` and `HistoryCalendar.tsx`) count any reflection in the lane, not only deep-work ones. The heatmap tooltip's "· deep work" becomes "· reflection".
-  - The week and month summary's "N deep work" (`countDeepWorkReflectionsInRange`, [`progress.ts` L425](../../../../../apps/api/src/progress.ts); shown at `ProgressPage.tsx` L448 and L455) becomes total reflection minutes for the period. (Proposed: reflections without minutes add 0.)
+  - The week and month summary's "N deep work" (`countDeepWorkReflectionsInRange`, [`progress.ts` L425](../../../../../apps/api/src/progress.ts); shown at `ProgressPage.tsx` L448 and L455) becomes the number of reflections written in the period.
 - The `deep_work` column stays in the database, unused, with no migration, so no history is lost. The API stops requiring or returning it.
 
 ## Acceptance criteria
@@ -21,7 +21,7 @@ Deep work stops being a concept in the UI and the API's outputs:
 - [ ] No reflection form shows a deep-work toggle; creating a reflection without one works everywhere.
 - [ ] The today strip has no deep-work badges on Home or Progress.
 - [ ] A day with a reflection that was saved with deep work off now shows the lane mark on the heatmap and History calendar.
-- [ ] The week and month summaries show reflection minutes (for example, reflections of 30 and 45 minutes and one blank show 75 min), not a deep-work count.
+- [ ] The week and month summaries show the number of reflections, counting those saved with deep work off.
 - [ ] No points change (deep work never affected points).
 - [ ] Existing tests that assert deep-work behavior (`progress.api.test.ts`) are updated to the new behavior, not deleted wholesale.
 

@@ -117,6 +117,11 @@ Report the baseline; don't hide new failures behind it.
 - Before any cleanup, inspect and report first. Uncommitted work is never discarded.
 - Keep commits scoped: no unrelated formatting or drive-by refactors.
 
+## Database migrations
+
+- Never edit a migration file in `apps/api/src/sql/` once it has been committed. Put any change in a new, higher-numbered file. `migrate()` records each applied file's checksum in `schema_migrations` and refuses to run if an applied file changed (MT-06).
+- Each file runs once, in its own transaction. Still write it to be safe to re-run (`IF NOT EXISTS`, guarded updates), since a fresh database or a recreated test database runs every file.
+
 ## Reuse before writing
 
 Before writing a component, hook, helper, or API route, search for an existing one (`rg` the concept, check `apps/web/src/` top-level shared files and `features/*/`). Extend an existing piece rather than duplicating it. Modals must use the shared `ModalLayer` (`apps/web/src/ModalLayer.tsx`); don't hand-roll backdrops, focus, or Escape handling. If no fitting piece exists, say so in the ticket.

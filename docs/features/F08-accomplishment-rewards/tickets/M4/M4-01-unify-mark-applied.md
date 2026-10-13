@@ -69,6 +69,8 @@ Close the side door (R2.21): mark applied becomes the only way a to-do-backed ro
 
 Extract from `completeTask` ([`tasks.ts`](../../../../../apps/api/src/tasks.ts)) and `transferTaskReflectionsToApplication` ([`progress.ts`](../../../../../apps/api/src/progress.ts)). Reuse `awardApplicationApplied` ([`pointsAwards.ts`](../../../../../apps/api/src/pointsAwards.ts)), which already records one earn per application. Don't add a third endpoint unless both wrappers prove awkward.
 
+This ticket keeps today's points and time rules (reflection minutes saved as the task's actual time). M5-04 then changes them (R5.31): the time moves onto the application and the earn becomes +5 + minutes + 20 if a reflection. Build the shared operation so that change lands in one place.
+
 Out of scope: MT-01's `"todo"` type error (it may disappear as a side effect; note it if so).
 
 ## Definition of done

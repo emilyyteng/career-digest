@@ -108,14 +108,14 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   1. in the completion modal
   2. afterwards, in Edit details on the completed task
 
-  Changing it adjusts the task's points. Minutes entered in a reflection during completion are saved as the task's actual time. Applications have no later actual-time edit; their reflection minutes are adjustable instead (R5.19).
+  Changing it adjusts the task's points. Minutes entered in a reflection during completion are saved as the task's actual time. Applications have no later actual-time edit; their reflection minutes are adjustable instead (R5.19). (Changes in M5: R5.31 moves all time onto the work, so applications and interview steps get their own actual time, editable afterwards, and reflections carry none.)
 - **R2.11** (Established) Interview finish has two pages: page 1 for outcomes and next step, then Next, then page 2 for an optional reflection, then Finish step.
 - **R2.12** (Established) The modals get real visual design, not stacked textareas. F09 now governs the visual standard.
 - **R2.13** (Established) Marking an application applied from Jobs (card or job detail) has the same outcome as marking it applied from Tasks:
   - points awarded once
   - the modal's reflection linked to the application
   - the task's reflections transferred (R2.1b)
-  - reflection minutes saved as the task's actual time
+  - the modal's time saved as the application's actual time (on the task until M5-04; on the application after, R5.31)
   - the same weekly apps handling
 
   Changing an existing application's status on its own page earns nothing again. Ticket: M4-01.
@@ -136,7 +136,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R4.1** (Established) One global points balance, with a breakdown by category.
 - **R4.2** (Established) An event log of points earned. Spend entries come with M7.
 - **R4.3** (Established, locked in M4) Earnings are forward-only. No earn is deleted; corrections are recorded as reverse or adjust events. Subtasks earn nothing.
-- **R4.4** (Established, locked in M4; the weekly row changes in R5.9 and R5.15, the LeetCode row in R5.20) The points formula:
+- **R4.4** (Established, locked in M4; the weekly row changes in R5.9 and R5.15, the LeetCode row in R5.20, and the application, interview and reflection rows in R5.31) The points formula:
 
 | Action | Points |
 |--------|--------|
@@ -204,16 +204,24 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 
   Apps and LC are worth the same per unit: LC takes more effort, but a tagged app is more likely to be a high-priority one.
 - **R5.16** (Established) Streaks and achievements award points, extending the M4 rules. Details in R5.25–R5.27.
-- **R5.19** (Established) Editing a reflection's minutes adjusts the points that came from those minutes, with an adjust event. This covers:
-  - the standalone reflection earn
-  - the reflection add-on of an application or interview step earn
+- **R5.19** (Superseded 2026-10-13 by R5.31) Editing a reflection's minutes adjusts the points that came from those minutes. Reflections no longer carry minutes; editing the work's actual time adjusts points instead.
+- **R5.30** (Superseded 2026-10-13 by R5.31) One model for reflection minutes, editable everywhere, moving points only where the reflection created them. Replaced because time with two owners (the work and the reflection) needed an exception for every path.
+- **R5.31** (Established 2026-10-13, Q51) **Time belongs to the work; a reflection is a note.** The numbers are a starting point and may be tuned, like the rest of the points rules; the gacha (M7) is priced against them. Part of the points rules, so it's in the in-app rules reference (R7.9).
+  - **Work has its own actual time:** misc tasks (as today), applications and interview steps. It's entered in the completion modal and editable afterwards, and every edit adjusts that work's earn with an adjust event.
+  - **Reflections have no time.** No reflection form has a minutes field, wherever reflections are created or edited.
+  - **Points:**
 
-  A misc task's reflection add-on is flat, so it's unaffected. Reflections that earned nothing (linked later) stay at 0.
-- **R5.30** (Established 2026-10-13, Q50) One model for reflection minutes. It's part of the points rules, so it's also in the in-app rules reference (R7.9).
-  - Every reflection can have minutes, entered when it's created and editable later, wherever reflections are created or edited.
-  - A reflection's minutes move points only where that reflection created points: a standalone reflection's own earn, or the reflection add-on of the application or interview earn it was written in (R5.19). Otherwise editing minutes changes no points: reflections linked later, and the misc task's modal reflection, whose add-on is flat.
-  - In the misc completion modal, the task's actual time stays the one time field; the reflection there has no separate minutes.
-  - Editing the minutes of an application's modal reflection also updates the completed application task's actual time, which was copied from it.
+    | Action | Points |
+    |--------|--------|
+    | Misc task complete | 1 × actual minutes, or 15 if blank (unchanged) |
+    | Application mark-applied | Flat +5, plus 1 × actual minutes. (Proposed: blank time adds 0.) |
+    | Interview step finish | Flat by kind (unchanged values), plus 1 × actual minutes. (Proposed: blank time adds 0.) |
+    | Reflection | Flat +20 wherever it's written: in a completion modal, from Progress, or from a detail page. Linking an existing reflection to work later earns nothing more. |
+
+    Time counts whether or not there's a reflection. For example, an application with 60 minutes and a reflection earns 5 + 60 + 20 = 85 (65 before).
+  - **Applications store their time on the application,** since some have no task (Proposed). An application task's actual time shows the application's.
+  - **Existing data:** minutes on reflections written with an application or interview step are copied onto that work if it has no time yet. All other reflection minutes stay in the database, unused, so no history is lost. Past earns keep their points; an earn is re-scored under the current formula only when its work's time is next edited (Proposed).
+  - Applications never reverse (R4.10): a lower time is an adjust down, not a reverse. Re-finishing an interview step still earns nothing again (R4.11).
 - **R5.20** (Established; values pending Q32) LeetCode points vary by difficulty tier (easy, medium, hard). Tiers are built in M5, in the same stepper rework as R5.17, because they change points from then on; their visual polish is M8 (R8.3). Existing untiered counts aren't migrated and keep their points. Wherever past days are shown by tier, they count as medium. Ticket: M5-01.
 - **R5.21** (Established 2026-10-13) The points breakdown splits its single task row by task category (School, Reading, Writing, Admin, custom), because tasks make up most of the total and a single row isn't informative. A task's points belong to its category at completion, recorded on the earn. Earns from before M5-03 fall back to the task's current category (2026-10-13). Earns whose task was since deleted go to one "Deleted tasks" row, shown only when it isn't 0 (2026-10-13). Ticket: M5-03.
 
@@ -240,7 +248,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 
 - **R5.29** (Established 2026-10-13) Deep work is retired. It was a motivational display; now that reflections carry minutes and points, whether one is marked deep work adds little. The toggle leaves every reflection form, and the today strip loses its deep-work badges. This supersedes R2.4 and B5. Where deep work fed Progress, reflections in general take its place (Q49, 2026-10-13):
   - **Heatmap and History calendar marks:** a lane's day is marked when it has at least one reflection in that lane, of any kind.
-  - **Week and month summary:** the "deep work" count becomes total reflection minutes for the period. (Proposed: reflections without minutes add 0.)
+  - **Week and month summary:** the "deep work" count becomes the number of reflections written in the period.
   - The `deep_work` column stays in the database, unused, so no history is lost.
 
 **LeetCode logging**
@@ -279,7 +287,7 @@ M7 is devoted to the gacha and spending points.
 - **R7.5** (Established) v1 is the working product. Ongoing design updates go to a separate feature, created only when needed.
 - **R7.6** (Established) The pull banner loads quickly. The prototype is far too slow; recheck during implementation.
 - **R7.8** (Established) Rewards hosts the points log, with a simple filter: earnings only, pulls only, or both. What a pull entry shows is decided in M7.
-- **R7.9** (Established 2026-10-13; placement revisited in M7) The app includes a readable reference of the points rules, so they can be checked without leaving the app: the points formula, which reflection minutes edits move points (R5.30), weekly scoring, streaks (including that the weekly-goal streak earns nothing), achievements, and later the gacha rates. It's a tab in Rewards or Progress; which one is decided in M7, alongside M8's information architecture. (Proposed: it reads the same values the code uses, so it can't drift from the rules.)
+- **R7.9** (Established 2026-10-13; placement revisited in M7) The app includes a readable reference of the points rules, so they can be checked without leaving the app: the points formula, including how work time and reflections earn (R5.31), weekly scoring, streaks (including that the weekly-goal streak earns nothing), achievements, and later the gacha rates. It's a tab in Rewards or Progress; which one is decided in M7, alongside M8's information architecture. (Proposed: it reads the same values the code uses, so it can't drift from the rules.)
 - **R7.7** (Proposed; Q21) The gacha parameters from the prototype:
   - 180 points per pull; CE base rate 1.5%
   - soft pity from pull 13 (+8 percentage points per pull); hard pity at 20
@@ -357,7 +365,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | `deep_work` stored on the reflection, default on | [`ReflectionDraftFields.tsx` L24–28](../../../apps/web/src/features/completion/ReflectionDraftFields.tsx), [`progress.ts` L743](../../../apps/api/src/progress.ts) | Conforms R2.4; conflicts R5.29 | Retired by M5-14 |
 | Shared `CompleteWorkModal`; `OptionalPanel` toggles, keeps text on collapse, confirms discard; defaults match R2.9 | [`CompleteWorkModal.tsx`](../../../apps/web/src/features/completion/CompleteWorkModal.tsx), [`OptionalPanel.tsx`](../../../apps/web/src/features/completion/OptionalPanel.tsx), [`FinishInterviewStepModal.tsx`](../../../apps/web/src/features/interviews/FinishInterviewStepModal.tsx) | Conforms R2.6–R2.9, R2.11 | Turning the reflection off in application mode clears its minutes but keeps its text (Unspecified) |
 | Misc actual time: set in the modal, editable in Edit details, edits adjust points | [`routes.ts` L931–963](../../../apps/api/src/routes.ts) | Conforms R2.10 | |
-| Reflection minutes can't be edited at all: the update accepts no minutes field. They can be entered at creation in the Progress compose form and the application and interview completion modals, but not in the misc completion modal (the task's actual time is used) or when creating from a detail page's Reflections panel | [`progress.ts` L790–865](../../../apps/api/src/progress.ts), [`CompleteWorkModal.tsx` L100–115](../../../apps/web/src/features/completion/CompleteWorkModal.tsx), [`ReflectionsPanel.tsx` L110–130](../../../apps/web/src/features/reflections/ReflectionsPanel.tsx) | Conflicts R5.19, R5.30 | M5-04 |
+| Reflection minutes can't be edited at all: the update accepts no minutes field. They can be entered at creation in the Progress compose form and the application and interview completion modals, but not in the misc completion modal (the task's actual time is used) or when creating from a detail page's Reflections panel | [`progress.ts` L790–865](../../../apps/api/src/progress.ts), [`CompleteWorkModal.tsx` L100–115](../../../apps/web/src/features/completion/CompleteWorkModal.tsx), [`ReflectionsPanel.tsx` L110–130](../../../apps/web/src/features/reflections/ReflectionsPanel.tsx) | Conflicts R5.31 (reflections should have no minutes; applications and interview steps should have their own editable time) | M5-04 |
 | Creating a reflection from a detail page's Reflections panel earns the standalone +20, since it's a create, not a link | [`ReflectionsPanel.tsx` L114](../../../apps/web/src/features/reflections/ReflectionsPanel.tsx), [`progress.ts` L772–785](../../../apps/api/src/progress.ts) | Conforms R4.4 | |
 
 ### M4
@@ -428,13 +436,13 @@ Nothing that depends on an open question may be implemented.
 | Q32 | LeetCode tier point values (easy, medium, hard). Medium is the reference, since past solves count as medium (today +30). Settled during M5 work, before M5-01's build. | R5.20, M5-01 | M5-01 build |
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
 | Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
-| Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
+| Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (more once R5.31 counts application and interview time without a reflection) (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
 | Q35 | Does the points log leave Progress in M7, when Rewards gets it, or stay on both until the M8 redesign? What does a pull log entry show? | R7.8, R8.2 | M7 design |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (45)</summary>
+<summary>Resolved questions (46)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -459,7 +467,7 @@ Nothing that depends on an open question may be implemented.
 | Q23 | Weekly goal scoring | +20 per completed tagged app or weekly LC solve, +100 flat when met; LC past the target keeps +20 each with no second flat (2026-10-13) | R5.15 |
 | Q24 | Should daily clicks count toward weekly progress? | Replace daily/weekly with weekly-set vs other types through one write path (2026-10-13) | R5.17, M5-01 |
 | Q25 | Where the two bugs go | Jobs path: M4-01, worked with M5. Weekly stepper: fixed by M5-01 (2026-10-13) | M4-01, M5-01 |
-| Q26 | Application time after the fact | Editing reflection minutes adjusts points (2026-10-13) | R5.19 |
+| Q26 | Application time after the fact | Editing reflection minutes adjusts points (2026-10-13). Superseded by Q51: the application's own time is edited instead | R5.19 → R5.31 |
 | Q27 | Milestone structure | M5 covers weekly goals, streaks, achievements and points rules; M8 covers the Progress redesign, after M7 (2026-10-13) | Milestones |
 | Q28 | Reflection edge cases | Confirmed (2026-10-13) | R2.14–R2.20 |
 | Q29 | Block status edits on to-do-backed applications? | Yes; the API rejects them and the page redirects to the task (2026-10-13) | R2.21 |
@@ -480,9 +488,10 @@ Nothing that depends on an open question may be implemented.
 | Q45 | Streak points when days change after the fact | Awarded on the day's first qualifying action, reversed if that day drops to 0; past-day edits change only the displayed streak (2026-10-13) | R5.25 |
 | Q46 | Counts and streaks from before M5 | Passed achievements unlock without points; running streaks keep earlier days, daily points from launch (2026-10-13) | R5.25, R5.26 |
 | Q47 | Deep-work badges on the today strip | Deep work is retired in M5 (2026-10-13) | R5.27, R5.29 |
-| Q48 | Matching edited reflection minutes to earns | Record the reflection id on new earns; older earns aren't adjusted (2026-10-13) | R5.19, M5-04 |
-| Q49 | What replaces deep work on Progress | Reflections in general: heatmap and calendar marks count any reflection in the lane; the summary shows reflection minutes instead of a count (2026-10-13) | R5.29, M5-14 |
-| Q50 | Reflection minutes model | Confirmed as written; part of the points rules and the in-app rules reference (2026-10-13) | R5.30, R7.9, M5-04 |
+| Q48 | Matching edited reflection minutes to earns | Record the reflection id on new earns; older earns aren't adjusted (2026-10-13). Moot after Q51: reflections carry no minutes | — |
+| Q49 | What replaces deep work on Progress | Reflections in general: heatmap and calendar marks count any reflection in the lane; the summary counts reflections (2026-10-13; first answered as minutes, changed to a count with Q51) | R5.29, M5-14 |
+| Q50 | Reflection minutes model | Confirmed, then superseded the same day by Q51 (2026-10-13) | R5.30 → R5.31 |
+| Q51 | Where does time live? | On the work (misc task, application, interview step), editable afterwards. A reflection is a note worth +20 everywhere. Application and interview time counts with or without a reflection. Points rules may change for this; they're untested and the gacha can adapt (2026-10-13) | R5.31, R7.9, M5-04 |
 
 </details>
 
@@ -515,4 +524,5 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Streaks (LC, apps) earn small daily points plus milestone rewards; achievements are count-based, with interview steps per kind worth more. The today strip will show streaks instead of `x/3`.
 - **2026-10-13:** Streak and achievement numbers set as a starting point. The weekly-goal streak is display only. Closed weeks are fixed. Deep work is retired in M5. The app gets an in-app rules reference, placed in M7. Weekly points, per-unit included, are all awarded at week close, so the congrats banner shows the full amount.
 - **2026-10-13:** Reflections in general replace deep work on Progress: marks count any reflection, and the summary shows reflection minutes. The reflection minutes model (R5.30) is confirmed and belongs to the points rules, in-app too.
+- **2026-10-13:** Time belongs to the work, not the reflection (R5.31). Applications and interview steps get their own editable time, which counts with or without a reflection; every reflection is a flat +20 note. The Progress summary counts reflections. This replaces R5.19 and R5.30 and raises application and interview earns.
 - **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs.
