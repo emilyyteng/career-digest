@@ -32,9 +32,9 @@ afterAll(async () => {
   if (s) await new Promise<void>((resolve) => s.close(() => resolve()));
 });
 
-export function apiClient(): supertest.SuperTest<supertest.Test> {
+export function apiClient(): supertest.Agent {
   if (!baseUrl) {
     throw new Error("apiClient() used outside a test: the test server starts in beforeAll.");
   }
-  return supertest(baseUrl) as unknown as supertest.SuperTest<supertest.Test>;
+  return supertest(baseUrl);
 }

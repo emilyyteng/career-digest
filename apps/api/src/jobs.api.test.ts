@@ -4,6 +4,7 @@ import {
   getFeedbackByPosting,
   getPosting,
   seedCompany,
+  seedPosting,
   seedRankedPosting,
 } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
@@ -199,7 +200,7 @@ describe.skipIf(!integrationReady)("jobs API", () => {
 
   it("POST /api/jobs/:id/feedback dismiss on needs-description appears in mismatches", async () => {
     const company = await seedCompany({ name: "No JD Co" });
-    const posting = await seedRankedPosting({
+    const posting = await seedPosting({
       source: "greenhouse",
       externalId: "job-no-jd-dismiss",
       companyId: company.id,
