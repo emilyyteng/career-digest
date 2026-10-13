@@ -66,7 +66,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-14](./tickets/M5/M5-14-retire-deep-work.md) | Retire deep work | (pending) |
+| [M5-14](./tickets/M5/M5-14-retire-deep-work.md) | Retire deep work | `d42626b` |
 
 </details>
 
