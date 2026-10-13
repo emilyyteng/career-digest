@@ -38,8 +38,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Unit and integration tests (API)
-        run: npm run test -w @career-digest/api
-
-      - name: Build web
-        run: npm run build -w @career-digest/web
+      - name: Typecheck, build and test
+        run: npm run check
