@@ -23,8 +23,8 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M2-01](./tickets/M2/M2-01-merge-moves-reflections.md) | Merging duplicate postings moves reflections to the surviving application | (pending; in M2-02's commit) |
-| [M2-02](./tickets/M2/M2-02-merge-keeps-everything.md) | Application merges keep everything from the removed application | (pending) |
+| [M2-01](./tickets/M2/M2-01-merge-moves-reflections.md) | Merging duplicate postings moves reflections to the surviving application | `28ad562` (with M2-02) |
+| [M2-02](./tickets/M2/M2-02-merge-keeps-everything.md) | Application merges keep everything from the removed application | `28ad562` |
 
 </details>
 
