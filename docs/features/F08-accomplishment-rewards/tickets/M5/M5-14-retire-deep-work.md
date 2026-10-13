@@ -1,6 +1,6 @@
 # M5-14: Retire deep work
 
-**Status:** Draft (open: spec Q49)
+**Status:** Ready
 **Blocked by:** (none)
 **Implements:** R5.29 (from `../../spec.md`)
 **Type:** build
@@ -11,16 +11,17 @@ Deep work stops being a concept in the UI and the API's outputs:
 
 - The deep-work toggle leaves every reflection form: the completion modals ([`ReflectionDraftFields.tsx` L24–28](../../../../../apps/web/src/features/completion/ReflectionDraftFields.tsx)), Progress compose and History edit (`ReflectionAccordion.tsx`), and the Reflections panel.
 - The today strip's deep-work badges go ([`TodayStrip.tsx` L58–65](../../../../../apps/web/src/features/progress/TodayStrip.tsx)). M5-12 then replaces the `x/3` counts with streaks.
-- The heatmap's per-lane effort marks ([`progress.ts` L293–310](../../../../../apps/api/src/progress.ts)) and the deep-work units count (L425) change per Q49.
-- The `deep_work` column stays in the database, unused, with no migration, so no history is lost. The API stops requiring or returning it, except where Q49 keeps a replacement.
+- Reflections in general replace deep work on Progress (R5.29, Q49):
+  - The per-lane marks on the heatmap and History calendar ([`progress.ts` L293–310](../../../../../apps/api/src/progress.ts), `effortDaysByLane`; drawn in `ProgressHeatmap.tsx` and `HistoryCalendar.tsx`) count any reflection in the lane, not only deep-work ones. The heatmap tooltip's "· deep work" becomes "· reflection".
+  - The week and month summary's "N deep work" (`countDeepWorkReflectionsInRange`, [`progress.ts` L425](../../../../../apps/api/src/progress.ts); shown at `ProgressPage.tsx` L448 and L455) becomes total reflection minutes for the period. (Proposed: reflections without minutes add 0.)
+- The `deep_work` column stays in the database, unused, with no migration, so no history is lost. The API stops requiring or returning it.
 
 ## Acceptance criteria
 
-(Draft. Finalize after Q49.)
-
 - [ ] No reflection form shows a deep-work toggle; creating a reflection without one works everywhere.
 - [ ] The today strip has no deep-work badges on Home or Progress.
-- [ ] Heatmap marks and the summary count behave per Q49.
+- [ ] A day with a reflection that was saved with deep work off now shows the lane mark on the heatmap and History calendar.
+- [ ] The week and month summaries show reflection minutes (for example, reflections of 30 and 45 minutes and one blank show 75 min), not a deep-work count.
 - [ ] No points change (deep work never affected points).
 - [ ] Existing tests that assert deep-work behavior (`progress.api.test.ts`) are updated to the new behavior, not deleted wholesale.
 

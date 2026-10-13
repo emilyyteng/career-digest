@@ -1,7 +1,7 @@
 # M5-04: Reflection minutes: editable everywhere, and edits adjust the points they created
 
-**Status:** Draft (open: spec Q50)
-**Blocked by:** M4-02 (adjust and reverse storage settled first)
+**Status:** Ready
+**Blocked by:** (none; M4-02 is done)
 **Implements:** R5.19, R5.30 (from `../../spec.md`)
 **Type:** build
 
@@ -15,7 +15,7 @@
 
 ## What to build
 
-Per R5.30 (pending Q50):
+Per R5.30 (confirmed in Q50):
 
 1. **Minutes everywhere:** every place that creates or edits a reflection offers minutes: Progress compose, History edit, the Reflections panel's create and edit, and the application and interview modals. The misc completion modal keeps the task's actual time as its one time field.
 2. **Edits move points only where that reflection created them** (R5.19):
@@ -26,8 +26,6 @@ Per R5.30 (pending Q50):
 4. **Keep the application task in step:** editing an application modal reflection's minutes also updates the completed application task's actual time.
 
 ## Acceptance criteria
-
-(Draft. Finalize after Q50.)
 
 - [ ] Minutes can be entered and edited in every create and edit form listed above.
 - [ ] Standalone reflection, 30 → 45 min: +15 adjust; 30 → blank: re-scored at +20.
