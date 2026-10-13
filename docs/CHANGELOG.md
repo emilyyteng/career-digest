@@ -261,6 +261,8 @@ One global points balance makes effort visible, and later spendable.
 - A brief mint flash shows the points earned after each completion.
 - Completed tasks show estimated vs actual time and points.
 
+**Later fixes.** Marking an application applied from Jobs now has the same outcome as from Tasks: the task's reflections move to the application, the modal's time and notes are saved, and the weekly apps goal is checked. Re-completing a reopened task or raising a LeetCode day back up earns its points again instead of nothing, and category totals no longer count a reversed earn twice.
+
 ---
 
 ## Documentation & development process (F10)
