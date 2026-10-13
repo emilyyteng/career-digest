@@ -364,11 +364,11 @@ button {
   font-weight: 500;
   font-family: var(--font-sans);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss):not(.hide-board-remove):not(.task-detail-week-star):not(.document-link):not(.document-remove-btn):not(.progress-lane-chip):not(.progress-dw-toggle):not(.complete-optional-bar):not(.ledger-subtab):not(.ledger-nested-item):not(.earn-flash-dismiss) {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss):not(.hide-board-remove):not(.task-detail-week-star):not(.document-link):not(.document-remove-btn):not(.progress-lane-chip):not(.complete-optional-bar):not(.ledger-subtab):not(.ledger-nested-item):not(.earn-flash-dismiss) {
   border-radius: var(--radius-soft);
   box-shadow: var(--shadow-button);
 }
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.hide-board-remove):not(.task-detail-week-star):not(.document-link):not(.document-remove-btn):not(.progress-lane-chip):not(.progress-dw-toggle):not(.complete-optional-bar):not(.ledger-subtab):not(.ledger-nested-item):not(.earn-flash-dismiss):not(:disabled):hover {
+button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.hide-board-remove):not(.task-detail-week-star):not(.document-link):not(.document-remove-btn):not(.progress-lane-chip):not(.complete-optional-bar):not(.ledger-subtab):not(.ledger-nested-item):not(.earn-flash-dismiss):not(:disabled):hover {
   background: var(--accent-blue);
   border-color: var(--accent-blue);
   box-shadow: 0 3px 10px rgba(91, 124, 153, 0.28);
@@ -3357,37 +3357,6 @@ textarea { min-height: 10rem; width: 100%; }
   color: var(--text-subtle);
   font-weight: inherit;
 }
-.progress-strip-lane-marks {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.14em;
-}
-.progress-strip-deep-work.is-active .progress-strip-lane-marks {
-  gap: 0;
-}
-.progress-strip-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.28rem;
-  vertical-align: middle;
-  margin-left: 0.15rem;
-}
-.progress-strip-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.08rem 0.4rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--text-muted);
-}
-.progress-strip-badge.is-on {
-  border-color: color-mix(in srgb, var(--accent-mint) 50%, var(--border));
-  background: color-mix(in srgb, var(--accent-mint) 16%, transparent);
-  color: var(--accent-mint-deep);
-}
 .progress-outcome-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3844,69 +3813,6 @@ button.progress-lane-chip.is-on:not(:disabled):hover {
   border-color: var(--accent-purple);
   background: color-mix(in srgb, var(--accent-purple) 18%, transparent);
   color: var(--accent-purple-deep);
-}
-.progress-dw-toggle-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-left: auto;
-  flex-shrink: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-button.progress-dw-toggle,
-button.progress-dw-toggle:focus,
-button.progress-dw-toggle:focus-visible {
-  position: relative;
-  width: 2.4rem;
-  height: 1.3rem;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  box-shadow: none;
-  cursor: pointer;
-}
-button.progress-dw-toggle:not(:disabled):hover {
-  box-shadow: none;
-  background: var(--surface-2);
-  border-color: var(--border-strong);
-  color: inherit;
-}
-button.progress-dw-toggle.is-on {
-  background: color-mix(in srgb, var(--accent-purple) 45%, var(--surface));
-  border-color: var(--accent-purple);
-}
-button.progress-dw-toggle.is-on:not(:disabled):hover {
-  box-shadow: none;
-  background: color-mix(in srgb, var(--accent-purple) 52%, var(--surface));
-  border-color: var(--accent-purple);
-}
-.progress-dw-toggle-knob {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 1.05rem;
-  height: 1.05rem;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  transition: transform 0.12s ease;
-}
-button.progress-dw-toggle.is-on .progress-dw-toggle-knob {
-  transform: translateX(1.05rem);
-  border-color: var(--accent-purple-deep);
-}
-.progress-dw-tag {
-  display: inline-flex;
-  padding: 0.02rem 0.35rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, var(--border));
-  background: color-mix(in srgb, var(--accent-purple) 12%, transparent);
-  color: var(--accent-purple-deep);
-  flex-shrink: 0;
 }
 .progress-note-link {
   margin: 0.35rem 0 0;

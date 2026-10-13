@@ -10,7 +10,6 @@ export type CompletionReflectionNest = {
   body: string;
   preview: string;
   minutes: number | null;
-  deepWork: boolean;
 };
 
 export type CompletionDiaryItem = {
@@ -60,7 +59,6 @@ function nestReflections(
     id: string;
     body: string;
     actual_minutes: number | null;
-    deep_work: boolean;
   }>,
 ): CompletionReflectionNest[] {
   return rows.map((r) => ({
@@ -68,7 +66,6 @@ function nestReflections(
     body: r.body,
     preview: r.body.length > 120 ? `${r.body.slice(0, 117)}…` : r.body,
     minutes: r.actual_minutes,
-    deepWork: r.deep_work,
   }));
 }
 
@@ -126,9 +123,8 @@ export async function getCompletionsDiary(
         id: string;
         body: string;
         actual_minutes: number | null;
-        deep_work: boolean;
       }>(
-        `SELECT id, body, actual_minutes, deep_work
+        `SELECT id, body, actual_minutes
          FROM reflection_logs
          WHERE task_id = $1
          ORDER BY created_at ASC`,
@@ -183,9 +179,8 @@ export async function getCompletionsDiary(
         id: string;
         body: string;
         actual_minutes: number | null;
-        deep_work: boolean;
       }>(
-        `SELECT id, body, actual_minutes, deep_work
+        `SELECT id, body, actual_minutes
          FROM reflection_logs
          WHERE application_id = $1
          ORDER BY created_at ASC`,
@@ -260,9 +255,8 @@ export async function getCompletionsDiary(
         id: string;
         body: string;
         actual_minutes: number | null;
-        deep_work: boolean;
       }>(
-        `SELECT id, body, actual_minutes, deep_work
+        `SELECT id, body, actual_minutes
          FROM reflection_logs
          WHERE interview_step_id = $1
          ORDER BY created_at ASC`,
@@ -293,7 +287,6 @@ export async function getCompletionsDiary(
       id: string;
       body: string;
       lane: string;
-      deep_work: boolean;
       actual_minutes: number | null;
       created_at: Date;
       task_id: string | null;
@@ -304,7 +297,7 @@ export async function getCompletionsDiary(
     }>(
       kindFilter === "reflection"
         ? `SELECT
-             r.id, r.body, r.lane, r.deep_work, r.actual_minutes, r.created_at,
+             r.id, r.body, r.lane, r.actual_minutes, r.created_at,
              r.task_id, r.application_id,
              t.title AS task_title,
              COALESCE(a.title, p.title) AS application_title,
@@ -321,7 +314,7 @@ export async function getCompletionsDiary(
            ORDER BY r.created_at DESC
            LIMIT $1`
         : `SELECT
-             r.id, r.body, r.lane, r.deep_work, r.actual_minutes, r.created_at,
+             r.id, r.body, r.lane, r.actual_minutes, r.created_at,
              r.task_id, r.application_id,
              t.title AS task_title,
              COALESCE(a.title, p.title) AS application_title,
@@ -358,8 +351,8 @@ export async function getCompletionsDiary(
         title:
           row.body.length > 80 ? `${row.body.slice(0, 77)}…` : row.body,
         subtitle: linked
-          ? `${row.lane}${row.deep_work ? " · dw" : ""} · ${linked}`
-          : `${row.lane}${row.deep_work ? " · dw" : ""} · standalone`,
+          ? `${row.lane} · ${linked}`
+          : `${row.lane} · standalone`,
         at,
         localDate,
         estimateMinutes: null,

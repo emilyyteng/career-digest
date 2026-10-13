@@ -28,7 +28,6 @@ export async function saveCompletionReflection(
   await createProgressReflection({
     lane: draft.lane,
     body: draft.body,
-    deepWork: draft.deepWork,
     actualMinutes: draft.actualMinutes,
     taskId: link.taskId ?? null,
     applicationId: link.applicationId ?? null,

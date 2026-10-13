@@ -213,7 +213,6 @@ export default function TaskDetailPage() {
           ? {
               lane: result.reflection.lane,
               body: result.reflection.body,
-              deepWork: result.reflection.deepWork,
               actualMinutes:
                 task.category === "application" ? result.actualMinutes : null,
             }

@@ -389,7 +389,6 @@ export default function Tasks() {
           ? {
               lane: result.reflection.lane,
               body: result.reflection.body,
-              deepWork: result.reflection.deepWork,
               actualMinutes: application ? result.actualMinutes : null,
             }
           : null,

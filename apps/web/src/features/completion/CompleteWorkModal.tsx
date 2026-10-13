@@ -101,7 +101,6 @@ export default function CompleteWorkModal({
       ? {
           body: reflection.body.trim(),
           lane: reflection.lane,
-          deepWork: reflection.deepWork,
           actualMinutes:
             actualTimeMode === "gated" ? reflection.actualMinutes : null,
         }

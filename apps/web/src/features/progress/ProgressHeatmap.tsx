@@ -54,7 +54,7 @@ export function ProgressHeatLegend() {
         />
       ))}
       <span className="muted">More</span>
-      <span className="muted progress-heat-legend-note">✓ = deep work</span>
+      <span className="muted progress-heat-legend-note">✓ = reflection</span>
     </div>
   );
 }
@@ -90,7 +90,7 @@ export default function ProgressHeatmap({
                 const future = day.date > today;
                 const tip = future
                   ? undefined
-                  : `${day.date}: ${day.earned}/3${day.effort ? " · deep work" : ""}`;
+                  : `${day.date}: ${day.earned}/3${day.effort ? " · reflection" : ""}`;
                 return (
                   <span
                     key={day.date}

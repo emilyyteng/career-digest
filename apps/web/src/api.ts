@@ -752,7 +752,6 @@ export const completeTask = (
     reflection?: {
       lane: string;
       body: string;
-      deepWork?: boolean;
       actualMinutes?: number | null;
     } | null;
   },
@@ -861,7 +860,6 @@ export type ProgressToday = {
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
-  deepWork: boolean;
 };
 
 export type ProgressHeatmapDay = {
@@ -879,14 +877,13 @@ export type ProgressOutcome = {
   endDate: string;
   applicationsLogged: number;
   leetcodeSolves: number;
-  deepWorkUnits: number;
+  reflectionsWritten: number;
 };
 
 export type ProgressReflection = {
   id: string;
   lane: ProgressLane;
   body: string;
-  deepWork: boolean;
   actualMinutes: number | null;
   taskId: string | null;
   applicationId: string | null;
@@ -914,7 +911,6 @@ export type ProgressDayDetail = {
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
-  deepWork: boolean;
   applicationRows: Array<{
     id: string;
     company: string | null;
@@ -1000,7 +996,6 @@ export type CompletionDiaryItem = {
     body: string;
     preview: string;
     minutes: number | null;
-    deepWork: boolean;
   }>;
 };
 
@@ -1095,7 +1090,6 @@ export const patchProgressLeetcode = (
 export const createProgressReflection = (body: {
   lane: ProgressLane;
   body: string;
-  deepWork?: boolean;
   actualMinutes?: number | null;
   awardPoints?: boolean;
   taskId?: string | null;
@@ -1119,7 +1113,6 @@ export const patchProgressReflection = (
     | {
         body?: string;
         lane?: ProgressLane;
-        deepWork?: boolean;
         taskId?: string | null;
         applicationId?: string | null;
         interviewStepId?: string | null;

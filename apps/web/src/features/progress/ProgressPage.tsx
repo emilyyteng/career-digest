@@ -114,8 +114,6 @@ export default function Progress() {
   const [editingDay, setEditingDay] = useState(false);
   const [composeLane, setComposeLane] = useState<ProgressLane>("application");
   const [historyLane, setHistoryLane] = useState<ProgressLane>("application");
-  const [composeDeepWork, setComposeDeepWork] = useState(true);
-  const [historyDeepWork, setHistoryDeepWork] = useState(true);
   const [composeLinkKey, setComposeLinkKey] = useState("");
   const [historyLinkKey, setHistoryLinkKey] = useState("");
   const [composeStepId, setComposeStepId] = useState("");
@@ -347,7 +345,6 @@ export default function Progress() {
     input: {
       lane: ProgressLane;
       body: string;
-      deepWork: boolean;
       actualMinutes?: number | null;
       taskId: string | null;
       applicationId: string | null;
@@ -358,7 +355,6 @@ export default function Progress() {
     await createProgressReflection({
       lane: input.lane,
       body: input.body,
-      deepWork: input.deepWork,
       actualMinutes: input.actualMinutes ?? null,
       taskId: input.taskId,
       applicationId: input.applicationId,
@@ -374,7 +370,6 @@ export default function Progress() {
     patch: {
       body: string;
       lane: ProgressLane;
-      deepWork: boolean;
       taskId: string | null;
       applicationId: string | null;
       interviewStepId: string | null;
@@ -384,7 +379,6 @@ export default function Progress() {
     await patchProgressReflection(id, {
       body: patch.body,
       lane: patch.lane,
-      deepWork: patch.deepWork,
       taskId: patch.taskId,
       applicationId: patch.applicationId,
       interviewStepId: patch.interviewStepId,
@@ -445,14 +439,16 @@ export default function Progress() {
               <span className="progress-kicker">This week</span>
               <strong>
                 {week.applicationsLogged} apps · {week.leetcodeSolves} LC ·{" "}
-                {week.deepWorkUnits} deep work
+                {week.reflectionsWritten}{" "}
+                {week.reflectionsWritten === 1 ? "reflection" : "reflections"}
               </strong>
             </div>
             <div className="card progress-outcome-card">
               <span className="progress-kicker">This month</span>
               <strong>
                 {month.applicationsLogged} apps · {month.leetcodeSolves} LC ·{" "}
-                {month.deepWorkUnits} deep work
+                {month.reflectionsWritten}{" "}
+                {month.reflectionsWritten === 1 ? "reflection" : "reflections"}
               </strong>
             </div>
           </div>
@@ -503,8 +499,6 @@ export default function Progress() {
                 <ReflectionCompose
                   lane={composeLane}
                   onLaneChange={setComposeLane}
-                  deepWork={composeDeepWork}
-                  onDeepWorkChange={setComposeDeepWork}
                   linkKey={composeLinkKey}
                   onLinkKeyChange={setComposeLinkKey}
                   interviewStepId={composeStepId}
@@ -635,8 +629,6 @@ export default function Progress() {
                     <ReflectionCompose
                       lane={historyLane}
                       onLaneChange={setHistoryLane}
-                      deepWork={historyDeepWork}
-                      onDeepWorkChange={setHistoryDeepWork}
                       linkKey={historyLinkKey}
                       onLinkKeyChange={setHistoryLinkKey}
                       interviewStepId={historyStepId}

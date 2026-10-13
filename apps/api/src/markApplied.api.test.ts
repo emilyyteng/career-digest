@@ -15,7 +15,6 @@ const TZ = "UTC";
 const MODAL_REFLECTION = {
   lane: "application",
   body: "Tailored the resume to the team",
-  deepWork: true,
   actualMinutes: 45,
 };
 

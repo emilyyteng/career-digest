@@ -28,7 +28,6 @@ export type ProgressToday = {
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
-  deepWork: boolean;
 };
 
 export type ProgressHeatmapDay = {
@@ -46,7 +45,7 @@ export type ProgressOutcome = {
   endDate: string;
   applicationsLogged: number;
   leetcodeSolves: number;
-  deepWorkUnits: number;
+  reflectionsWritten: number;
 };
 
 export type ProgressDayApplication = {
@@ -60,7 +59,6 @@ export type ProgressReflection = {
   id: string;
   lane: ProgressLane;
   body: string;
-  deepWork: boolean;
   actualMinutes: number | null;
   taskId: string | null;
   applicationId: string | null;
@@ -88,7 +86,6 @@ export type ProgressDayDetail = {
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
-  deepWork: boolean;
   applicationRows: ProgressDayApplication[];
   reflections: ProgressReflection[];
 };
@@ -98,7 +95,6 @@ const reflectionSelect = `
     r.id,
     r.lane,
     r.body,
-    r.deep_work AS "deepWork",
     r.actual_minutes AS "actualMinutes",
     r.task_id AS "taskId",
     r.application_id AS "applicationId",
@@ -240,7 +236,7 @@ async function sumLeetcodeInRange(
   return Number(rows[0]?.total ?? 0) || 0;
 }
 
-async function countDeepWorkReflectionsInRange(
+async function countReflectionsInRange(
   pool: Pool,
   tz: string,
   startDate: string,
@@ -249,8 +245,7 @@ async function countDeepWorkReflectionsInRange(
   const { rows } = await pool.query<{ count: string }>(
     `SELECT COUNT(*)::text AS count
      FROM reflection_logs
-     WHERE deep_work
-       AND ((created_at AT TIME ZONE $1)::date >= $2::date)
+     WHERE ((created_at AT TIME ZONE $1)::date >= $2::date)
        AND ((created_at AT TIME ZONE $1)::date <= $3::date)`,
     [tz, startDate, endDate],
   );
@@ -289,7 +284,7 @@ async function leetcodeCountsByDate(
   return new Map(rows.map((row) => [row.date, row.count]));
 }
 
-/** Days with ≥1 deep-work reflection in this lane. */
+/** Days with ≥1 reflection in this lane (R5.29). */
 async function effortDaysByLane(
   pool: Pool,
   tz: string,
@@ -301,7 +296,6 @@ async function effortDaysByLane(
     `SELECT DISTINCT ((created_at AT TIME ZONE $1)::date)::text AS date
      FROM reflection_logs
      WHERE lane = $2
-       AND deep_work
        AND ((created_at AT TIME ZONE $1)::date >= $3::date)
        AND ((created_at AT TIME ZONE $1)::date <= $4::date)`,
     [tz, lane, startDate, endDate],
@@ -356,7 +350,6 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
     effortApplication: effortApp.size > 0,
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,
-    deepWork: effortApp.size > 0 || effortTech.size > 0 || effortOther.size > 0,
   };
 }
 
@@ -422,7 +415,7 @@ export async function getProgressOutcome(
     bounds.endDate,
   );
   const leetcodeSolves = await sumLeetcodeInRange(pool, bounds.startDate, bounds.endDate);
-  const deepWorkUnits = await countDeepWorkReflectionsInRange(
+  const reflectionsWritten = await countReflectionsInRange(
     pool,
     tz,
     bounds.startDate,
@@ -437,7 +430,7 @@ export async function getProgressOutcome(
     endDate: bounds.endDate,
     applicationsLogged,
     leetcodeSolves,
-    deepWorkUnits,
+    reflectionsWritten,
   };
 }
 
@@ -495,7 +488,6 @@ export async function getProgressDay(
     effortApplication: effortApp.size > 0,
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,
-    deepWork: effortApp.size > 0 || effortTech.size > 0 || effortOther.size > 0,
     applicationRows: appRows.rows,
     reflections: reflections.rows,
   };
@@ -702,7 +694,6 @@ export async function createReflectionLog(
   input: {
     lane: ProgressLane;
     body: string;
-    deepWork?: boolean;
     actualMinutes?: number | null;
     taskId?: string | null;
     applicationId?: string | null;
@@ -740,7 +731,6 @@ export async function createReflectionLog(
     createdAt = atRows[0]?.created_at ?? null;
   }
 
-  const deepWork = input.deepWork !== false;
   let actualMinutes: number | null = null;
   if (input.actualMinutes !== undefined && input.actualMinutes !== null) {
     if (!Number.isFinite(input.actualMinutes) || input.actualMinutes < 0) {
@@ -751,14 +741,13 @@ export async function createReflectionLog(
 
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO reflection_logs (
-       lane, body, deep_work, actual_minutes, task_id, application_id, interview_step_id, created_at
+       lane, body, actual_minutes, task_id, application_id, interview_step_id, created_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, now()))
+     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, now()))
      RETURNING id`,
     [
       input.lane,
       body,
-      deepWork,
       actualMinutes,
       taskId,
       applicationId,
@@ -793,7 +782,6 @@ export async function updateReflectionLog(
   input: {
     body?: string;
     lane?: ProgressLane;
-    deepWork?: boolean;
     taskId?: string | null;
     applicationId?: string | null;
     interviewStepId?: string | null;
@@ -810,7 +798,6 @@ export async function updateReflectionLog(
   }
   const lane = input.lane ?? existing.lane;
   if (!isProgressLane(lane)) throw new Error("Invalid lane");
-  const deepWork = input.deepWork ?? existing.deepWork;
 
   let taskId = existing.taskId;
   let applicationId = existing.applicationId;
@@ -854,12 +841,11 @@ export async function updateReflectionLog(
     `UPDATE reflection_logs
      SET body = $2,
          lane = $3,
-         deep_work = $4,
-         task_id = $5,
-         application_id = $6,
-         interview_step_id = $7
+         task_id = $4,
+         application_id = $5,
+         interview_step_id = $6
      WHERE id = $1`,
-    [id, body, lane, deepWork, taskId, applicationId, interviewStepId],
+    [id, body, lane, taskId, applicationId, interviewStepId],
   );
   return fetchReflection(pool, id);
 }

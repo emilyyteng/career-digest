@@ -55,19 +55,18 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body.effortApplication).toBe(false);
     expect(res.body.effortTechnical).toBe(true);
     expect(res.body.effortOther).toBe(false);
-    expect(res.body.deepWork).toBe(true);
+    expect(res.body).not.toHaveProperty("deepWork");
   });
 
-  it("GET /api/progress/today effortOther from other-lane deep work only", async () => {
+  it("GET /api/progress/today lane effort counts any reflection, including legacy deep-work-off rows", async () => {
     await seedReflectionLog({
       lane: "other",
       body: "Journaled after networking coffee",
-      deepWork: true,
       createdAt: new Date("2025-08-10T21:00:00.000Z"),
     });
     await seedReflectionLog({
       lane: "application",
-      body: "Quick note — not deep work",
+      body: "Quick note saved with deep work off",
       deepWork: false,
       createdAt: new Date("2025-08-10T21:30:00.000Z"),
     });
@@ -78,9 +77,8 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .expect(200);
 
     expect(res.body.effortOther).toBe(true);
-    expect(res.body.effortApplication).toBe(false);
+    expect(res.body.effortApplication).toBe(true);
     expect(res.body.effortTechnical).toBe(false);
-    expect(res.body.deepWork).toBe(true);
   });
 
   it("GET /api/progress/heatmap returns earned credit capped at 5", async () => {
@@ -105,6 +103,23 @@ describe.skipIf(!integrationReady)("progress API", () => {
 
     const day = res.body.days.find((row: { date: string }) => row.date === "2025-08-10");
     expect(day).toMatchObject({ raw: 7, earned: 3, effort: false });
+  });
+
+  it("GET /api/progress/heatmap marks a lane day from a reflection saved with deep work off", async () => {
+    await seedReflectionLog({
+      lane: "technical",
+      body: "Legacy quick note",
+      deepWork: false,
+      createdAt: new Date("2025-08-10T21:00:00.000Z"),
+    });
+
+    const res = await apiClient()
+      .get("/api/progress/heatmap")
+      .query({ tz: TZ, lane: "technical", days: 30 })
+      .expect(200);
+
+    const day = res.body.days.find((row: { date: string }) => row.date === "2025-08-10");
+    expect(day).toMatchObject({ effort: true });
   });
 
   it("PATCH /api/progress/leetcode sets and increments daily count", async () => {
@@ -132,13 +147,13 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body).toMatchObject({
       lane: "application",
       body: "Drafted project story",
-      deepWork: true,
       taskId: null,
       applicationId: null,
     });
+    expect(res.body).not.toHaveProperty("deepWork");
   });
 
-  it("POST /api/progress/reflections accepts other lane, deepWork off, and task link", async () => {
+  it("POST /api/progress/reflections accepts other lane and task link", async () => {
     const task = await seedTask({
       category: "misc",
       title: "Networking coffee",
@@ -149,15 +164,15 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .send({
         lane: "other",
         body: "Followed up after chat",
-        deepWork: false,
         taskId: task.id,
+        localDate: "2025-08-10",
+        tz: TZ,
       })
       .expect(201);
 
     expect(res.body).toMatchObject({
       lane: "other",
       body: "Followed up after chat",
-      deepWork: false,
       taskId: task.id,
       taskTitle: "Networking coffee",
       applicationId: null,
@@ -167,7 +182,7 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .get("/api/progress/today")
       .query({ tz: TZ })
       .expect(200);
-    expect(today.body.effortOther).toBe(false);
+    expect(today.body.effortOther).toBe(true);
 
     const linked = await apiClient().get(`/api/tasks/${task.id}/reflections`).expect(200);
     expect(linked.body.reflections).toHaveLength(1);
@@ -206,6 +221,12 @@ describe.skipIf(!integrationReady)("progress API", () => {
       body: "Trees review",
       createdAt: new Date("2025-08-11T18:00:00.000Z"),
     });
+    await seedReflectionLog({
+      lane: "other",
+      body: "Legacy note saved with deep work off",
+      deepWork: false,
+      createdAt: new Date("2025-08-12T18:00:00.000Z"),
+    });
 
     const res = await apiClient()
       .get("/api/progress/outcome")
@@ -215,8 +236,9 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body).toMatchObject({
       period: "week",
       leetcodeSolves: 3,
-      deepWorkUnits: 2,
+      reflectionsWritten: 3,
     });
+    expect(res.body).not.toHaveProperty("deepWorkUnits");
     expect(res.body.startDate).toBe("2025-08-10");
     expect(res.body.endDate).toBe("2025-08-16");
   });
@@ -265,7 +287,8 @@ describe.skipIf(!integrationReady)("progress API", () => {
 
     expect(res.body.applications).toMatchObject({ raw: 1, earned: 1 });
     expect(res.body.leetcode).toMatchObject({ raw: 4, earned: 3 });
-    expect(res.body.deepWork).toBe(true);
+    expect(res.body).not.toHaveProperty("deepWork");
+    expect(res.body.effortApplication).toBe(true);
     expect(res.body.applicationRows).toHaveLength(1);
     expect(res.body.applicationRows[0]).toMatchObject({
       company: "Prog Co",
@@ -355,7 +378,7 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(updated.body.body).toBe("Edited note with more detail");
   });
 
-  it("PATCH /api/progress/reflections/:id toggles deep work and links to application", async () => {
+  it("PATCH /api/progress/reflections/:id changes lane and links to application", async () => {
     const app = await seedManualApplication({
       status: "applied",
       company: "Link Co",
@@ -363,16 +386,15 @@ describe.skipIf(!integrationReady)("progress API", () => {
     });
     const created = await apiClient()
       .post("/api/progress/reflections")
-      .send({ lane: "application", body: "Story draft", deepWork: true })
+      .send({ lane: "application", body: "Story draft" })
       .expect(201);
 
     const updated = await apiClient()
       .patch(`/api/progress/reflections/${created.body.id}`)
-      .send({ deepWork: false, applicationId: app.id, lane: "other" })
+      .send({ applicationId: app.id, lane: "other" })
       .expect(200);
 
     expect(updated.body).toMatchObject({
-      deepWork: false,
       lane: "other",
       applicationId: app.id,
       applicationTitle: "SWE Intern",

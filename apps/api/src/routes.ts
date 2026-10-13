@@ -146,7 +146,7 @@ export const api = express.Router();
 
 /** The optional reflection from a completion / mark-applied modal. */
 function parseModalReflection(
-  raw: { lane?: string; body?: string; deepWork?: boolean; actualMinutes?: number | null } | null | undefined,
+  raw: { lane?: string; body?: string; actualMinutes?: number | null } | null | undefined,
 ): { value: MarkAppliedReflection | null } | { error: string } {
   if (!raw?.body || typeof raw.body !== "string") return { value: null };
   const lane = raw.lane ?? "";
@@ -157,7 +157,7 @@ function parseModalReflection(
     raw.actualMinutes === undefined || raw.actualMinutes === null
       ? null
       : Math.floor(raw.actualMinutes);
-  return { value: { lane, body: raw.body, deepWork: raw.deepWork, actualMinutes } };
+  return { value: { lane, body: raw.body, actualMinutes } };
 }
 
 function requestTimezone(req: express.Request): string {
@@ -415,7 +415,6 @@ api.post("/applications", async (req, res) => {
     reflection?: {
       lane?: string;
       body?: string;
-      deepWork?: boolean;
       actualMinutes?: number | null;
     } | null;
   };
@@ -701,7 +700,6 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
       reflection?: {
         lane?: string;
         body?: string;
-        deepWork?: boolean;
         actualMinutes?: number | null;
       } | null;
     };
@@ -733,7 +731,6 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
         await createReflectionLog(pool, {
           lane,
           body: body.reflection.body,
-          deepWork: body.reflection.deepWork,
           actualMinutes: reflectionMinutes,
           applicationId: thread?.primaryApplicationId ?? null,
           interviewStepId: before.id,
@@ -1023,7 +1020,6 @@ api.post("/tasks/:id/complete", async (req, res) => {
     reflection?: {
       lane?: string;
       body?: string;
-      deepWork?: boolean;
       actualMinutes?: number | null;
     } | null;
     notes?: string | null;
@@ -1523,7 +1519,6 @@ api.post("/progress/reflections", async (req, res) => {
   const body = req.body as {
     lane?: string;
     body?: string;
-    deepWork?: boolean;
     actualMinutes?: number | null;
     taskId?: string | null;
     applicationId?: string | null;
@@ -1545,7 +1540,6 @@ api.post("/progress/reflections", async (req, res) => {
     const row = await createReflectionLog(pool, {
       lane,
       body: body.body,
-      deepWork: body.deepWork,
       actualMinutes: body.actualMinutes,
       taskId: body.taskId ?? null,
       applicationId: body.applicationId ?? null,
@@ -1571,7 +1565,6 @@ api.patch("/progress/reflections/:id", async (req, res) => {
   const body = req.body as {
     body?: string;
     lane?: string;
-    deepWork?: boolean;
     taskId?: string | null;
     applicationId?: string | null;
     interviewStepId?: string | null;
@@ -1589,7 +1582,6 @@ api.patch("/progress/reflections/:id", async (req, res) => {
     const row = await updateReflectionLog(pool, req.params.id, {
       body: body.body,
       lane: body.lane as ProgressLane | undefined,
-      deepWork: body.deepWork,
       taskId: body.taskId,
       applicationId: body.applicationId,
       interviewStepId: body.interviewStepId,

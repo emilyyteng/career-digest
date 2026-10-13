@@ -12,7 +12,6 @@ import { getWeeklyGoalsSnapshot } from "./weeklyGoals.js";
 export type MarkAppliedReflection = {
   lane: ProgressLane;
   body: string;
-  deepWork?: boolean;
   actualMinutes: number | null;
 };
 
@@ -125,7 +124,6 @@ async function markAppliedInTransaction(
     await createReflectionLog(client, {
       lane: input.reflection.lane,
       body: input.reflection.body,
-      deepWork: input.reflection.deepWork,
       actualMinutes: minutes,
       applicationId,
       awardPoints: false,

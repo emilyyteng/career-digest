@@ -1,13 +1,9 @@
-import {
-  DeepWorkToggle,
-  LaneChips,
-} from "../progress/ReflectionAccordion";
+import { LaneChips } from "../progress/ReflectionAccordion";
 import type { ProgressLane } from "../../api";
 
 export type ReflectionDraft = {
   body: string;
   lane: ProgressLane;
-  deepWork: boolean;
   /** Minutes attached to this reflection (points); blank → null. */
   actualMinutes: number | null;
 };
@@ -25,7 +21,6 @@ export function emptyReflectionDraft(lane: ProgressLane = "application"): Reflec
   return {
     body: "",
     lane,
-    deepWork: true,
     actualMinutes: null,
   };
 }
@@ -85,7 +80,7 @@ type Props = {
   minutesMode?: ReflectionMinutesMode;
 };
 
-/** Shared reflection editor: body + lane + deep work + optional minutes. */
+/** Shared reflection editor: body + lane + optional minutes. */
 export default function ReflectionDraftFields({
   value,
   onChange,
@@ -110,11 +105,6 @@ export default function ReflectionDraftFields({
           value={value.lane}
           disabled={disabled}
           onChange={(lane) => onChange({ ...value, lane })}
-        />
-        <DeepWorkToggle
-          value={value.deepWork}
-          disabled={disabled}
-          onChange={(deepWork) => onChange({ ...value, deepWork })}
         />
       </div>
       {showMinutes && (

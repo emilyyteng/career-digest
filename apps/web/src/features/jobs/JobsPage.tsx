@@ -521,7 +521,6 @@ export default function Jobs() {
               reflection: {
                 lane: result.reflection.lane,
                 body: result.reflection.body,
-                deepWork: result.reflection.deepWork,
                 actualMinutes: result.reflection.actualMinutes,
               },
             }

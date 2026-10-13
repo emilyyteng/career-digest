@@ -1,6 +1,6 @@
 /**
  * Detail-page Reflections: accordion + ✎, bottom Link existing / Create,
- * inline draft with lane chips + deep-work toggle (Progress compose parity).
+ * inline draft with lane chips (Progress compose parity).
  * Application host: optional interview-step association after app link.
  */
 import { useCallback, useEffect, useState } from "react";
@@ -13,10 +13,7 @@ import {
   type ProgressLane,
   type ProgressReflection,
 } from "../../api";
-import {
-  DeepWorkToggle,
-  LaneChips,
-} from "../progress/ReflectionAccordion";
+import { LaneChips } from "../progress/ReflectionAccordion";
 
 function truncate(body: string, max = 72): string {
   const oneLine = body.replace(/\s+/g, " ").trim();
@@ -48,14 +45,12 @@ export default function ReflectionsPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftBody, setDraftBody] = useState("");
   const [draftLane, setDraftLane] = useState<ProgressLane>("application");
-  const [draftDeepWork, setDraftDeepWork] = useState(true);
   const [draftStepId, setDraftStepId] = useState("");
   const [creating, setCreating] = useState(false);
   const [createBody, setCreateBody] = useState("");
   const [createLane, setCreateLane] = useState<ProgressLane>(
     host.defaultLane ?? (host.kind === "task" ? "other" : "application"),
   );
-  const [createDeepWork, setCreateDeepWork] = useState(true);
   const [createStepId, setCreateStepId] = useState("");
   const [linking, setLinking] = useState(false);
   const [unlinked, setUnlinked] = useState<ProgressReflection[]>([]);
@@ -98,7 +93,6 @@ export default function ReflectionsPanel({
     setLinking(false);
     setCreateBody("");
     setCreateLane(defaultLane);
-    setCreateDeepWork(true);
     setCreateStepId("");
   }
 
@@ -114,7 +108,6 @@ export default function ReflectionsPanel({
       await createProgressReflection({
         lane: createLane,
         body: createBody,
-        deepWork: createDeepWork,
         taskId: host.kind === "task" ? host.taskId : null,
         applicationId,
         interviewStepId:
@@ -154,7 +147,6 @@ export default function ReflectionsPanel({
       await patchProgressReflection(id, {
         body: draftBody,
         lane: draftLane,
-        deepWork: draftDeepWork,
         ...(applicationId
           ? { interviewStepId: draftStepId || null }
           : {}),
@@ -205,7 +197,6 @@ export default function ReflectionsPanel({
                       }}
                     >
                       <span className="progress-lane-tag">{row.lane}</span>
-                      {row.deepWork && <span className="progress-dw-tag">dw</span>}
                       <span>{truncate(row.body)}</span>
                     </button>
                     {!editing && (
@@ -218,7 +209,6 @@ export default function ReflectionsPanel({
                           setEditingId(row.id);
                           setDraftBody(row.body);
                           setDraftLane(row.lane);
-                          setDraftDeepWork(row.deepWork);
                           setDraftStepId(row.interviewStepId ?? "");
                         }}
                       >
@@ -269,11 +259,6 @@ export default function ReflectionsPanel({
                               disabled={busy}
                               onChange={setDraftLane}
                             />
-                            <DeepWorkToggle
-                              value={draftDeepWork}
-                              disabled={busy}
-                              onChange={setDraftDeepWork}
-                            />
                           </div>
                           <div className="progress-note-actions">
                             <button
@@ -323,7 +308,7 @@ export default function ReflectionsPanel({
                   <li key={row.id}>
                     <div>
                       <span className="progress-lane-tag">{row.lane}</span>
-                      {row.deepWork && <span className="progress-dw-tag">dw</span>}{" "}
+                      {" "}
                       {truncate(row.body, 56)}
                     </div>
                     <button
@@ -386,11 +371,6 @@ export default function ReflectionsPanel({
                 value={createLane}
                 disabled={busy}
                 onChange={setCreateLane}
-              />
-              <DeepWorkToggle
-                value={createDeepWork}
-                disabled={busy}
-                onChange={setCreateDeepWork}
               />
             </div>
             <div className="progress-note-actions">

@@ -92,7 +92,6 @@ export default function ReflectionAccordion({
     patch: {
       body: string;
       lane: ProgressLane;
-      deepWork: boolean;
       taskId: string | null;
       applicationId: string | null;
       interviewStepId: string | null;
@@ -103,7 +102,6 @@ export default function ReflectionAccordion({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftBody, setDraftBody] = useState("");
   const [draftLane, setDraftLane] = useState<ProgressLane>("application");
-  const [draftDeepWork, setDraftDeepWork] = useState(true);
   const [draftLinkKey, setDraftLinkKey] = useState("");
   const [draftStepId, setDraftStepId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -136,7 +134,6 @@ export default function ReflectionAccordion({
                 }}
               >
                 <span className="progress-lane-tag">{row.lane}</span>
-                {row.deepWork && <span className="progress-dw-tag">dw</span>}
                 <span>{truncate(row.body)}</span>
               </button>
               {canEdit && !editing && (
@@ -149,7 +146,6 @@ export default function ReflectionAccordion({
                     setEditingId(row.id);
                     setDraftBody(row.body);
                     setDraftLane(row.lane);
-                    setDraftDeepWork(row.deepWork);
                     setDraftLinkKey(currentLinkKey(row));
                     setDraftStepId(row.interviewStepId ?? "");
                   }}
@@ -187,11 +183,6 @@ export default function ReflectionAccordion({
                         disabled={busy}
                         onChange={setDraftLane}
                       />
-                      <DeepWorkToggle
-                        value={draftDeepWork}
-                        disabled={busy}
-                        onChange={setDraftDeepWork}
-                      />
                     </div>
                     <div className="progress-note-actions">
                       <button
@@ -216,7 +207,6 @@ export default function ReflectionAccordion({
                               await onSave(row.id, {
                                 body: draftBody,
                                 lane: draftLane,
-                                deepWork: draftDeepWork,
                                 taskId: link.taskId,
                                 applicationId: link.applicationId,
                                 interviewStepId:
@@ -299,32 +289,6 @@ export function LaneChips({
           {lane}
         </button>
       ))}
-    </div>
-  );
-}
-
-export function DeepWorkToggle({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: boolean;
-  onChange: (next: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="progress-dw-toggle-wrap">
-      <span>Deep work</span>
-      <button
-        type="button"
-        className={value ? "progress-dw-toggle is-on" : "progress-dw-toggle"}
-        aria-pressed={value}
-        aria-label="Deep work"
-        disabled={disabled}
-        onClick={() => onChange(!value)}
-      >
-        <span className="progress-dw-toggle-knob" />
-      </button>
     </div>
   );
 }
@@ -580,8 +544,6 @@ function WorkLinkFields({
 export function ReflectionCompose({
   lane,
   onLaneChange,
-  deepWork,
-  onDeepWorkChange,
   linkKey,
   onLinkKeyChange,
   interviewStepId,
@@ -592,8 +554,6 @@ export function ReflectionCompose({
 }: {
   lane: ProgressLane;
   onLaneChange: (lane: ProgressLane) => void;
-  deepWork: boolean;
-  onDeepWorkChange: (deepWork: boolean) => void;
   linkKey: string;
   onLinkKeyChange: (key: string) => void;
   interviewStepId: string;
@@ -602,7 +562,6 @@ export function ReflectionCompose({
   onSubmit: (input: {
     lane: ProgressLane;
     body: string;
-    deepWork: boolean;
     actualMinutes: number | null;
     taskId: string | null;
     applicationId: string | null;
@@ -641,7 +600,6 @@ export function ReflectionCompose({
             await onSubmit({
               lane,
               body,
-              deepWork,
               actualMinutes,
               taskId: opt?.taskId ?? null,
               applicationId: opt?.applicationId ?? null,
@@ -676,11 +634,6 @@ export function ReflectionCompose({
       />
       <div className="progress-compose-meta">
         <LaneChips value={lane} onChange={onLaneChange} disabled={busy} />
-        <DeepWorkToggle
-          value={deepWork}
-          onChange={onDeepWorkChange}
-          disabled={busy}
-        />
       </div>
       <label className="reflection-minutes-field">
         <span className="reflection-minutes-label">Time (min)</span>

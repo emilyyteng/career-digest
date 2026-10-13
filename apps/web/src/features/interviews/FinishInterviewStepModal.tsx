@@ -75,7 +75,6 @@ export default function FinishInterviewStepModal({
         ? {
             body: reflection.body.trim(),
             lane: reflection.lane,
-            deepWork: reflection.deepWork,
             actualMinutes: reflection.actualMinutes,
           }
         : null;
