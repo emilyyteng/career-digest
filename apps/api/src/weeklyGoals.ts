@@ -1,5 +1,8 @@
 import type { Pool, PoolClient } from "pg";
 import { addCivilDays } from "./homeUpcoming.js";
+import { POINTS, weeklyRecordPoints } from "./pointsFormulas.js";
+import { effectiveEarnAmount, findEarnEvent, recordEarn } from "./pointsLedger.js";
+import { weeklyGoalSourceId } from "./pointsAwards.js";
 import { isValidTimezone, localDateInTimezone } from "./progress.js";
 
 type Queryable = Pool | PoolClient;
@@ -34,6 +37,22 @@ export type WeeklyGoalView = {
     fractionElapsed: number;
   };
   members: WeeklyGoalMember[];
+  /** Consecutive met weeks ending with the last closed week (R5.28; display only). */
+  metWeeksStreak: number;
+};
+
+export type WeeklyGoalRecord = {
+  weekStart: string;
+  slot: WeeklyGoalSlot;
+  /** LC: the target. Apps: tagged tasks at close. */
+  target: number;
+  /** LC: weekly solves, possibly past the target. Apps: tagged tasks completed in the week. */
+  done: number;
+  met: boolean;
+  /** The week's worth under R5.15. */
+  points: number;
+  flatBonusPaidBefore: boolean;
+  closedAt: string;
 };
 
 export type WeeklyGoalsSnapshot = {
@@ -177,6 +196,7 @@ function toView(
   row: GoalRow,
   members: WeeklyGoalMember[],
   fractionElapsed: number,
+  metWeeksStreak: number,
 ): WeeklyGoalView {
   let done: number;
   let total: number;
@@ -185,8 +205,7 @@ function toView(
 
   if (row.kind === "count") {
     total = targetCount ?? 0;
-    done = Math.min(progressCount, total);
-    progressCount = done;
+    done = progressCount;
   } else {
     total = members.length;
     done = members.filter((m) => m.status === "completed").length;
@@ -206,6 +225,7 @@ function toView(
     total,
     pace: computePace(done, total, fractionElapsed),
     members: row.kind === "task_set" ? members : [],
+    metWeeksStreak,
   };
 }
 
@@ -242,45 +262,303 @@ async function ensurePair(db: Queryable, weekStart: string): Promise<void> {
       [weekStart],
     );
   }
+}
 
-  // Carry incomplete app members from previous week into this week's apps goal.
-  const prev = addCivilDays(weekStart, -7);
+async function appsGoalId(db: Queryable, weekStart: string): Promise<string | null> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM weekly_goals WHERE week_start = $1::date AND slot = 'apps'`,
+    [weekStart],
+  );
+  return rows[0]?.id ?? null;
+}
+
+/** Arbitrary key for the advisory lock that serializes week close. */
+const WEEK_CLOSE_LOCK_KEY = 508_005;
+
+async function readCloseStart(db: Queryable): Promise<string | null> {
+  const { rows } = await db.query<{ start_week: string }>(
+    `SELECT start_week::text AS start_week FROM weekly_close_state WHERE singleton`,
+  );
+  return rows[0]?.start_week ?? null;
+}
+
+async function lastClosedWeek(db: Queryable): Promise<string | null> {
+  const { rows } = await db.query<{ week: string | null }>(
+    `SELECT MAX(week_start)::text AS week FROM weekly_goal_records`,
+  );
+  return rows[0]?.week ?? null;
+}
+
+/** "Week of Oct 5" for a Monday YMD. */
+export function weekLabel(weekStart: string): string {
+  const [y, m, d] = weekStart.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  return `Week of ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`;
+}
+
+function isPool(db: Queryable): db is Pool {
+  return !("release" in db);
+}
+
+/**
+ * R5.23: close every ended, unclosed week, oldest first, before anything reads or
+ * changes weekly goals. Runs in its own transaction under an advisory lock, so
+ * concurrent requests close a week once. The first call ever only records the
+ * switch-over week (R5.22): earlier weeks are never closed.
+ */
+export async function closeDueWeeks(
+  db: Queryable,
+  tz: string,
+  now = new Date(),
+): Promise<WeeklyGoalRecord[]> {
+  if (!isValidTimezone(tz)) return [];
+  const currentWeek = mondayOfLocalWeek(now, tz);
+  const start = await readCloseStart(db);
+  if (start) {
+    const lastEnded = addCivilDays(currentWeek, -7);
+    if (lastEnded < start) return [];
+    const closed = await lastClosedWeek(db);
+    if (closed && closed >= lastEnded) return [];
+  }
+
+  if (!isPool(db)) {
+    await db.query(`SELECT pg_advisory_xact_lock($1)`, [WEEK_CLOSE_LOCK_KEY]);
+    return closeDueWeeksLocked(db, tz, currentWeek);
+  }
+  const client = await db.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`SELECT pg_advisory_xact_lock($1)`, [WEEK_CLOSE_LOCK_KEY]);
+    const records = await closeDueWeeksLocked(client, tz, currentWeek);
+    await client.query("COMMIT");
+    return records;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function closeDueWeeksLocked(
+  db: Queryable,
+  tz: string,
+  currentWeek: string,
+): Promise<WeeklyGoalRecord[]> {
+  let start = await readCloseStart(db);
+  if (!start) {
+    await db.query(
+      `INSERT INTO weekly_close_state (start_week) VALUES ($1::date) ON CONFLICT DO NOTHING`,
+      [currentWeek],
+    );
+    start = (await readCloseStart(db)) ?? currentWeek;
+    await adoptStrandedMembers(db, start);
+  }
+
+  const closed = await lastClosedWeek(db);
+  let week = closed && closed >= start ? addCivilDays(closed, 7) : start;
+  const records: WeeklyGoalRecord[] = [];
+  while (week < currentWeek) {
+    records.push(...(await closeWeek(db, week, tz)));
+    week = addCivilDays(week, 7);
+  }
+  return records;
+}
+
+/**
+ * The switch-over: open tagged tasks left in earlier weeks (the old carry-over only
+ * looked one week back) join the first week that closes.
+ */
+async function adoptStrandedMembers(db: Queryable, startWeek: string): Promise<void> {
+  await ensurePair(db, startWeek);
+  const goalId = await appsGoalId(db, startWeek);
+  if (!goalId) return;
   await db.query(
     `UPDATE weekly_goal_members AS m
-     SET goal_id = curr.id
-     FROM weekly_goals AS prev,
-          weekly_goals AS curr,
-          tasks AS t
-     WHERE m.goal_id = prev.id
-       AND prev.week_start = $2::date
-       AND prev.slot = 'apps'
-       AND curr.week_start = $1::date
-       AND curr.slot = 'apps'
+     SET goal_id = $1
+     FROM weekly_goals AS g, tasks AS t
+     WHERE m.goal_id = g.id
+       AND g.slot = 'apps'
+       AND g.week_start < $2::date
        AND t.id = m.task_id
-       AND t.status = 'open'
-       AND NOT EXISTS (
-         SELECT 1 FROM weekly_goal_members AS already
-         WHERE already.goal_id = curr.id AND already.task_id = m.task_id
-       )`,
-    [weekStart, prev],
+       AND t.status = 'open'`,
+    [goalId, startWeek],
   );
 }
 
+async function closeWeek(db: Queryable, weekStart: string, tz: string): Promise<WeeklyGoalRecord[]> {
+  await ensurePair(db, weekStart);
+  const nextWeek = addCivilDays(weekStart, 7);
+  const weekEnd = zonedMidnightUtc(nextWeek, tz);
+  const records: WeeklyGoalRecord[] = [];
+
+  for (const row of await loadGoalRows(db, weekStart)) {
+    let target: number;
+    let done: number;
+    if (row.kind === "count") {
+      target = row.targetCount ?? 0;
+      done = row.progressCount;
+    } else {
+      // A tagged task completed after the week ended counts toward the week it was completed in.
+      const { rows } = await db.query<{ total: number; done: number }>(
+        `SELECT
+           COUNT(*)::int AS total,
+           COUNT(*) FILTER (
+             WHERE t.status = 'completed' AND t.completed_at IS NOT NULL AND t.completed_at < $2
+           )::int AS done
+         FROM weekly_goal_members m
+         JOIN tasks t ON t.id = m.task_id
+         WHERE m.goal_id = $1`,
+        [row.id, weekEnd],
+      );
+      target = rows[0]?.total ?? 0;
+      done = rows[0]?.done ?? 0;
+    }
+    const met = target > 0 && done >= target;
+    const points = weeklyRecordPoints(done, met);
+
+    const flatEarn = await findEarnEvent(db, "weekly_goal", weeklyGoalSourceId(weekStart, row.slot));
+    const flatBonusPaidBefore = flatEarn != null && effectiveEarnAmount(flatEarn) > 0;
+
+    const inserted = await db.query<{ closed_at: Date }>(
+      `INSERT INTO weekly_goal_records
+         (week_start, slot, target, done, met, points, flat_bonus_paid_before)
+       VALUES ($1::date, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (week_start, slot) DO NOTHING
+       RETURNING closed_at`,
+      [weekStart, row.slot, target, done, met, points, flatBonusPaidBefore],
+    );
+    if (!inserted.rows[0]) continue;
+
+    const bonusDue = met && !flatBonusPaidBefore;
+    const unitPoints = done * POINTS.weeklyGoalPerUnit;
+    const amount = unitPoints + (bonusDue ? POINTS.weeklyGoalBonus : 0);
+    const name = row.slot === "lc" ? "LC" : "Apps";
+    if (amount > 0) {
+      await recordEarn(db, {
+        category: "weekly_goal",
+        amount,
+        message: `${weekLabel(weekStart)} · ${name} ${done}/${target} · +${amount} points`,
+        sourceType: "weekly_record",
+        sourceId: weeklyGoalSourceId(weekStart, row.slot),
+        breakdown: [
+          ...(unitPoints > 0
+            ? [{ category: "weekly_goal" as const, amount: unitPoints, label: `${done} × ${POINTS.weeklyGoalPerUnit}` }]
+            : []),
+          ...(bonusDue
+            ? [{ category: "weekly_goal" as const, amount: POINTS.weeklyGoalBonus, label: "target met" }]
+            : []),
+        ],
+        meta: { week_start: weekStart, slot: row.slot, target, done, met },
+      });
+    }
+    records.push({
+      weekStart,
+      slot: row.slot,
+      target,
+      done,
+      met,
+      points,
+      flatBonusPaidBefore,
+      closedAt: inserted.rows[0].closed_at.toISOString(),
+    });
+  }
+
+  // R5.11: open tagged tasks, and ones completed after the week ended, move into next week.
+  await ensurePair(db, nextWeek);
+  const fromId = await appsGoalId(db, weekStart);
+  const toId = await appsGoalId(db, nextWeek);
+  if (fromId && toId) {
+    await db.query(
+      `UPDATE weekly_goal_members AS m
+       SET goal_id = $2
+       FROM tasks AS t
+       WHERE m.goal_id = $1
+         AND t.id = m.task_id
+         AND (t.status = 'open' OR t.completed_at IS NULL OR t.completed_at >= $3)`,
+      [fromId, toId, weekEnd],
+    );
+  }
+  return records;
+}
+
+export async function listWeeklyGoalRecords(
+  db: Queryable,
+  opts: { limit?: number } = {},
+): Promise<WeeklyGoalRecord[]> {
+  const limit = Math.min(Math.max(opts.limit ?? 80, 1), 500);
+  const { rows } = await db.query<{
+    week_start: string;
+    slot: WeeklyGoalSlot;
+    target: number;
+    done: number;
+    met: boolean;
+    points: number;
+    flat_bonus_paid_before: boolean;
+    closed_at: Date;
+  }>(
+    `SELECT week_start::text AS week_start, slot, target, done, met, points,
+            flat_bonus_paid_before, closed_at
+     FROM weekly_goal_records
+     ORDER BY week_start DESC, CASE slot WHEN 'lc' THEN 0 ELSE 1 END
+     LIMIT $1`,
+    [limit],
+  );
+  return rows.map((r) => ({
+    weekStart: r.week_start,
+    slot: r.slot,
+    target: r.target,
+    done: r.done,
+    met: r.met,
+    points: r.points,
+    flatBonusPaidBefore: r.flat_bonus_paid_before,
+    closedAt: r.closed_at.toISOString(),
+  }));
+}
+
+/** R5.28: consecutive met weeks per goal, counting back from the last closed week. */
+export async function metWeeksStreaks(db: Queryable): Promise<Record<WeeklyGoalSlot, number>> {
+  const { rows } = await db.query<{ slot: WeeklyGoalSlot; streak: number }>(
+    `WITH ranked AS (
+       SELECT slot, met, week_start,
+              MAX(week_start) OVER (PARTITION BY slot) AS last_week,
+              ROW_NUMBER() OVER (PARTITION BY slot ORDER BY week_start DESC) - 1 AS back
+       FROM weekly_goal_records
+     ),
+     first_break AS (
+       SELECT slot, MIN(back) AS back
+       FROM ranked
+       WHERE NOT met OR week_start <> last_week - (back * 7)::int
+       GROUP BY slot
+     )
+     SELECT r.slot, COALESCE(MIN(b.back), COUNT(*))::int AS streak
+     FROM ranked r
+     LEFT JOIN first_break b ON b.slot = r.slot
+     GROUP BY r.slot`,
+  );
+  const out: Record<WeeklyGoalSlot, number> = { lc: 0, apps: 0 };
+  for (const r of rows) out[r.slot] = r.streak;
+  return out;
+}
+
+/** The current week's goals, after closing any ended weeks. Null if `tz` isn't valid. */
 export async function getWeeklyGoalsSnapshot(
   db: Queryable,
   tz: string,
   now = new Date(),
 ): Promise<WeeklyGoalsSnapshot | null> {
   if (!isValidTimezone(tz)) return null;
+  await closeDueWeeks(db, tz, now);
   const weekStart = mondayOfLocalWeek(now, tz);
   const weekEnd = addCivilDays(weekStart, 6);
   await ensurePair(db, weekStart);
   const rows = await loadGoalRows(db, weekStart);
   const fraction = weekElapsedFraction(now, weekStart, tz);
+  const streaks = await metWeeksStreaks(db);
   const goals: WeeklyGoalView[] = [];
   for (const row of rows) {
     const members = row.kind === "task_set" ? await loadMembers(db, row.id) : [];
-    goals.push(toView(row, members, fraction));
+    goals.push(toView(row, members, fraction, streaks[row.slot]));
   }
   return { tz, weekStart, weekEnd, goals };
 }
@@ -291,6 +569,7 @@ export async function patchLcGoal(
   patch: { targetCount?: number; progressCount?: number },
 ): Promise<WeeklyGoalsSnapshot | null> {
   if (!isValidTimezone(tz)) return null;
+  await closeDueWeeks(db, tz);
   const weekStart = mondayOfLocalWeek(new Date(), tz);
   await ensurePair(db, weekStart);
   const { rows } = await db.query<{ id: string; target_count: number; progress_count: number }>(
@@ -309,7 +588,6 @@ export async function patchLcGoal(
       throw Object.assign(new Error("targetCount must be a positive integer"), { status: 400 });
     }
     target = patch.targetCount;
-    if (progress > target) progress = target;
   }
   if (patch.progressCount !== undefined) {
     if (!Number.isInteger(patch.progressCount) || patch.progressCount < 0) {
@@ -317,7 +595,7 @@ export async function patchLcGoal(
         status: 400,
       });
     }
-    progress = Math.min(patch.progressCount, target);
+    progress = patch.progressCount;
   }
 
   await db.query(
@@ -363,6 +641,7 @@ export async function setAppTargetMembership(
   member: boolean,
 ): Promise<WeeklyGoalsSnapshot | null> {
   if (!isValidTimezone(tz)) return null;
+  await closeDueWeeks(db, tz);
   const weekStart = mondayOfLocalWeek(new Date(), tz);
   await ensurePair(db, weekStart);
 

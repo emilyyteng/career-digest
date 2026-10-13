@@ -317,6 +317,8 @@ export type WeeklyGoalView = {
     fractionElapsed: number;
   };
   members: WeeklyGoalMember[];
+  /** Consecutive met weeks ending with the last closed week (R5.28). */
+  metWeeksStreak: number;
 };
 
 export type WeeklyGoalsSnapshot = {
@@ -409,9 +411,15 @@ export const getApplicationLocations = (q = "") => {
 export const getApplication = (id: string) =>
   parse<ApplicationRow>(api(`/api/applications/${id}`));
 
+/** Mark applied closes ended weeks, which needs the user's local week (B2). */
+function tzQuery(): string {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return tz ? `?tz=${encodeURIComponent(tz)}` : "";
+}
+
 export const createApplication = (body: Record<string, unknown>) =>
   parse<{ id: string; points?: PointsEarnInfo | null }>(
-    api("/api/applications", {
+    api(`/api/applications${tzQuery()}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -761,7 +769,7 @@ export const completeTask = (
   },
 ) =>
   parse<CompleteTaskResult>(
-    api(`/api/tasks/${id}/complete`, {
+    api(`/api/tasks/${id}/complete${tzQuery()}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body ?? {}),

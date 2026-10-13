@@ -55,9 +55,8 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Ready (after M5-05) | Q32 settled (easy 20, medium 30, hard 50); adds interim purple buttons; user tries R5.10 before close |
+| [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Ready | Q32 settled (easy 20, medium 30, hard 50); adds interim purple buttons; user tries R5.10 before close |
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | build | Draft | After M5-05, M5-07 (M5-06 design in); documents banner patterns in the design system |
-| [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | build | Ready | Backend only; M4-01 done, so unblocked. Build order: M5-03, M5-05, M5-15, M5-01, M5-10, M5-07, M5-08, M5-09, M5-02, M5-12, M5-11, M5-13 |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | prototype | Ready | Mock numbers from R5.25–R5.26 |
 | [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Draft | After M5-05, M5-01, M5-07; owns the weekly-streak display (R5.28), criteria wait on M5-07 Q5 |
 | [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | build | Draft | After M5-08 (LC label API); M5-06 design in; finalize acceptance criteria |
@@ -65,13 +64,14 @@ No open tickets.
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Draft | After M5-07, M5-01 |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Draft | After M5-07, M5-10 (M5-14 done) |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | build | Draft | Only if Q7 keeps it after M5-07 |
-| [M5-15](./tickets/M5/M5-15-weekly-records-in-completion-log.md) | Weekly records in the completion log | build | Ready (after M5-05) | UI half of the M5-05 split; M5-06 Q5 variant A |
+| [M5-15](./tickets/M5/M5-15-weekly-records-in-completion-log.md) | Weekly records in the completion log | build | Ready | M5-05 done; the API already returns the `weekly` items and meta text |
 
 <details>
-<summary>Done (4)</summary>
+<summary>Done (5)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | (this commit) |
 | [M5-03](./tickets/M5/M5-03-points-by-task-category.md) | Points breakdown splits tasks by task category | `5c1ea60` |
 | [M5-06](./tickets/M5/M5-06-prototype-weekly-surfaces.md) | Prototype weekly goal surfaces | `f0a5fd2` |
 | [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | `c367095` |

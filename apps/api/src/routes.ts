@@ -178,10 +178,6 @@ function applicationLabel(app: { company: string | null; title: string | null })
     : app.title ?? "Application";
 }
 
-function requestTimezone(req: express.Request): string {
-  return resolveTimezone(String(req.query.tz ?? "")) ?? "UTC";
-}
-
 async function appendTaskNotes(
   db: Pool,
   taskId: string,
@@ -262,7 +258,7 @@ api.post("/demo/reset", async (_req, res) => {
 });
 
 api.get("/home", async (req, res) => {
-  const tz = resolveTimezone(String(req.query.tz ?? "")) ?? "UTC";
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
   const upcomingDays = normalizeUpcomingWindowDays(req.query.upcomingDays);
   res.json(await getHomeDashboard(tz, upcomingDays));
 });
@@ -480,7 +476,7 @@ api.post("/applications", async (req, res) => {
         notes: body.notes ?? null,
         actualMinutes: actualMinutes.value ?? null,
         reflection: reflection.value,
-        tz: requestTimezone(req),
+        tz: resolveTimezone(String(req.query.tz ?? "")),
       });
       res.status(201).json({ id: result.applicationId, points: serializePointsEarn(result.points) });
       return;
@@ -1163,7 +1159,7 @@ api.post("/tasks/:id/complete", async (req, res) => {
         notes: typeof body.notes === "string" ? body.notes : null,
         actualMinutes: actualMinutes ?? null,
         reflection: reflection.value,
-        tz: requestTimezone(req),
+        tz: resolveTimezone(String(req.query.tz ?? "")),
       });
       const task = await getTaskById(pool, before.id);
       res.json({ ...task, points: serializePointsEarn(result.points) });
@@ -1447,6 +1443,7 @@ api.get("/progress/completions", async (req, res) => {
     "application",
     "interview",
     "reflection",
+    "weekly",
   ];
   const kind = (allowed.includes(rawKind as CompletionKind | "all")
     ? rawKind

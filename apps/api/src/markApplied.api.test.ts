@@ -148,7 +148,6 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
       ],
       events: [
         { kind: "earn", category: "application", amount: 70, source_type: "application_applied" },
-        { kind: "earn", category: "weekly_goal", amount: expect.any(Number), source_type: "weekly_goal" },
       ],
     });
   });

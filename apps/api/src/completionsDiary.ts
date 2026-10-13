@@ -2,8 +2,26 @@ import type { Pool } from "pg";
 import { addCivilDays } from "./homeUpcoming.js";
 import { localDateInTimezone } from "./progress.js";
 import { effectiveEarnAmount, findEarnEvent } from "./pointsLedger.js";
+import { POINTS } from "./pointsFormulas.js";
+import {
+  closeDueWeeks,
+  listWeeklyGoalRecords,
+  weekLabel,
+  type WeeklyGoalRecord,
+  type WeeklyGoalSlot,
+} from "./weeklyGoals.js";
 
-export type CompletionKind = "task" | "application" | "interview" | "reflection";
+export type CompletionKind = "task" | "application" | "interview" | "reflection" | "weekly";
+
+/** A closed week's record for one goal (R5.8); only on `weekly` items. */
+export type CompletionWeekly = {
+  slot: WeeklyGoalSlot;
+  weekStart: string;
+  target: number;
+  done: number;
+  met: boolean;
+  points: number;
+};
 
 export type CompletionReflectionNest = {
   id: string;
@@ -23,6 +41,7 @@ export type CompletionDiaryItem = {
   points: number | null;
   href: string | null;
   reflections: CompletionReflectionNest[];
+  weekly?: CompletionWeekly;
 };
 
 export type CompletionCounts = {
@@ -37,7 +56,7 @@ export type CompletionsDiary = {
   stats: {
     week: CompletionCounts & { minutes: number };
     month: CompletionCounts & { minutes: number };
-    allTime: CompletionCounts;
+    allTime: CompletionCounts & { weekly: number };
   };
   items: CompletionDiaryItem[];
 };
@@ -66,6 +85,14 @@ function nestReflections(
   }));
 }
 
+/** M5-06 verdict, Q5 variant A: "Week of Oct 5 · 12 × 20 + 100 · target met". */
+function weeklySubtitle(r: WeeklyGoalRecord): string {
+  const week = weekLabel(r.weekStart);
+  if (r.slot === "apps" && r.target === 0) return `${week} · no tagged applications`;
+  const units = `${r.done} × ${POINTS.weeklyGoalPerUnit}`;
+  return r.met ? `${week} · ${units} + ${POINTS.weeklyGoalBonus} · target met` : `${week} · ${units}`;
+}
+
 function emptyCounts(): CompletionCounts {
   return { tasks: 0, apps: 0, interview: 0, reflections: 0 };
 }
@@ -82,8 +109,36 @@ export async function getCompletionsDiary(
   const weekStart = mondayOf(today);
   const weekEnd = addCivilDays(weekStart, 6);
   const monthBegin = monthStart(today);
+  await closeDueWeeks(pool, tz, now);
 
   const items: CompletionDiaryItem[] = [];
+
+  // Closed weeks: one entry per goal, on the close date (R5.8, R5.23)
+  if (!kindFilter || kindFilter === "weekly") {
+    for (const r of await listWeeklyGoalRecords(pool, { limit })) {
+      items.push({
+        id: `weekly:${r.weekStart}:${r.slot}`,
+        kind: "weekly",
+        title: `${r.slot === "lc" ? "LC" : "Apps"} ${r.done}/${r.target}`,
+        subtitle: weeklySubtitle(r),
+        at: r.closedAt,
+        localDate: localDateInTimezone(new Date(r.closedAt), tz),
+        estimateMinutes: null,
+        actualMinutes: null,
+        points: r.points,
+        href: null,
+        reflections: [],
+        weekly: {
+          slot: r.slot,
+          weekStart: r.weekStart,
+          target: r.target,
+          done: r.done,
+          met: r.met,
+          points: r.points,
+        },
+      });
+    }
+  }
 
   // Misc completed tasks
   if (!kindFilter || kindFilter === "task") {
@@ -368,10 +423,10 @@ export async function getCompletionsDiary(
   items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   const trimmed = items.slice(0, limit);
 
-  const allTime = emptyCounts();
+  const allTime = { ...emptyCounts(), weekly: 0 };
 
   // All-time counts from DB (not limited feed)
-  const [taskCount, appCount, interviewCount, reflectionCount] = await Promise.all([
+  const [taskCount, appCount, interviewCount, reflectionCount, weeklyCount] = await Promise.all([
     pool.query<{ n: string }>(
       `SELECT COUNT(*)::text AS n FROM tasks WHERE status = 'completed' AND category = 'misc'`,
     ),
@@ -383,11 +438,13 @@ export async function getCompletionsDiary(
        WHERE status IN ('completed', 'awaiting_employer') AND completed_at IS NOT NULL`,
     ),
     pool.query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM reflection_logs`),
+    pool.query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM weekly_goal_records`),
   ]);
   allTime.tasks = Number(taskCount.rows[0]?.n ?? 0);
   allTime.apps = Number(appCount.rows[0]?.n ?? 0);
   allTime.interview = Number(interviewCount.rows[0]?.n ?? 0);
   allTime.reflections = Number(reflectionCount.rows[0]?.n ?? 0);
+  allTime.weekly = Number(weeklyCount.rows[0]?.n ?? 0);
 
   // Accurate week/month from DB dates (timestamptz → local civil date in tz)
   async function rangeCounts(start: string, end: string) {

@@ -286,36 +286,6 @@ export async function syncLeetcodeDailyPoints(
   return earn;
 }
 
-export async function awardWeeklyGoalIfNeeded(
-  db: Queryable,
-  input: {
-    weekStart: string;
-    slot: "lc" | "apps";
-    met: boolean;
-    label: string;
-  },
-): Promise<PointsEventRow | null> {
-  if (!input.met) return null;
-  const sourceType = "weekly_goal";
-  const sourceId = weeklyGoalSourceId(input.weekStart, input.slot);
-  const { event, created } = await recordEarn(db, {
-    category: "weekly_goal",
-    amount: POINTS.weeklyGoalBonus,
-    message: `${input.label} · +${POINTS.weeklyGoalBonus} points`,
-    sourceType,
-    sourceId,
-    breakdown: [
-      {
-        category: "weekly_goal",
-        amount: POINTS.weeklyGoalBonus,
-        label: input.slot,
-      },
-    ],
-    meta: { week_start: input.weekStart, slot: input.slot },
-  });
-  return created ? event : null;
-}
-
 export async function reverseTaskComplete(
   db: Queryable,
   taskId: string,

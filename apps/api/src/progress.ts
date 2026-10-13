@@ -497,8 +497,6 @@ export async function setLeetcodeDaily(
   input: { count?: number; delta?: number; date?: string },
 ): Promise<{ localDate: string; count: number }> {
   const { syncLeetcodeDailyPoints } = await import("./pointsAwards.js");
-  const { awardWeeklyGoalIfNeeded } = await import("./pointsAwards.js");
-  const { getWeeklyGoalsSnapshot } = await import("./weeklyGoals.js");
 
   const localDate =
     input.date != null
@@ -543,21 +541,6 @@ export async function setLeetcodeDaily(
   }
 
   await syncLeetcodeDailyPoints(pool, localDate, count);
-
-  try {
-    const snap = await getWeeklyGoalsSnapshot(pool, tz);
-    const lcGoal = snap?.goals.find((g) => g.slot === "lc");
-    if (snap && lcGoal && lcGoal.done >= lcGoal.total && lcGoal.total > 0) {
-      await awardWeeklyGoalIfNeeded(pool, {
-        weekStart: snap.weekStart,
-        slot: "lc",
-        met: true,
-        label: "Weekly LC target met!",
-      });
-    }
-  } catch {
-    // Weekly goals optional if table missing in odd test setups.
-  }
 
   return { localDate, count };
 }

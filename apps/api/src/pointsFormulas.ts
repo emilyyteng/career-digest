@@ -9,6 +9,8 @@ export const POINTS = {
   /** A reflection is a flat +20, whether written with the work or on its own. */
   reflectionBonus: 20,
   leetcodePerUnit: 30,
+  /** Week close (R5.15): per completed tagged app or weekly LC solve, plus a flat bonus when met. */
+  weeklyGoalPerUnit: 20,
   weeklyGoalBonus: 100,
   interviewByKind: {
     assessment: 60,
@@ -19,6 +21,11 @@ export const POINTS = {
     custom: 40,
   },
 } as const;
+
+/** R5.15: a week's worth per goal. 0/0 is never met, so it earns nothing (R5.12). */
+export function weeklyRecordPoints(done: number, met: boolean): number {
+  return Math.max(0, done) * POINTS.weeklyGoalPerUnit + (met ? POINTS.weeklyGoalBonus : 0);
+}
 
 export type PointsCategory =
   | "task"

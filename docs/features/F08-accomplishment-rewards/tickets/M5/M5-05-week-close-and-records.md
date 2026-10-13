@@ -1,6 +1,6 @@
 # M5-05: Week close and weekly records
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** M4-01 (done: one mark-applied hook for weekly apps progress)
 **Implements:** R5.7, R5.8 (data; display is M5-15), R5.9, R5.11, R5.12, R5.14, R5.15, R5.22, R5.23, R5.24, R5.28 (data), B1 (from `../../spec.md`)
 **Type:** build
@@ -25,20 +25,20 @@ This ticket is backend only (split 2026-10-13). Item 11 changes web API calls bu
 
 ## Acceptance criteria
 
-- [ ] Closing a week with 6/10 apps done records 6/10, not met, +120.
-- [ ] 10/10 apps: met, +300. LC 12/10: met, +340.
-- [ ] 0/0 apps: recorded, not met, 0 points.
-- [ ] Open tagged tasks move to the new week; last week's record keeps its result.
-- [ ] Two weeks without a visit: both close in order on the next request, and members carry forward correctly.
-- [ ] Concurrent requests close a week exactly once (one record, one earn per goal).
-- [ ] No weekly points are awarded when a target is hit mid-week, from any path.
-- [ ] LC progress can exceed the target and is shown as such by the API.
-- [ ] The switch-over week doesn't pay the flat bonus twice; weeks before it get no record.
-- [ ] `GET /progress/completions` returns one `weekly` entry per goal per closed week, on its close date, with goal, progress, target, met and points (0/0 apps included, with 0 points).
-- [ ] After close, no action changes a closed week's record or points; a late weekly solve raises the current week instead.
-- [ ] Each goal's run of consecutive met weeks is available from the API.
-- [ ] Mark applied from Tasks and Jobs sends the browser's time zone, so weekly apps progress and scoring use local weeks.
-- [ ] Tests cover all of the above, including week boundaries in a non-UTC time zone (B2).
+- [x] Closing a week with 6/10 apps done records 6/10, not met, +120.
+- [x] 10/10 apps: met, +300. LC 12/10: met, +340.
+- [x] 0/0 apps: recorded, not met, 0 points.
+- [x] Open tagged tasks move to the new week; last week's record keeps its result.
+- [x] Two weeks without a visit: both close in order on the next request, and members carry forward correctly.
+- [x] Concurrent requests close a week exactly once (one record, one earn per goal).
+- [x] No weekly points are awarded when a target is hit mid-week, from any path.
+- [x] LC progress can exceed the target and is shown as such by the API.
+- [x] The switch-over week doesn't pay the flat bonus twice; weeks before it get no record.
+- [x] `GET /progress/completions` returns one `weekly` entry per goal per closed week, on its close date, with goal, progress, target, met and points (0/0 apps included, with 0 points).
+- [x] After close, no action changes a closed week's record or points; a late weekly solve raises the current week instead.
+- [x] Each goal's run of consecutive met weeks is available from the API.
+- [x] Mark applied from Tasks and Jobs sends the browser's time zone, so weekly apps progress and scoring use local weeks.
+- [x] Tests cover all of the above, including week boundaries in a non-UTC time zone (B2).
 
 ## Reuse notes
 
@@ -46,12 +46,20 @@ Extend `weeklyGoals.ts` (`ensurePair` is the natural place to close weeks before
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Reuse check done
-- [ ] Committed as `F08 M5-05: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Reuse check done
+- [x] Committed as `F08 M5-05: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+**Done 2026-10-13** (commit hash on the board).
+
+- **Records and close:** migration 029 adds `weekly_goal_records` (one fixed row per week and goal) and `weekly_close_state` (the switch-over week). `closeDueWeeks` ([`weeklyGoals.ts`](../../../../../apps/api/src/weeklyGoals.ts)) runs first in the weekly snapshot (so Home too), `patchLcGoal`, `setAppTargetMembership`, the completions diary and `markApplied`. It takes an advisory lock in its own transaction, closes weeks oldest first, records each goal, pays one `weekly_record` earn (`Week of Mar 2 · LC 12/10 · +340 points`), then carries open tagged tasks forward. The unique `(week_start, slot)` and earn indexes back up the lock.
+- **Late completions:** an apps week counts tagged tasks completed before its local end (`completed_at`), so a task finished Monday morning before any close still counts for the new week and moves there.
+- **Switch-over (R5.22):** the first check records the current week as the start and adopts open tagged tasks stranded in older weeks. If the old code already paid the flat +100 for that week, the close pays the units only; the record still shows the week's full worth and `flat_bonus_paid_before`. On the dev database the start week is 2026-10-12, so the first real close is Monday 2026-10-19.
+- **Removed:** the instant bonuses in `setLeetcodeDaily` and `markApplied`, `awardWeeklyGoalIfNeeded`, and the LC cap. The weekly snapshot adds `metWeeksStreak` per goal. The diary returns `weekly` items (title, the M5-06 meta text as `subtitle`, points, `weekly` details) and `stats.allTime.weekly`; the `weekly` tab and row styling are M5-15.
+- **Time zone (B2):** mark applied closes weeks only with a valid `tz` (no UTC fallback; the unused `requestTimezone` helper is gone). The web sends the browser's zone on `completeTask` and `createApplication` ([`api.ts` `tzQuery`](../../../../../apps/web/src/api.ts)). `GET /api/home` without `tz` returns no weekly goals rather than UTC ones; Upcoming keeps its UTC fallback. The Proposed rejection of weekly reads without `tz` wasn't needed: every weekly route already returns 400 without one.
+- **Checked by running:** 15 integration tests in `weekClose.api.test.ts` (fixed weeks in America/Los_Angeles across the DST change: 6/10, 10/10, LC 12/10, 0/0, two missed visits, concurrent closes, Sunday 23:30 vs Monday 01:00, switch-over with and without a prior bonus, first-run adoption, no mid-week points from any path, LC past and lowered target, fixed records after close, R5.24 untag and delete, streaks, diary entries, mark applied with and without `tz`). The mark-applied parity test no longer expects a weekly bonus. `npm run check` passes (264 tests).
+- **Proposed (not in the spec):** a tagged task completed in a week, then reopened before that week closes, is carried forward as open. Untagging a completed task is still allowed, as before.

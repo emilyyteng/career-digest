@@ -1,7 +1,7 @@
 # M5-01: Log LeetCode as weekly or misc, by difficulty tier, through one write path
 
-**Status:** Ready (after M5-05)
-**Blocked by:** M5-05 (build order, 2026-10-13: both change `setLeetcodeDaily`; M5-05 removes the instant weekly bonus and the cap first, so this ticket writes the single path once)
+**Status:** Ready
+**Blocked by:** M5-05, done (build order, 2026-10-13: both change `setLeetcodeDaily`; M5-05 removes the instant weekly bonus and the cap first, so this ticket writes the single path once)
 **Implements:** R5.10, R5.14, R5.17, R5.20, R8.3 (function only; visual polish stays in M8) (from `../../spec.md`)
 **Type:** build
 

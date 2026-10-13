@@ -47,6 +47,9 @@ export async function truncateAll(client?: PoolClient): Promise<void> {
   assertTestDatabaseMutationAllowed();
   const sql = `
     TRUNCATE TABLE
+      weekly_goal_records,
+      weekly_close_state,
+      weekly_goals,
       points_events,
       reflection_logs,
       leetcode_daily,

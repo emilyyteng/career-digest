@@ -121,7 +121,8 @@ async function loadJobRows(
 }
 
 export async function getHomeDashboard(
-  tz: string,
+  /** Null without a valid browser time zone: upcoming falls back to UTC, weekly goals are omitted (B2). */
+  tz: string | null,
   upcomingDays: UpcomingWindowDays = UPCOMING_WINDOW_DAYS_DEFAULT,
 ): Promise<HomeDashboard> {
   const board = await getBoardRefresh();
@@ -148,8 +149,8 @@ export async function getHomeDashboard(
     excludeNew,
   );
 
-  const upcomingThisWeek = await getUpcomingThisWeek(pool, tz, new Date(), upcomingDays);
-  const weeklyGoals = await getWeeklyGoalsSnapshot(pool, tz);
+  const upcomingThisWeek = await getUpcomingThisWeek(pool, tz ?? "UTC", new Date(), upcomingDays);
+  const weeklyGoals = tz ? await getWeeklyGoalsSnapshot(pool, tz) : null;
 
   const greetingName = process.env.DIGEST_GREETING_NAME?.trim() ?? "";
 

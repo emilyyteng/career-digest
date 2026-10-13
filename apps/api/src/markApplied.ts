@@ -1,13 +1,13 @@
 import type { Pool, PoolClient } from "pg";
 import { getApplication, setApplicationActualMinutes } from "./applications.js";
-import { awardApplicationApplied, awardWeeklyGoalIfNeeded } from "./pointsAwards.js";
+import { awardApplicationApplied } from "./pointsAwards.js";
 import type { PointsEventRow } from "./pointsLedger.js";
 import {
   createReflectionLog,
   transferTaskReflectionsToApplication,
   type ProgressLane,
 } from "./progress.js";
-import { getWeeklyGoalsSnapshot } from "./weeklyGoals.js";
+import { closeDueWeeks } from "./weeklyGoals.js";
 
 export type MarkAppliedReflection = {
   lane: ProgressLane;
@@ -36,7 +36,8 @@ export type MarkAppliedInput = {
   /** The modal's time; blank keeps an open task's existing actual time. */
   actualMinutes?: number | null;
   reflection: MarkAppliedReflection | null;
-  tz: string;
+  /** The browser's time zone. Without it, ended weeks are left for a request that has one (B2). */
+  tz: string | null;
 };
 
 export type MarkAppliedResult = {
@@ -49,12 +50,14 @@ export type MarkAppliedResult = {
 /**
  * The single mark-applied operation (R2.13). Tasks and Jobs both call it, so the
  * application, its open task, reflections, points and weekly apps handling can't drift
- * between paths. Everything but the weekly check is one transaction.
+ * between paths. Ended weeks close first (R5.23), so this completion counts toward the
+ * current week; the rest is one transaction. Weekly points come only from week close (R5.9).
  */
 export async function markApplied(
   pool: Pool,
   input: MarkAppliedInput,
 ): Promise<MarkAppliedResult> {
+  if (input.tz) await closeDueWeeks(pool, input.tz);
   const client = await pool.connect();
   let result: MarkAppliedResult;
   try {
@@ -67,7 +70,6 @@ export async function markApplied(
   } finally {
     client.release();
   }
-  await checkWeeklyAppsGoal(pool, input.tz);
   return result;
 }
 
@@ -144,21 +146,4 @@ async function markAppliedInTransaction(
   });
 
   return { applicationId, completedTaskIds, points: created ? event : null };
-}
-
-async function checkWeeklyAppsGoal(pool: Pool, tz: string): Promise<void> {
-  try {
-    const snap = await getWeeklyGoalsSnapshot(pool, tz);
-    const appsGoal = snap?.goals.find((g) => g.slot === "apps");
-    if (snap && appsGoal && appsGoal.total > 0 && appsGoal.done >= appsGoal.total) {
-      await awardWeeklyGoalIfNeeded(pool, {
-        weekStart: snap.weekStart,
-        slot: "apps",
-        met: true,
-        label: "Weekly apps target met!",
-      });
-    }
-  } catch {
-    // The bonus is idempotent and re-checked on the next mark applied, so it never fails this one.
-  }
 }

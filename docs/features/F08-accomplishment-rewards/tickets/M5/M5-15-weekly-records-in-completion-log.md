@@ -1,7 +1,7 @@
 # M5-15: Weekly records in the completion log
 
-**Status:** Ready (after M5-05)
-**Blocked by:** M5-05 (the `weekly` entries from the completions diary API; split out 2026-10-13)
+**Status:** Ready
+**Blocked by:** M5-05, done (the `weekly` entries from the completions diary API; split out 2026-10-13)
 **Implements:** R5.8 (display) (from `../../spec.md`)
 **Type:** build
 
@@ -17,6 +17,8 @@ When a week closes, the Progress completion log shows one row per goal on the cl
 3. **Filter tab:** a `weekly` tab in `TYPE_TABS` (L11–17), after `reflections`. Its count works like the other tabs.
 
 Reference: `/prototype/f08/weekly/weekly-record` (variant A).
+
+As built in M5-05, `GET /api/progress/completions` already returns these items: `kind: "weekly"`, the title, the meta text as `subtitle`, `points` (0 for 0/0), a `weekly` object (slot, weekStart, target, done, met, points), and `stats.allTime.weekly` for the tab count. Without this ticket they already show in the `all` tab with the generic row style. Add `"weekly"` to the web `CompletionKind` type.
 
 ## Acceptance criteria
 

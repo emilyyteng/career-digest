@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { pool } from "./db.js";
 import { apiClient } from "./test/apiClient.js";
-import { seedTask } from "./test/dbHarness.js";
+import { seedTask, truncateAll } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
 import { addCivilDays } from "./homeUpcoming.js";
 import { localDateInTimezone } from "./progress.js";
@@ -68,7 +68,8 @@ describe.skipIf(!integrationReady)("weekly goals API", () => {
     expect(reduced.rows[0]?.count).toBe(baseline + 2);
   });
 
-  it("tags application tasks into apps set and carries open members", async () => {
+  it("tags application tasks into apps set and carries open members at week close", async () => {
+    await truncateAll();
     const task = await seedTask({
       category: "application",
       title: "Weekly target app",
@@ -102,6 +103,7 @@ describe.skipIf(!integrationReady)("weekly goals API", () => {
          AND m.goal_id = curr.id`,
       [weekStart, prevStart, task.id],
     );
+    await pool.query(`UPDATE weekly_close_state SET start_week = $1::date`, [prevStart]);
 
     const again = await apiClient()
       .get(`/api/weekly-goals?tz=${encodeURIComponent(TZ)}`)
