@@ -70,7 +70,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-15](./tickets/M5/M5-15-weekly-records-in-completion-log.md) | Weekly records in the completion log | (this commit) |
+| [M5-15](./tickets/M5/M5-15-weekly-records-in-completion-log.md) | Weekly records in the completion log | `712afa7` |
 | [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | `e4ca71e` |
 | [M5-03](./tickets/M5/M5-03-points-by-task-category.md) | Points breakdown splits tasks by task category | `5c1ea60` |
 | [M5-06](./tickets/M5/M5-06-prototype-weekly-surfaces.md) | Prototype weekly goal surfaces | `f0a5fd2` |
