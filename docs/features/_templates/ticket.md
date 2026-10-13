@@ -1,11 +1,14 @@
 # M<n>-<NN>: <Ticket title>
 
-(Maintenance tickets use `MT-<NN>` instead.)
+(Save as `tickets/M<n>/M<n>-<NN>-<slug>.md` and add a row to `../../board.md`. Maintenance tickets use `MT-<NN>` instead.)
 
 **Status:** Draft | Ready | In progress | Blocked | Done
 **Blocked by:** (none) | M<n>-<NN>
-**Implements:** R<n>.x, R<n>.y (from `../spec.md`)
-**Type:** build | prototype | refactor | bug | docs
+**Implements:** R<n>.x, R<n>.y (from `../../spec.md`)
+**Scheduled with:** (optional) the milestone it will be worked alongside, if not its own
+**Type:** build | prototype | refactor | bug | docs | spike
+
+(A spike is a time-boxed investigation. It produces findings and proposed requirements or tickets for the user to approve, not production code.)
 
 ## Found during (bug tickets only)
 

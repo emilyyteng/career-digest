@@ -52,11 +52,22 @@ What the code does today, verified in code (cite files). Never a requirement by 
 
 ## Open questions
 
-Nothing that depends on an open question may be implemented.
+Nothing that depends on an open question may be implemented. Group by the milestone that must answer them. When a question is answered, move it to Resolved questions (keeping its number) and fold the answer into the requirements.
 
-| # | Question | Blocks | Answer |
+| # | Question | Blocks | Due by |
 |---|----------|--------|--------|
-| Q1 | … | R<n>.x | (open) |
+| Q1 | … | R<n>.x | M<n> design |
+
+## Resolved questions
+
+<details>
+<summary>Resolved questions (N)</summary>
+
+| # | Question | Answer (date) | Now in |
+|---|----------|---------------|--------|
+| Q0 | … | … (YYYY-MM-DD) | R<n>.x |
+
+</details>
 
 ## Decisions log
 

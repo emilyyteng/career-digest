@@ -19,18 +19,19 @@ For visual and interaction conventions, `docs/design-system.md` overrides ticket
 |------|-------|-------|
 | Roadmap (all features + status) | `docs/features/README.md` | The index: start here. Update when a feature or milestone changes status |
 | Feature spec (expected behavior) | `docs/features/F<NN>-<slug>/spec.md` | Authoritative for requirements |
-| Tickets (bounded tasks) | `docs/features/F<NN>-<slug>/tickets/M<n>-<NN>-<slug>.md` | Per-feature milestone numbering |
+| Tickets (bounded tasks) | `docs/features/F<NN>-<slug>/tickets/M<n>/M<n>-<NN>-<slug>.md` | One folder per milestone; per-feature numbering |
+| Ticket board (open vs done) | `docs/features/F<NN>-<slug>/board.md` | Index of every ticket in the feature by milestone; see Ticket board |
 | Maintenance (work outside any feature) | `docs/features/maintenance/` | Tickets `MT-<NN>-<slug>.md` |
 | Triage (unresolved issues) | `docs/features/triage.md` | See Issues found during work |
 | Templates | `docs/features/_templates/` | Copy these; don't improvise structure |
 | Design system | `docs/design-system.md` | Read before any UI work |
 | Changelog (shipped history) | `docs/CHANGELOG.md` | Completed, verified work only |
 | Prototypes | `apps/web/src/prototype/f<NN>-<slug>/<topic>/` | Dev-only; see Prototypes |
-| Setup / running locally | `README.md`, `docs/SETUP.md` | |
+| Setup / running locally | `README.md`, `docs/SETUP.md` | Root README: see Docs rules before changing it |
 
 ### Feature IDs
 
-- Every feature has a permanent ID, `F<NN>`, listed in the roadmap. The next ID is the highest in the roadmap plus 1. IDs are never reused or renumbered, even if a feature is dropped.
+- Every feature has a permanent ID, `F<NN>`, listed in the roadmap. The next free ID is stated at the top of the roadmap ("Next free ID"); bump it in the same edit that adds a feature. IDs are never reused or renumbered, even if a feature is dropped.
 - A feature's folder is `docs/features/F<NN>-<slug>/`. Shipped features from before this process have IDs but no folder; one is created (with the existing ID) only if the feature is reopened.
 - Ticket IDs stay short inside a feature (`M5-02`). Outside the feature folder (commit messages, cross-references, changelog), use the full form: `F08 M5-02`.
 - `maintenance/` and `_templates/` are not features and have no ID.
@@ -38,14 +39,15 @@ For visual and interaction conventions, `docs/design-system.md` overrides ticket
 ## Feature workflow
 
 1. **Spec.** A new feature first gets an ID and a roadmap row (see Feature IDs), then a folder with `spec.md` from the template. Requirements are only things the user wants: *Established* (stated or confirmed by the user, and the only kind that may be implemented) or *Proposed* (suggested by the agent, awaiting confirmation). What the code does today goes in a separate **Current behavior** section, each item marked *Conforms*, *Conflicts* or *Unspecified* against the requirements. Existing behavior is never a requirement just because it exists. Unknowns go under **Open questions**. Do not fill gaps with assumptions.
-2. **Tickets.** Break a milestone into tickets from the template. Each ticket cites the spec requirements it implements and lists acceptance criteria. A ticket never introduces a requirement the spec lacks.
+2. **Tickets.** Break a milestone into tickets from the template, in that milestone's folder (`tickets/M<n>/`), and add a row to the feature's `board.md`. Each ticket cites the spec requirements it implements and lists acceptance criteria. A ticket never introduces a requirement the spec lacks.
 3. **Prototype (only when the ticket names design questions).** See Prototypes.
 4. **Implement.** Work one ticket at a time. Prefer a fresh conversation per ticket; the ticket file carries the context.
 5. **Verify** against the Definition of done.
-6. **Commit** the ticket.
-7. **Close the milestone** when all its tickets are Done and its prototypes are deleted: update the roadmap status, then add a changelog entry in its own commit.
+6. **Commit** the ticket, with its status and the board row updated in the same commit.
+7. **Close the milestone** when all its tickets are Done: update the board and roadmap status, then add a changelog entry in its own commit. A bug found later in a closed milestone gets a ticket in that milestone's folder; the milestone stays Done, and the board shows the open ticket.
+8. **Close the feature** when every milestone is Done and every prototype the feature created is deleted (routes included).
 
-Prototype cleanup is feature work, not maintenance. Each feature's tickets include deleting its prototypes (and their routes) once the decisions they informed are locked.
+Prototype cleanup is feature work, not maintenance. Prototypes may be deleted when their area is revisited or together in a cleanup ticket near the end of the feature; the feature, not each milestone, waits on it.
 
 **If a requirement is missing, ambiguous, or contradicts the spec: stop.** Ask the user, record the answer in the spec (decisions log), then continue. Do not invent behavior, and do not quietly pick one side of a contradiction.
 
@@ -54,6 +56,10 @@ Prototype cleanup is feature work, not maintenance. Each feature's tickets inclu
 - *Conforms*: already meets a requirement (cite it, e.g. R5.2).
 - *Conflicts*: contradicts a requirement. This is a defect; handle it through Issues found during work.
 - *Unspecified*: no requirement covers it. Not protected, but ask before changing anything user-visible. If it matters, raise an open question; if the user endorses it, it becomes an Established requirement.
+
+## Explaining code
+
+When explaining how code behaves (answering a question, reporting a bug, auditing current behavior), link each claim to the file and lines it rests on, e.g. [`weeklyGoals.ts` L330–354](apps/api/src/weeklyGoals.ts), so the user can verify it directly. Say which claims were checked by reading code, which by running it, and which are unverified.
 
 ## End-of-task report
 
@@ -132,17 +138,22 @@ Prototypes are exploratory and throwaway. They answer design questions listed in
 - **Labeled:** every prototype page shows a visible "Experimental prototype" banner, and its file header names the ticket and the design questions.
 - **Variants:** every variant must satisfy every locked requirement in the spec. Variants differ only on the ticket's named design questions. Before handing off, check each variant against the spec.
 - **Shared tooling:** use `apps/web/src/prototype/PrototypeSwitcher.tsx` for variant switching. Don't copy styles or switchers per milestone.
-- **Lifecycle:** once the user locks a decision, record the verdict and the prototype's last commit hash in the ticket, then delete the prototype (routes included) in the implementing ticket. Git history is the archive.
+- **Lifecycle:** once the user locks a decision, record the verdict and the prototype's last commit hash in the ticket. Delete the prototype (routes included) when its area is revisited or in the feature's cleanup ticket, before the feature closes. Git history is the archive.
 
 ## Docs rules
 
 - **Changelog** (`docs/CHANGELOG.md`): readable history for external and portfolio readers. Completed, verified work only, written after the milestone closes. No upcoming work, requirements, ticket links, prototype URLs, or links to ignored files. Each feature heading includes its ID and links to its spec when one exists, e.g. `## Accomplishment, detail pages & rewards (F08)`; legacy features show the ID only. Parked features may keep their shipped parts, with one line saying the feature is parked and pointing to its spec.
-- **Specs** hold requirements and decisions; **tickets** hold bounded tasks and acceptance criteria. Neither is a progress log.
+- **Root `README.md`**: the visitor-facing overview (pages, routes, commands). Update it after implementation only when necessary: a page or nav item is added or removed, or existing functionality changes significantly. Propose the change to the user before making it, and list it under Files in the end-of-task report. Never update it silently.
+- **Specs** hold requirements and decisions; **tickets** hold bounded tasks and acceptance criteria. Neither is a progress log. In specs, open questions and resolved questions are separate sections; resolved ones sit in a collapsed `<details>` block and keep their numbers.
 - Keep docs short and current. When behavior changes, update the spec in the same commit.
 
 ## Ticket status values
 
 `Draft` → `Ready` → `In progress` → `Done`, plus `Blocked` (with `Blocked by:` naming the blocker). Only `Ready` tickets may be implemented.
+
+## Ticket board
+
+Each feature folder has a `board.md` (from `_templates/board.md`): one section per milestone, with the milestone's status, a table of open tickets, and a collapsed list of done tickets. The ticket file's `Status:` line is the source of truth; the board mirrors it and is updated in the same commit. Ticket files never move between folders when their status changes.
 
 ## Skills
 
