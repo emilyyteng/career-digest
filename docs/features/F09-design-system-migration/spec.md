@@ -18,7 +18,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
-| M0 | Agree on visual direction and component rules; record them in `docs/design-system.md` | Not started |
+| M0 | Agree on visual direction and component rules; record them in `docs/design-system.md`. Runs alongside the F08 M5 design pass, using its prototypes as the test case (2026-10-13) | Not started |
 | M1 | Build the components F08 M5 (Accomplishment, detail pages & rewards) depends on, and migrate only the surfaces F08 M5 touches | Not started |
 | M2+ | Broader migration, scoped later | Not scoped |
 
@@ -71,4 +71,5 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 
 - **2026-10-12:** Reference doc (`docs/design-system.md`) and migration (this spec) are kept separate: the reference is permanent, the migration is a bounded project.
 - **2026-10-12:** No full-app migration yet; scope M1 from F08 M5's dependencies.
+- **2026-10-13:** M0's questions (Q1–Q5) are settled during the F08 M5 design pass rather than before it. M1 then builds only what M5 needs (at least the one-time notice, the LC stepper and the Home target row).
 - **2026-10-13:** Banner behavior is standardized. F08 M5-02 defines the one-time notice; F09 owns moving the Jobs ranking banner onto it (R.6).
