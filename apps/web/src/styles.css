@@ -4889,6 +4889,11 @@ button.progress-cal-cell.effort::after {
   background: var(--surface);
   margin-bottom: 0.4rem;
 }
+/* A closed week's goal record (F08 M5-06 Q5 variant A). */
+.ledger-row.weekly {
+  border-color: color-mix(in srgb, var(--accent-yellow-deep) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent-yellow) 18%, var(--surface));
+}
 .ledger-row-title {
   font-weight: 600;
   font-size: 0.92rem;

@@ -989,7 +989,7 @@ export const getProgressOutcome = (
 export const getProgressDay = (tz: string, date: string) =>
   parse<ProgressDayDetail>(api(`/api/progress/day/${date}?${progressTz(tz)}`));
 
-export type CompletionKind = "task" | "application" | "interview" | "reflection";
+export type CompletionKind = "task" | "application" | "interview" | "reflection" | "weekly";
 
 export type CompletionDiaryItem = {
   id: string;
@@ -1007,6 +1007,15 @@ export type CompletionDiaryItem = {
     body: string;
     preview: string;
   }>;
+  /** Only on `weekly` items: one goal's closed-week record (R5.8). */
+  weekly?: {
+    slot: "lc" | "apps";
+    weekStart: string;
+    target: number;
+    done: number;
+    met: boolean;
+    points: number;
+  };
 };
 
 export type CompletionsDiary = {
@@ -1031,6 +1040,7 @@ export type CompletionsDiary = {
       apps: number;
       interview: number;
       reflections: number;
+      weekly: number;
     };
   };
   items: CompletionDiaryItem[];
