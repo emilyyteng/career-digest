@@ -4,17 +4,19 @@ Personal internship digest and application tracker. Ingests public ATS job board
 
 ## What it does
 
-| Area | What you get |
-|------|----------------|
-| **Jobs** | Ranked digest board; **Mark as mismatch** (optional ranking feedback) or **Hide from board** (quiet / company bulk) → Mismatches |
-| **Applications** | Pipeline tracker (applied → interviewing → accepted / declined) |
-| **Tasks** | Unified action backlog — application, school, and personal |
-| **Interviews** | Step-based pipelines with countdowns and workspace |
-| **Progress** | Activity / Effort / Outcome for application and technical prep |
-| **Home** | Digest status, today strip, needs attention, top job picks |
-| **Status** | Ops dashboard — ingest, scrape, rank, and backup health |
 
-**Tasks** is what you need to do; **Applications** is the tracker for roles you've already applied to (or are past the “must apply” stage).
+| Area             | What you get                                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| **Jobs**         | Ranked digest board of relevant internship postings                                             |
+| **Applications** | Application pipeline tracker (applied, interviewing, accepted, declined)                        |
+| **Tasks**        | Unified action backlog for to-do items — application, school, and personal tasks by category    |
+| **Interviews**   | Step-based pipelines with deadlines, scheduling, and workspace per application                  |
+| **Progress**     | Daily and weekly goals for applications and technical prep                                      |
+| **Home**         | Digest status, today and weekly progress, upcoming deadlines and targets, new and top job picks |
+| **Status**       | Ops dashboard — ingest, scrape, rank, and backup health                                         |
+
+
+
 
 ## Stack
 
@@ -22,6 +24,8 @@ Personal internship digest and application tracker. Ingests public ATS job board
 - **Frontend:** React (Vite), local only
 - **Ingest:** Greenhouse, Lever, Ashby, Simplify (+ SmartRecruiters boards in config)
 - **Ranking:** OpenAI API (`gpt-4o-mini` by default; batch + live)
+
+
 
 ## Quickstart
 
@@ -39,32 +43,38 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 
 ## Routes
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Home |
-| `/jobs` | Ranked digest board |
-| `/applications` | Application tracker |
-| `/tasks` | Action backlog |
-| `/interviews` | Interview pipelines |
-| `/progress` | Today log, heatmaps, history |
-| `/status` | Pipeline / ops dashboard |
+
+| Route           | Purpose                      |
+| --------------- | ---------------------------- |
+| `/`             | Home                         |
+| `/jobs`         | Ranked digest board          |
+| `/applications` | Application tracker          |
+| `/tasks`        | Action backlog               |
+| `/interviews`   | Interview pipelines          |
+| `/progress`     | Today log, heatmaps, history |
+| `/status`       | Pipeline / ops dashboard     |
+
+
+
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npm run migrate` | Apply SQL migrations |
-| `npm run ingest` | Pull ATS boards + Simplify listings |
-| `npm run scrape` | Fill blank Simplify descriptions |
-| `npm run rank` | Rank via OpenAI Batch API |
-| `npm run rank:live` | Rank synchronously (rate-limited) |
-| `npm run board-refresh` | Discover boards + ingest + scrape + light live rank |
-| `npm run build` | Build the web UI for production |
-| `npm start` | Serve API + built UI on `PORT` (default 3000) |
-| `npm run test` | API unit + integration tests |
+
+| Command                              | Purpose                                                           |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `npm run migrate`                    | Apply SQL migrations                                              |
+| `npm run ingest`                     | Pull ATS boards + Simplify listings                               |
+| `npm run scrape`                     | Fill blank Simplify descriptions                                  |
+| `npm run rank`                       | Rank via OpenAI Batch API                                         |
+| `npm run rank:live`                  | Rank synchronously (rate-limited)                                 |
+| `npm run board-refresh`              | Discover boards + ingest + scrape + light live rank               |
+| `npm run build`                      | Build the web UI for production                                   |
+| `npm start`                          | Serve API + built UI on `PORT` (default 3000)                     |
+| `npm run test`                       | API unit + integration tests                                      |
 | `npm run backup` / `npm run restore` | Logical DB backup to `backups/` (stop dev servers before restore) |
-| `npm run discover-boards` | Diff Simplify ATS URLs vs `tracked_boards` (`--write` to upsert) |
-| `npm run merge-postings` | Collapse duplicate postings across sources |
+| `npm run discover-boards`            | Diff Simplify ATS URLs vs `tracked_boards` (`--write` to upsert)  |
+| `npm run merge-postings`             | Collapse duplicate postings across sources                        |
+
 
 Cron helpers (`npm run cron:install`, `cron:install-backup`) target macOS launchd.
 
@@ -77,10 +87,14 @@ export TEST_DATABASE_URL=postgres://YOUR_USER@localhost:5432/career_digest_test
 npm run test
 ```
 
+
+
 ## Docs
 
 - [docs/SETUP.md](./docs/SETUP.md) — cold-clone setup and verification checklist
 - [docs/CHANGELOG.md](./docs/CHANGELOG.md) — milestone development history
+
+
 
 ## License
 

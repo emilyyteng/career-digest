@@ -27,11 +27,13 @@ A connection variable typed as `Client` (or `Pool | Client`) is passed where `Qu
 
 13 predate M2. Line 906 (`transferTaskReflectionsToApplication(queryable, …)`) came with M2 (`d201cde`).
 
-### Group B: comparison against a retired `"todo"` status (2 errors)
+### Group B: comparison against `"todo"`, which is outside the status type (2 errors)
 
-`apps/api/src/applications.ts` lines 230 and 259 check `input.status !== "todo"`, but `"todo"` is no longer in the application status type (`"applied" | "interviewing" | "accepted" | "declined"`). The condition is therefore always true: creating an application always runs `completeOpenApplicationTasksForApplication`, and any `"todo"`-only branch is dead.
+`apps/api/src/applications.ts` lines 230 and 259 check `input.status !== "todo"`, but `"todo"` isn't in the `ApplicationStatus` type (`"applied" | "interviewing" | "accepted" | "declined"`).
 
-**Not a pure type fix.** Removing the check keeps today's behavior; restoring a status check would change it. Whether today's behavior is the intended one is unconfirmed.
+`"todo"` is still a live database status. Every application task has a to-do application row behind it, inserted directly in `tasks.ts`. It never reaches `createApplication`, though, because `POST /api/applications` rejects backlog statuses. So the condition is always true at runtime: creating an application always completes its open application tasks. That matches the intent of `4258616` ("Complete open application task when marking Applied from Jobs").
+
+**Fix direction (updated 2026-10-13):** remove the check, which keeps current behavior. Separately, F08 R2.13 requires the Jobs path to complete the task through the same flow as Tasks, so the code here is likely to change in that bug fix too.
 
 ### Group C: route parameter typing (1 error)
 
