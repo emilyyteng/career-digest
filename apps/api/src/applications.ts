@@ -192,22 +192,19 @@ export async function getApplication(
  */
 export async function ensureApplicationToMarkApplied(
   db: Queryable,
-  input: Omit<CreateApplicationInput, "status" | "appliedAt" | "appliedAtProvided">,
+  input: Omit<CreateApplicationInput, "status" | "notes" | "appliedAt" | "appliedAtProvided">,
 ): Promise<string> {
   if (input.postingId) {
     const existing = await db.query<{ id: string }>(
-      `UPDATE applications
-       SET notes = COALESCE($2, notes), updated_at = now()
-       WHERE posting_id = $1
-       RETURNING id`,
-      [input.postingId, input.notes ?? null],
+      `SELECT id FROM applications WHERE posting_id = $1`,
+      [input.postingId],
     );
     if (existing.rows[0]) return existing.rows[0].id;
     const inserted = await db.query<{ id: string }>(
-      `INSERT INTO applications (posting_id, status, notes, status_changed_at)
-       VALUES ($1, 'todo', $2, now())
+      `INSERT INTO applications (posting_id, status, status_changed_at)
+       VALUES ($1, 'todo', now())
        RETURNING id`,
-      [input.postingId, input.notes ?? null],
+      [input.postingId],
     );
     return inserted.rows[0]!.id;
   }
@@ -217,12 +214,11 @@ export async function ensureApplicationToMarkApplied(
   }
   const inserted = await db.query<{ id: string }>(
     `INSERT INTO applications (
-       status, notes, company_name, title, location, url, description_html, status_changed_at
+       status, company_name, title, location, url, description_html, status_changed_at
      )
-     VALUES ('todo', $1, $2, $3, $4, $5, $6, now())
+     VALUES ('todo', $1, $2, $3, $4, $5, now())
      RETURNING id`,
     [
-      input.notes ?? null,
       input.company.trim(),
       input.title.trim(),
       input.location?.trim() || null,

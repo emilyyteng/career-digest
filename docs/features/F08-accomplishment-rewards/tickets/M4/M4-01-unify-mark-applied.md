@@ -108,8 +108,8 @@ MT-01 removed the dead `"todo"` check in `createApplication` (2026-10-13); creat
 - **Fixed along the way:** changing an application to applied on its own page after it had already earned returned the old earn as `points`, so the page showed a "+N points" banner for nothing. `awardApplicationApplied` now reports whether it created the earn, and only a new earn is returned.
 - **Same as before:**
   - Thread resolution: "applied" has no thread resolution (`applicationResolutionFromStatus`), so neither path ever resolved threads; the operation doesn't call it.
-  - Notes: modal notes still go to the task's notes from Tasks and to the application's notes from Jobs. The spec doesn't say which is right.
-  - Timezone: neither web caller sends `tz`, so the weekly apps check runs in UTC on both paths.
+  - Timezone: neither web caller sends `tz`, so the weekly apps check runs in UTC on both paths. Moved to M5-05, which replaces this check with week close (2026-10-13).
+- **Notes (follow-up, 2026-10-13):** the user decided the modal's notes go on the application on both paths (R2.13). `markApplied` appends them to the application's existing notes, separated by a blank line. Before, Tasks appended them to the task and Jobs replaced the application's notes.
 - **Tests:** [`markApplied.api.test.ts`](../../../../../apps/api/src/markApplied.api.test.ts), 8 integration tests:
   - Tasks and Jobs parity: a tagged task with a linked reflection, comparing application, task, reflections, points events and the weekly bonus
   - a second mark applied from the other path, both orders

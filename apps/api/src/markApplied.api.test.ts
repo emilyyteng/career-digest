@@ -19,6 +19,8 @@ const MODAL_REFLECTION = {
   actualMinutes: 45,
 };
 
+const MODAL_NOTES = "Submitted via the portal";
+
 type Path = "tasks" | "jobs";
 
 /** A posting added to Tasks, tagged for the weekly apps goal, with a reflection on its task. */
@@ -48,11 +50,16 @@ async function markAppliedVia(path: Path, ids: { postingId: string; taskId: stri
   if (path === "tasks") {
     return apiClient()
       .post(`/api/tasks/${ids.taskId}/complete?tz=${TZ}`)
-      .send({ actualMinutes: null, reflection: MODAL_REFLECTION });
+      .send({ actualMinutes: null, notes: MODAL_NOTES, reflection: MODAL_REFLECTION });
   }
   return apiClient()
     .post(`/api/applications?tz=${TZ}`)
-    .send({ postingId: ids.postingId, status: "applied", reflection: MODAL_REFLECTION });
+    .send({
+      postingId: ids.postingId,
+      status: "applied",
+      notes: MODAL_NOTES,
+      reflection: MODAL_REFLECTION,
+    });
 }
 
 /** Everything R2.13 says must match, with ids and timestamps reduced to comparable facts. */
@@ -62,14 +69,19 @@ async function outcome(ids: { postingId: string; taskId: string }) {
     status: string;
     applied: boolean;
     due_at: Date | null;
+    notes: string | null;
   }>(
-    `SELECT id, status, applied_at IS NOT NULL AS applied, due_at
+    `SELECT id, status, applied_at IS NOT NULL AS applied, due_at, notes
      FROM applications WHERE posting_id = $1`,
     [ids.postingId],
   );
   const applicationId = app.rows[0]!.id;
-  const task = await pool.query<{ status: string; actual_minutes: number | null }>(
-    `SELECT status, actual_minutes FROM tasks WHERE id = $1`,
+  const task = await pool.query<{
+    status: string;
+    actual_minutes: number | null;
+    notes: string | null;
+  }>(
+    `SELECT status, actual_minutes, notes FROM tasks WHERE id = $1`,
     [ids.taskId],
   );
   const reflections = await pool.query<{
@@ -94,7 +106,12 @@ async function outcome(ids: { postingId: string; taskId: string }) {
     `SELECT kind, category, amount, source_type FROM points_events ORDER BY source_type`,
   );
   return {
-    application: { status: app.rows[0]!.status, applied: app.rows[0]!.applied, dueAt: app.rows[0]!.due_at },
+    application: {
+      status: app.rows[0]!.status,
+      applied: app.rows[0]!.applied,
+      dueAt: app.rows[0]!.due_at,
+      notes: app.rows[0]!.notes,
+    },
     task: task.rows[0],
     reflections: reflections.rows,
     events: events.rows,
@@ -115,8 +132,8 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
 
     expect(results.jobs).toEqual(results.tasks);
     expect(results.tasks).toEqual({
-      application: { status: "applied", applied: true, dueAt: null },
-      task: { status: "completed", actual_minutes: 45 },
+      application: { status: "applied", applied: true, dueAt: null, notes: MODAL_NOTES },
+      task: { status: "completed", actual_minutes: 45, notes: null },
       reflections: [
         { body: "Researched the team", on_application: true, on_task: false, actual_minutes: null },
         { body: "Tailored the resume to the team", on_application: true, on_task: false, actual_minutes: 45 },
@@ -146,6 +163,21 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
       expect(earns.rows).toHaveLength(1);
       const reflections = await pool.query(`SELECT 1 FROM reflection_logs`);
       expect(reflections.rows).toHaveLength(2);
+    }
+  });
+
+  it("appends the modal's notes to existing application notes on both paths", async () => {
+    for (const path of ["tasks", "jobs"] as const) {
+      await truncateAll();
+      const ids = await seedTaggedApplicationTask();
+      await pool.query(`UPDATE applications SET notes = 'Referral from Sam' WHERE posting_id = $1`, [
+        ids.postingId,
+      ]);
+      const res = await markAppliedVia(path, ids);
+      expect(res.status).toBeLessThan(300);
+      const after = await outcome(ids);
+      expect(after.application.notes, path).toBe(`Referral from Sam\n\n${MODAL_NOTES}`);
+      expect(after.task?.notes, path).toBeNull();
     }
   });
 

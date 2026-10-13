@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import multer from "multer";
-import type { Pool, PoolClient } from "pg";
+import type { Pool } from "pg";
 import { getBoardRefresh, startBoardRefresh } from "./boardRefresh.js";
 import { getBackupJob, startBackupJob } from "./backupJob.js";
 import { getLiveRankBacklogJob, startLiveRankBacklogJob } from "./liveRankBacklogJob.js";
@@ -165,7 +165,7 @@ function requestTimezone(req: express.Request): string {
 }
 
 async function appendTaskNotes(
-  db: Pool | PoolClient,
+  db: Pool,
   taskId: string,
   existing: string | null,
   incoming: unknown,
@@ -447,7 +447,6 @@ api.post("/applications", async (req, res) => {
         resolveApplication: (client) =>
           ensureApplicationToMarkApplied(client, {
             postingId: body.postingId,
-            notes: body.notes ?? null,
             company: body.company,
             title: body.title,
             location: body.location,
@@ -456,6 +455,7 @@ api.post("/applications", async (req, res) => {
             descriptionHtml: body.descriptionHtml,
           }),
         appliedAt,
+        notes: body.notes ?? null,
         reflection: reflection.value,
         tz: requestTimezone(req),
       });
@@ -1059,10 +1059,8 @@ api.post("/tasks/:id/complete", async (req, res) => {
     }
     try {
       const result = await markApplied(pool, {
-        resolveApplication: async (client) => {
-          await appendTaskNotes(client, before.id, before.notes, body.notes);
-          return applicationId;
-        },
+        resolveApplication: async () => applicationId,
+        notes: typeof body.notes === "string" ? body.notes : null,
         reflection: reflection.value,
         tz: requestTimezone(req),
       });

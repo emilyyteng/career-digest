@@ -19,6 +19,7 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 8. **Completion log (R5.8):** each closed week adds one entry per goal (for example `Apps 6/10`, `LC 12/10`, with its points) to the completions diary ([`completionsDiary.ts`](../../../../../apps/api/src/completionsDiary.ts)) as a new kind. Its look comes from M5-06.
 9. **After close (R5.23):** a closed week's record is fixed. A weekly solve logged late counts toward the current week; a carried-over task counts toward the week it's completed in.
 10. **Weekly-goal streak (R5.28):** expose each goal's current run of met weeks from the records, for display only (no points).
+11. **Local time zone everywhere (B2, 2026-10-13):** every request that reads, scores or closes weeks uses the browser's time zone (`tz`), never a UTC fallback. Today the Tasks and Jobs mark-applied calls send no `tz` (`completeTask` and `createApplication` in [`api.ts`](../../../../../apps/web/src/api.ts)), so their weekly check runs in UTC ([`routes.ts` `requestTimezone`](../../../../../apps/api/src/routes.ts)). The web sends `browserTz()` on those calls. (Proposed: a weekly read without a valid `tz` is rejected rather than defaulting to UTC.)
 
 ## Acceptance criteria
 
@@ -34,6 +35,7 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 - [ ] Closed weeks appear in the completions diary, one entry per goal.
 - [ ] After close, no action changes a closed week's record or points; a late weekly solve raises the current week instead.
 - [ ] Each goal's run of consecutive met weeks is available from the API.
+- [ ] Mark applied from Tasks and Jobs sends the browser's time zone, so weekly apps progress and scoring use local weeks.
 - [ ] Tests cover all of the above, including week boundaries in a non-UTC time zone (B2).
 
 ## Reuse notes

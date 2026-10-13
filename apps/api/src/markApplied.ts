@@ -33,6 +33,8 @@ export type MarkAppliedInput = {
   resolveApplication: (client: PoolClient) => Promise<string>;
   /** Defaults to now. */
   appliedAt?: Date | null;
+  /** The modal's notes; appended to the application's notes, since the task is being completed. */
+  notes?: string | null;
   reflection: MarkAppliedReflection | null;
   tz: string;
 };
@@ -83,15 +85,21 @@ async function markAppliedInTransaction(
     throw new MarkAppliedError("This application is already marked applied", 409);
   }
 
+  const notes = input.notes?.trim() || null;
   await client.query(
     `UPDATE applications
      SET status = 'applied',
          applied_at = COALESCE($2, now()),
          due_at = NULL,
+         notes = CASE
+           WHEN $3::text IS NULL THEN notes
+           WHEN NULLIF(btrim(notes), '') IS NULL THEN $3
+           ELSE btrim(notes) || E'\\n\\n' || $3
+         END,
          status_changed_at = now(),
          updated_at = now()
      WHERE id = $1`,
-    [applicationId, input.appliedAt ?? null],
+    [applicationId, input.appliedAt ?? null, notes],
   );
 
   // Until M5-04 moves time onto the application, the modal's minutes are the task's actual time (R2.10).

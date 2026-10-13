@@ -117,6 +117,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   - the task's reflections transferred (R2.1b)
   - the modal's time saved as the application's actual time (on the task until M5-04; on the application after, R5.31)
   - the same weekly apps handling
+  - the modal's notes appended to the application's notes, not the task's, since the task is being completed (2026-10-13)
 
   Changing an existing application's status on its own page earns nothing again. Ticket: M4-01.
 
