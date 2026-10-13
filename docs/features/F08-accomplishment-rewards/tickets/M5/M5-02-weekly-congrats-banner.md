@@ -1,7 +1,7 @@
 # M5-02: Weekly targets congrats banner on Home
 
-**Status:** Draft (needs the week-close record and scoring: R5.8, Q23)
-**Blocked by:** (none)
+**Status:** Draft (waits on M5-05 and the M5-06 verdict)
+**Blocked by:** M5-05, M5-06
 **Implements:** R5.18 (from `../../spec.md`)
 **Type:** build
 
@@ -9,14 +9,14 @@
 
 After the week resets, the first time the user opens Home they see one congratulations banner covering last week's met targets.
 
-- **Content:** it names the targets that were met (apps, LC, or both), the count out of the target for each (for example `Apps 10/10 · LC 12/10`), and the points earned specifically for reaching the targets (today a flat 100 per target, so 100 or 200).
+- **Content:** it names the targets that were met (apps, LC, or both), the count out of the target for each (for example `Apps 10/10 · LC 12/10`), and the points each met goal earned at week close (R5.15: +20 per unit plus the +100 flat, for example `Apps 10/10 · +300`). This shows the goal's full week-close points, not only the flat bonus; confirm when prototyping.
 - **Only for met targets:** if neither target was met, no banner appears. Missed goals are never shown on Home (B1).
 - **Shows once** (Q38, 2026-10-13): × closes it early. It's marked seen per week in `localStorage` as soon as it's shown, so it's gone on the next visit whether or not it was closed.
 - **Standardize it:** this is the first "one-time notice". Once it works, document the pattern in `docs/design-system.md` (alongside the transient flash, `EarnFlash`) so later banners pick one of the two instead of inventing a third. Moving the Jobs ranking banner onto this pattern is F09's job (F09 R.6), not this ticket's.
 
 ## Acceptance criteria
 
-(Draft. Finalize after Q23.)
+(Draft. Finalize after M5-06.)
 
 - [ ] Both met: one banner naming apps and LC, with both counts and the combined target points.
 - [ ] One met: the banner names only that target, its count, and its points.

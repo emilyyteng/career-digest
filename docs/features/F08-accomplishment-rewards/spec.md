@@ -187,12 +187,23 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R5.12** (Established) A week that ends with no tagged app tasks (0/0) earns no reward.
 - **R5.13** (Established) **LC carry-over.** The LC target number carries forward and stays editable. Progress starts at 0, and the label clears.
 - **R5.14** (Established) LC progress can go past the target, for example when dipping into next week's set. It is recorded as reached (12/10).
+- **R5.22** (Established 2026-10-13) Weekly records start with the week M5's week close ships. Earlier weeks get no record and no points; their apps results can't be trusted, because carry-over moved members out of them. In the week of the switch, a flat bonus already paid the old way isn't paid again at close.
+- **R5.23** (Established 2026-10-13) The first request after a week ends closes every unclosed week, oldest first. A week closes even if the app wasn't opened on Sunday. The points are dated when the week closes and labelled with the week ("Week of Oct 5").
+- **R5.24** (Established 2026-10-13) Apps goal membership:
+  - Untagging an open task shrinks the goal, even if that makes it met.
+  - A tagged task that's deleted (for example, its posting left the board) drops out of the goal.
+  - With no tagged tasks, Home shows no apps target row.
 
 **Points rules**
 
 - **R5.9** (Established) Weekly goal points are awarded once, when the week closes, as part of the week's record; not at the moment a target is hit. Every path that moves weekly progress feeds that same record: R2.13 and R5.17.
-- **R5.15** (Established; formula pending Q23) Weekly goal points account for partial progress and the size of the goal, so a 1/1 week isn't worth the same as a 10/10 week. The flat bonus for meeting a target stays.
-- **R5.16** (Established; definitions pending Q22) Streaks and achievements or milestones award points, extending the M4 rules.
+- **R5.15** (Established 2026-10-13) Weekly goal points account for partial progress and the size of the goal, so a 1/1 week isn't worth the same as a 10/10 week. At week close, each goal earns:
+  - +20 per unit: each completed tagged app, and each weekly LC solve
+  - +100 flat when the target is met
+  - LC solves past the target keep earning +20 each, but there's no second flat bonus
+
+  Apps and LC are worth the same per unit: LC takes more effort, but a tagged app is more likely to be a high-priority one.
+- **R5.16** (Established) Streaks and achievements award points, extending the M4 rules. Details in R5.25–R5.27.
 - **R5.19** (Established) Editing a reflection's minutes adjusts the points that came from those minutes, with an adjust event. This covers:
   - the standalone reflection earn
   - the reflection add-on of an application or interview step earn
@@ -200,6 +211,21 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   A misc task's reflection add-on is flat, so it's unaffected. Reflections that earned nothing (linked later) stay at 0.
 - **R5.20** (Established; values pending Q32) LeetCode points vary by difficulty tier (easy, medium, hard). Tiers are built in M5, in the same stepper rework as R5.17, because they change points from then on; their visual polish is M8 (R8.3). Existing untiered counts aren't migrated and keep their points. Wherever past days are shown by tier, they count as medium. Ticket: M5-01.
 - **R5.21** (Established 2026-10-13) The points breakdown splits its single task row by task category (School, Reading, Writing, Admin, custom), because tasks make up most of the total and a single row isn't informative. A task's points belong to its category at completion, recorded on the earn. Earns from before M5-03 fall back to the task's current category (2026-10-13). Earns whose task was since deleted go to one "Deleted tasks" row, shown only when it isn't 0 (2026-10-13). Ticket: M5-03.
+
+**Streaks and achievements**
+
+- **R5.25** (Established 2026-10-13; numbers pending Q42) **Daily streaks** for LC and for applications.
+  - A day counts for the LC streak if it has at least 1 solve. It counts for the apps streak if at least 1 application was marked applied that day (Proposed definition).
+  - Today doesn't break a streak until the day ends.
+  - Every day the streak continues earns a small number of points that grows with the streak's length. Small daily points are more motivating than large milestone payouts.
+  - Separately, reaching streak milestones (for example 5, 10 or 20 days) earns a one-time reward.
+- **R5.26** (Established 2026-10-13; numbers pending Q42) **Achievements** for accumulated counts, with points roughly proportional to the count:
+  - applications marked applied
+  - LC solves
+  - finished interview steps, counted per kind (for example x coding assessments, x technical screens). These reward more than applications or LC.
+
+  There are no "first of a kind" achievements; every achievement is a count.
+- **R5.27** (Established 2026-10-13; built after R5.25) The today strip on Home and Progress shows the current apps and LC streaks instead of today's `x/3` counts, which aren't motivating. What happens to the deep-work badges is Q47.
 
 **LeetCode logging**
 
@@ -381,8 +407,13 @@ Nothing that depends on an open question may be implemented.
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
 | Q7 | Keep the completion flourish at all? You lean toward removing it after the first prototype. If kept: which events trigger it, and does it replace `EarnFlash`? | R5.2 | M5 design |
-| Q22 | Which streaks and achievements exist (for example daily LC streak, weekly-goal streak, application-count milestones, first offer)? What does each earn, and is each earned once or repeatedly? | R5.16 | M5 design |
-| Q23 | Weekly goal scoring. **(a)** fraction × 100 for partial progress, +100 when met; **(b)** points per completed item, plus a flat +100 when met. Each app (+5) and LC solve (+30) already earns on its own, so (b) adds on top. Does going past the LC target earn more? | R5.15, R5.18 | M5 design |
+| Q42 | Streak and achievement numbers. Proposal: **daily streak points** of 2 × streak length, capped at 20 (day 1 = 2, day 10 onward = 20), the same for apps and LC. **Streak milestones** at 5, 10, 20, 30, 50 and 100 days, worth 5 × the length (+25 to +500), earned again by each new streak. **Achievements:** applications 10, 25, 50, 100, 150, 200, 300, 500 at 3 × N; LC 25, 50, 100, 200, 300, 500 at 5 × N; interview steps at the step's own points × N, with thresholds assessment and phone 5/10/25/50, technical 3/5/10/25, onsite 1/3/5/10, offer 1/2/3/5, and custom excluded. | R5.25, R5.26 | M5 design |
+| Q43 | Weekly-goal streak: display only, with no points? Recommendation: yes, shown per goal (for example "3 weeks in a row" in the congrats banner and Progress weekly block); revisit points after a month of data. | R5.16 | M5 design |
+| Q44 | Once a week is closed, is its record fixed? If so, a weekly LC solve logged on Monday morning for Sunday counts toward the new week, and a carried-over task completed late counts toward the week it's completed in. The alternative is a grace window (for example until Monday noon) for logging into the closed week, which then re-scores it with an adjust event. Recommendation: fixed, no grace. | R5.8, R5.23 | M5 design |
+| Q45 | Streak points when days change after the fact. Recommendation: a day's streak points are awarded on its first qualifying action, for immediate feedback, and reversed if that day drops back to 0. Editing a past day in History updates the displayed streak, but doesn't award or reverse streak points for that day or any later day, so there are no cascades. | R5.25 | M5 design |
+| Q46 | Counts and streaks from before M5. Applications, LC solves and interview steps already exist, so many achievements are already passed. **(a)** unlock them at launch with no points; **(b)** award their points at launch as a one-time lump; **(c)** count only activity after launch. Streaks: does a streak that's running at launch count its earlier days? Recommendation: (a), and yes for streaks, with daily points only from launch. | R5.25, R5.26 | M5 design |
+| Q47 | Today strip: when streaks replace the `x/3` counts, do the deep-work badges (app, tech, other) stay on the strip, move elsewhere (for example the Progress Today panel), or go? The heatmaps keep their 3-per-day scale either way. | R5.27 | M5 design |
+| Q48 | Editing reflection minutes (R5.19): application and interview earns store the reflection's minutes but not which reflection they came from ([`pointsAwards.ts` L95, L126](../../../apps/api/src/pointsAwards.ts)). Recommendation: record the reflection id on new earns, and leave earns from before M5-04 unadjusted rather than guess. | R5.19, M5-04 | M5-04 build |
 | Q32 | LeetCode tier point values (easy, medium, hard). Medium is the reference, since past solves count as medium (today +30). Settled during M5 work, before M5-01's build. | R5.20, M5-01 | M5-01 build |
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
 | Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
@@ -392,7 +423,7 @@ Nothing that depends on an open question may be implemented.
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (34)</summary>
+<summary>Resolved questions (36)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -413,6 +444,8 @@ Nothing that depends on an open question may be implemented.
 | Q17 | Departures log retention | 14 days, per-day sections, today expanded (2026-10-13) | R6.7 |
 | Q18 | Rewards scope | M7 is Cat Cake Collection v1; later updates go to a future feature (2026-10-13) | R7.5 |
 | Q19 | Self-care shop | Dropped; gacha only (2026-10-13) | R7.1 |
+| Q22 | Which streaks and achievements exist? | Daily LC and apps streaks with small growing daily points plus milestone rewards; count-based achievements for applications, LC and interview steps per kind (higher reward); no "first of a kind". Numbers in Q42; weekly-goal streak in Q43 (2026-10-13) | R5.25–R5.27 |
+| Q23 | Weekly goal scoring | +20 per completed tagged app or weekly LC solve, +100 flat when met; LC past the target keeps +20 each with no second flat (2026-10-13) | R5.15 |
 | Q24 | Should daily clicks count toward weekly progress? | Replace daily/weekly with weekly-set vs other types through one write path (2026-10-13) | R5.17, M5-01 |
 | Q25 | Where the two bugs go | Jobs path: M4-01, worked with M5. Weekly stepper: fixed by M5-01 (2026-10-13) | M4-01, M5-01 |
 | Q26 | Application time after the fact | Editing reflection minutes adjusts points (2026-10-13) | R5.19 |
@@ -458,3 +491,6 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Un-applying or deleting applications stays out of F08, tracked as maintenance spike MT-05.
 - **2026-10-13:** The congrats banner shows once and is the reference for a standard one-time notice in `docs/design-system.md`. Moving the Jobs ranking banner to it belongs to F09, not F08.
 - **2026-10-13:** Task points belong to the category at completion. LeetCode days store counts per tier. R2.21 joins M4-01; the LeetCode re-earn bug joins M4-03.
+- **2026-10-13:** Weekly scoring is +20 per unit and +100 flat when met. Weekly records start when week close ships, and weeks close on the first request after they end.
+- **2026-10-13:** Streaks (LC, apps) earn small daily points plus milestone rewards; achievements are count-based, with interview steps per kind worth more. The today strip will show streaks instead of `x/3`.
+- **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs.
