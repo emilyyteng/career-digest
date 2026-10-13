@@ -34,6 +34,13 @@ const proto = import.meta.env.DEV
       M5WeeklyGoals: lazy(() => import("./prototype/m5/WeeklyGoalsPrototypePage")),
       M5HomeTargets: lazy(() => import("./prototype/m5/HomeTargetsPrototypePage")),
       M5Celebration: lazy(() => import("./prototype/m5/CelebrationPrototypePage")),
+      F08WeeklyHub: lazy(() => import("./prototype/f08-weekly/F08WeeklyHub")),
+      F08LcStepper: lazy(() => import("./prototype/f08-weekly/LcStepperPrototypePage")),
+      F08ProgressWeekly: lazy(() => import("./prototype/f08-weekly/ProgressWeeklyPrototypePage")),
+      F08HomeTargets: lazy(() => import("./prototype/f08-weekly/HomeTargetsPrototypePage")),
+      F08Congrats: lazy(() => import("./prototype/f08-weekly/CongratsBannerPrototypePage")),
+      F08WeeklyRecord: lazy(() => import("./prototype/f08-weekly/WeeklyRecordPrototypePage")),
+      F08VisualDirection: lazy(() => import("./prototype/f08-weekly/VisualDirectionPrototypePage")),
       RewardsHub: lazy(() => import("./prototype/rewards/RewardsPrototypeHub")),
       RewardsLab: lazy(() => import("./prototype/rewards/CatCakeLabPage")),
       RewardsPull: lazy(() => import("./prototype/rewards/PullPrototypePage")),
@@ -84,7 +91,6 @@ export default function App() {
             <NavLink to="/interviews">Interviews</NavLink>
             <NavLink to="/progress">Progress</NavLink>
             <NavLink to="/status">Status</NavLink>
-            {proto && <NavLink to="/prototype/m5">Prototype</NavLink>}
           </nav>
         </header>
         <main>
@@ -147,6 +153,31 @@ export default function App() {
                 <Route
                   path="/prototype/m5/celebration"
                   element={<ProtoPage page={proto.M5Celebration} />}
+                />
+                <Route path="/prototype/f08/weekly" element={<ProtoPage page={proto.F08WeeklyHub} />} />
+                <Route
+                  path="/prototype/f08/weekly/lc-stepper"
+                  element={<ProtoPage page={proto.F08LcStepper} />}
+                />
+                <Route
+                  path="/prototype/f08/weekly/progress-block"
+                  element={<ProtoPage page={proto.F08ProgressWeekly} />}
+                />
+                <Route
+                  path="/prototype/f08/weekly/home-targets"
+                  element={<ProtoPage page={proto.F08HomeTargets} />}
+                />
+                <Route
+                  path="/prototype/f08/weekly/congrats"
+                  element={<ProtoPage page={proto.F08Congrats} />}
+                />
+                <Route
+                  path="/prototype/f08/weekly/weekly-record"
+                  element={<ProtoPage page={proto.F08WeeklyRecord} />}
+                />
+                <Route
+                  path="/prototype/f08/weekly/visual-direction"
+                  element={<ProtoPage page={proto.F08VisualDirection} />}
                 />
                 <Route path="/prototype/rewards" element={<ProtoPage page={proto.RewardsHub} />} />
                 <Route path="/prototype/rewards/lab" element={<ProtoPage page={proto.RewardsLab} />} />

@@ -424,7 +424,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| A dev-only "Prototype" nav link points to `/prototype/m5` | [`App.tsx` L87](../../../apps/web/src/App.tsx) | Conflicts RX.1 | |
+| No Prototype nav link; prototypes are reached by URL only | [`App.tsx`](../../../apps/web/src/App.tsx) | Conforms RX.1 | Removed in M5-06 |
 | No production code imports from `prototype/` | `apps/web/src` | Conforms | Deleting prototype folders is safe |
 | The M1, M2 and M4 prototypes are still routed; the M5 and rewards prototypes import `prototype/m4/prototype-m4.css` | `apps/web/src/prototype/`, [`App.tsx` L18–160](../../../apps/web/src/App.tsx) | Conforms RX.3 | Deferred cleanup |
 

@@ -1,6 +1,6 @@
 # M5-06: Prototype weekly goal surfaces
 
-**Status:** Ready
+**Status:** In progress (prototypes built; awaiting the verdict)
 **Blocked by:** (none)
 **Implements:** R5.1, RX.1, RX.2, RX.3 (for `prototype/m5`); designs for R5.3–R5.6, R5.8, R5.17, R5.18, R5.20 (from `../../spec.md`)
 **Type:** prototype
@@ -29,11 +29,11 @@ Prototype URL: `/prototype/f08/weekly`
 
 ## Acceptance criteria
 
-- [ ] 2–3 variants per design question, switchable with the shared prototype switcher, all under `apps/web/src/prototype/f08-weekly/`
-- [ ] No production imports of prototype code; mock data only
+- [x] 2–3 variants per design question, switchable with the shared prototype switcher, all under `apps/web/src/prototype/f08-weekly/`
+- [x] No production imports of prototype code; mock data only
 - [ ] The user picks a variant (or a mix) per question; the verdict is recorded below
 - [ ] F09 Q1–Q5 answers recorded in `docs/design-system.md`
-- [ ] The Prototype nav tab is removed (RX.1)
+- [x] The Prototype nav tab is removed (RX.1)
 - [ ] The superseded `prototype/m5` folder and its route are deleted after the verdict (RX.3)
 
 ## Reuse notes
@@ -52,3 +52,5 @@ The existing `WeeklyGoalsBlock`, `LeetcodeStepper`, `TodayStrip`, Home Upcoming 
 ## Verification notes
 
 (Filled in when done: the verdict per question, and the last prototype commit hash.)
+
+**Built (awaiting verdict).** Hub at `/prototype/f08/weekly`, one page per design question (`lc-stepper`, `progress-block`, `home-targets`, `congrats`, `weekly-record`) plus `visual-direction` for F09 Q1–Q5. Each page has scenario toggles for the edge cases (12/10, empty or 50-character label, 0 tagged apps, goal met, neither met, 0/0 week), and a `?dir=a|b|c` toggle that applies an F09 direction to it. Mock dates are computed from today, so Sunday targets are never overdue. Tier points are placeholders until Q32.
