@@ -3,14 +3,19 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import {
   deleteDocument,
   getApplication,
+  getApplicationReflections,
   getJobs,
   patchApplication,
   uploadDocument,
   type ApplicationRow,
   type JobCard,
+  type PointsEarnInfo,
+  type ProgressReflection,
 } from "../../api";
 import { formatDueDateMdY, toDateInputValue } from "../../formatDate";
 import ApplicationMetaBadges from "./ApplicationMetaBadges";
+import EarnFlash from "../completion/EarnFlash";
+import ReflectionsPanel from "../reflections/ReflectionsPanel";
 import RichTextField, { isEmptyRichHtml } from "../../RichTextField";
 import DocumentPreviewModal from "./DocumentPreviewModal";
 import { invalidateListCache } from "../../listCache";
@@ -45,8 +50,13 @@ export default function ApplicationDetail() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState<{ target: FlashTarget; message: string } | null>(null);
+  const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(() => {
+    const fromNav = (location.state as { earnFlash?: PointsEarnInfo } | null)?.earnFlash;
+    return fromNav ?? null;
+  });
   const [stageSaving, setStageSaving] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [reflections, setReflections] = useState<ProgressReflection[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const flashTimer = useRef<number | null>(null);
 
@@ -67,13 +77,17 @@ export default function ApplicationDetail() {
 
   async function load() {
     if (!id) return;
-    const data = await getApplication(id);
+    const [data, refl] = await Promise.all([
+      getApplication(id),
+      getApplicationReflections(id),
+    ]);
     setRow(data);
     setNotes(data.notes ?? "");
     setDescriptionHtml(data.descriptionHtml ?? "");
     setStatus(data.status === "todo" ? "applied" : data.status);
     setAppliedAt(toDateInputValue(data.appliedAt));
     setUrl(data.url ?? "");
+    setReflections(refl.reflections);
   }
 
   useEffect(() => {
@@ -92,11 +106,12 @@ export default function ApplicationDetail() {
     setStageSaving(true);
     setError(null);
     try {
-      await patchApplication(id, {
+      const patched = await patchApplication(id, {
         status,
         appliedAt: appliedAt || null,
         url: url.trim() || null,
       });
+      if (patched.points) setEarnFlash(patched.points);
       invalidateListCache("applications:");
       invalidateListCache("jobs:");
       await load();
@@ -194,6 +209,7 @@ export default function ApplicationDetail() {
 
   return (
     <article className="application-detail-page">
+      <EarnFlash earn={earnFlash} onDismiss={() => setEarnFlash(null)} />
       <header className="application-detail-header-card">
         <p className="application-detail-back">
           <Link to={listReturnTo(location, "/applications")}>← Applications</Link>
@@ -479,23 +495,15 @@ export default function ApplicationDetail() {
             </form>
           </section>
 
-          <section className="application-detail-section application-detail-stickies">
-            <div className="application-detail-stickies-head">
-              <h3>Reflections</h3>
-              <span className="task-detail-pill muted">coming later</span>
-            </div>
-            <div className="application-detail-stickies-scroll">
-              <p className="muted">
-                Reflections for this application and its interview steps will appear here,
-                sectioned by step.
-              </p>
-            </div>
-            <div className="application-detail-actions">
-              <button type="button" className="secondary" disabled>
-                Add reflection…
-              </button>
-            </div>
-          </section>
+          <ReflectionsPanel
+            host={{ kind: "application", applicationId: row.id, defaultLane: "application" }}
+            reflections={reflections}
+            onChanged={() => {
+              void load().catch((err: Error) => setError(err.message));
+            }}
+            onError={(message) => setError(message)}
+            fillHeight={false}
+          />
         </div>
       </div>
 

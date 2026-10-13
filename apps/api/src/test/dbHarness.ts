@@ -47,6 +47,7 @@ export async function truncateAll(client?: PoolClient): Promise<void> {
   assertTestDatabaseMutationAllowed();
   const sql = `
     TRUNCATE TABLE
+      points_events,
       reflection_logs,
       leetcode_daily,
       tasks,
@@ -362,19 +363,27 @@ export async function seedLeetcodeDaily(
 }
 
 export async function seedReflectionLog(input: {
-  lane: "application" | "technical";
+  lane: "application" | "technical" | "other";
   body: string;
+  deepWork?: boolean;
+  taskId?: string | null;
   applicationId?: string | null;
+  interviewStepId?: string | null;
   createdAt?: Date;
 }): Promise<{ id: string }> {
   const { rows } = await pool.query<{ id: string }>(
-    `INSERT INTO reflection_logs (lane, body, application_id, created_at)
-     VALUES ($1, $2, $3, COALESCE($4, now()))
+    `INSERT INTO reflection_logs (
+       lane, body, deep_work, task_id, application_id, interview_step_id, created_at
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, now()))
      RETURNING id`,
     [
       input.lane,
       input.body,
+      input.deepWork !== false,
+      input.taskId ?? null,
       input.applicationId ?? null,
+      input.interviewStepId ?? null,
       input.createdAt ?? null,
     ],
   );

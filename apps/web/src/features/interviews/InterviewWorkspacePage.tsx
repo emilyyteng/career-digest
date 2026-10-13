@@ -7,8 +7,10 @@ import {
   patchInterviewThread,
   type InterviewStep,
   type InterviewThreadDetail,
+  type PointsEarnInfo,
 } from "../../api";
-import InterviewCountdown from "./InterviewCountdown";
+import DeadlineUrgency from "../../DeadlineUrgency";
+import EarnFlash from "../completion/EarnFlash";
 import InterviewStepFields, {
   emptyInterviewStepFields,
   interviewStepFieldsToPayload,
@@ -72,6 +74,7 @@ export default function InterviewWorkspace() {
     mode: FinishStepMode;
   } | null>(null);
   const [finishBusy, setFinishBusy] = useState(false);
+  const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
   const [notesFlash, setNotesFlash] = useState(false);
   const notesFlashTimer = useRef<number | null>(null);
 
@@ -219,12 +222,25 @@ export default function InterviewWorkspace() {
   }
 
   async function runFinishStep(result: FinishStepResult) {
-    if (!threadId || !finishStepTarget) return;
+    if (!threadId || !finishStepTarget || !thread) return;
     setFinishBusy(true);
     setError(null);
     try {
       const status = result.outcome === "waiting" ? "awaiting_employer" : "completed";
-      await patchInterviewStep(threadId, finishStepTarget.stepId, { status });
+      const finished = await patchInterviewStep(threadId, finishStepTarget.stepId, {
+        status,
+        ...(result.reflection
+          ? {
+              reflection: {
+                lane: result.reflection.lane,
+                body: result.reflection.body,
+                deepWork: result.reflection.deepWork,
+                actualMinutes: result.reflection.actualMinutes,
+              },
+            }
+          : {}),
+      });
+      if (finished.points) setEarnFlash(finished.points);
       if (result.outcome === "round_done" && result.nextStep) {
         await addInterviewStep(threadId, result.nextStep);
       }
@@ -257,6 +273,7 @@ export default function InterviewWorkspace() {
 
   return (
     <article className="detail">
+      <EarnFlash earn={earnFlash} onDismiss={() => setEarnFlash(null)} />
       <div className="interview-workspace-header">
         <div className="interview-workspace-header-main">
           <p><Link to="/interviews">← Interviews</Link></p>
@@ -348,7 +365,12 @@ export default function InterviewWorkspace() {
                 {deadlineLabel && (
                   <div className="interview-deadline-block">
                     <div className="interview-deadline-date">{deadlineLabel}</div>
-                    {deadlineIso && <InterviewCountdown target={deadlineIso} />}
+                    {deadlineIso && (
+                      <DeadlineUrgency
+                        dueAt={deadlineIso}
+                        className="deadline-urgency-prominent deadline-urgency-compact"
+                      />
+                    )}
                   </div>
                 )}
                 <div className="interview-next-actions">

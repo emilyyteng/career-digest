@@ -5,12 +5,14 @@ import {
   getInterviews,
   patchInterviewStep,
   type InterviewThreadListItem,
+  type PointsEarnInfo,
 } from "../../api";
 import FinishInterviewStepModal, {
   type FinishStepMode,
   type FinishStepResult,
 } from "./FinishInterviewStepModal";
-import InterviewCountdown from "./InterviewCountdown";
+import EarnFlash from "../completion/EarnFlash";
+import DeadlineUrgency from "../../DeadlineUrgency";
 import ModalLayer from "../../ModalLayer";
 import {
   formatLinkedRoles,
@@ -29,6 +31,7 @@ type FinishStepTarget = {
   stepId: string;
   stepTitle: string;
   mode: FinishStepMode;
+  primaryApplicationId: string;
 };
 
 type ThreadCardProps = {
@@ -89,7 +92,12 @@ function ThreadCard({
         {deadlineLabel && (
           <div className="interview-deadline-block">
             <div className="interview-deadline-date">{deadlineLabel}</div>
-            {deadlineIso && showQuickActions && <InterviewCountdown target={deadlineIso} />}
+            {deadlineIso && showQuickActions && (
+              <DeadlineUrgency
+                dueAt={deadlineIso}
+                className="deadline-urgency-prominent deadline-urgency-compact"
+              />
+            )}
           </div>
         )}
         {!step && !awaitingStep && <p className="muted">No active step</p>}
@@ -107,6 +115,7 @@ function ThreadCard({
                   stepId: step.id,
                   stepTitle: step.title,
                   mode: "actionable",
+                  primaryApplicationId: row.primaryApplicationId,
                 })
               }
             >
@@ -139,6 +148,7 @@ function ThreadCard({
                   stepId: awaitingStep.id,
                   stepTitle: awaitingStep.title,
                   mode: "awaiting_response",
+                  primaryApplicationId: row.primaryApplicationId,
                 })
               }
             >
@@ -174,6 +184,7 @@ export default function Interviews() {
   const [adding, setAdding] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [finishStepTarget, setFinishStepTarget] = useState<FinishStepTarget | null>(null);
+  const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
   const addFormRef = useRef<AddInterviewModalHandle>(null);
 
   async function load() {
@@ -197,7 +208,24 @@ export default function Interviews() {
     setError(null);
     try {
       const status = result.outcome === "waiting" ? "awaiting_employer" : "completed";
-      await patchInterviewStep(finishStepTarget.threadId, finishStepTarget.stepId, { status });
+      const finished = await patchInterviewStep(
+        finishStepTarget.threadId,
+        finishStepTarget.stepId,
+        {
+          status,
+          ...(result.reflection
+            ? {
+                reflection: {
+                  lane: result.reflection.lane,
+                  body: result.reflection.body,
+                  deepWork: result.reflection.deepWork,
+                  actualMinutes: result.reflection.actualMinutes,
+                },
+              }
+            : {}),
+        },
+      );
+      if (finished.points) setEarnFlash(finished.points);
       if (result.outcome === "round_done" && result.nextStep) {
         await addInterviewStep(finishStepTarget.threadId, result.nextStep);
       }
@@ -216,6 +244,7 @@ export default function Interviews() {
 
   return (
     <section>
+      <EarnFlash earn={earnFlash} onDismiss={() => setEarnFlash(null)} />
       <div className="tabs-row">
         <div className="tabs">
           {VIEW_TABS.map((tab) => (

@@ -6,6 +6,7 @@ import {
   seedCompany,
   seedManualApplication,
   seedRankedPosting,
+  seedReflectionLog,
   seedTask,
 } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
@@ -247,6 +248,41 @@ describe.skipIf(!integrationReady)("tasks API", () => {
     const app = await pool.query(`SELECT status, applied_at FROM applications WHERE id = $1`, [manual.id]);
     expect(app.rows[0].status).toBe("applied");
     expect(app.rows[0].applied_at).toBeTruthy();
+  });
+
+  it("POST /api/tasks/:id/complete transfers task reflections to the application", async () => {
+    const manual = await seedManualApplication({
+      status: "todo",
+      company: "Notion",
+      title: "Eng Intern",
+    });
+    const task = await seedTask({
+      category: "application",
+      title: "Eng Intern",
+      organization: "Notion",
+      applicationId: manual.id,
+    });
+    const refl = await seedReflectionLog({
+      lane: "application",
+      body: "Tailored resume bullets",
+      taskId: task.id,
+    });
+
+    await apiClient().post(`/api/tasks/${task.id}/complete`).expect(200);
+
+    const taskRefl = await apiClient().get(`/api/tasks/${task.id}/reflections`).expect(200);
+    expect(taskRefl.body.reflections).toHaveLength(0);
+
+    const appRefl = await apiClient()
+      .get(`/api/applications/${manual.id}/reflections`)
+      .expect(200);
+    expect(appRefl.body.reflections).toHaveLength(1);
+    expect(appRefl.body.reflections[0]).toMatchObject({
+      id: refl.id,
+      applicationId: manual.id,
+      taskId: null,
+      body: "Tailored resume bullets",
+    });
   });
 
   it("GET /api/tasks/:id returns a hydrated task with subtasks", async () => {

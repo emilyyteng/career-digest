@@ -333,8 +333,8 @@ export async function resetDemoDatabase(db: Pool): Promise<DemoSeedSummary> {
   for (let d = 0; d < 40; d += 2) {
     const lane = d % 4 === 0 ? "application" : "technical";
     await db.query(
-      `INSERT INTO reflection_logs (lane, body, created_at)
-       VALUES ($1, $2, $3)`,
+      `INSERT INTO reflection_logs (lane, body, deep_work, created_at)
+       VALUES ($1, $2, true, $3)`,
       [
         lane,
         lane === "application"

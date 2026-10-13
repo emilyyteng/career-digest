@@ -2,6 +2,7 @@ import type { Pool, PoolClient } from "pg";
 import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { resolveThreadsForApplication } from "./interviews.js";
 import { applicationResolutionFromStatus } from "./interviewStatuses.js";
+import { transferTaskReflectionsToApplication } from "./progress.js";
 import {
   getApplicationTaskCategory,
   getTaskCategoryById,
@@ -43,6 +44,7 @@ export type TaskRow = {
   dueKind: TaskDueKind | null;
   priority: TaskPriority | null;
   estimateMinutes: number | null;
+  actualMinutes: number | null;
   postingId: string | null;
   applicationId: string | null;
   location: string | null;
@@ -53,6 +55,8 @@ export type TaskRow = {
   updatedAt: string;
   subtasks: TaskSubtaskRow[];
   subtaskProgress: { completed: number; total: number } | null;
+  /** Points from the task_complete earn event (completed misc). */
+  pointsEarned?: number | null;
 };
 
 const taskListSelect = `
@@ -75,6 +79,7 @@ const taskListSelect = `
     t.due_kind AS "dueKind",
     t.priority,
     t.estimate_minutes AS "estimateMinutes",
+    t.actual_minutes AS "actualMinutes",
     t.posting_id AS "postingId",
     t.application_id AS "applicationId",
     COALESCE(a.location, p.location) AS location,
@@ -232,10 +237,19 @@ async function fetchTaskRow(db: Queryable, id: string): Promise<TaskRow | null> 
   const [hydrated] = await attachSubtasksToTasks(db, [
     { ...row, subtasks: [], subtaskProgress: null },
   ]);
-  return hydrated ?? null;
+  if (!hydrated) return null;
+  if (hydrated.status !== "completed") {
+    return { ...hydrated, pointsEarned: null };
+  }
+  const [withPoints] = await attachPointsEarnedToTasks(db, [hydrated]);
+  return withPoints ?? hydrated;
 }
 
-export async function listTasks(db: Queryable, view: TaskView): Promise<{
+export async function listTasks(
+  db: Queryable,
+  view: TaskView,
+  opts: { includeApplicationCompleted?: boolean } = {},
+): Promise<{
   view: TaskView;
   count: number;
   counts: { open: number; completed: number };
@@ -256,16 +270,71 @@ export async function listTasks(db: Queryable, view: TaskView): Promise<{
     );
     return { view, count: tasks.length, counts, categories, tasks };
   }
+  // Tasks page Completed tab is misc-only; Progress link search may include
+  // completed application tasks via includeApplicationCompleted.
   const { rows } = await db.query<Omit<TaskRow, "subtasks" | "subtaskProgress">>(
-    `${taskListSelect}
-     WHERE t.status = 'completed' AND t.category = 'misc'
-     ORDER BY t.completed_at DESC NULLS LAST, t.created_at DESC`,
+    opts.includeApplicationCompleted
+      ? `${taskListSelect}
+         WHERE t.status = 'completed'
+         ORDER BY t.completed_at DESC NULLS LAST, t.created_at DESC`
+      : `${taskListSelect}
+         WHERE t.status = 'completed' AND t.category = 'misc'
+         ORDER BY t.completed_at DESC NULLS LAST, t.created_at DESC`,
   );
   const tasks = await attachSubtasksToTasks(
     db,
     rows.map((row) => ({ ...row, subtasks: [], subtaskProgress: null })),
   );
-  return { view, count: tasks.length, counts, categories, tasks };
+  const withPoints = await attachPointsEarnedToTasks(db, tasks);
+  return { view, count: withPoints.length, counts, categories, tasks: withPoints };
+}
+
+async function attachPointsEarnedToTasks(
+  db: Queryable,
+  tasks: TaskRow[],
+): Promise<TaskRow[]> {
+  if (tasks.length === 0) return tasks;
+  const miscIds = tasks.filter((t) => t.category === "misc").map((t) => t.id);
+  const appIds = tasks
+    .filter((t) => t.category === "application" && t.applicationId)
+    .map((t) => t.applicationId!);
+  const pointsBySource = new Map<string, number>();
+  if (miscIds.length > 0) {
+    const { rows } = await db.query<{ source_id: string; amount: number }>(
+      `SELECT source_id,
+              COALESCE((meta->>'current_amount')::int, amount) AS amount
+       FROM points_events
+       WHERE kind = 'earn'
+         AND source_type = 'task_complete'
+         AND source_id = ANY($1::text[])
+         AND COALESCE((meta->>'superseded')::boolean, false) = false`,
+      [miscIds],
+    );
+    for (const r of rows) pointsBySource.set(`task:${r.source_id}`, r.amount);
+  }
+  if (appIds.length > 0) {
+    const { rows } = await db.query<{ source_id: string; amount: number }>(
+      `SELECT source_id,
+              COALESCE((meta->>'current_amount')::int, amount) AS amount
+       FROM points_events
+       WHERE kind = 'earn'
+         AND source_type = 'application_applied'
+         AND source_id = ANY($1::text[])
+         AND COALESCE((meta->>'superseded')::boolean, false) = false`,
+      [appIds],
+    );
+    for (const r of rows) pointsBySource.set(`app:${r.source_id}`, r.amount);
+  }
+  return tasks.map((t) => {
+    const key =
+      t.category === "misc"
+        ? `task:${t.id}`
+        : t.applicationId
+          ? `app:${t.applicationId}`
+          : null;
+    const pts = key ? pointsBySource.get(key) : undefined;
+    return { ...t, pointsEarned: pts ?? null };
+  });
 }
 
 export async function getTaskById(db: Queryable, id: string): Promise<TaskRow | null> {
@@ -622,6 +691,7 @@ export type PatchTaskInput = {
   dueKind?: TaskDueKind | null;
   priority?: TaskPriority | null;
   estimateMinutes?: number | null;
+  actualMinutes?: number | null;
   location?: string | null;
   descriptionHtml?: string | null;
   postingId?: string | null;
@@ -693,6 +763,23 @@ export async function patchTask(
   if (patch.estimateMinutes !== undefined) {
     estimateMinutes = parseTaskEstimateMinutes(patch.estimateMinutes) ?? null;
   }
+  let actualMinutes = existing.actualMinutes;
+  if (patch.actualMinutes !== undefined) {
+    if (existing.status !== "completed") {
+      throw Object.assign(new Error("actualMinutes can only be set on completed tasks"), {
+        status: 400,
+      });
+    }
+    if (patch.actualMinutes === null) {
+      actualMinutes = null;
+    } else {
+      const parsed = parseTaskEstimateMinutes(patch.actualMinutes);
+      if (parsed === undefined) {
+        throw Object.assign(new Error("Invalid actualMinutes"), { status: 400 });
+      }
+      actualMinutes = parsed;
+    }
+  }
 
   const client = "connect" in db && patch.postingId ? await db.connect() : null;
   const queryable = client ?? db;
@@ -718,7 +805,8 @@ export async function patchTask(
            category_id = $8,
            priority = $9,
            estimate_minutes = $10,
-           posting_id = CASE WHEN $11::boolean THEN $12::uuid ELSE posting_id END,
+           actual_minutes = $11,
+           posting_id = CASE WHEN $12::boolean THEN $13::uuid ELSE posting_id END,
            updated_at = now()
        WHERE id = $1`,
       [
@@ -732,6 +820,7 @@ export async function patchTask(
         nextCategoryId,
         priority,
         estimateMinutes,
+        actualMinutes,
         patch.postingId !== undefined,
         patch.postingId ?? null,
       ],
@@ -784,7 +873,15 @@ export async function patchTask(
   }
 }
 
-export async function completeTask(db: Queryable, id: string): Promise<TaskRow | null> {
+export type CompleteTaskOptions = {
+  actualMinutes?: number | null;
+};
+
+export async function completeTask(
+  db: Queryable,
+  id: string,
+  options: CompleteTaskOptions = {},
+): Promise<TaskRow | null> {
   const existing = await getTaskById(db, id);
   if (!existing || existing.status !== "open") return null;
 
@@ -805,6 +902,11 @@ export async function completeTask(db: Queryable, id: string): Promise<TaskRow |
          WHERE id = $1`,
         [existing.applicationId],
       );
+      await transferTaskReflectionsToApplication(
+        queryable,
+        id,
+        existing.applicationId,
+      );
       const resolution = applicationResolutionFromStatus("applied");
       if (resolution && client) {
         await resolveThreadsForApplication(client, existing.applicationId, resolution);
@@ -817,13 +919,19 @@ export async function completeTask(db: Queryable, id: string): Promise<TaskRow |
       await completeOpenSubtasksForTask(queryable, id);
     }
 
+    const actualMinutes =
+      options.actualMinutes !== undefined
+        ? options.actualMinutes
+        : existing.actualMinutes;
+
     await queryable.query(
       `UPDATE tasks
        SET status = 'completed',
            completed_at = now(),
+           actual_minutes = $2,
            updated_at = now()
        WHERE id = $1`,
-      [id],
+      [id, actualMinutes ?? null],
     );
 
     if (client) await client.query("COMMIT");
@@ -1051,6 +1159,13 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     if (body.estimateMinutes !== undefined) {
       patch.estimateMinutes = parseTaskEstimateMinutes(body.estimateMinutes) ?? null;
     }
+    if (body.actualMinutes !== undefined) {
+      if (body.actualMinutes === null) {
+        patch.actualMinutes = null;
+      } else {
+        patch.actualMinutes = parseTaskEstimateMinutes(body.actualMinutes) ?? null;
+      }
+    }
   } catch {
     return null;
   }
@@ -1067,7 +1182,8 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
     patch.postingId === undefined &&
     patch.categoryId === undefined &&
     patch.priority === undefined &&
-    patch.estimateMinutes === undefined
+    patch.estimateMinutes === undefined &&
+    patch.actualMinutes === undefined
   ) {
     return null;
   }

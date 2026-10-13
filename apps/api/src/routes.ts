@@ -90,19 +90,43 @@ import {
   getProgressHeatmap,
   getProgressOutcome,
   getProgressToday,
+  isProgressHeatmapLane,
   isProgressLane,
   isProgressPeriod,
+  listInterviewStepsForApplication,
+  listReflectionsForApplication,
+  listReflectionsForTask,
+  listUnlinkedReflections,
   parseAnchorDate,
   parseLocalDate,
   resolveTimezone,
   setLeetcodeDaily,
   updateReflectionLog,
+  type ProgressLane,
 } from "./progress.js";
 import {
   getWeeklyGoalsSnapshot,
   patchLcGoal,
   setAppTargetMembership,
 } from "./weeklyGoals.js";
+import {
+  awardApplicationApplied,
+  awardInterviewFinish,
+  awardMiscTaskComplete,
+  awardWeeklyGoalIfNeeded,
+  adjustTaskCompleteActual,
+  reverseTaskComplete,
+} from "./pointsAwards.js";
+import {
+  getPointsSummary,
+  listPointsEvents,
+  serializePointsEarn,
+  type PointsEarnInfo,
+} from "./pointsLedger.js";
+import {
+  getCompletionsDiary,
+  type CompletionKind,
+} from "./completionsDiary.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -354,6 +378,12 @@ api.post("/applications", async (req, res) => {
     descriptionHtml?: string;
     appliedAt?: string | null;
     dueAt?: string | null;
+    reflection?: {
+      lane?: string;
+      body?: string;
+      deepWork?: boolean;
+      actualMinutes?: number | null;
+    } | null;
   };
   if (body.status && isLegacyApplicationBacklogStatus(body.status)) {
     res.status(400).json({ error: "Use Tasks for apply backlog" });
@@ -364,6 +394,24 @@ api.post("/applications", async (req, res) => {
     res.status(400).json({ error: "Invalid status" });
     return;
   }
+
+  let withReflection = false;
+  let reflectionMinutes: number | null = null;
+  if (body.reflection?.body && typeof body.reflection.body === "string") {
+    const lane = body.reflection.lane ?? "";
+    if (!isProgressLane(lane)) {
+      res.status(400).json({ error: "reflection.lane must be application, technical, or other" });
+      return;
+    }
+    withReflection = true;
+    if (
+      body.reflection.actualMinutes !== undefined &&
+      body.reflection.actualMinutes !== null
+    ) {
+      reflectionMinutes = Math.floor(body.reflection.actualMinutes);
+    }
+  }
+
   try {
     const created = await createApplication(pool, {
       postingId: body.postingId,
@@ -378,7 +426,31 @@ api.post("/applications", async (req, res) => {
       appliedAt: body.appliedAt,
       appliedAtProvided: Object.prototype.hasOwnProperty.call(body, "appliedAt"),
     });
-    res.status(201).json(created);
+    if (withReflection && body.reflection?.body) {
+      await createReflectionLog(pool, {
+        lane: body.reflection.lane as ProgressLane,
+        body: body.reflection.body,
+        deepWork: body.reflection.deepWork,
+        actualMinutes: reflectionMinutes,
+        applicationId: created.id,
+        awardPoints: false,
+      });
+    }
+    let points: PointsEarnInfo | null = null;
+    if (status === "applied") {
+      const app = await getApplication(pool, created.id);
+      const label = app?.company
+        ? `${app.company}${app.title ? ` · ${app.title}` : ""}`
+        : app?.title ?? "Application";
+      const event = await awardApplicationApplied(pool, {
+        applicationId: created.id,
+        label,
+        withReflection,
+        reflectionMinutes,
+      });
+      points = serializePointsEarn(event);
+    }
+    res.status(201).json({ ...created, points });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
     res.status(400).json({ error: message });
@@ -405,8 +477,10 @@ api.patch("/applications/:id", async (req, res) => {
     return;
   }
   try {
+    const before = await getApplication(pool, req.params.id);
+    const nextStatus = body.status ? normalizeApplicationStatus(body.status) : undefined;
     const result = await patchApplication(pool, req.params.id, {
-      status: body.status ? normalizeApplicationStatus(body.status) : undefined,
+      status: nextStatus,
       notes: body.notes,
       postingId: body.postingId,
       appliedAt: body.appliedAt,
@@ -419,7 +493,22 @@ api.patch("/applications/:id", async (req, res) => {
       urlProvided: Object.prototype.hasOwnProperty.call(body, "url"),
       postingIdProvided: Object.prototype.hasOwnProperty.call(body, "postingId"),
     });
-    res.json(result);
+    let points: PointsEarnInfo | null = null;
+    if (
+      before &&
+      nextStatus === "applied" &&
+      before.status !== "applied"
+    ) {
+      const label = before.company
+        ? `${before.company}${before.title ? ` · ${before.title}` : ""}`
+        : before.title ?? "Application";
+      const event = await awardApplicationApplied(pool, {
+        applicationId: before.id,
+        label,
+      });
+      points = serializePointsEarn(event);
+    }
+    res.json({ ...result, points });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
     if (message === "Application not found") {
@@ -568,9 +657,62 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
       url?: string | null;
       notes?: string | null;
       prepNotes?: string | null;
+      reflection?: {
+        lane?: string;
+        body?: string;
+        deepWork?: boolean;
+        actualMinutes?: number | null;
+      } | null;
     };
+    const thread = await getInterviewThread(pool, req.params.threadId);
+    const before = thread?.steps.find((s) => s.id === req.params.stepId);
     await patchInterviewStep(pool, req.params.threadId, req.params.stepId, body);
-    res.json({ ok: true });
+    const finishStatuses = new Set(["completed", "awaiting_employer"]);
+    if (
+      before &&
+      body.status &&
+      finishStatuses.has(body.status) &&
+      !finishStatuses.has(before.status)
+    ) {
+      let withReflection = false;
+      let reflectionMinutes: number | null = null;
+      if (body.reflection?.body && typeof body.reflection.body === "string") {
+        const lane = body.reflection.lane ?? "";
+        if (!isProgressLane(lane)) {
+          res.status(400).json({ error: "reflection.lane must be application, technical, or other" });
+          return;
+        }
+        withReflection = true;
+        if (
+          body.reflection.actualMinutes !== undefined &&
+          body.reflection.actualMinutes !== null
+        ) {
+          reflectionMinutes = Math.floor(body.reflection.actualMinutes);
+        }
+        await createReflectionLog(pool, {
+          lane,
+          body: body.reflection.body,
+          deepWork: body.reflection.deepWork,
+          actualMinutes: reflectionMinutes,
+          applicationId: thread?.primaryApplicationId ?? null,
+          interviewStepId: before.id,
+          awardPoints: false,
+        });
+      }
+      const label = thread?.company
+        ? `${thread.company} · ${before.title}`
+        : before.title;
+      const event = await awardInterviewFinish(pool, {
+        stepId: before.id,
+        label,
+        kind: body.kind ?? before.kind,
+        withReflection,
+        reflectionMinutes,
+      });
+      res.json({ ok: true, points: serializePointsEarn(event) });
+      return;
+    }
+    res.json({ ok: true, points: null });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
     const status = message.includes("not found") ? 404 : 400;
@@ -645,7 +787,10 @@ api.get("/tasks", async (req, res) => {
     res.status(400).json({ error: "Invalid view" });
     return;
   }
-  res.json(await listTasks(pool, view));
+  const includeApplicationCompleted =
+    view === "completed" &&
+    (req.query.includeApplication === "1" || req.query.includeApplication === "true");
+  res.json(await listTasks(pool, view, { includeApplicationCompleted }));
 });
 
 api.post("/tasks/from-posting", async (req, res) => {
@@ -777,9 +922,43 @@ api.patch("/tasks/:id", async (req, res) => {
     return;
   }
   try {
+    const before = await getTaskById(pool, req.params.id);
     const task = await patchTask(pool, req.params.id, parsed);
     if (!task) {
       res.status(404).json({ error: "Task not found" });
+      return;
+    }
+    if (
+      before &&
+      task.status === "completed" &&
+      task.category === "misc" &&
+      parsed.actualMinutes !== undefined &&
+      parsed.actualMinutes !== before.actualMinutes
+    ) {
+      const earn = await pool.query<{ meta: { with_reflection?: boolean } }>(
+        `SELECT meta FROM points_events
+         WHERE kind = 'earn' AND source_type = 'task_complete' AND source_id = $1
+         LIMIT 1`,
+        [task.id],
+      );
+      let withReflection = Boolean(earn.rows[0]?.meta?.with_reflection);
+      if (!earn.rows[0]) {
+        const linked = await pool.query<{ ok: boolean }>(
+          `SELECT EXISTS(
+             SELECT 1 FROM reflection_logs WHERE task_id = $1
+           ) AS ok`,
+          [task.id],
+        );
+        withReflection = Boolean(linked.rows[0]?.ok);
+      }
+      await adjustTaskCompleteActual(pool, {
+        taskId: task.id,
+        title: task.title,
+        actualMinutes: task.actualMinutes,
+        withReflection,
+      });
+      const refreshed = await getTaskById(pool, task.id);
+      res.json(refreshed ?? task);
       return;
     }
     res.json(task);
@@ -796,12 +975,118 @@ api.patch("/tasks/:id", async (req, res) => {
 });
 
 api.post("/tasks/:id/complete", async (req, res) => {
-  const task = await completeTask(pool, req.params.id);
+  const body = (req.body ?? {}) as {
+    actualMinutes?: number | null;
+    reflection?: {
+      lane?: string;
+      body?: string;
+      deepWork?: boolean;
+      actualMinutes?: number | null;
+    } | null;
+    notes?: string | null;
+  };
+
+  let actualMinutes: number | null | undefined = undefined;
+  if (body.actualMinutes !== undefined) {
+    if (body.actualMinutes === null) actualMinutes = null;
+    else if (!Number.isFinite(body.actualMinutes) || body.actualMinutes < 0) {
+      res.status(400).json({ error: "Invalid actualMinutes" });
+      return;
+    } else actualMinutes = Math.floor(body.actualMinutes);
+  }
+
+  const before = await getTaskById(pool, req.params.id);
+  if (!before) {
+    res.status(404).json({ error: "Task not found or cannot complete" });
+    return;
+  }
+
+  let withReflection = false;
+  let reflectionMinutes: number | null = null;
+  if (body.reflection?.body && typeof body.reflection.body === "string") {
+    const lane = body.reflection.lane ?? "";
+    if (!isProgressLane(lane)) {
+      res.status(400).json({ error: "reflection.lane must be application, technical, or other" });
+      return;
+    }
+    withReflection = true;
+    if (
+      body.reflection.actualMinutes !== undefined &&
+      body.reflection.actualMinutes !== null
+    ) {
+      reflectionMinutes = Math.floor(body.reflection.actualMinutes);
+    }
+    try {
+      await createReflectionLog(pool, {
+        lane,
+        body: body.reflection.body,
+        deepWork: body.reflection.deepWork,
+        actualMinutes: reflectionMinutes,
+        taskId: before.id,
+        awardPoints: false,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Bad request";
+      res.status(400).json({ error: message });
+      return;
+    }
+  }
+
+  if (body.notes && typeof body.notes === "string" && body.notes.trim()) {
+    const merged = [before.notes?.trim(), body.notes.trim()].filter(Boolean).join("\n\n");
+    await patchTask(pool, before.id, { notes: merged });
+  }
+
+  const task = await completeTask(pool, req.params.id, { actualMinutes });
   if (!task) {
     res.status(404).json({ error: "Task not found or cannot complete" });
     return;
   }
-  res.json(task);
+
+  let points: PointsEarnInfo | null = null;
+  try {
+    if (task.category === "misc") {
+      const event = await awardMiscTaskComplete(pool, {
+        taskId: task.id,
+        title: task.title,
+        actualMinutes: task.actualMinutes,
+        withReflection,
+      });
+      points = serializePointsEarn(event);
+    } else if (task.category === "application" && task.applicationId) {
+      const label = task.organization
+        ? `${task.organization}${task.title ? ` · ${task.title}` : ""}`
+        : task.title;
+      const event = await awardApplicationApplied(pool, {
+        applicationId: task.applicationId,
+        label,
+        withReflection,
+        reflectionMinutes,
+      });
+      points = serializePointsEarn(event);
+      try {
+        const tz = resolveTimezone(String(req.query.tz ?? "")) ?? "UTC";
+        const snap = await getWeeklyGoalsSnapshot(pool, tz);
+        const appsGoal = snap?.goals.find((g) => g.slot === "apps");
+        if (snap && appsGoal && appsGoal.done >= appsGoal.total && appsGoal.total > 0) {
+          await awardWeeklyGoalIfNeeded(pool, {
+            weekStart: snap.weekStart,
+            slot: "apps",
+            met: true,
+            label: "Weekly apps target met!",
+          });
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Points error";
+    res.status(500).json({ error: message });
+    return;
+  }
+
+  res.json({ ...task, points });
 });
 
 api.post("/tasks/:id/duplicate", async (req, res) => {
@@ -823,12 +1108,31 @@ api.post("/tasks/:id/duplicate", async (req, res) => {
 });
 
 api.post("/tasks/:id/reopen", async (req, res) => {
+  const existing = await getTaskById(pool, req.params.id);
   const task = await reopenTask(pool, req.params.id);
   if (!task) {
     res.status(404).json({ error: "Task not found or cannot reopen" });
     return;
   }
+  if (existing) {
+    await reverseTaskComplete(pool, existing.id, existing.title);
+  }
   res.json(task);
+});
+
+api.get("/points", async (_req, res) => {
+  res.json(await getPointsSummary(pool));
+});
+
+api.get("/points/events", async (req, res) => {
+  const limit = Number(req.query.limit);
+  const offset = Number(req.query.offset);
+  res.json({
+    events: await listPointsEvents(pool, {
+      limit: Number.isFinite(limit) ? limit : undefined,
+      offset: Number.isFinite(offset) ? offset : undefined,
+    }),
+  });
 });
 
 api.delete("/tasks/:id", async (req, res) => {
@@ -999,6 +1303,32 @@ api.get("/progress/today", async (req, res) => {
   res.json(await getProgressToday(pool, tz));
 });
 
+api.get("/progress/completions", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const rawKind = String(req.query.kind ?? "all");
+  const allowed: Array<CompletionKind | "all"> = [
+    "all",
+    "task",
+    "application",
+    "interview",
+    "reflection",
+  ];
+  const kind = (allowed.includes(rawKind as CompletionKind | "all")
+    ? rawKind
+    : "all") as CompletionKind | "all";
+  const limit = Number(req.query.limit);
+  res.json(
+    await getCompletionsDiary(pool, tz, {
+      kind,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    }),
+  );
+});
+
 api.get("/weekly-goals", async (req, res) => {
   const tz = resolveTimezone(String(req.query.tz ?? ""));
   if (!tz) {
@@ -1087,7 +1417,7 @@ api.get("/progress/heatmap", async (req, res) => {
     return;
   }
   const lane = String(req.query.lane ?? "application");
-  if (!isProgressLane(lane)) {
+  if (!isProgressHeatmapLane(lane)) {
     res.status(400).json({ error: "lane must be application or technical" });
     return;
   }
@@ -1153,17 +1483,28 @@ api.patch("/progress/leetcode", async (req, res) => {
   }
 });
 
+api.get("/progress/reflections/unlinked", async (req, res) => {
+  const rawLimit = Number(req.query.limit);
+  const limit = Number.isFinite(rawLimit) ? rawLimit : 40;
+  res.json({ reflections: await listUnlinkedReflections(pool, limit) });
+});
+
 api.post("/progress/reflections", async (req, res) => {
   const body = req.body as {
     lane?: string;
     body?: string;
+    deepWork?: boolean;
+    actualMinutes?: number | null;
+    taskId?: string | null;
     applicationId?: string | null;
+    interviewStepId?: string | null;
     localDate?: string | null;
     tz?: string | null;
+    awardPoints?: boolean;
   };
   const lane = body.lane ?? "";
   if (!isProgressLane(lane)) {
-    res.status(400).json({ error: "lane must be application or technical" });
+    res.status(400).json({ error: "lane must be application, technical, or other" });
     return;
   }
   if (!body.body || typeof body.body !== "string") {
@@ -1174,26 +1515,56 @@ api.post("/progress/reflections", async (req, res) => {
     const row = await createReflectionLog(pool, {
       lane,
       body: body.body,
+      deepWork: body.deepWork,
+      actualMinutes: body.actualMinutes,
+      taskId: body.taskId ?? null,
       applicationId: body.applicationId ?? null,
+      interviewStepId: body.interviewStepId ?? null,
       localDate: body.localDate ?? null,
       tz: body.tz ?? (typeof req.query.tz === "string" ? req.query.tz : null),
+      awardPoints: body.awardPoints,
     });
     res.status(201).json(row);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
-    const status = message === "Application not found" ? 404 : 400;
+    const status =
+      message === "Application not found" ||
+      message === "Task not found" ||
+      message === "Interview step not found for application"
+        ? 404
+        : 400;
     res.status(status).json({ error: message });
   }
 });
 
 api.patch("/progress/reflections/:id", async (req, res) => {
-  const body = req.body as { body?: string };
-  if (!body.body || typeof body.body !== "string") {
+  const body = req.body as {
+    body?: string;
+    lane?: string;
+    deepWork?: boolean;
+    taskId?: string | null;
+    applicationId?: string | null;
+    interviewStepId?: string | null;
+    clearLink?: boolean;
+  };
+  if (body.lane != null && !isProgressLane(body.lane)) {
+    res.status(400).json({ error: "lane must be application, technical, or other" });
+    return;
+  }
+  if (body.body !== undefined && (typeof body.body !== "string" || !body.body.trim())) {
     res.status(400).json({ error: "body is required" });
     return;
   }
   try {
-    const row = await updateReflectionLog(pool, req.params.id, body.body);
+    const row = await updateReflectionLog(pool, req.params.id, {
+      body: body.body,
+      lane: body.lane as ProgressLane | undefined,
+      deepWork: body.deepWork,
+      taskId: body.taskId,
+      applicationId: body.applicationId,
+      interviewStepId: body.interviewStepId,
+      clearLink: body.clearLink,
+    });
     if (!row) {
       res.status(404).json({ error: "Reflection not found" });
       return;
@@ -1201,7 +1572,42 @@ api.patch("/progress/reflections/:id", async (req, res) => {
     res.json(row);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
-    res.status(400).json({ error: message });
+    const status =
+      message === "Application not found" ||
+      message === "Task not found" ||
+      message === "Interview step not found for application"
+        ? 404
+        : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+api.get("/tasks/:id/reflections", async (req, res) => {
+  const task = await getTaskById(pool, req.params.id);
+  if (!task) {
+    res.status(404).json({ error: "Task not found" });
+    return;
+  }
+  res.json({ reflections: await listReflectionsForTask(pool, req.params.id) });
+});
+
+api.get("/applications/:id/reflections", async (req, res) => {
+  const row = await getApplication(pool, req.params.id);
+  if (!row) {
+    res.status(404).json({ error: "Application not found" });
+    return;
+  }
+  res.json({ reflections: await listReflectionsForApplication(pool, req.params.id) });
+});
+
+api.get("/applications/:id/interview-steps", async (req, res) => {
+  try {
+    const steps = await listInterviewStepsForApplication(pool, req.params.id);
+    res.json({ steps });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    const status = message === "Application not found" ? 404 : 400;
+    res.status(status).json({ error: message });
   }
 });
 

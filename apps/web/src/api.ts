@@ -404,7 +404,7 @@ export const getApplication = (id: string) =>
   parse<ApplicationRow>(api(`/api/applications/${id}`));
 
 export const createApplication = (body: Record<string, unknown>) =>
-  parse<{ id: string }>(
+  parse<{ id: string; points?: PointsEarnInfo | null }>(
     api("/api/applications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -413,7 +413,7 @@ export const createApplication = (body: Record<string, unknown>) =>
   );
 
 export const patchApplication = (id: string, body: Record<string, unknown>) =>
-  parse<{ id: string }>(
+  parse<{ id: string; points?: PointsEarnInfo | null }>(
     api(`/api/applications/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -602,7 +602,7 @@ export const patchInterviewStep = (
   stepId: string,
   body: Record<string, unknown>,
 ) =>
-  parse<{ ok: boolean }>(
+  parse<{ ok: boolean; points?: PointsEarnInfo | null }>(
     api(`/api/interviews/${threadId}/steps/${stepId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -640,6 +640,12 @@ export type TaskSubtaskRow = {
   updatedAt: string;
 };
 
+export type PointsEarnInfo = {
+  amount: number;
+  message: string;
+  balanceAfter: number;
+};
+
 export type TaskRow = {
   id: string;
   category: TaskKind;
@@ -654,6 +660,7 @@ export type TaskRow = {
   dueKind: TaskDueKind | null;
   priority: TaskPriority | null;
   estimateMinutes: number | null;
+  actualMinutes: number | null;
   postingId: string | null;
   applicationId: string | null;
   location: string | null;
@@ -664,6 +671,12 @@ export type TaskRow = {
   updatedAt: string;
   subtasks: TaskSubtaskRow[];
   subtaskProgress: { completed: number; total: number } | null;
+  /** Ledger earn for this completion (misc task_complete / app applied). */
+  pointsEarned?: number | null;
+};
+
+export type CompleteTaskResult = TaskRow & {
+  points?: PointsEarnInfo | null;
 };
 
 export type TasksPage = {
@@ -674,8 +687,16 @@ export type TasksPage = {
   tasks: TaskRow[];
 };
 
-export const getTasks = (view: TaskView = "open") =>
-  parse<TasksPage>(api(`/api/tasks?view=${encodeURIComponent(view)}`));
+export const getTasks = (
+  view: TaskView = "open",
+  opts?: { includeApplicationCompleted?: boolean },
+) => {
+  const params = new URLSearchParams({ view });
+  if (view === "completed" && opts?.includeApplicationCompleted) {
+    params.set("includeApplication", "1");
+  }
+  return parse<TasksPage>(api(`/api/tasks?${params}`));
+};
 
 export const getTask = (id: string) => parse<TaskRow>(api(`/api/tasks/${id}`));
 
@@ -721,8 +742,26 @@ export const patchTask = (id: string, body: Record<string, unknown>) =>
     }),
   );
 
-export const completeTask = (id: string) =>
-  parse<TaskRow>(api(`/api/tasks/${id}/complete`, { method: "POST" }));
+export const completeTask = (
+  id: string,
+  body?: {
+    actualMinutes?: number | null;
+    notes?: string | null;
+    reflection?: {
+      lane: string;
+      body: string;
+      deepWork?: boolean;
+      actualMinutes?: number | null;
+    } | null;
+  },
+) =>
+  parse<CompleteTaskResult>(
+    api(`/api/tasks/${id}/complete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body ?? {}),
+    }),
+  );
 
 export const duplicateTask = (id: string) =>
   parse<TaskRow>(api(`/api/tasks/${id}/duplicate`, { method: "POST" }));
@@ -808,7 +847,8 @@ export type ActivityCredit = {
   cap: number;
 };
 
-export type ProgressLane = "application" | "technical";
+export type ProgressLane = "application" | "technical" | "other";
+export type ProgressHeatmapLane = "application" | "technical";
 export type ProgressPeriod = "day" | "week" | "month";
 
 export type ProgressToday = {
@@ -818,6 +858,7 @@ export type ProgressToday = {
   leetcode: ActivityCredit;
   effortApplication: boolean;
   effortTechnical: boolean;
+  effortOther: boolean;
   deepWork: boolean;
 };
 
@@ -843,8 +884,24 @@ export type ProgressReflection = {
   id: string;
   lane: ProgressLane;
   body: string;
+  deepWork: boolean;
+  actualMinutes: number | null;
+  taskId: string | null;
   applicationId: string | null;
+  interviewStepId: string | null;
+  taskTitle: string | null;
+  applicationTitle: string | null;
+  applicationCompany: string | null;
+  interviewStepTitle: string | null;
   createdAt: string;
+};
+
+export type ApplicationInterviewStepOption = {
+  id: string;
+  title: string;
+  status: string;
+  threadStatus: string;
+  threadCompany: string | null;
 };
 
 export type ProgressDayDetail = {
@@ -854,6 +911,7 @@ export type ProgressDayDetail = {
   leetcode: ActivityCredit;
   effortApplication: boolean;
   effortTechnical: boolean;
+  effortOther: boolean;
   deepWork: boolean;
   applicationRows: Array<{
     id: string;
@@ -896,12 +954,12 @@ export const setWeeklyAppTargetMember = (tz: string, taskId: string, member: boo
 
 export const getProgressHeatmap = (
   tz: string,
-  lane: ProgressLane,
+  lane: ProgressHeatmapLane,
   days = 365,
 ) => {
   const params = new URLSearchParams({ tz, lane, days: String(days) });
   return parse<{
-    lane: ProgressLane;
+    lane: ProgressHeatmapLane;
     tz: string;
     startDate: string;
     endDate: string;
@@ -922,6 +980,104 @@ export const getProgressOutcome = (
 export const getProgressDay = (tz: string, date: string) =>
   parse<ProgressDayDetail>(api(`/api/progress/day/${date}?${progressTz(tz)}`));
 
+export type CompletionKind = "task" | "application" | "interview" | "reflection";
+
+export type CompletionDiaryItem = {
+  id: string;
+  kind: CompletionKind;
+  title: string;
+  subtitle: string | null;
+  at: string;
+  localDate: string;
+  estimateMinutes: number | null;
+  actualMinutes: number | null;
+  points: number | null;
+  href: string | null;
+  reflections: Array<{
+    id: string;
+    body: string;
+    preview: string;
+    minutes: number | null;
+    deepWork: boolean;
+  }>;
+};
+
+export type CompletionsDiary = {
+  tz: string;
+  stats: {
+    week: {
+      tasks: number;
+      apps: number;
+      interview: number;
+      reflections: number;
+      minutes: number;
+    };
+    month: {
+      tasks: number;
+      apps: number;
+      interview: number;
+      reflections: number;
+      minutes: number;
+    };
+    allTime: {
+      tasks: number;
+      apps: number;
+      interview: number;
+      reflections: number;
+    };
+  };
+  items: CompletionDiaryItem[];
+};
+
+export const getProgressCompletions = (
+  tz: string,
+  opts?: { kind?: CompletionKind | "all"; limit?: number },
+) => {
+  const params = new URLSearchParams({ tz });
+  if (opts?.kind) params.set("kind", opts.kind);
+  if (opts?.limit != null) params.set("limit", String(opts.limit));
+  return parse<CompletionsDiary>(api(`/api/progress/completions?${params}`));
+};
+
+export type PointsCategory =
+  | "task"
+  | "application"
+  | "leetcode"
+  | "interview"
+  | "reflection"
+  | "weekly_goal"
+  | "achievement";
+
+export type PointsSummary = {
+  balance: number;
+  categories: Array<{ category: PointsCategory; points: number }>;
+};
+
+export type PointsEvent = {
+  id: string;
+  createdAt: string;
+  kind: "earn" | "reverse" | "adjust";
+  category: PointsCategory;
+  amount: number;
+  balanceAfter: number;
+  message: string;
+  sourceType: string;
+  sourceId: string | null;
+  breakdown: Array<{ category: string; amount: number; label: string }> | null;
+  meta: Record<string, unknown>;
+  reversesEventId: string | null;
+};
+
+export const getPointsSummary = () => parse<PointsSummary>(api("/api/points"));
+
+export const getPointsEvents = (opts?: { limit?: number; offset?: number }) => {
+  const params = new URLSearchParams();
+  if (opts?.limit != null) params.set("limit", String(opts.limit));
+  if (opts?.offset != null) params.set("offset", String(opts.offset));
+  const q = params.toString();
+  return parse<{ events: PointsEvent[] }>(api(`/api/points/events${q ? `?${q}` : ""}`));
+};
+
 export const patchProgressLeetcode = (
   tz: string,
   body: { count?: number; delta?: number; date?: string },
@@ -937,7 +1093,12 @@ export const patchProgressLeetcode = (
 export const createProgressReflection = (body: {
   lane: ProgressLane;
   body: string;
+  deepWork?: boolean;
+  actualMinutes?: number | null;
+  awardPoints?: boolean;
+  taskId?: string | null;
   applicationId?: string | null;
+  interviewStepId?: string | null;
   localDate?: string | null;
   tz?: string | null;
 }) =>
@@ -949,11 +1110,44 @@ export const createProgressReflection = (body: {
     }),
   );
 
-export const patchProgressReflection = (id: string, body: string) =>
+export const patchProgressReflection = (
+  id: string,
+  body:
+    | string
+    | {
+        body?: string;
+        lane?: ProgressLane;
+        deepWork?: boolean;
+        taskId?: string | null;
+        applicationId?: string | null;
+        interviewStepId?: string | null;
+        clearLink?: boolean;
+      },
+) =>
   parse<ProgressReflection>(
     api(`/api/progress/reflections/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body }),
+      body: JSON.stringify(typeof body === "string" ? { body } : body),
     }),
+  );
+
+export const getUnlinkedReflections = (limit = 40) =>
+  parse<{ reflections: ProgressReflection[] }>(
+    api(`/api/progress/reflections/unlinked?limit=${limit}`),
+  );
+
+export const getTaskReflections = (taskId: string) =>
+  parse<{ reflections: ProgressReflection[] }>(
+    api(`/api/tasks/${taskId}/reflections`),
+  );
+
+export const getApplicationReflections = (applicationId: string) =>
+  parse<{ reflections: ProgressReflection[] }>(
+    api(`/api/applications/${applicationId}/reflections`),
+  );
+
+export const getApplicationInterviewSteps = (applicationId: string) =>
+  parse<{ steps: ApplicationInterviewStepOption[] }>(
+    api(`/api/applications/${applicationId}/interview-steps`),
   );

@@ -23,7 +23,9 @@ import FeedbackDialog from "./FeedbackDialog";
 import HideFromBoardDialog from "./HideFromBoardDialog";
 import { demoGatedTitle, useDemoMode } from "../../demoMode";
 import { listReturnTo } from "../../navigationReturn";
-import MarkAppliedDialog from "./MarkAppliedDialog";
+import CompleteWorkModal, {
+  type CompleteWorkResult,
+} from "../completion/CompleteWorkModal";
 import RerankDialog from "./RerankDialog";
 
 export default function JobDetail() {
@@ -147,20 +149,35 @@ export default function JobDetail() {
     }
   }
 
-  async function confirmApplied(notes: string) {
+  async function confirmApplied(result: CompleteWorkResult) {
     if (!job) return;
-    setAppliedConfirm(false);
+    setPending(true);
     try {
-      const result = await createApplication({
+      const created = await createApplication({
         postingId: job.id,
         status: "applied",
-        ...(notes ? { notes } : {}),
+        ...(result.notes ? { notes: result.notes } : {}),
+        ...(result.reflection
+          ? {
+              reflection: {
+                lane: result.reflection.lane,
+                body: result.reflection.body,
+                deepWork: result.reflection.deepWork,
+                actualMinutes: result.reflection.actualMinutes,
+              },
+            }
+          : {}),
       });
+      setAppliedConfirm(false);
       invalidateListCache("applications:");
       invalidateListCache("tasks:");
-      navigate(`/applications/${result.id}`);
+      navigate(`/applications/${created.id}`, {
+        state: created.points ? { earnFlash: created.points } : undefined,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not mark applied");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -387,11 +404,16 @@ export default function JobDetail() {
         />
       )}
       {appliedConfirm && (
-        <MarkAppliedDialog
-          title={`${job.company} — ${job.title}`}
+        <CompleteWorkModal
+          title="Mark as applied?"
+          contextLabel={`${job.company} — ${job.title}`}
+          description="This removes the role from Jobs and moves it to Applications."
+          confirmLabel="Mark applied"
+          defaultLane="application"
+          actualTimeMode="gated"
           pending={pending}
           onCancel={() => setAppliedConfirm(false)}
-          onConfirm={(notes) => void confirmApplied(notes)}
+          onConfirm={(result) => void confirmApplied(result)}
         />
       )}
     </article>

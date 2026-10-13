@@ -105,6 +105,18 @@ export function dueLabel(value: string | null | undefined): string | null {
 /** Default apply-by time when none is set (end of day). */
 export const DEFAULT_APPLY_BY_TIME = "23:59";
 
+/** End of local civil day (23:59:59.999) for `YYYY-MM-DD`. */
+export function endOfLocalCivilDayIso(ymd: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim());
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const end = new Date(y, mo - 1, d, 23, 59, 59, 999);
+  if (Number.isNaN(end.getTime())) return null;
+  return end.toISOString();
+}
+
 /** Local time for apply-by `<input type="time">` (defaults to end of day). */
 export function applyByTimeInputValue(value: string | null | undefined): string {
   const time = toTimeInputValue(value);

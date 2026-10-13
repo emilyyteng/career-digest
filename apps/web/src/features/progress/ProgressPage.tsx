@@ -3,10 +3,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   completeTask,
   createProgressReflection,
+  getApplications,
   getProgressDay,
   getProgressHeatmap,
   getProgressOutcome,
   getProgressToday,
+  getTasks,
   getWeeklyGoals,
   patchProgressLeetcode,
   patchProgressReflection,
@@ -18,10 +20,13 @@ import {
   type WeeklyGoalsSnapshot,
 } from "../../api";
 import HistoryCalendar, { type CalendarDayMark } from "./HistoryCalendar";
+import LedgerCompletionsPanel from "./LedgerCompletionsPanel";
+import LedgerPointsPanel from "./LedgerPointsPanel";
 import LeetcodeStepper from "./LeetcodeStepper";
 import ProgressHeatmap from "./ProgressHeatmap";
 import ReflectionAccordion, {
   ReflectionCompose,
+  type ReflectionLinkOption,
 } from "./ReflectionAccordion";
 import TodayStrip from "./TodayStrip";
 import WeeklyGoalsBlock from "./WeeklyGoalsBlock";
@@ -29,7 +34,19 @@ import ModalLayer from "../../ModalLayer";
 import StepActionConfirm from "../../StepActionConfirm";
 import { useBeforeUnloadDraftGuard } from "../../useUnsavedDraftGuard";
 
-/** ~26 weeks — fills the left column when cells stretch to card width. */
+type ProgressTab = "today" | "history" | "ledger";
+type LedgerView = "completions" | "points";
+
+function parseProgressTab(raw: string | null): ProgressTab {
+  if (raw === "history" || raw === "ledger") return raw;
+  return "today";
+}
+
+function parseLedgerView(raw: string | null): LedgerView {
+  return raw === "points" ? "points" : "completions";
+}
+
+/** ~26 weeks — fills half the today band at 50/50 with daily progress. */
 const HEATMAP_DAYS = 182;
 
 function browserTz(): string {
@@ -81,7 +98,8 @@ export default function Progress() {
   const tz = useMemo(() => browserTz(), []);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "history" ? "history" : "today";
+  const tab = parseProgressTab(searchParams.get("tab"));
+  const ledgerView = parseLedgerView(searchParams.get("view"));
 
   const [today, setToday] = useState<ProgressToday | null>(null);
   const [week, setWeek] = useState<ProgressOutcome | null>(null);
@@ -96,6 +114,13 @@ export default function Progress() {
   const [editingDay, setEditingDay] = useState(false);
   const [composeLane, setComposeLane] = useState<ProgressLane>("application");
   const [historyLane, setHistoryLane] = useState<ProgressLane>("application");
+  const [composeDeepWork, setComposeDeepWork] = useState(true);
+  const [historyDeepWork, setHistoryDeepWork] = useState(true);
+  const [composeLinkKey, setComposeLinkKey] = useState("");
+  const [historyLinkKey, setHistoryLinkKey] = useState("");
+  const [composeStepId, setComposeStepId] = useState("");
+  const [historyStepId, setHistoryStepId] = useState("");
+  const [linkOptions, setLinkOptions] = useState<ReflectionLinkOption[]>([]);
   const [composeDirty, setComposeDirty] = useState(false);
   const [pendingLeave, setPendingLeave] = useState<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -226,13 +251,26 @@ export default function Progress() {
     };
   }, [selectedHistory, reloadHistoryDay]);
 
-  function setTab(next: "today" | "history") {
+  function setTab(next: ProgressTab) {
     guardedAction(() => {
       const params = new URLSearchParams(searchParams);
-      if (next === "today") params.delete("tab");
-      else params.set("tab", "history");
+      if (next === "today") {
+        params.delete("tab");
+        params.delete("view");
+      } else {
+        params.set("tab", next);
+        if (next !== "ledger") params.delete("view");
+      }
       setSearchParams(params, { replace: true });
     });
+  }
+
+  function setLedgerView(next: LedgerView) {
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", "ledger");
+    if (next === "completions") params.delete("view");
+    else params.set("view", "points");
+    setSearchParams(params, { replace: true });
   }
 
   async function refreshAfterWrite(date: string) {
@@ -250,18 +288,110 @@ export default function Progress() {
     await refreshAfterWrite(date ?? today!.localDate);
   }
 
-  async function addReflection(lane: ProgressLane, body: string, localDate?: string) {
+  useEffect(() => {
+    void Promise.all([
+      getTasks("open"),
+      getTasks("completed", { includeApplicationCompleted: true }),
+      getApplications("all"),
+    ])
+      .then(([openTasks, completedTasks, apps]) => {
+        const seenTasks = new Set<string>();
+        const taskOpts: ReflectionLinkOption[] = [];
+        for (const t of openTasks.tasks) {
+          if (seenTasks.has(t.id)) continue;
+          seenTasks.add(t.id);
+          const org = t.organization?.trim();
+          const display = org ? `${org} · ${t.title}` : t.title;
+          taskOpts.push({
+            key: `task:${t.id}`,
+            kind: "task",
+            taskId: t.id,
+            label: display,
+            searchText: `${display} task open`.toLowerCase(),
+          });
+        }
+        for (const t of completedTasks.tasks) {
+          if (seenTasks.has(t.id)) continue;
+          seenTasks.add(t.id);
+          const org = t.organization?.trim();
+          const base = org ? `${org} · ${t.title}` : t.title;
+          const display = `${base} · done`;
+          taskOpts.push({
+            key: `task:${t.id}`,
+            kind: "task",
+            taskId: t.id,
+            label: display,
+            searchText: `${base} task done completed`.toLowerCase(),
+          });
+        }
+        const appOpts: ReflectionLinkOption[] = apps.applications
+          .filter((a) => a.status !== "todo")
+          .map((a) => {
+            const company = a.company ?? "Unknown";
+            const title = a.title ?? "Untitled";
+            const label = `${company} · ${title}`;
+            return {
+              key: `app:${a.id}`,
+              kind: "application" as const,
+              applicationId: a.id,
+              label,
+              searchText: `${label} app ${a.status}`.toLowerCase(),
+            };
+          });
+        setLinkOptions([...taskOpts, ...appOpts]);
+      })
+      .catch(() => setLinkOptions([]));
+  }, []);
+
+  async function addReflection(
+    input: {
+      lane: ProgressLane;
+      body: string;
+      deepWork: boolean;
+      actualMinutes?: number | null;
+      taskId: string | null;
+      applicationId: string | null;
+      interviewStepId: string | null;
+    },
+    localDate?: string,
+  ) {
     await createProgressReflection({
-      lane,
-      body,
+      lane: input.lane,
+      body: input.body,
+      deepWork: input.deepWork,
+      actualMinutes: input.actualMinutes ?? null,
+      taskId: input.taskId,
+      applicationId: input.applicationId,
+      interviewStepId: input.interviewStepId,
       localDate: localDate ?? null,
       tz: localDate ? tz : null,
     });
     await refreshAfterWrite(localDate ?? today!.localDate);
   }
 
-  async function saveReflection(id: string, body: string, date: string) {
-    await patchProgressReflection(id, body);
+  async function saveReflection(
+    id: string,
+    patch: {
+      body: string;
+      lane: ProgressLane;
+      deepWork: boolean;
+      taskId: string | null;
+      applicationId: string | null;
+      interviewStepId: string | null;
+    },
+    date: string,
+  ) {
+    await patchProgressReflection(id, {
+      body: patch.body,
+      lane: patch.lane,
+      deepWork: patch.deepWork,
+      taskId: patch.taskId,
+      applicationId: patch.applicationId,
+      interviewStepId: patch.interviewStepId,
+      ...(patch.taskId == null && patch.applicationId == null
+        ? { clearLink: true }
+        : {}),
+    });
     await refreshAfterWrite(date);
   }
 
@@ -290,6 +420,13 @@ export default function Progress() {
         >
           history
         </button>
+        <button
+          type="button"
+          className={`tab ${tab === "ledger" ? "on" : ""}`}
+          onClick={() => setTab("ledger")}
+        >
+          ledger
+        </button>
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -297,9 +434,9 @@ export default function Progress() {
       {tab === "today" ? (
         <>
           <header className="card progress-today-head">
-            <p className="progress-today-label">
+            <span className="progress-kicker">
               Today · {formatShort(today.localDate)}
-            </p>
+            </span>
             <TodayStrip today={today} />
           </header>
 
@@ -366,8 +503,15 @@ export default function Progress() {
                 <ReflectionCompose
                   lane={composeLane}
                   onLaneChange={setComposeLane}
+                  deepWork={composeDeepWork}
+                  onDeepWorkChange={setComposeDeepWork}
+                  linkKey={composeLinkKey}
+                  onLinkKeyChange={setComposeLinkKey}
+                  interviewStepId={composeStepId}
+                  onInterviewStepIdChange={setComposeStepId}
+                  linkOptions={linkOptions}
                   onDirtyChange={handleComposeDirtyChange}
-                  onSubmit={(lane, body) => addReflection(lane, body)}
+                  onSubmit={(input) => addReflection(input)}
                 />
               </div>
               <div className="progress-log-block progress-notes-block">
@@ -375,7 +519,8 @@ export default function Progress() {
                 <ReflectionAccordion
                   reflections={todayDetail?.reflections ?? []}
                   canEdit
-                  onSave={(id, body) => saveReflection(id, body, today.localDate)}
+                  linkOptions={linkOptions}
+                  onSave={(id, patch) => saveReflection(id, patch, today.localDate)}
                 />
               </div>
               <div className="progress-log-block progress-apps-block">
@@ -401,7 +546,7 @@ export default function Progress() {
             </aside>
           </div>
         </>
-      ) : (
+      ) : tab === "history" ? (
         <div className="progress-history">
           {monthAnchor && selectedHistory && (
             <HistoryCalendar
@@ -490,10 +635,15 @@ export default function Progress() {
                     <ReflectionCompose
                       lane={historyLane}
                       onLaneChange={setHistoryLane}
+                      deepWork={historyDeepWork}
+                      onDeepWorkChange={setHistoryDeepWork}
+                      linkKey={historyLinkKey}
+                      onLinkKeyChange={setHistoryLinkKey}
+                      interviewStepId={historyStepId}
+                      onInterviewStepIdChange={setHistoryStepId}
+                      linkOptions={linkOptions}
                       onDirtyChange={handleComposeDirtyChange}
-                      onSubmit={(lane, body) =>
-                        addReflection(lane, body, selectedHistory!)
-                      }
+                      onSubmit={(input) => addReflection(input, selectedHistory!)}
                     />
                   </div>
                 )}
@@ -503,8 +653,9 @@ export default function Progress() {
                   <ReflectionAccordion
                     reflections={historyDetail.reflections}
                     canEdit={editingDay}
-                    onSave={(id, body) =>
-                      saveReflection(id, body, selectedHistory!)
+                    linkOptions={linkOptions}
+                    onSave={(id, patch) =>
+                      saveReflection(id, patch, selectedHistory!)
                     }
                   />
                 </div>
@@ -512,6 +663,32 @@ export default function Progress() {
             )}
           </section>
         </div>
+      ) : (
+        <section className="card progress-ledger">
+          <div className="ledger-subtabs" role="tablist" aria-label="Ledger">
+            <button
+              type="button"
+              className={
+                ledgerView === "completions" ? "ledger-subtab on" : "ledger-subtab"
+              }
+              onClick={() => setLedgerView("completions")}
+            >
+              Completions
+            </button>
+            <button
+              type="button"
+              className={ledgerView === "points" ? "ledger-subtab on" : "ledger-subtab"}
+              onClick={() => setLedgerView("points")}
+            >
+              Points
+            </button>
+          </div>
+          {ledgerView === "completions" ? (
+            <LedgerCompletionsPanel tz={tz} todayYmd={today.localDate} />
+          ) : (
+            <LedgerPointsPanel />
+          )}
+        </section>
       )}
       {leaveConfirmOpen && (
         <ModalLayer className="modal modal-compact" onClose={cancelLeave}>

@@ -15,13 +15,17 @@ import {
   type BoardRefreshStatus,
   type JobCard,
   type JobView,
+  type PointsEarnInfo,
   type RankBatchStatus,
   type RerankQueueSnapshot,
 } from "../../api";
+import CompleteWorkModal, {
+  type CompleteWorkResult,
+} from "../completion/CompleteWorkModal";
+import EarnFlash from "../completion/EarnFlash";
 import { isMismatch, RankBadges, RankNote } from "./RankMark";
 import JobFeedbackButtons from "./JobFeedbackButtons";
 import { invalidateListCache, readListCache, writeListCache } from "../../listCache";
-import MarkAppliedDialog from "./MarkAppliedDialog";
 import FeedbackDialog from "./FeedbackDialog";
 import RerankDialog from "./RerankDialog";
 import { demoGatedTitle, useDemoMode } from "../../demoMode";
@@ -209,6 +213,7 @@ export default function Jobs() {
   } | null>(null);
   const [rerankDialog, setRerankDialog] = useState<JobCard | null>(null);
   const [appliedConfirm, setAppliedConfirm] = useState<JobCard | null>(null);
+  const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
   const [rerankQueue, setRerankQueue] = useState<RerankQueueSnapshot["items"]>([]);
   const [searchInput, setSearchInput] = useState(query);
   const demo = useDemoMode();
@@ -501,16 +506,29 @@ export default function Jobs() {
     }
   }
 
-  async function confirmApplied(notes: string) {
+  async function confirmApplied(result: CompleteWorkResult) {
     if (!appliedConfirm) return;
     const job = appliedConfirm;
-    setAppliedConfirm(null);
+    setPendingId(job.id);
     try {
-      await createApplication({
+      // Same combined payload pattern as task mark-applied: one ledger event.
+      const created = await createApplication({
         postingId: job.id,
         status: "applied",
-        ...(notes ? { notes } : {}),
+        ...(result.notes ? { notes: result.notes } : {}),
+        ...(result.reflection
+          ? {
+              reflection: {
+                lane: result.reflection.lane,
+                body: result.reflection.body,
+                deepWork: result.reflection.deepWork,
+                actualMinutes: result.reflection.actualMinutes,
+              },
+            }
+          : {}),
       });
+      setAppliedConfirm(null);
+      if (created.points) setEarnFlash(created.points);
       invalidateListCache("applications:");
       invalidateListCache("tasks:");
       const data = await reload();
@@ -519,6 +537,8 @@ export default function Jobs() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not mark applied");
+    } finally {
+      setPendingId(null);
     }
   }
 
@@ -583,6 +603,7 @@ export default function Jobs() {
 
   return (
     <section>
+      <EarnFlash earn={earnFlash} onDismiss={() => setEarnFlash(null)} />
       <div className="tabs-row">
         <div className="tabs">
           {TABS.map((tab) => (
@@ -838,11 +859,16 @@ export default function Jobs() {
         />
       )}
       {appliedConfirm && (
-        <MarkAppliedDialog
-          title={`${appliedConfirm.company} — ${appliedConfirm.title}`}
+        <CompleteWorkModal
+          title="Mark as applied?"
+          contextLabel={`${appliedConfirm.company} — ${appliedConfirm.title}`}
+          description="This removes the role from Jobs and moves it to Applications."
+          confirmLabel="Mark applied"
+          defaultLane="application"
+          actualTimeMode="gated"
           pending={pendingId === appliedConfirm.id}
           onCancel={() => setAppliedConfirm(null)}
-          onConfirm={(notes) => void confirmApplied(notes)}
+          onConfirm={(result) => void confirmApplied(result)}
         />
       )}
     </section>

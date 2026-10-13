@@ -12,18 +12,22 @@ function SegmentMark({ met }: { met: boolean }) {
   );
 }
 
-function LaneMark({ met }: { met: boolean }) {
+function DeepWorkBadge({
+  label,
+  met,
+}: {
+  label: string;
+  met: boolean;
+}) {
   return (
-    <span
-      className={met ? "progress-strip-check" : "progress-strip-miss"}
-      aria-hidden="true"
-    >
-      {met ? "✓" : "_"}
+    <span className={met ? "progress-strip-badge is-on" : "progress-strip-badge"}>
+      {label}
+      {met ? " ✓" : ""}
     </span>
   );
 }
 
-/** Shared Home / Progress today strip with per-goal ✓ / _ markers. */
+/** Shared Home / Progress today strip with per-goal ✓ / O markers + deep-work badges. */
 export default function TodayStrip({
   today,
   prefix,
@@ -35,7 +39,8 @@ export default function TodayStrip({
 }) {
   const appsMet = today.applications.earned >= today.applications.cap;
   const lcMet = today.leetcode.earned >= today.leetcode.cap;
-  const anyDeepWork = today.effortApplication || today.effortTechnical;
+  const anyDeepWork =
+    today.effortApplication || today.effortTechnical || today.effortOther;
 
   return (
     <p className={className}>
@@ -51,11 +56,11 @@ export default function TodayStrip({
       </span>
       {" · "}
       <span className={`progress-strip-deep-work${anyDeepWork ? " is-active" : ""}`}>
-        {anyDeepWork ? "deep work" : "no deep work"}
-        {" "}
-        <span className="progress-strip-lane-marks">
-          <LaneMark met={today.effortApplication} />
-          <LaneMark met={today.effortTechnical} />
+        deep work{" "}
+        <span className="progress-strip-badges">
+          <DeepWorkBadge label="app" met={today.effortApplication} />
+          <DeepWorkBadge label="tech" met={today.effortTechnical} />
+          <DeepWorkBadge label="other" met={today.effortOther} />
         </span>
       </span>
     </p>

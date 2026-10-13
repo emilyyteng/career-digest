@@ -169,7 +169,7 @@ export default function WeeklyGoalsBlock({
               )}
               <strong className="weekly-goal-title">{goal.title}</strong>
             </span>
-            <span className="weekly-goal-fraction muted">
+            <span className="weekly-goal-fraction">
               {goal.done}/{goal.total}
             </span>
             <GoalBar done={goal.done} total={goal.total} />

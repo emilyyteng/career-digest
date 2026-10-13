@@ -9,7 +9,8 @@ import {
   type ProgressToday,
   type WeeklyGoalsSnapshot,
 } from "../api";
-import InterviewCountdown from "../features/interviews/InterviewCountdown";
+import DeadlineUrgency, { DeadlineUrgencyPiesOnly } from "../DeadlineUrgency";
+import { endOfLocalCivilDayIso } from "../formatDate";
 import TodayStrip from "../features/progress/TodayStrip";
 import WeeklyGoalsBlock from "../features/progress/WeeklyGoalsBlock";
 import PriorityBadge from "../PriorityBadge";
@@ -124,7 +125,10 @@ function UpcomingRow({
         {showSchedule && (
           <div className="home-interview-deadline">
             <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
-            <InterviewCountdown target={item.at} />
+            <DeadlineUrgency
+              dueAt={item.at}
+              className="deadline-urgency-prominent deadline-urgency-compact deadline-urgency-home"
+            />
           </div>
         )}
       </li>
@@ -146,7 +150,10 @@ function UpcomingRow({
       {showSchedule && (
         <div className="home-interview-deadline">
           <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
-          <InterviewCountdown target={item.at} />
+          <DeadlineUrgency
+            dueAt={item.at}
+            className="deadline-urgency-prominent deadline-urgency-compact deadline-urgency-home"
+          />
         </div>
       )}
     </li>
@@ -297,7 +304,22 @@ export default function Home() {
                     {(section.dayGroups ?? []).map((group) =>
                       group.items.length === 0 ? null : (
                         <div key={group.key} className="home-target-day">
-                          <h5 className="home-target-day-label">{group.label}</h5>
+                          <h5
+                            className={`home-target-day-label${
+                              group.key === "overdue" ? " is-overdue" : ""
+                            }`}
+                          >
+                            <span className="home-target-day-label-text">{group.label}</span>
+                            {(() => {
+                              const dayEnd = endOfLocalCivilDayIso(group.key);
+                              return dayEnd ? (
+                                <DeadlineUrgencyPiesOnly
+                                  endAt={dayEnd}
+                                  className="deadline-urgency-compact"
+                                />
+                              ) : null;
+                            })()}
+                          </h5>
                           <ul className="home-list">
                             {group.items.map((item) => (
                               <UpcomingRow

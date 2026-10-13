@@ -12,6 +12,7 @@ import {
   renameTaskCategory,
   reopenTask,
   setWeeklyAppTargetMember,
+  type PointsEarnInfo,
   type TaskCategoryRow,
   type TaskDueKind,
   type TaskRow,
@@ -26,7 +27,12 @@ import {
   applyByTimeInputValue,
   formatEstimateMinutes,
 } from "../formatDate";
-import InterviewCountdown from "../features/interviews/InterviewCountdown";
+import CompleteWorkModal, {
+  type CompleteWorkResult,
+} from "../features/completion/CompleteWorkModal";
+import EarnFlash from "../features/completion/EarnFlash";
+import { defaultLaneForTask } from "../features/completion/completeWorkActions";
+import DeadlineUrgency from "../DeadlineUrgency";
 import ModalLayer from "../ModalLayer";
 import PriorityBadge from "../PriorityBadge";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
@@ -96,6 +102,8 @@ export default function Tasks() {
   const [removeConfirm, setRemoveConfirm] = useState<TaskRow | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
   const [reopenConfirm, setReopenConfirm] = useState<TaskRow | null>(null);
+  const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
+  const [actualDrafts, setActualDrafts] = useState<Record<string, string>>({});
   const [dueDrafts, setDueDrafts] = useState<
     Record<string, { date: string; time: string; kind: TaskDueKind }>
   >({});
@@ -367,18 +375,32 @@ export default function Tasks() {
     }
   }
 
-  async function confirmComplete() {
+  async function confirmComplete(result: CompleteWorkResult) {
     if (!completeConfirm) return;
     const row = completeConfirm;
-    setCompleteConfirm(null);
+    const application = isApplicationTask(row);
     setPendingId(row.id);
-    setRows((current) => current.filter((item) => item.id !== row.id));
-    setCounts((current) => ({
-      open: Math.max(0, current.open - 1),
-      completed: isApplicationTask(row) ? current.completed : current.completed + 1,
-    }));
     try {
-      await completeTask(row.id);
+      // Complete API creates reflection (awardPoints false) + one ledger event.
+      const completed = await completeTask(row.id, {
+        actualMinutes: application ? null : result.actualMinutes,
+        notes: result.notes,
+        reflection: result.reflection
+          ? {
+              lane: result.reflection.lane,
+              body: result.reflection.body,
+              deepWork: result.reflection.deepWork,
+              actualMinutes: application ? result.actualMinutes : null,
+            }
+          : null,
+      });
+      setCompleteConfirm(null);
+      if (completed.points) setEarnFlash(completed.points);
+      setRows((current) => current.filter((item) => item.id !== row.id));
+      setCounts((current) => ({
+        open: Math.max(0, current.open - 1),
+        completed: application ? current.completed : current.completed + 1,
+      }));
       invalidateListCache("tasks:");
       invalidateListCache("applications:");
     } catch (err) {
@@ -405,6 +427,51 @@ export default function Tasks() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not reopen task");
       await load().catch(() => undefined);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  function actualDraftFor(row: TaskRow): string {
+    if (Object.prototype.hasOwnProperty.call(actualDrafts, row.id)) {
+      return actualDrafts[row.id]!;
+    }
+    return row.actualMinutes != null ? String(row.actualMinutes) : "";
+  }
+
+  function actualSaveEnabled(row: TaskRow): boolean {
+    if (pendingId === row.id) return false;
+    const draft = actualDraftFor(row).trim();
+    const saved = row.actualMinutes != null ? String(row.actualMinutes) : "";
+    if (draft === saved) return false;
+    if (draft === "") return true;
+    const n = Number(draft);
+    return Number.isInteger(n) && n > 0;
+  }
+
+  async function saveActualMinutes(row: TaskRow) {
+    if (!actualSaveEnabled(row)) return;
+    const draft = actualDraftFor(row).trim();
+    const actualMinutes = draft === "" ? null : Number(draft);
+    if (draft !== "" && (!Number.isInteger(actualMinutes) || (actualMinutes ?? 0) <= 0)) {
+      setError("Actual time must be a positive number of minutes");
+      return;
+    }
+    setPendingId(row.id);
+    setError(null);
+    try {
+      const updated = await patchTask(row.id, { actualMinutes });
+      setRows((current) =>
+        current.map((item) => (item.id === row.id ? { ...item, ...updated } : item)),
+      );
+      setActualDrafts((current) => {
+        const next = { ...current };
+        delete next[row.id];
+        return next;
+      });
+      invalidateListCache("tasks:");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update actual time");
     } finally {
       setPendingId(null);
     }
@@ -506,13 +573,48 @@ export default function Tasks() {
             {!application && view === "completed" && (
               <span className="task-category-pill">{row.categoryName}</span>
             )}
+            {!application && view === "completed" && (
+              <span className="task-completed-meta">
+                {row.estimateMinutes != null || row.actualMinutes != null ? (
+                  <span>
+                    {row.estimateMinutes != null
+                      ? `est ${row.estimateMinutes}`
+                      : "est —"}
+                    {" / "}
+                    {row.actualMinutes != null
+                      ? `actual ${row.actualMinutes}`
+                      : "actual —"}
+                  </span>
+                ) : null}
+                {row.estimateMinutes != null &&
+                  row.actualMinutes != null &&
+                  row.actualMinutes !== row.estimateMinutes && (
+                    <span
+                      className={`task-completed-disparity ${
+                        row.actualMinutes > row.estimateMinutes ? "over" : "under"
+                      }`}
+                    >
+                      {row.actualMinutes > row.estimateMinutes
+                        ? `+${row.actualMinutes - row.estimateMinutes}m over`
+                        : `${row.actualMinutes - row.estimateMinutes}m under`}
+                    </span>
+                  )}
+                {row.pointsEarned != null && row.pointsEarned > 0 && (
+                  <span className="task-completed-pts">+{row.pointsEarned} pts</span>
+                )}
+              </span>
+            )}
           </div>
           {view === "open" && row.dueAt && (
             <div className="application-card-aside-countdown task-card-header-aside">
               {deadlineLabel && (
                 <div className="task-card-deadline-label">{deadlineLabel}</div>
               )}
-              <InterviewCountdown target={row.dueAt} />
+              <DeadlineUrgency
+                dueAt={row.dueAt}
+                dueKind={row.dueKind}
+                className="deadline-urgency-prominent deadline-urgency-compact"
+              />
             </div>
           )}
           {view === "open" && (
@@ -687,6 +789,35 @@ export default function Tasks() {
                 </label>
               )}
               {view === "completed" && !application && (
+                <label className="task-completed-actual-edit">
+                  <span>Actual (min)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="15"
+                    value={actualDraftFor(row)}
+                    disabled={pendingId === row.id}
+                    aria-label="Actual time in minutes"
+                    onChange={(event) =>
+                      setActualDrafts((current) => ({
+                        ...current,
+                        [row.id]: event.target.value,
+                      }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={!actualSaveEnabled(row)}
+                    onClick={() => void saveActualMinutes(row)}
+                  >
+                    Save
+                  </button>
+                </label>
+              )}
+              {view === "completed" && !application && (
                 <button
                   type="button"
                   className="secondary"
@@ -726,6 +857,7 @@ export default function Tasks() {
         </div>
       </div>
       {error && <p className="error">{error}</p>}
+      <EarnFlash earn={earnFlash} onDismiss={() => setEarnFlash(null)} />
       {!loaded && rows.length === 0 && <p className="muted">Loading…</p>}
       {view === "open" && loaded && (
         <div className="task-board">
@@ -894,23 +1026,36 @@ export default function Tasks() {
         </ModalLayer>
       )}
       {completeConfirm && (
-        <ModalLayer onClose={() => setCompleteConfirm(null)}>
-          <StepActionConfirm
-            title={
-              isApplicationTask(completeConfirm)
-                ? "Mark as applied?"
-                : "Mark task complete?"
-            }
-            description={
-              isApplicationTask(completeConfirm)
-                ? "This moves the application to Applied with today's date and removes the task from your open list."
-                : "This archives the task to Completed. You can still refer back to it there."
-            }
-            confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
-            onConfirm={() => void confirmComplete()}
-            onCancel={() => setCompleteConfirm(null)}
-          />
-        </ModalLayer>
+        <CompleteWorkModal
+          title={
+            isApplicationTask(completeConfirm)
+              ? "Mark as applied?"
+              : "Mark task complete?"
+          }
+          contextLabel={
+            completeConfirm.organization
+              ? `${completeConfirm.organization} · ${completeConfirm.title}`
+              : completeConfirm.title
+          }
+          description={
+            isApplicationTask(completeConfirm)
+              ? "This moves the application to Applied with today's date and removes the task from your open list."
+              : "This archives the task to Completed. You can still refer back to it there."
+          }
+          confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
+          defaultLane={defaultLaneForTask(isApplicationTask(completeConfirm))}
+          actualTimeMode={
+            isApplicationTask(completeConfirm) ? "gated" : "task"
+          }
+          estimateMinutes={
+            isApplicationTask(completeConfirm)
+              ? null
+              : completeConfirm.estimateMinutes
+          }
+          pending={pendingId === completeConfirm.id}
+          onCancel={() => setCompleteConfirm(null)}
+          onConfirm={(result) => void confirmComplete(result)}
+        />
       )}
       {reopenConfirm && (
         <ModalLayer onClose={() => setReopenConfirm(null)}>

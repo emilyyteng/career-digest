@@ -3,11 +3,15 @@ import { apiClient } from "./test/apiClient.js";
 import {
   seedApplication,
   seedCompany,
+  seedInterviewThread,
   seedLeetcodeDaily,
+  seedManualApplication,
   seedRankedPosting,
   seedReflectionLog,
+  seedTask,
 } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
+import { pool } from "./db.js";
 
 const TZ = "America/Los_Angeles";
 const FIXED_NOW = new Date("2025-08-10T20:00:00.000Z");
@@ -50,6 +54,32 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body.leetcode).toMatchObject({ raw: 2, earned: 2, cap: 3 });
     expect(res.body.effortApplication).toBe(false);
     expect(res.body.effortTechnical).toBe(true);
+    expect(res.body.effortOther).toBe(false);
+    expect(res.body.deepWork).toBe(true);
+  });
+
+  it("GET /api/progress/today effortOther from other-lane deep work only", async () => {
+    await seedReflectionLog({
+      lane: "other",
+      body: "Journaled after networking coffee",
+      deepWork: true,
+      createdAt: new Date("2025-08-10T21:00:00.000Z"),
+    });
+    await seedReflectionLog({
+      lane: "application",
+      body: "Quick note — not deep work",
+      deepWork: false,
+      createdAt: new Date("2025-08-10T21:30:00.000Z"),
+    });
+
+    const res = await apiClient()
+      .get("/api/progress/today")
+      .query({ tz: TZ })
+      .expect(200);
+
+    expect(res.body.effortOther).toBe(true);
+    expect(res.body.effortApplication).toBe(false);
+    expect(res.body.effortTechnical).toBe(false);
     expect(res.body.deepWork).toBe(true);
   });
 
@@ -102,7 +132,65 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(res.body).toMatchObject({
       lane: "application",
       body: "Drafted project story",
+      deepWork: true,
+      taskId: null,
+      applicationId: null,
     });
+  });
+
+  it("POST /api/progress/reflections accepts other lane, deepWork off, and task link", async () => {
+    const task = await seedTask({
+      category: "misc",
+      title: "Networking coffee",
+    });
+
+    const res = await apiClient()
+      .post("/api/progress/reflections")
+      .send({
+        lane: "other",
+        body: "Followed up after chat",
+        deepWork: false,
+        taskId: task.id,
+      })
+      .expect(201);
+
+    expect(res.body).toMatchObject({
+      lane: "other",
+      body: "Followed up after chat",
+      deepWork: false,
+      taskId: task.id,
+      taskTitle: "Networking coffee",
+      applicationId: null,
+    });
+
+    const today = await apiClient()
+      .get("/api/progress/today")
+      .query({ tz: TZ })
+      .expect(200);
+    expect(today.body.effortOther).toBe(false);
+
+    const linked = await apiClient().get(`/api/tasks/${task.id}/reflections`).expect(200);
+    expect(linked.body.reflections).toHaveLength(1);
+    expect(linked.body.reflections[0].id).toBe(res.body.id);
+  });
+
+  it("POST /api/progress/reflections rejects linking task and application together", async () => {
+    const task = await seedTask({ title: "Xor task" });
+    const app = await seedManualApplication({
+      status: "applied",
+      company: "Xor Co",
+      title: "Intern",
+    });
+
+    await apiClient()
+      .post("/api/progress/reflections")
+      .send({
+        lane: "application",
+        body: "Both links",
+        taskId: task.id,
+        applicationId: app.id,
+      })
+      .expect(400);
   });
 
   it("GET /api/progress/outcome aggregates week totals", async () => {
@@ -265,5 +353,120 @@ describe.skipIf(!integrationReady)("progress API", () => {
       .expect(200);
 
     expect(updated.body.body).toBe("Edited note with more detail");
+  });
+
+  it("PATCH /api/progress/reflections/:id toggles deep work and links to application", async () => {
+    const app = await seedManualApplication({
+      status: "applied",
+      company: "Link Co",
+      title: "SWE Intern",
+    });
+    const created = await apiClient()
+      .post("/api/progress/reflections")
+      .send({ lane: "application", body: "Story draft", deepWork: true })
+      .expect(201);
+
+    const updated = await apiClient()
+      .patch(`/api/progress/reflections/${created.body.id}`)
+      .send({ deepWork: false, applicationId: app.id, lane: "other" })
+      .expect(200);
+
+    expect(updated.body).toMatchObject({
+      deepWork: false,
+      lane: "other",
+      applicationId: app.id,
+      applicationTitle: "SWE Intern",
+      applicationCompany: "Link Co",
+      taskId: null,
+    });
+
+    const unlinked = await apiClient()
+      .get("/api/progress/reflections/unlinked")
+      .expect(200);
+    expect(
+      unlinked.body.reflections.some((row: { id: string }) => row.id === created.body.id),
+    ).toBe(false);
+
+    const appRefl = await apiClient()
+      .get(`/api/applications/${app.id}/reflections`)
+      .expect(200);
+    expect(appRefl.body.reflections).toHaveLength(1);
+  });
+
+  it("GET /api/progress/reflections/unlinked lists only unassociated rows", async () => {
+    const task = await seedTask({ title: "Linked task" });
+    const linked = await seedReflectionLog({
+      lane: "technical",
+      body: "Linked to task",
+      taskId: task.id,
+    });
+    const free = await seedReflectionLog({
+      lane: "other",
+      body: "Floating note",
+    });
+
+    const res = await apiClient()
+      .get("/api/progress/reflections/unlinked")
+      .query({ limit: 50 })
+      .expect(200);
+
+    const ids = res.body.reflections.map((row: { id: string }) => row.id);
+    expect(ids).toContain(free.id);
+    expect(ids).not.toContain(linked.id);
+  });
+
+  it("application-linked reflection can optionally attach an interview step", async () => {
+    const app = await seedManualApplication({
+      status: "interviewing",
+      company: "Stripe",
+      title: "SWE Intern",
+    });
+    const { threadId, stepId } = await seedInterviewThread({
+      primaryApplicationId: app.id,
+      stepTitle: "Phone screen",
+    });
+    await pool.query(
+      `UPDATE interview_threads SET status = 'resolved', resolution = 'accepted', resolved_at = now()
+       WHERE id = $1`,
+      [threadId],
+    );
+
+    const steps = await apiClient()
+      .get(`/api/applications/${app.id}/interview-steps`)
+      .expect(200);
+    expect(steps.body.steps).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: stepId,
+          title: "Phone screen",
+          threadStatus: "resolved",
+        }),
+      ]),
+    );
+
+    const created = await apiClient()
+      .post("/api/progress/reflections")
+      .send({
+        lane: "application",
+        body: "Debriefed phone screen",
+        applicationId: app.id,
+        interviewStepId: stepId,
+      })
+      .expect(201);
+
+    expect(created.body).toMatchObject({
+      applicationId: app.id,
+      interviewStepId: stepId,
+      interviewStepTitle: "Phone screen",
+    });
+
+    await apiClient()
+      .post("/api/progress/reflections")
+      .send({
+        lane: "application",
+        body: "Step without application",
+        interviewStepId: stepId,
+      })
+      .expect(400);
   });
 });

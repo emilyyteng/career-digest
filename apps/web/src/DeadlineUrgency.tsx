@@ -3,11 +3,15 @@ import type { TaskDueKind } from "./api";
 
 const HALF_DAY_MS = 12 * 3600_000;
 const MAX_CHUNKS = 14;
+const FIVE_DAYS_MS = 5 * 24 * 3600_000;
 
-function urgencyTone(ms: number): "overdue" | "urgent" | "soon" | "ok" {
+export type DeadlineUrgencyTone = "overdue" | "urgent" | "soon" | "ahead" | "ok";
+
+export function urgencyTone(ms: number): DeadlineUrgencyTone {
   if (ms <= 0) return "overdue";
   if (ms < 6 * 3600_000) return "urgent";
   if (ms < 24 * 3600_000) return "soon";
+  if (ms < FIVE_DAYS_MS) return "ahead";
   return "ok";
 }
 
@@ -42,7 +46,7 @@ export function buildDeadlineCircles(ms: number): Array<{ key: number; fill: num
   return circles;
 }
 
-function PieCircle({ fill, tone }: { fill: number; tone: string }) {
+export function PieCircle({ fill, tone }: { fill: number; tone: string }) {
   const pct = Math.max(0, Math.min(1, fill)) * 100;
   return (
     <span
@@ -55,33 +59,78 @@ function PieCircle({ fill, tone }: { fill: number; tone: string }) {
   );
 }
 
-/**
- * Inline deadline urgency for task detail headers.
- * Renders nothing for targets / undated tasks.
- */
-export default function DeadlineUrgency({
-  dueAt,
-  dueKind,
+/** Pie circles only (no countdown text). Updates every second when `endAt` is set. */
+export function DeadlineUrgencyPiesOnly({
+  endAt,
+  className,
 }: {
-  dueAt: string | null | undefined;
-  dueKind: TaskDueKind | null | undefined;
+  endAt: string;
+  className?: string;
 }) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (dueKind !== "deadline" || !dueAt) return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [dueAt, dueKind]);
+  }, [endAt]);
 
-  if (dueKind !== "deadline" || !dueAt) return null;
+  const ms = new Date(endAt).getTime() - now;
+  const tone = urgencyTone(ms);
+  const circles = buildDeadlineCircles(ms);
+  if (ms <= 0 || circles.length === 0) return null;
+
+  return (
+    <span
+      className={["deadline-pies", `deadline-tone-${tone}`, className]
+        .filter(Boolean)
+        .join(" ")}
+      aria-hidden="true"
+    >
+      {circles.map((c) => (
+        <PieCircle key={c.key} fill={c.fill} tone={tone} />
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Inline 12h pie-circles + countdown for dated tasks (deadline or target).
+ * Renders nothing when undated.
+ */
+export default function DeadlineUrgency({
+  dueAt,
+  dueKind,
+  className,
+}: {
+  dueAt: string | null | undefined;
+  dueKind?: TaskDueKind | null | undefined;
+  /** e.g. `deadline-urgency-prominent` for card / home aside sizing */
+  className?: string;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+  const dated = Boolean(dueAt);
+
+  useEffect(() => {
+    if (!dated) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [dated, dueAt]);
+
+  // dueKind kept for call-site clarity; urgency treats deadline and target alike.
+  void dueKind;
+
+  if (!dueAt) return null;
 
   const ms = new Date(dueAt).getTime() - now;
   const tone = urgencyTone(ms);
   const circles = buildDeadlineCircles(ms);
 
   return (
-    <span className="deadline-urgency-inline" role="timer" aria-live="polite">
+    <span
+      className={["deadline-urgency-inline", className].filter(Boolean).join(" ")}
+      role="timer"
+      aria-live="polite"
+    >
       {circles.length > 0 && (
         <span className={`deadline-pies deadline-tone-${tone}`} aria-hidden="true">
           {circles.map((c) => (

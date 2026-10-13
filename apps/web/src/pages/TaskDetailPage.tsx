@@ -4,16 +4,28 @@ import {
   completeTask,
   getTask,
   getTaskCategories,
+  getTaskReflections,
   getWeeklyGoals,
   patchTask,
   reopenTask,
   setWeeklyAppTargetMember,
+  type PointsEarnInfo,
+  type ProgressReflection,
   type TaskCategoryRow,
   type TaskDueKind,
   type TaskPriority,
   type TaskRow,
+  type TaskSubtaskRow,
 } from "../api";
 import DeadlineUrgency from "../DeadlineUrgency";
+import CompleteWorkModal, {
+  type CompleteWorkResult,
+} from "../features/completion/CompleteWorkModal";
+import EarnFlash from "../features/completion/EarnFlash";
+import {
+  defaultLaneForTask,
+} from "../features/completion/completeWorkActions";
+import ReflectionsPanel from "../features/reflections/ReflectionsPanel";
 import {
   applyByTimeInputValue,
   combineApplyByDateTime,
@@ -29,7 +41,6 @@ import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 import StepActionConfirm from "../StepActionConfirm";
 import EditSubtasksModal from "./EditSubtasksModal";
 import TaskSubtasksPanel from "./TaskSubtasksPanel";
-import type { TaskSubtaskRow } from "../api";
 
 function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -57,10 +68,12 @@ export default function TaskDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
   const [completeConfirm, setCompleteConfirm] = useState(false);
   const [reopenConfirm, setReopenConfirm] = useState(false);
   const [editingSubtasks, setEditingSubtasks] = useState(false);
   const [weeklyTarget, setWeeklyTarget] = useState(false);
+  const [reflections, setReflections] = useState<ProgressReflection[]>([]);
 
   const [title, setTitle] = useState("");
   const [organization, setOrganization] = useState("");
@@ -74,10 +87,13 @@ export default function TaskDetailPage() {
   const [categoryId, setCategoryId] = useState("");
   const [priority, setPriority] = useState<TaskPriority | null>(null);
   const [estimateMinutes, setEstimateMinutes] = useState("");
+  const [actualMinutes, setActualMinutes] = useState("");
 
   const isApplication = task?.category === "application";
   const showDescriptionEditor = Boolean(isApplication && task && !task.postingId);
   const backTo = listReturnTo(location, "/tasks");
+  const canEditActual =
+    Boolean(task && task.status === "completed" && task.category === "misc");
 
   function hydrateForm(row: TaskRow) {
     setTitle(row.title);
@@ -92,13 +108,19 @@ export default function TaskDetailPage() {
     setCategoryId(row.categoryId);
     setPriority(row.priority ?? null);
     setEstimateMinutes(row.estimateMinutes != null ? String(row.estimateMinutes) : "");
+    setActualMinutes(row.actualMinutes != null ? String(row.actualMinutes) : "");
   }
 
   async function load() {
     if (!taskId) return;
-    const [row, cats] = await Promise.all([getTask(taskId), getTaskCategories()]);
+    const [row, cats, refl] = await Promise.all([
+      getTask(taskId),
+      getTaskCategories(),
+      getTaskReflections(taskId),
+    ]);
     setTask(row);
     hydrateForm(row);
+    setReflections(refl.reflections);
     setMiscCategories(cats.categories.filter((c) => c.kind === "misc"));
     if (row.category === "application") {
       try {
@@ -129,6 +151,19 @@ export default function TaskDetailPage() {
         setSaving(false);
         return;
       }
+      let actual: number | null | undefined = undefined;
+      if (canEditActual) {
+        actual =
+          actualMinutes.trim() === "" ? null : Number(actualMinutes.trim());
+        if (
+          actualMinutes.trim() !== "" &&
+          (!Number.isInteger(actual) || (actual ?? 0) <= 0)
+        ) {
+          setError("Actual time must be a positive number of minutes");
+          setSaving(false);
+          return;
+        }
+      }
       const body: Record<string, unknown> = {
         title: title.trim(),
         organization: organization.trim() || null,
@@ -139,6 +174,9 @@ export default function TaskDetailPage() {
         priority,
         estimateMinutes: estimate,
       };
+      if (canEditActual) {
+        body.actualMinutes = actual ?? null;
+      }
       if (!isApplication && categoryId !== task.categoryId) {
         body.categoryId = categoryId;
       }
@@ -164,21 +202,41 @@ export default function TaskDetailPage() {
     }
   }
 
-  async function onComplete() {
+  async function onComplete(result: CompleteWorkResult) {
     if (!task) return;
-    setCompleteConfirm(false);
+    setSaving(true);
     try {
-      const row = await completeTask(task.id);
+      const row = await completeTask(task.id, {
+        actualMinutes: task.category === "application" ? null : result.actualMinutes,
+        notes: result.notes,
+        reflection: result.reflection
+          ? {
+              lane: result.reflection.lane,
+              body: result.reflection.body,
+              deepWork: result.reflection.deepWork,
+              actualMinutes:
+                task.category === "application" ? result.actualMinutes : null,
+            }
+          : null,
+      });
+      setCompleteConfirm(false);
       invalidateListCache("tasks:");
       invalidateListCache("applications:");
       if (row.category === "application" && row.applicationId) {
-        navigate(`/applications/${row.applicationId}`);
+        navigate(`/applications/${row.applicationId}`, {
+          state: row.points ? { earnFlash: row.points } : undefined,
+        });
         return;
       }
+      if (row.points) setEarnFlash(row.points);
       setTask(row);
       hydrateForm(row);
+      const refl = await getTaskReflections(task.id);
+      setReflections(refl.reflections);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not complete");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -231,6 +289,7 @@ export default function TaskDetailPage() {
 
   return (
     <article className="task-detail-page">
+      <EarnFlash earn={earnFlash} onDismiss={() => setEarnFlash(null)} />
       <header className="task-detail-header">
         <p className="task-detail-back muted">
           <Link to={backTo}>← Tasks</Link>
@@ -293,12 +352,39 @@ export default function TaskDetailPage() {
               <span>{kindLabel}</span>
             </>
           )}
-          {task.dueKind === "deadline" && task.dueAt && (
+          {task.status === "open" && task.dueAt && (
             <>
               <span className="task-detail-meta-dot">·</span>
               <DeadlineUrgency dueAt={task.dueAt} dueKind={task.dueKind} />
             </>
           )}
+          {task.status === "completed" &&
+            !isApplication &&
+            (task.estimateMinutes != null ||
+              task.actualMinutes != null ||
+              (task.pointsEarned != null && task.pointsEarned > 0)) && (
+              <>
+                <span className="task-detail-meta-dot">·</span>
+                <span className="task-completed-meta">
+                  {(task.estimateMinutes != null || task.actualMinutes != null) && (
+                    <span>
+                      {task.estimateMinutes != null
+                        ? `est ${task.estimateMinutes}`
+                        : "est —"}
+                      {" / "}
+                      {task.actualMinutes != null
+                        ? `actual ${task.actualMinutes}`
+                        : "actual —"}
+                    </span>
+                  )}
+                  {task.pointsEarned != null && task.pointsEarned > 0 && (
+                    <span className="task-completed-pts">
+                      +{task.pointsEarned} pts
+                    </span>
+                  )}
+                </span>
+              </>
+            )}
           {task.postingId && (
             <>
               <span className="task-detail-meta-dot">·</span>
@@ -332,7 +418,7 @@ export default function TaskDetailPage() {
               </button>
             )}
           </div>
-          {earliestSub?.dueAt && earliestKindLabel && (
+          {task.status === "open" && earliestSub?.dueAt && earliestKindLabel && (
             <p className="task-detail-subtasks-earliest">
               <span>
                 {earliestKindLabel}: {formatDueDateMdY(earliestSub.dueAt)}
@@ -340,7 +426,7 @@ export default function TaskDetailPage() {
               <span className="task-detail-meta-dot">·</span>
               <DeadlineUrgency
                 dueAt={earliestSub.dueAt}
-                dueKind="deadline"
+                dueKind={earliestSub.dueKind}
               />
             </p>
           )}
@@ -444,35 +530,57 @@ export default function TaskDetailPage() {
                   </div>
                 </>
               ) : (
-                <div className="task-detail-meta-row">
-                  <label>
-                    Category
-                    <select
-                      value={categoryId}
-                      onChange={(e) => setCategoryId(e.target.value)}
-                    >
-                      {miscCategories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Priority
-                    <PrioritySelect value={priority} onChange={setPriority} />
-                  </label>
-                  <label>
-                    Estimate (min)
-                    <input
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={estimateMinutes}
-                      onChange={(e) => setEstimateMinutes(e.target.value)}
-                    />
-                  </label>
-                </div>
+                <>
+                  <div
+                    className={
+                      canEditActual
+                        ? "task-detail-meta-row task-detail-meta-row-4"
+                        : "task-detail-meta-row"
+                    }
+                  >
+                    <label>
+                      Category
+                      <select
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                      >
+                        {miscCategories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Priority
+                      <PrioritySelect value={priority} onChange={setPriority} />
+                    </label>
+                    <label>
+                      Estimate (min)
+                      <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={estimateMinutes}
+                        onChange={(e) => setEstimateMinutes(e.target.value)}
+                      />
+                    </label>
+                    {canEditActual && (
+                      <label>
+                        Actual (min)
+                        <input
+                          type="number"
+                          min={1}
+                          step={1}
+                          inputMode="numeric"
+                          placeholder="15"
+                          value={actualMinutes}
+                          onChange={(e) => setActualMinutes(e.target.value)}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </>
               )}
               <div className="task-detail-due-row">
                 <label>
@@ -526,22 +634,18 @@ export default function TaskDetailPage() {
           </form>
         </section>
 
-        <section className="task-detail-section task-detail-section-fill">
-          <div className="task-detail-stickies-head">
-            <h3>Reflections</h3>
-            <span className="task-detail-pill muted">coming later</span>
-          </div>
-          <div className="task-detail-stickies-scroll">
-            <p className="muted">
-              Stickies linked to this task will show here after the reflections milestone.
-            </p>
-          </div>
-          <div className="task-detail-form-actions">
-            <button type="button" className="secondary" disabled>
-              Add reflection…
-            </button>
-          </div>
-        </section>
+        <ReflectionsPanel
+          host={{
+            kind: "task",
+            taskId: task.id,
+            defaultLane: isApplication ? "application" : "other",
+          }}
+          reflections={reflections}
+          onChanged={() => {
+            void load().catch((err: Error) => setError(err.message));
+          }}
+          onError={(message) => setError(message)}
+        />
       </div>
 
       {editingSubtasks && (
@@ -555,20 +659,25 @@ export default function TaskDetailPage() {
           }}
         />
       )}
-      {completeConfirm && (
-        <ModalLayer onClose={() => setCompleteConfirm(false)}>
-          <StepActionConfirm
-            title={isApplication ? "Mark applied?" : "Complete task?"}
-            description={
-              isApplication
-                ? "This creates/updates the application tracker row and removes the task from Open."
-                : "The task will move to Completed."
-            }
-            confirmLabel={isApplication ? "Mark applied" : "Complete"}
-            onCancel={() => setCompleteConfirm(false)}
-            onConfirm={() => void onComplete()}
-          />
-        </ModalLayer>
+      {completeConfirm && task && (
+        <CompleteWorkModal
+          title={isApplication ? "Mark applied?" : "Complete task?"}
+          contextLabel={
+            task.organization ? `${task.organization} · ${task.title}` : task.title
+          }
+          description={
+            isApplication
+              ? "This creates/updates the application tracker row and removes the task from Open."
+              : "The task will move to Completed."
+          }
+          confirmLabel={isApplication ? "Mark applied" : "Complete"}
+          defaultLane={defaultLaneForTask(isApplication)}
+          actualTimeMode={isApplication ? "gated" : "task"}
+          estimateMinutes={isApplication ? null : task.estimateMinutes}
+          pending={saving}
+          onCancel={() => setCompleteConfirm(false)}
+          onConfirm={(result) => void onComplete(result)}
+        />
       )}
       {reopenConfirm && (
         <ModalLayer onClose={() => setReopenConfirm(false)}>
