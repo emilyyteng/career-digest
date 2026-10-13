@@ -47,7 +47,7 @@ For visual and interaction conventions, `docs/design-system.md` overrides ticket
 7. **Close the milestone** when all its tickets are Done: update the board and roadmap status, then add a changelog entry in its own commit. A bug found later in a closed milestone gets a ticket in that milestone's folder; the milestone stays Done, and the board shows the open ticket.
 8. **Close the feature** when every milestone is Done and every prototype the feature created is deleted (routes included).
 
-Prototype cleanup is feature work, not maintenance. Prototypes may be deleted when their area is revisited or together in a cleanup ticket near the end of the feature; the feature, not each milestone, waits on it.
+Prototype cleanup is feature work, not maintenance. A prototype is deleted once no open ticket references it, or together with others in a cleanup ticket near the end of the feature (see Prototypes → Lifecycle); the feature, not each milestone, waits on it.
 
 **If a requirement is missing, ambiguous, or contradicts the spec: stop.** Ask the user, record the answer in the spec (decisions log), then continue. Do not invent behavior, and do not quietly pick one side of a contradiction.
 
@@ -136,7 +136,7 @@ Prototypes are exploratory and throwaway. They answer design questions listed in
 - **Labeled:** every prototype page shows a visible "Experimental prototype" banner, and its file header names the ticket and the design questions.
 - **Variants:** every variant must satisfy every locked requirement in the spec. Variants differ only on the ticket's named design questions. Before handing off, check each variant against the spec.
 - **Shared tooling:** use `apps/web/src/prototype/PrototypeSwitcher.tsx` for variant switching. Don't copy styles or switchers per milestone.
-- **Lifecycle:** once the user locks a decision, record the verdict and the prototype's last commit hash in the ticket. Delete the prototype (routes included) when its area is revisited or in the feature's cleanup ticket, before the feature closes. Git history is the archive.
+- **Lifecycle:** once the user locks a decision, record the verdict and the prototype's last commit hash in the ticket. **Keep a prototype while any open ticket still uses it as a reference**, even after the prototype ticket closes and across several build tickets; each build ticket names the prototype page it follows. Delete it (routes included) only after the last ticket that references it is Done, either then or in the feature's cleanup ticket, and before the feature closes. A prototype that a newer one replaces is deleted once the newer one's verdict is recorded. Git history is the archive.
 
 ## Docs rules
 

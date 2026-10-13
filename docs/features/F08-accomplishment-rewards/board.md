@@ -60,7 +60,7 @@ No open tickets.
 | [M5-03](./tickets/M5/M5-03-points-by-task-category.md) | Points breakdown splits tasks by task category | build | Ready | M4-02 done, so unblocked |
 | [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | build | Ready | M4-01 done, so unblocked |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | prototype | Ready | Mock numbers from R5.25–R5.26 |
-| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Draft | Acceptance criteria drafted; 7 open questions |
+| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Draft | After M5-05; 2 open questions tied to the build order |
 | [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | build | Draft | M5-06 design in; finalize acceptance criteria |
 | [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | build | Ready | M4-03 done, so unblocked; includes the `streak` category migration |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Draft | After M5-07 |

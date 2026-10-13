@@ -175,7 +175,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 **Progress weekly block** (content and behavior only; the page layout is M8's)
 
 - **R5.3** (Established) The Progress weekly goals block keeps its bars, counts and ahead/behind pace.
-- **R5.4** (Established) On Progress, the apps goal's members appear as a plain list, with no checkmarks and no untag control. Membership is managed only on Tasks, because a checkbox is too easy to misfire after applying.
+- **R5.4** (Established) On Progress, the apps goal's members appear as a plain list, with no checkmarks and no untag control. Membership is managed only on Tasks, because a checkbox is too easy to misfire after applying. Each member links to its task's detail page; applied members carry a green `applied` tag and are listed after the open ones (2026-10-13).
 - **R5.5** (Established) The LC goal has an optional label (for example a grind track):
   - it's editable on Progress, up to 50 characters
   - Home shows it in the target row as `Weekly LC goal · Grind 75 Week 4`
@@ -323,7 +323,7 @@ M8 follows M7, so Progress is redesigned knowing what Rewards covers.
 
 - **RX.1** (Established) Remove the Prototype nav tab (`App.tsx`). Prototypes are reached by URL only.
 - **RX.2** (Established) New F08 prototypes live under `apps/web/src/prototype/f08-<topic>/`, at routes `/prototype/f08/<topic>`, per `AGENTS.md`.
-- **RX.3** (Established) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
+- **RX.3** (Established; clarified 2026-10-13) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it: `f08-weekly` stays until M5-01, M5-02, M5-05, M5-08 and M5-09 are Done. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
 
 ## Behavior rules
 

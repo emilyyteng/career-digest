@@ -67,4 +67,4 @@ The existing `WeeklyGoalsBlock`, `LeetcodeStepper`, `TodayStrip`, Home Upcoming 
 
 **Visual direction:** F09 Q1–Q5 stay open. Interim working decisions for M5 (prototype direction W): flat elevation, tinted purple primary (Save) buttons, and toggles such as the weekly/misc switch in the goal-bar blue. Recorded in `docs/design-system.md`; preferences in the F09 spec.
 
-**Closed 2026-10-13.** The superseded `prototype/m5` folder and its routes are deleted (RX.3); git history keeps them. The `f08-weekly` prototype stays as the reference for the M5 builds and is deleted when its area is revisited or in F08's cleanup (RX.3). The user wants the weekly streak more visible than these placeholders; that's M5-07 Q5. Last prototype commit: `f0a5fd2`.
+**Closed 2026-10-13.** The superseded `prototype/m5` folder and its routes are deleted (RX.3); git history keeps them. The `f08-weekly` prototype stays as the reference for the M5 builds until M5-01, M5-02, M5-05, M5-08 and M5-09 are all Done (RX.3, `AGENTS.md` → Prototypes → Lifecycle). The user wants the weekly streak more visible than these placeholders; that's M5-07 Q5. Last prototype commit: `f0a5fd2`.

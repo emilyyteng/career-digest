@@ -1,7 +1,7 @@
 # M5-08: Progress weekly goals block
 
-**Status:** Draft (acceptance criteria drafted 2026-10-13; waits on the open questions below)
-**Blocked by:** (none; M5-06 done). 12/10 needs M5-05's uncapping to be reachable (open question 1)
+**Status:** Draft (acceptance criteria drafted 2026-10-13; waits on M5-05 and open questions 2–3)
+**Blocked by:** M5-05 (uncapped LC progress, so 12/10 is verified with real data; decided 2026-10-13). M5-06 done
 **Implements:** R5.3, R5.4, R5.5 (Progress), R5.13 (label clears), R5.14 (display) (from `../../spec.md`)
 **Type:** build
 
@@ -23,7 +23,7 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 **Apps goal row**
 
 - Head line: `Weekly apps`, `done/total`, pace text (same rules as LC), and a bar. With 0 tagged: no bar and no pace, just `No tagged applications. Tag application tasks as “Target this week” on Tasks.`
-- Members are a plain list, `Organization · Title`, with an `applied` tag on completed ones, and a `Tag or untag on Tasks.` hint. There's no checkbox (which today completes the task with no modal) and no Untag button ([`WeeklyGoalsBlock.tsx` L82–118](../../../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx)) (R5.4). The Progress page's `onCompleteTask` handler goes with them.
+- Members are a plain list, `Organization · Title`, each linking to its task's detail page (`/tasks/:id`). Applied members carry the green uppercase `applied` tag from the prototype and are listed after the open ones; within each group, the API's order is kept. A `Tag or untag on Tasks.` hint follows the list. There's no checkbox (which today completes the task with no modal) and no Untag button ([`WeeklyGoalsBlock.tsx` L82–118](../../../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx)) (R5.4). The Progress page's `onCompleteTask` handler goes with them.
 
 **Label storage and API (R5.5, R5.13, B6)**
 
@@ -32,25 +32,26 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 - A new week's LC row starts with no label, while the target still carries forward (R5.13). Past weeks keep their label in the database, but it isn't shown anywhere.
 - The label shows only in this block and in the Home target row (M5-09). Home's compact hero block doesn't show it.
 
-**Look (`docs/design-system.md` → Interim decisions):** flat, tinted purple for Save, other buttons as quiet secondary or ghost buttons. See open question 4 for how those variants are added.
+**Look (`docs/design-system.md` → Interim decisions):** flat; Save is a tinted purple primary; Cancel, `+ Add label` and `Edit label` are ghost buttons. These come from one shared set of interim button classes built on `.secondary` (tinted primary, ghost; decided 2026-10-13). Whichever ticket needs them first adds them, reused by M5-01, M5-02 and M5-09, and logs them in the F09 spec's Current behavior table for F09's pass. The target field keeps today's size (logged in F09).
 
 **Not in this ticket:**
 - The LC stepper and its type × tier control (M5-01).
-- Uncapping LC progress (M5-05 item 5).
-- The weekly streak display (open question 3).
+- Uncapping LC progress (M5-05 item 5; this ticket waits for it).
+- The weekly streak display (open question 3: Proposed to move into this ticket).
 - Home's compact block and target rows (M5-09).
 
 ## Acceptance criteria
 
 **Apps list**
 - [ ] No checkbox and no Untag control. The page no longer completes or untags a task from this block.
-- [ ] Completed members show the `applied` tag; open members show none.
+- [ ] Each member links to its task's detail page.
+- [ ] Applied members show the green `applied` tag and are listed after the open ones; open members show no tag.
 - [ ] 0 tagged: the empty text shows, with no bar and no pace.
 
 **LC label**
 - [ ] With no label, `+ Add label` shows. Saving `Grind 75 Week 4` shows that text, and it's still there after a reload.
 - [ ] `Edit label` opens the field prefilled. Escape or Cancel leaves the saved label unchanged; Enter or Save saves.
-- [ ] The counter tracks the length. The field stops at 50 characters, and the API rejects 51 with 400 and no change.
+- [ ] The counter tracks the length in user-visible characters (an emoji counts as one, in the counter and in the database's `char_length`). The field stops at 50 characters, and the API rejects 51 with 400 and no change.
 - [ ] Leading and trailing spaces are trimmed. Saving an empty or all-spaces label clears it, and `+ Add label` returns.
 - [ ] A new week starts with no label and the previous week's target (test across a week boundary in a non-UTC time zone, B2).
 - [ ] The apps goal can't carry a label: the API ignores or rejects one, and the database check refuses it.
@@ -59,7 +60,7 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 **Count, bar and pace**
 - [ ] 4/10 midweek shows the pace from the API (`n behind`, `n ahead` or `on track`).
 - [ ] 10/10 shows `met` and a full bar with no tail.
-- [ ] 12/10 shows `12/10`, `met`, a full bar and a `+2` tail. (Before M5-05 ships, verified with a seeded row; open question 1.)
+- [ ] 12/10, reached through the app, shows `12/10`, `met`, a full bar and a `+2` tail.
 - [ ] Pace text has normal weight in every state.
 
 **Target field**
@@ -70,15 +71,20 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 - [ ] Matches the M5-06 A2 prototype in direction W, apart from the open questions' outcomes.
 - [ ] API tests cover the label: save, trim, clear, 51 characters → 400, apps-row refusal, and the new-week reset with the target carried.
 
-## Open questions (settle before building)
+## Open questions
 
-1. **12/10 before M5-05.** Today the API caps LC progress at the target, and lowering the target clamps progress too ([`weeklyGoals.ts` L304–321](../../../../../apps/api/src/weeklyGoals.ts)). Until M5-05 removes the cap, 12/10 can't happen in the app. Options: (a) build the display now and verify it with seeded data (Proposed); (b) move the uncap into M5-08 (removing the immediate bonus would still be M5-05's job); (c) wait for M5-05.
-2. **The weekly stepper until M5-01.** M5-06 Q1 chose one LC control in the LeetCode card, which makes this block's LC row read-only. M5-01 builds that control but waits on Q32. Options: (a) keep today's weekly stepper in the block until M5-01, which then removes it (Proposed); (b) make the row read-only now, which leaves no way to log weekly progress until M5-01.
-3. **Who builds the weekly streak display (R5.28) in this block?** It needs M5-05's data and M5-07's design. No build ticket lists it for the Progress block (M5-02 covers the banner). Options: (a) add it to M5-08 and wait for both; (b) M5-08 ships without it, and a new small ticket adds it to the block after M5-05 and M5-07 (Proposed).
-4. **Interim button variants.** Production has no tinted purple primary or ghost button; today every button is the blue default or `.secondary`. Options: (a) add one shared interim pair of classes built on `.secondary`, reused by M5-01, M5-02 and M5-09, and logged in F09 for its pass (Proposed); (b) use plain `.secondary` everywhere, leaving the purple primary to F09.
-5. **Should members link to their task?** The prototype list is plain text. Linking each member to its task detail page (`/tasks/:id`) keeps the list read-only while giving it a use. Proposed: link.
-6. **Target field size.** Today it's 4.5rem with the global input padding, which you found too large. Per the new rule it's logged in F09. Options: (a) keep today's size (Proposed, per the rule); (b) narrow it here, since A2 puts it on a shared line.
-7. **Character count.** "50 characters": count user-visible characters (code points, so an emoji counts as one) in both the counter and the database (`char_length`), not UTF-16 units. Proposed.
+Decided 2026-10-13:
+
+- **Waits for M5-05** (was questions 1 and 3): build the data and API first, so this UI is verified against real data. 12/10 comes from M5-05's uncapping.
+- **Interim buttons** (was 4): one shared set of tinted purple primary and ghost classes, logged in F09.
+- **Apps members** (was 5): link to the task, green `applied` tag, applied listed last, no checkbox or untag (spec R5.4).
+- **Target field size** (was 6): today's size, logged in F09.
+- **Character count** (was 7): user-visible characters.
+
+Still open (depend on the M5 build order):
+
+2. **The weekly stepper until M5-01.** M5-06 Q1 makes this block's LC row read-only, with the one LC control in the LeetCode card (M5-01). If this ticket ships first, it either keeps today's weekly stepper (M5-01 then comes back to remove it) or removes it (no way to log weekly progress until M5-01). Proposed: build M5-01 first; it removes the weekly stepper as part of replacing both controls, and this ticket never touches the stepper.
+3. **The weekly streak display (R5.28) in this block.** No build ticket owns it. Proposed: this ticket owns it and also waits on M5-07 Q5 for its design, so the block is built once.
 
 ## Reuse notes
 
