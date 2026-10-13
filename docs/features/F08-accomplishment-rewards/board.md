@@ -65,7 +65,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | (pending) |
+| [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | `c367095` |
 | [M5-14](./tickets/M5/M5-14-retire-deep-work.md) | Retire deep work | `d42626b` |
 
 </details>
