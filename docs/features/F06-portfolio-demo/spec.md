@@ -2,7 +2,7 @@
 
 **ID:** F06
 **Status:** Parked
-**Last updated:** 2026-10-12
+**Last updated:** 2026-10-13
 
 ## Problem
 
@@ -21,12 +21,12 @@ The hosting path was started, then paused. Resume only if a public demo deploy i
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
-| M0 | Demo mode inside the app (seed, reset, gating, banner) | Done |
+| M0 | Demo mode inside the app (seed, reset, gating, banner) | Built, never shipped |
 | M1 | Public hosting / deploy | Parked |
 
 ## Requirements
 
-### M0: Demo mode (shipped)
+### M0: Demo mode (built, never shipped)
 
 - **R0.1** (Proposed, from the legacy glossary; confirm when resuming) Seed data uses invented company and role names, never real employers, and never the operator's real applications, progress, rank profile, feedback, tasks, interviews or documents.
 
@@ -61,3 +61,4 @@ Not specified. To be written if this feature is resumed.
 
 - **(date unknown):** Local agent docs, glossary, ADRs and specs were gitignored to keep the public repo quiet ("docs hygiene").
 - **2026-10-12:** Partly reversed. `AGENTS.md`, `.cursor/rules/` and `docs/features/` are now tracked so the development process is version-controlled. Older local docs stay ignored as legacy until re-homed.
+- **2026-10-13:** Documentation work moved out of this feature into F10 (Documentation & development process). F06 is only the hosted demo. Demo mode code exists in the app but was never shipped.

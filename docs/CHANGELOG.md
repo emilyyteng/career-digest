@@ -1,387 +1,290 @@
 # Changelog
 
-Development history and planned work for Career Digest. For setup, see [docs/SETUP.md](./SETUP.md).
+Career Digest is a single-user internship-search app. It pulls postings from company job boards, ranks them against the user's preferences, and tracks applications, interviews, tasks and daily progress. This changelog records what has shipped, feature by feature: why each piece was built, the product and technical decisions behind it, and what it changed.
 
-Features are grouped by product area. Each feature opens with **Why** (motivation). Completed features end with **Result**. Milestone details sit under a **Milestones** dropdown so the page stays scannable.
+Planned work isn't listed here. It lives in the [roadmap](./features/README.md) and the feature specs. For setup, see [SETUP.md](./SETUP.md).
 
-Status tags: **[Parked]** · **[In progress]** · **[Upcoming]** (not yet implemented — plan reference only). After an upcoming feature ships, trim plan detail, mark complete, and add **Result**.
-
----
-
-## Feature: Job board ingest & ranking
-
-**Why:** Pull internship postings into one board, enrich descriptions, rank with your preferences, and keep company boards fresh without manual busywork.
-
-**Milestones**
-
-### Milestone 1 — Job ingest & open board API
-
-Pull internship listings from Greenhouse, Lever, Ashby, and Simplify into Postgres, with US location filtering, season/recency rules, and retention that keeps applied roles even when a posting leaves the board.
-
-- Multi-ATS adapters and verified company list
-- `npm run discover-boards` scans Simplify ATS URLs (Greenhouse/Lever/Ashby/Oracle); Oracle boards over 250 jobs deferred for Simplify hybrid (`ORACLE_DISCOVER_MAX_JOBS`; `--write` to append)
-- Simplify ingest for **miscellaneous** apply URLs only (skips direct ATS host links; oracle hybrid rows stay on Simplify until merge)
-- After ingest, merge collapses duplicates when an ATS board has the same job id (`gh_jid` embeds, Oracle `/job/{id}`; `npm run merge-postings`)
-- `GET /api/jobs` for open internships (not yet applied; open **application tasks** stay visible)
-
-
-
-### Milestone 2.5 — Jobs list UI
-
-First React surface for browsing the digest board (split from original Milestone 2; applications half lives under Applications tracker).
-
-- Jobs list with status/source browsing as the open board grew
-
-
-
-### Milestone 3 — Descriptions & scraping
-
-Fill missing job descriptions for Simplify miscellaneous URLs by scraping apply pages, with sanitized HTML extraction and retry backoff so ranking only runs on postings with real JD text.
-
-- `scrape_status` tracking and host-specific retry windows
-- Skip blank descriptions during rank (saves OpenAI tokens)
-- Ashby/Lever/Greenhouse JDs from board JSON at ingest
-- User-dismissed mismatches leave the needs-description tab
-- Editable apply/posting URLs on job and application detail pages
-
-
-
-### Milestone 4 — OpenAI ranking & daily digest pipeline
-
-Score and sort roles with OpenAI using your feedback and tracker history as preference signals, then automate ingest → scrape → light rank via board refresh and an optional daily cron.
-
-- Batch ranking (`npm run rank`) and live drip (`npm run rank:live`, `rank:live-backlog`)
-- Client rate gate (RPM/RPD/TPM), stall recovery, rerank queue
-- Board refresh UI, heart/mismatch feedback, rank badges and dismissible batch banner
-- Jobs tabs: ranked, mismatches, unranked, needs description (search/sort per tab)
-- Up to 75 recent likes and dismissals per rank prompt; 12 tracker rows
-- Rank system prompt loaded from gitignored `config/rank-profile.md` (see `config/rank-profile.example.md`)
-
-
-
-### Milestone 9 — Hide from board vs Mark as mismatch
-
-Quiet board cleanup without teaching the ranker, while keeping one **Mismatches** tab.
-
-- `posting_feedback.teach` — dismissals with `teach=false` stay off Ranked but are omitted from rank prompts
-- Mark as mismatch dialog: **Use as ranking feedback** toggle (default on); off hides notes and does not teach
-- Job detail: **Hide {employer} from board** when ≥2 ranked siblings (display employer); confirm list with X-to-keep
-- Progress History/Today: correct Simplify display employer; Apps list on Today tab
-
-
-
-### Milestone 14 — Tracked boards in Postgres
-
-ATS board list moves from `config/companies.ts` to `tracked_boards`. Daily board refresh runs Simplify discover (with write) before ingest; `npm run discover-boards -- --write` upserts the same table.
-
-**Result:** Open internships flow from multi-ATS ingest through scrape and preference-aware ranking, with teach vs quiet-hide controls and board configuration owned in Postgres as part of daily refresh.
+Features are listed by ID. Milestones are numbered within each feature from M0, and a gap in the numbering is a milestone that hasn't shipped yet. Milestones were renumbered this way on 2026-10-12; earlier versions of this file used one global sequence.
 
 ---
 
+## Job board ingest & ranking (F01)
 
+*Built 2026-08-26 to 2026-09-25.*
 
-## Feature: Applications tracker
+**Why:** Internship postings are spread across hundreds of company boards on several applicant-tracking systems (ATS). Aggregators like Simplify repeat many of the same roles behind links with no description. The aim was one board of open US internships, with real descriptions, ranked by fit and refreshed without manual work.
 
-**Why:** Track the application pipeline (materials, status, deadlines) separately from browsing the open job board.
+### M0: Ingest and the open-board API
 
-**Milestones**
+Adapters for Greenhouse, Lever and Ashby, later joined by Oracle Recruiting Cloud, pull postings into Postgres. They're filtered to US locations and the current internship cycle.
 
-### Milestone 2 — Local applications tracker UI
+- **Simplify only fills gaps.** It's ingested only for postings whose apply link doesn't point straight at an ATS, because the ATS board is the better source.
+- **Duplicates merge onto the ATS posting.** When the same job appears on both, a merge step matches them on the ATS job ID embedded in the link.
+- **New boards are discovered automatically.** A discovery script finds new company boards from Simplify's ATS links. Oracle boards with more than 250 jobs are left to the Simplify path, because they're too large to ingest directly.
+- **Applied roles are kept.** A posting that leaves its board is deleted unless an application exists for it.
 
-React application tracker alongside the jobs board (jobs list split out as Milestone 2.5 under ingest).
+`GET /api/jobs` serves the open internships not yet applied to.
 
-- Applications list with status tabs
-- Application detail with documents and optional posting link
-- Nullable `posting_id` for manual-only applications
+### M1: Jobs list
 
+The first React page: browsing the board by status and source.
 
+### M2: Descriptions and scraping
 
-### Milestone 5 — Applications workflow
+Ranking a posting without its job description wastes tokens and gives poor results.
 
-Polish the tracker for day-to-day use: pipeline statuses, rich job descriptions, document preview, and UI details that make applying and reviewing materials faster.
+- Greenhouse, Lever and Ashby descriptions come from board data at ingest.
+- Simplify-only postings are scraped from their apply pages. The HTML is sanitized, and retries back off per host (tracked in `scrape_status`).
+- Ranking skips postings with blank descriptions. They wait in a Needs description tab until they're filled or dismissed.
+- Apply and posting URLs became editable on job and application pages.
 
-- Applications **to-do** tab (legacy; later migrated to **Tasks** — see Tasks backlog)
-- Status badges (to-do / applied / interviewing / accepted / declined) plus source on every card
-- Apply-by deadlines and countdown timers on to-do / application-task cards
-- Status tabs including accepted and declined; date applied; status-change ordering
-- Rich-text JD paste, scroll-box descriptions, location autocomplete
-- In-browser PDF/image preview for uploaded materials
-- Modal add-application form; save/upload flash confirmations
+### M3: OpenAI ranking and the daily pipeline
 
-**Result:** A full applications pipeline with statuses, materials preview, deadlines, and detail pages — later complemented by Tasks for “still need to apply” work.
+OpenAI scores each posting against a written preference profile plus the user's own signals: up to 75 recent likes and dismissals and 12 application-tracker rows per prompt.
 
----
+- **Two ways to run.** Ranking runs as a batch (`npm run rank`) or as a live drip.
+- **Staying within OpenAI's limits.** A client-side rate gate caps requests per minute, requests per day and tokens per minute, with stall recovery and a rerank queue.
+- **One-click refresh.** A board-refresh action, also available as an optional daily cron job, chains ingest, scraping and ranking of new postings.
+- **Jobs page.** It gained Ranked, Mismatches, Unranked and Needs description tabs, heart and mismatch feedback, and rank badges.
 
+The preference profile is a local config file kept out of the repository (an example is checked in), so personal preferences aren't published.
 
+### M4: Hide from board vs mark as mismatch
 
-## Feature: Interviews & ops shell
+Not every dismissal should teach the ranker. Sometimes a role fits but isn't wanted, for example when one employer has many similar listings.
 
-**Why:** Follow interview threads with clear next steps; see Home and pipeline health without digging through logs.
+- **Optional teaching.** Mark as mismatch gained a "Use as ranking feedback" toggle, on by default. With it off, the posting leaves Ranked but is left out of future rank prompts.
+- **Hide an employer.** A job page offers "Hide {employer} from board" when that employer has two or more ranked postings, with a confirm list for keeping specific ones.
+- **Employer names.** Progress now shows the right employer for Simplify postings.
 
-**Milestones**
+### M5: Tracked boards in Postgres
 
-### Milestone 6 — Interviews, home, and ops dashboards
+The list of company boards moved from a source file into a `tracked_boards` table. The daily refresh now runs discovery before ingest, so new boards are picked up without a code change.
 
-Track interview pipelines per company, see what needs attention at a glance, and monitor ingest/rank/scrape health.
-
-- Interview threads with linear steps, countdown timers, workspace, and resolve flow
-- Home dashboard: greeting, last digest, interviews and tasks attention, new & top picks
-- Pipeline Status page (`/status`) and `GET /api/ops` / `GET /api/home`
-- Sakura-terminal UI theme, favicon, nav routing
-
-*(Home later grows under **Home — Upcoming & weekly goals**; interview finish-step UX continues under accomplishment work.)*
-
-**Result:** Interview threads, first Home dashboard, and Status/ops monitoring with a consistent sakura-terminal UI shell.
-
----
-
-
-
-## Feature: Tasks backlog
-
-**Why:** One place for “what I need to do” (application tasks + misc life/school work), distinct from the applications pipeline tracker.
-
-**Milestones**
-
-### Milestone 7 — Unified Tasks backlog
-
-Separate **what you need to do** from the **Applications tracker**.
-
-- **Tasks** page (`/tasks`): **open** and **completed** tabs for school, personal, and application tasks
-- **Add to tasks** / **Remove from tasks** on Jobs (replaces to-do star); completing an application task marks **Applied**
-- School/personal tasks archive to **completed**; application tasks do not
-- Manual application tasks and link-to-posting from the edit modal
-- Legacy application to-dos migrated to open application tasks; Applications tracker is pipeline-only (no to-do tab)
-- Home **Needs attention** shows **Interviews** then **Tasks** (up to four open tasks, sorted by due date)
-
-
-
-### Milestone 11 — Tasks categories board (pass 1)
-
-Stacked Open sections by category (Applications first; School / Reading / Writing / Admin + custom), per-section Add, refile misc tasks, migrate school→School and personal→Admin.
-
-### Milestone 13 — Tasks subtasks, priority, estimates
-
-Misc task checklists (one-level) with own due dates on Home Upcoming; P0/P1/P2 stoplight + minute estimates on tasks/subtasks; parent complete auto-completes open children. Daily Progress apps/LC cap **3**. Follow-on polish: Edit subtasks modal, drag reorder, duplicate task+subtasks.
-
-**Result:** Tasks is the actionable backlog — categorized open work, application tasks tied to mark-applied, subtasks/priority/estimates, with completed misc work archived on the Completed tab.
+**Outcome:** Open internships flow from several ATS sources through scraping and preference-aware ranking into one daily-refreshed board. Teaching the ranker and quietly hiding roles are separate controls.
 
 ---
 
+## Applications tracker (F02)
 
+*Built 2026-08-26 to 2026-08-28.*
 
-## Feature: Progress tracker
+**Why:** Browsing postings and tracking applications are different jobs. Applications needed their own record (status, materials, deadlines, notes), including for roles found outside the board.
 
-**Why:** Daily and weekly motivation for the internship search — applications sent, LeetCode, and deep-work reflections — with Today/History views and a Home strip.
+### M0: Tracker
 
-**Milestones**
+- A list of applications with status tabs, and a detail page for each one with uploaded documents and an optional link to its posting.
+- The posting link is optional, so manually found roles can be tracked too.
 
-### Milestone 8 — Progress tracker
+### M1: Day-to-day workflow
 
-Activity / Effort / Outcome for internship search motivation.
+- **Statuses and cards.** Applied, interviewing, accepted and declined, each with a badge and the source on every card. Cards show the date applied and are ordered by their last status change.
+- **Deadlines.** Apply-by deadlines with countdowns.
+- **Descriptions and materials.** Rich-text job descriptions with a scroll box, location autocomplete, in-browser PDF and image preview, and an add-application modal.
 
-- `leetcode_daily` and `reflection_logs` tables
-- Progress APIs (`/api/progress/*`) including dated LeetCode + reflection edit
-- **Progress** page (`/progress`): **Today** (strip, week/month Outcome, dual heatmaps, log) and **History** (calendar dig-in, view-first edit)
-- Application activity derived from `applications.applied_at` (local calendar date)
-- Home today strip (`Today: n/3 apps · n/3 LC · deep work ✓` / `no deep work`)
+A to-do status for roles not yet applied to lived here briefly. It later moved to Tasks (F04).
 
-*(Later accomplishment work may repurpose or absorb Progress into past-work / rewards IA — see that feature.)*
-
-**Result:** Progress Today/History with heatmaps, LC + reflection logging, and a Home today strip tied to daily caps.
-
----
-
-
-
-## Feature: Home — Upcoming & weekly goals
-
-**Why:** Make the week scannable from Home — dated work ahead, deadline vs target, and LC/apps weekly pace — without living on the Progress page.
-
-**Milestones**
-
-### Milestone 12 — Home upcoming this week
-
-Home **Upcoming this week** replaces Needs attention: overdue + next 7 local days, interviews and tasks in one list grouped by day (Today / Tomorrow / weekday · date), dated actionable items only (pending/scheduled — not awaiting employer), no 4-cap.
-
-### Milestone 15 — Weekly goals, due kinds, Home progress strip
-
-Document work already shipped after Milestone 12 / 13 that had not yet been changelogged.
-
-- `due_kind`: **deadline** vs **target** on tasks/subtasks; Home splits Deadlines (flat + countdown) from Targets (7-day buckets)
-- `weekly_goals`: LC count target + apps task-set membership; Home **This week** strip with equal-flex bars and ahead/behind pace
-- Targets: two-column day sections, overdue bucket, earliest subtask per parent only, single-line truncated titles
-- Today row: apps / LC / deep work + **Update progress →**; finish-step default outcome **waiting on them**
-- Related migrate fix for `tasks_due_at_kind_pair` when replaying legacy application-task SQL
-
-**Result:** Home shows Deadlines vs Targets for the week, a compact Today + This week progress strip, and weekly goal pacing alongside upcoming work.
+**Outcome:** A full application pipeline with statuses, materials and deadlines, kept separate from the job board.
 
 ---
 
+## Interviews & ops shell (F03)
 
+*Built 2026-08-27 to 2026-09-05.*
 
-## Feature: Portfolio demo & docs hygiene **[Parked]**
+**Why:** Interviews are multi-step threads with their own deadlines. Meanwhile the ingest, scrape and rank pipeline runs in the background, where failures go unnoticed.
 
-**Why:** Support a hosted portfolio sandbox (fictional seed, gated ranking side effects, demo banner) and quieter public docs for sharing the project.
+### M0: Interviews, Home and Status
 
-**Milestones**
+- **Interviews.** Each company has an interview thread with linear steps, countdown timers, a workspace, and a flow for resolving it.
+- **Home.** A first dashboard: greeting, last digest, items needing attention, and new and top-ranked picks.
+- **Status.** A page backed by `GET /api/ops` showing pipeline health.
+- **Shell.** The app's sakura-terminal theme and navigation.
 
-### Milestone 10 — Portfolio Demo mode + docs hygiene
-
-Internal support for a hosted portfolio sandbox (fictional seed, gated ranking side effects, demo banner) plus quieter public docs (local agent glossary/ADRs/specs gitignored; changelog kept).
-
-Demo hosting path was started then parked; docs hygiene pieces remain in effect. Resume only if/when a public demo deploy is prioritized again.
+**Outcome:** Interview threads, a Home dashboard and pipeline monitoring, in one consistent shell.
 
 ---
 
+## Tasks backlog (F04)
 
+*Built 2026-08-29 to 2026-09-23.*
 
-## Feature: Accomplishment, detail pages & rewards **[In progress]**
+**Why:** "Still need to apply" was a status inside the application tracker, and work like school, reading and admin had no home at all. Things to do needed one backlog, separate from the record of applications.
 
-**Why:** Turn completing work into a visible, motivating loop — clearer task and application detail, reflections attached to real work, recurring tasks, one global points economy, self-care rewards, and a calmer Home / Progress information architecture — without cluttering every surface at once.
+### M0: Unified backlog
 
-No **Result** yet; plan below is the working roadmap. Items tagged **[Upcoming]** are not implemented. After each milestone ships, trim plan prose and move detail into concise shipped notes; when the whole feature lands, add **Result**.
+- **Tasks page.** Open and Completed tabs, holding application tasks and everything else.
+- **From Jobs.** Jobs gained Add to tasks / Remove from tasks, replacing the to-do star.
+- **Applying.** Completing an application task marks its application Applied, and so does marking a role applied from Jobs.
+- **Migration.** Existing to-do applications became application tasks, so the tracker only holds roles already applied to.
+- **Home.** Its attention list showed interviews first, then up to four tasks by due date.
 
-**Milestones**
+### M1: Categories
 
-### Milestone 0 — Quick fixes & changelog restructure
+- Open tasks are grouped into sections, each with its own Add button: Applications first, then School, Reading, Writing, Admin and any custom categories.
+- Tasks can move between categories. Existing school and personal tasks moved to School and Admin.
 
-- Restructure this changelog into feature sections (Why / Milestones dropdown / Result), document Milestone 15, and keep upcoming plan referenceable here
-- Fix target-this-week jump: keep Applications sort order frozen after load (toggling only updates the checkbox)
-- Gone posting → delete open application task + todo application row so the posting is removed (applied+ still retained)
-- Add Task modal: Deadline / Target dropdown (parity with edit/card)
-- Weekly LC stepper progress delta bumps today’s daily LC stepper by the same amount
-- Home Upcoming: **1-week / 2-week** range preset (per-browser `localStorage`)
+### M2: Subtasks, priority and estimates
 
-*Deferred from M0:* weekly goal target dates on Home → Milestone 5 (needs Progress label/note design).
+- **Subtasks.** One level of subtasks, each with its own due date (shown on Home). Completing a parent completes its open subtasks.
+- **Priority and estimates.** P0, P1 and P2 priority, and estimates in minutes.
+- **Editing.** A bulk edit modal for subtasks, drag-to-reorder, and duplicating a task along with its subtasks.
 
+The daily application and LeetCode goals on Progress were set to 3.
 
-
-### Milestone 1 — Detail pages (three surfaces)
-
-Prototype pass (dev `/prototype/m1`) locked the layout; production surfaces shipped. **No shared completion-modal work here** — modal unification moves to Milestone 2.
-
-**Shipped**
-
-1. `**/tasks/:taskId**` — misc + application tasks: contained header, compact Complete/Mark applied, weekly ★ for app tasks, **Deadline/Target: mm/dd/yyyy** + live **12h pie-circles + countdown**, checkable/draggable subtasks (earliest-due urgency subtitle) or scrollable JD, **Edit details | Reflections** placeholder, equal-height columns
-2. **Application pipeline** (`/applications/:id`) — status **rail**: Stage + Documents (Upload… / remove) + Link posting; main column fixed-height JD scroll / Notes / Reflections placeholder; subtitle `org · location · Applied: date` + badges
-3. Home Upcoming + Tasks titles → detail; Completed tab shows checked subtasks
-4. `GET /api/tasks/:id` (+ JD coalesce from posting description); weekly-target sort boost cached across Tasks remounts (no Applications re-sort flash)
-
-Dev prototypes remain under `/prototype/m1` for reference until cleanup.
-
-
-
-### Milestone 2 — Reflections & completion modals
-
-**Linking + Progress**
-
-- Reflections link to task **or** application (optional); app-task Mark applied transfers linked reflections; optional interview step under an application (active + resolved)
-- **Other** lane + `deep_work` field; strip shows three deep-work badges (app / tech / other); heatmaps stay app vs technical
-- Progress compose/edit: typeahead link search, lane chips, deep-work toggle; detail Reflections panels (link existing / create); sorted by created ascending
-
-**Completion modals**
-
-- Shared complete / mark-applied modal (Jobs + Tasks): optional Reflection + Notes panels, deep-work toggle, optional actual time; auto-associates reflection (no link picker)
-- Interview finish: page 1 outcomes → Next → page 2 optional reflection → Finish
-
-Dropped: sectioned stickies by interview step.
-
-
-
-### Milestone 3 — Recurring tasks **[Upcoming]**
-
-Short UI design pass, then build.
-
-- Recurrence: daily; weekly on selected weekdays (Sun–Sat); monthly on selected days of month (1–31)
-- Shared task page across instances; stickies listed by date created (earliest first) or lightly grouped by instance date if needed
-- Mini-calendar of instances for the **next month**; easy add/remove instance for a due date
-- Missed days stay **overdue**; option to delete instance or change due date (similar to subtasks)
-- Subtasks + recurring: show subtasks of the **earliest open instance** (labeled with that date); instance complete only when all its subtasks **and** the parent instance are marked done → then surface the next instance’s subtasks on the shared page
-
-
-
-### Milestone 4 — Global points ledger
-
-M3 (recurring) deferred so this could ship before M5/M7.
-
-**Points formula (locked)**
-
-Forward-only points earnings: one ledger row per action (optional breakdown chips). No deleting earns — corrections use **reverse** / **adjust** events; balance never goes below 0. Subtasks do not earn points.
-
-
-| Action                         | Points                                                                                                                                                                                   |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Misc task complete             | **1 × actual minutes**; blank actual → **15**. Optional reflection on the same event adds flat **+20** (task minutes already counted; not double-counted as a separate reflection earn). |
-| Application mark-applied       | Flat **+5**. Minutes only count when a reflection is included: **1 × reflection minutes**, or **+20** if minutes blank.                                                                  |
-| Interview step finish          | Flat by kind: assessment **60**, phone **50**, technical **80**, onsite **100**, offer **200**, custom **40**. Same reflection add-on as apps when reflection is included.               |
-| Standalone Progress reflection | On **create** only: **1 × minutes**, or **+20** if blank. Linking an existing reflection later earns **0**.                                                                              |
-| LeetCode daily                 | **+30** per solve (uncapped). Day is one aggregate earn; −1 / clear uses adjust or reverse.                                                                                              |
-| Weekly LC or apps goal         | **+100** once per ISO week when that slot’s target is met.                                                                                                                               |
-
-
-**Ledger mechanics**
-
-- `points_events` table + `actual_minutes` on tasks / reflections; `GET /api/points` + `/api/points/events`
-- Earn hooks: misc complete, mark-applied, interview finish, Progress reflection create, LC stepper, weekly goal met
-- Completing with an optional reflection uses **one combined earning** (`awardPoints: false` on the nested reflection create)
-- Editing actual minutes on a completed misc task **adjusts** points (pre-ledger completions **seed** an earning on first edit)
-- Reopen misc task → **reverse** that task’s earnings
-
-**UI**
-
-- Shared `ReflectionDraftFields`: Progress compose shows **Time (min)** always; misc complete shows **Actual** always (prefill estimate); apps / interview finish gate minutes inside the reflection panel only
-- Progress **ledger** tab (temporary until M7 Rewards): **Completions** diary (week/month stats, type tabs, day groups; titles link to work; nested reflections editable) vs **Points** (total, category bars, event log with balance badges)
-- Mint **EarnFlash** after complete / mark-applied / interview finish (earn line + running total)
-- Tasks **Completed**: est / actual (+ disparity), pts; Actual (min) editable on card and task detail; no live Overdue countdown on completed work
-
-
-
-### Milestone 5 — Celebration, Progress weekly UX, weekly goal targets on Home **[Upcoming]**
-
-Design pass on Progress weekly block + Home target rows, then implement.
-
-**Design pass (dev prototypes):** hub at `/prototype/m5` — weekly goals (`/weekly-goals`), Home Sunday targets (`/home-targets`), completion flourish (`/celebration`). Notes + draft variant lean in `docs/specs/M5_DESIGN_NOTES.md`.
-
-- Completion flourish: visible, dynamic (e.g. confetti / task vanish near last click) — not a plain toast; affirmations optional/skip for now
-- Progress weekly goals: keep bars, counts, ahead/behind; apps membership as a **plain list** — **no checkmarks, no untag** (too easy to misfire after apply; management stays on Tasks)
-- Optional **label / note** on weekly goal(s) from Progress (e.g. grind track) so Home can show `Weekly LC goal · Grind 75 Week 4` when set
-- **Weekly goal target dates on Home Targets only** (never Deadlines): App goal + LC goal on **Sunday**, similar visual treatment to interviews in Upcoming (not real tasks). Disappear when that week’s target is hit
-- Points + flourish when a weekly LC/apps target is hit (wired to Milestone 4 events)
-- Verify weekly→daily LC sync from Milestone 0 still feels right with points
-
-
-
-### Milestone 6 — Board departures log **[Upcoming]**
-
-Own milestone (distinct from Milestone 0’s delete-open-app-task behavior): a **record view** of postings that left the board or were deduped.
-
-- Basic fields: title, company, location, whether marked to-apply before leaving
-- Lives on **Status**; design for low scroll cost (collapsed day sections, “today” default, pagination, or equivalent — decide in-milestone)
-- Complements urgency + explains why an application task disappeared
-
-
-
-### Milestone 7 — Rewards, achievements & Home / Progress IA **[Upcoming]**
-
-Page-level design for where everything lives; lean toward **repurposing Progress** if content fits, but stay flexible.
-
-- **Rewards** as its own nav item: create self-care rewards with point costs; redeem + confirm + undo; show earned total, **balance**, redeem history (points events — not the full task diary)
-- Past work surface: completions + reflections history (naming TBD; may absorb/rename Progress)
-- Levels, streaks, count milestones → **one-time points** on achieve (tables TBD)
-- Design pass: Progress vs past work vs Rewards vs Status (heatmaps, weekly counters, calendar, board-left, points chrome from Milestone 4)
-- Home: explore Upcoming | recent completions side-by-side (and alternatives) once card density is known
-- Finalize retroactive reflection-linking entry points against the chosen History host
+**Outcome:** Tasks became the actionable backlog: categorized, with subtasks, priorities and estimates. Application tasks are tied to marking a role applied.
 
 ---
 
+## Progress tracker (F05)
 
+*Built 2026-08-30 to 2026-08-31.*
 
-## Format note (for future features)
+**Why:** A job search is long, and most days produce no visible outcome. Tracking the inputs (applications sent, LeetCode problems solved, focused deep-work sessions) gives daily evidence of progress.
 
-When starting a large initiative:
+### M0: Progress page
 
-1. Add a `## Feature: …` section with **Why** and status tag if needed (`[Upcoming]` / `[In progress]` / `[Parked]`).
-2. Put numbered milestones (from **0** for that feature) under a **Milestones** `<details>` dropdown.
-3. Plan prose may be detailed while **[Upcoming]**; after ship, tighten bullets and add **Result** only when the feature (or a clear slice) is complete.
+- **Data.** `leetcode_daily` and `reflection_logs` tables behind `/api/progress`. Applications count on the local calendar date they were applied.
+- **Today tab.** A daily strip, week and month totals, separate heatmaps for application and technical effort, and a log.
+- **History tab.** A calendar with view-first editing.
+- **Home.** A today strip: applications out of 3, LeetCode out of 3, and whether deep work happened.
 
+**Outcome:** Daily and weekly evidence of effort, with LeetCode and reflection logging, visible from Home.
+
+---
+
+## Portfolio demo (F06)
+
+*Parked. Nothing has shipped.*
+
+A hosted sandbox with fictional data, so visitors could try the app without seeing real data or triggering paid API calls. Work started and was paused before release. See the [spec](./features/F06-portfolio-demo/spec.md). The documentation work first grouped with this feature is recorded under Documentation & development process (F10).
+
+---
+
+## Home: Upcoming & weekly goals (F07)
+
+*Built 2026-09-22 to 2026-09-25.*
+
+**Why:** Home's attention list stopped at four items and mixed urgent work with planning. The week needed to be readable from Home: what is due, what is only intended, and whether LeetCode and application pace is on track.
+
+### M0: Upcoming this week
+
+- "Upcoming this week" replaced the attention list. It shows overdue items plus the next seven days, with interviews and tasks together, grouped by day.
+- It lists only dated items the user can act on, so interviews waiting on the employer are left out. There's no item cap.
+
+### M1: Weekly goals and due kinds
+
+- **Due kinds.** Tasks and subtasks gained a due kind: a **deadline** (external and firm) or a **target** (self-set).
+- **Deadlines vs Targets on Home.** Deadlines are a flat list with countdowns. Targets are grouped by day in two columns, with an overdue group, and show only the earliest subtask per task.
+- **Weekly goals.** A LeetCode count target, and an applications goal made of application tasks tagged "target this week". Home's This week strip shows equal-width bars with ahead or behind pace, beside the Today row.
+- **Interviews.** Finishing a step now defaults to "waiting on them".
+- **Fix.** A migration crash when replaying older SQL.
+
+**Outcome:** Home separates hard deadlines from self-set targets and shows weekly pace next to the day's progress.
+
+---
+
+## Accomplishment, detail pages & rewards (F08)
+
+*In progress since 2026-10-09. [Spec](./features/F08-accomplishment-rewards/spec.md).*
+
+**Why:** Finishing work didn't feel like anything. Tasks and applications had no page of their own, reflections weren't attached to the work they described, and completing something left no lasting trace. This feature makes accomplishment visible: detail pages, reflections on real work, one completion flow, and a points economy that effort feeds into.
+
+### M0: Quick fixes
+
+- This changelog was reorganized by feature.
+- Toggling "target this week" no longer re-sorts the Applications section.
+- When a posting leaves its board, its open application task goes with it.
+- The Add Task form gained the deadline / target choice.
+- The weekly LeetCode stepper also updates today's daily count.
+- Home's Upcoming range can be set to one or two weeks, remembered per browser.
+
+### M1: Detail pages
+
+Three layout proposals per page were prototyped before anything was built. Completion modals were deliberately left alone until M2.
+
+- **Task page (`/tasks/:taskId`).** Serves both misc and application tasks. It has:
+  - a header with Complete or Mark applied
+  - the due date labeled deadline or target, with a live countdown drawn as 12-hour pie circles
+  - checkable, draggable subtasks, or the job description for application tasks
+  - an edit form
+- **Application page.** Redesigned around a left rail holding the stage (a status selector with Save), documents and the posting link. The main column holds a fixed-height job description and notes.
+- **Links.** Home's Upcoming items, task titles on the Tasks page and completed tasks all open their detail page. Completed tasks show their checked subtasks.
+- **API.** `GET /api/tasks/:id` returns a single task, with the posting's description when the task has none.
+
+### M2: Reflections on real work, one completion flow
+
+**Linking.** A reflection can now link to a task or an application, and optionally to an interview step under that application. Unlinked reflections remain valid.
+
+- Marking an application task applied moves its reflections to the application.
+- Task and application pages list their reflections oldest first, and can link an existing reflection or start a new one.
+- Progress gained a link search when writing or editing a reflection.
+- The originally planned grouping of reflections by interview step was dropped in favor of a single list.
+
+**Deep work** became an explicit toggle on each reflection instead of being implied, and a third "Other" category joined application and technical. The daily strip shows one deep-work badge per category. Existing reflections were migrated as deep work, unlinked.
+
+**Completion.** Jobs and Tasks share one modal for completing a task or marking an application applied.
+
+- It has optional Reflection and Notes panels. A panel can be collapsed without losing its text, and the modal asks before discarding text left in a collapsed panel.
+- Finishing an interview step became two pages: the outcome first, then an optional reflection.
+
+### M4: Points ledger
+
+One global points balance makes effort visible, and later spendable.
+
+**Rules.** The ledger is forward-only:
+
+- Earned points are never deleted. Corrections are recorded as reverse or adjust events.
+- The balance never goes below zero.
+- Subtasks earn nothing.
+- Completing work together with a reflection records one combined earn, not two.
+
+| Action | Points |
+|--------|--------|
+| Misc task complete | 1 per actual minute, or 15 if no time is entered. A reflection adds a flat 20 |
+| Application marked applied | 5. A reflection adds 1 per reflection minute, or 20 if no time is entered |
+| Interview step finished | By kind: assessment 60, phone 50, technical 80, onsite 100, offer 200, custom 40. Same reflection bonus as applications |
+| Reflection written on Progress | 1 per minute, or 20 if no time is entered. Only when created; linking an existing reflection earns nothing |
+| LeetCode | 30 per problem, with no daily cap |
+| Weekly LeetCode or applications goal met | 100, once per week per goal |
+
+**Implementation.**
+
+- A `points_events` table records each event with the running balance. Tasks and reflections gained `actual_minutes`.
+- `GET /api/points` and `GET /api/points/events` serve the total and the history.
+- Editing a completed task's actual minutes adjusts its points, and reopening a misc task reverses them.
+
+**Interface.**
+
+- Misc tasks always ask for actual time, prefilled from the estimate. Applications and interviews ask for minutes only inside the reflection, matching the formula.
+- Progress gained a Ledger tab with two views: a Completions diary (week and month totals, filters by type, entries grouped by day) and a Points view (total, a bar for each category, the event log).
+- A brief mint flash shows the points earned after each completion.
+- Completed tasks show estimated vs actual time and points.
+
+---
+
+## Documentation & development process (F10)
+
+*Built 2026-08-31 and 2026-10-12 to 2026-10-13.*
+
+**Why:** The repository needed to make sense to outside readers. Development also needed a dependable source of truth: requirements had lived in the changelog and in local, untracked notes, so plans mixed with history and work started from incomplete or stale context.
+
+### M0: A public-facing repository
+
+- A short README for visitors, with milestone history moved to this changelog.
+- A setup guide with a fresh-clone checklist, and an MIT license.
+- The ranking profile moved to a local config file, with an example checked in.
+- Personal data and working notes kept out of the repository.
+
+### M1: Specs, tickets and a written process
+
+- **`AGENTS.md` is the single process reference.** It sets which source wins in a conflict (user, then spec, then ticket, then prototype; the design system on visuals). It defines the feature workflow: spec, tickets, prototype, implement, verify, commit.
+- **Specs.** Each feature has a permanent ID and, once active, a spec.
+  - Requirements are tagged Established (confirmed by the user, and the only kind that may be built) or Proposed (awaiting confirmation).
+  - Existing behavior is audited separately, and never treated as a requirement just because it exists.
+- **Tickets and maintenance.** Ticket templates, a maintenance area for work no feature owns, and a triage file for surfaced issues awaiting a decision.
+- **Design system.** A design-system reference, and editor rules that load it when UI or docs files are edited.
+- **Prototypes.** They're version-controlled but kept out of navigation, and every variant must meet the locked requirements.
+- **This changelog.** Rewritten as a shipped-only history, renumbered per feature.
+
+**Outcome:** Requirements, decisions and known issues live in tracked documents that every working session reads, and this changelog records only what shipped.
