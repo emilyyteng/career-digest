@@ -341,6 +341,8 @@ Forward-only points earnings: one ledger row per action (optional breakdown chip
 
 Design pass on Progress weekly block + Home target rows, then implement.
 
+**Design pass (dev prototypes):** hub at `/prototype/m5` — weekly goals (`/weekly-goals`), Home Sunday targets (`/home-targets`), completion flourish (`/celebration`). Notes + draft variant lean in `docs/specs/M5_DESIGN_NOTES.md`.
+
 - Completion flourish: visible, dynamic (e.g. confetti / task vanish near last click) — not a plain toast; affirmations optional/skip for now
 - Progress weekly goals: keep bars, counts, ahead/behind; apps membership as a **plain list** — **no checkmarks, no untag** (too easy to misfire after apply; management stays on Tasks)
 - Optional **label / note** on weekly goal(s) from Progress (e.g. grind track) so Home can show `Weekly LC goal · Grind 75 Week 4` when set

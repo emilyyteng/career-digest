@@ -18,10 +18,26 @@ import { HEADER_BRAND_EMOJI } from "./pageTheme";
 /** Dev-only prototype pages — dead-code eliminated from production builds. */
 const proto = import.meta.env.DEV
   ? {
-      Hub: lazy(() => import("./prototype/m1/M1PrototypeHub")),
+      M1Hub: lazy(() => import("./prototype/m1/M1PrototypeHub")),
       MiscTask: lazy(() => import("./prototype/m1/MiscTaskPrototypePage")),
       AppTask: lazy(() => import("./prototype/m1/AppTaskPrototypePage")),
       Application: lazy(() => import("./prototype/m1/ApplicationPrototypePage")),
+      M2Hub: lazy(() => import("./prototype/m2/M2PrototypeHub")),
+      DetailReflections: lazy(() => import("./prototype/m2/DetailReflectionsPrototypePage")),
+      ProgressCompose: lazy(() => import("./prototype/m2/ProgressComposePrototypePage")),
+      StripLink: lazy(() => import("./prototype/m2/StripLinkPrototypePage")),
+      M4Hub: lazy(() => import("./prototype/m4/M4PrototypeHub")),
+      LedgerCompletions: lazy(() => import("./prototype/m4/LedgerCompletionsPrototypePage")),
+      LedgerPoints: lazy(() => import("./prototype/m4/LedgerPointsPrototypePage")),
+      ReflectionMinutes: lazy(() => import("./prototype/m4/ReflectionMinutesPrototypePage")),
+      M5Hub: lazy(() => import("./prototype/m5/M5PrototypeHub")),
+      M5WeeklyGoals: lazy(() => import("./prototype/m5/WeeklyGoalsPrototypePage")),
+      M5HomeTargets: lazy(() => import("./prototype/m5/HomeTargetsPrototypePage")),
+      M5Celebration: lazy(() => import("./prototype/m5/CelebrationPrototypePage")),
+      RewardsHub: lazy(() => import("./prototype/rewards/RewardsPrototypeHub")),
+      RewardsLab: lazy(() => import("./prototype/rewards/CatCakeLabPage")),
+      RewardsPull: lazy(() => import("./prototype/rewards/PullPrototypePage")),
+      RewardsCollection: lazy(() => import("./prototype/rewards/CollectionPrototypePage")),
     }
   : null;
 
@@ -68,7 +84,7 @@ export default function App() {
             <NavLink to="/interviews">Interviews</NavLink>
             <NavLink to="/progress">Progress</NavLink>
             <NavLink to="/status">Status</NavLink>
-            {proto && <NavLink to="/prototype/m1">Prototype</NavLink>}
+            {proto && <NavLink to="/prototype/m5">Prototype</NavLink>}
           </nav>
         </header>
         <main>
@@ -86,12 +102,58 @@ export default function App() {
             <Route path="/status" element={<Status />} />
             {proto ? (
               <>
-                <Route path="/prototype/m1" element={<ProtoPage page={proto.Hub} />} />
+                <Route path="/prototype/m1" element={<ProtoPage page={proto.M1Hub} />} />
                 <Route path="/prototype/m1/misc-task" element={<ProtoPage page={proto.MiscTask} />} />
                 <Route path="/prototype/m1/app-task" element={<ProtoPage page={proto.AppTask} />} />
                 <Route
                   path="/prototype/m1/application"
                   element={<ProtoPage page={proto.Application} />}
+                />
+                <Route path="/prototype/m2" element={<ProtoPage page={proto.M2Hub} />} />
+                <Route
+                  path="/prototype/m2/detail-reflections"
+                  element={<ProtoPage page={proto.DetailReflections} />}
+                />
+                <Route
+                  path="/prototype/m2/progress-compose"
+                  element={<ProtoPage page={proto.ProgressCompose} />}
+                />
+                <Route
+                  path="/prototype/m2/strip-link"
+                  element={<ProtoPage page={proto.StripLink} />}
+                />
+                <Route path="/prototype/m4" element={<ProtoPage page={proto.M4Hub} />} />
+                <Route
+                  path="/prototype/m4/ledger-completions"
+                  element={<ProtoPage page={proto.LedgerCompletions} />}
+                />
+                <Route
+                  path="/prototype/m4/ledger-points"
+                  element={<ProtoPage page={proto.LedgerPoints} />}
+                />
+                <Route
+                  path="/prototype/m4/reflection-minutes"
+                  element={<ProtoPage page={proto.ReflectionMinutes} />}
+                />
+                <Route path="/prototype/m5" element={<ProtoPage page={proto.M5Hub} />} />
+                <Route
+                  path="/prototype/m5/weekly-goals"
+                  element={<ProtoPage page={proto.M5WeeklyGoals} />}
+                />
+                <Route
+                  path="/prototype/m5/home-targets"
+                  element={<ProtoPage page={proto.M5HomeTargets} />}
+                />
+                <Route
+                  path="/prototype/m5/celebration"
+                  element={<ProtoPage page={proto.M5Celebration} />}
+                />
+                <Route path="/prototype/rewards" element={<ProtoPage page={proto.RewardsHub} />} />
+                <Route path="/prototype/rewards/lab" element={<ProtoPage page={proto.RewardsLab} />} />
+                <Route path="/prototype/rewards/pull" element={<ProtoPage page={proto.RewardsPull} />} />
+                <Route
+                  path="/prototype/rewards/collection"
+                  element={<ProtoPage page={proto.RewardsCollection} />}
                 />
               </>
             ) : (

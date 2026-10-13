@@ -28,7 +28,8 @@ export default function M1PrototypeHub() {
   return (
     <section className="prototype-hub">
       <p className="prototype-banner">
-        Pass 2 · throwaway prototypes. Live pie-circles tick every second. ← / → flips variants.
+        Pass 2 · throwaway prototypes. Live pie-circles tick every second. ← / → flips variants.{" "}
+        <Link to="/prototype/m2">M2 hub</Link>
       </p>
       <h2>M1 · Detail page prototypes</h2>
       <p className="muted" style={{ marginTop: 0 }}>

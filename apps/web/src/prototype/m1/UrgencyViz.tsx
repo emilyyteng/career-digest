@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 const HALF_DAY_MS = 12 * 3600_000;
 const MAX_CHUNKS = 14;
 
-function urgencyTone(ms: number): "overdue" | "urgent" | "soon" | "ok" {
+function urgencyTone(ms: number): "overdue" | "urgent" | "soon" | "ahead" | "ok" {
   if (ms <= 0) return "overdue";
   if (ms < 6 * 3600_000) return "urgent";
   if (ms < 24 * 3600_000) return "soon";
+  if (ms < 5 * 24 * 3600_000) return "ahead";
   return "ok";
 }
 
