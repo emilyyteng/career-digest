@@ -32,7 +32,7 @@ Milestones M0, M1, M2 and M4 shipped before tickets existed, so they have no tic
 |--------|-------|------|--------|-------|
 | [M4-01](./tickets/M4/M4-01-unify-mark-applied.md) | Mark applied from Jobs has the same outcome as from Tasks | bug | Ready | Scheduled with M5; includes blocking edits on to-do-backed applications (R2.21) |
 | [M4-02](./tickets/M4/M4-02-category-totals-double-reverse.md) | Category totals subtract a reversed earn twice | bug | Done | Scheduled with M5; before M5-03 |
-| [M4-03](./tickets/M4/M4-03-recomplete-earns-delta.md) | Reversed earns can be revived: re-completed tasks and re-raised LeetCode days | bug | Ready | Scheduled with M5; after or with M4-02; before M5-01 |
+| [M4-03](./tickets/M4/M4-03-recomplete-earns-delta.md) | Reversed earns can be revived: re-completed tasks and re-raised LeetCode days | bug | Done | Scheduled with M5; before M5-01. Open: should LeetCode changes get a banner? |
 
 ## M5: Weekly goals, streaks & achievements, points rules, celebration
 

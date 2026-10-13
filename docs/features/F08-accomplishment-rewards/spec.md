@@ -35,7 +35,7 @@ Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and
 | M1 | Detail pages: misc task, application task, application | Done |
 | M2 | Reflections linked to work; shared completion modals | Done, with an open ticket (M2-01) |
 | M3 | Recurring tasks | Not started |
-| M4 | Global points ledger | Done, with open tickets (M4-01 to M4-03, scheduled with M5) |
+| M4 | Global points ledger | Done, with open ticket M4-01 (scheduled with M5); M4-02 and M4-03 done |
 | M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | Design |
 | M6 | Board departures log | Not started |
 | M7 | Cat Cake Collection v1: spending points, the Rewards page | Not started. The prototype is unfinished (R7.4–R7.6) |
@@ -365,11 +365,11 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
 | One earn per source item; a repeat returns the existing earn without adding points | [`pointsLedger.ts` L183–188](../../../apps/api/src/pointsLedger.ts) | Conforms R4.9, R4.10, R4.11 | This is why re-finishing an interview step doesn't earn again |
-| Adjust keeps the earn's original amount and stores the current value in `meta.current_amount` | [`pointsLedger.ts` L307–350](../../../apps/api/src/pointsLedger.ts) | Conforms R4.3 | |
-| Reverse inserts a negative reverse event **and** sets the original earn's amount to 0, marking it superseded | [`pointsLedger.ts` L227–298](../../../apps/api/src/pointsLedger.ts) | Conflicts R4.3 | Rewrites an earn row; leads to the next three rows. M4-02 stops the rewrite |
-| Category totals sum `amount` over all events, so a reversed earn is subtracted twice in its category (earn at 0 plus a negative reverse). The balance is correct because it comes from `balance_after` | [`pointsLedger.ts` L107–121](../../../apps/api/src/pointsLedger.ts) | Conflicts R4.1 | Ticket M4-02 |
-| Reopening then re-completing a misc task earns 0: the superseded earn is found and returned, so the task's points are lost | [`pointsLedger.ts` L183–188](../../../apps/api/src/pointsLedger.ts), [`pointsAwards.ts` L45–71](../../../apps/api/src/pointsAwards.ts) | Conflicts R4.13 | Ticket M4-03 |
-| Lowering a day's LeetCode count to 0 reverses its earn; raising it again the same day earns nothing, because adjust skips a superseded earn | [`pointsAwards.ts` L186–202](../../../apps/api/src/pointsAwards.ts), [`pointsLedger.ts` L319–322](../../../apps/api/src/pointsLedger.ts) | Conflicts R4.4 | Ticket M4-03 (same cause) |
+| Adjust keeps the earn's original amount and stores the current value in `meta.current_amount` | [`pointsLedger.ts` L402+](../../../apps/api/src/pointsLedger.ts) | Conforms R4.3 | |
+| Reverse inserts a negative reverse event and marks the earn superseded; the earn keeps its amount | [`pointsLedger.ts` L228–299](../../../apps/api/src/pointsLedger.ts) | Conforms R4.3 | Fixed by M4-02. Migration 027 restored earns the old reverse had zeroed |
+| Category totals sum `amount` over all events; a reversed earn nets to 0 in its category, and the totals sum to the balance | [`pointsLedger.ts` L107–121](../../../apps/api/src/pointsLedger.ts) | Conforms R4.1 | Fixed by M4-02 |
+| Re-completing a reopened misc task brings its earn back at f(new actual) with an adjust event, so across reopen and re-complete it nets f(new) − f(old). The reflection add-on stays if the first completion had one | [`pointsAwards.ts` L46–116](../../../apps/api/src/pointsAwards.ts), [`pointsLedger.ts` L301–394](../../../apps/api/src/pointsLedger.ts) | Conforms R4.13 | Fixed by M4-03. The banner reads e.g. "complete again · +45 points (30 before reopen, net +15)" |
+| Raising a day's LeetCode count from 0 brings the day's earn back at the new count's value | [`pointsAwards.ts` L231–241](../../../apps/api/src/pointsAwards.ts) | Conforms R4.4 | Fixed by M4-03. LeetCode changes have no banner; they show only in the points log |
 | The points breakdown has one row for all tasks; task earns don't record the task's category | [`pointsLedger.ts` L107–121](../../../apps/api/src/pointsLedger.ts), [`pointsAwards.ts` L45–71](../../../apps/api/src/pointsAwards.ts) | Conflicts R5.21 | Ticket M5-03 |
 | Lowering a day's LeetCode count adjusts or reverses its earn | [`pointsAwards.ts` L160–210](../../../apps/api/src/pointsAwards.ts) | Conforms R4.12 | |
 | Balance clamped at 0 (`clampDeltaToBalance`; database check `balance_after >= 0`) | [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts), [`025_points_ledger.sql` L20](../../../apps/api/src/sql/025_points_ledger.sql) | Conforms R4.5; conflicts R7.3 once M7 lands | Removing it needs a migration |

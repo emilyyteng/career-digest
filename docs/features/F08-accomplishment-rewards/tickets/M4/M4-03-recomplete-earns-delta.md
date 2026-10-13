@@ -1,6 +1,6 @@
 # M4-03: Reversed earns can be revived: re-completed tasks and re-raised LeetCode days
 
-**Status:** Ready
+**Status:** Done (LeetCode banner question open)
 **Blocked by:** (none)
 **Implements:** R4.4 (LeetCode row), R4.12, R4.13 (from `../../spec.md`)
 **Type:** bug
@@ -40,18 +40,18 @@ Fix this once in the ledger (a way to reinstate a superseded earn), not separate
 
 ## Acceptance criteria
 
-- [ ] Complete at 30 min, reopen, complete at 30 min: balance and `task` category total equal what they were after the first completion.
-- [ ] Complete at 30 min, reopen, complete at 45 min: net +15 versus after the first completion.
-- [ ] Complete at 30 min, reopen, complete at 20 min: net −10.
-- [ ] Complete with blank actual, reopen, complete with blank actual: net 0.
-- [ ] Reopen and re-complete several times: the result still depends only on the last actual time.
-- [ ] Editing actual time after re-completing still adjusts from the current value.
-- [ ] The completion banner shows the net change, not a fresh full earn.
-- [ ] LeetCode 1 → 0 → 1 on the same day: the day's points equal one solve, and the `leetcode` category total matches.
-- [ ] LeetCode 2 → 0 → 3 on the same day: the day's points equal three solves.
-- [ ] LeetCode 1 → 0 → 1 → 0: the day's points are 0; every step appears in the points log, and the points banner shows each change.
-- [ ] The balance equals the sum of category totals after each sequence above.
-- [ ] Tests cover each case above, for both misc tasks and LeetCode.
+- [x] Complete at 30 min, reopen, complete at 30 min: balance and `task` category total equal what they were after the first completion.
+- [x] Complete at 30 min, reopen, complete at 45 min: net +15 versus after the first completion.
+- [x] Complete at 30 min, reopen, complete at 20 min: net −10.
+- [x] Complete with blank actual, reopen, complete with blank actual: net 0.
+- [x] Reopen and re-complete several times: the result still depends only on the last actual time.
+- [x] Editing actual time after re-completing still adjusts from the current value.
+- [x] The completion banner shows the net change, not a fresh full earn. (See verification notes: the banner states both.)
+- [x] LeetCode 1 → 0 → 1 on the same day: the day's points equal one solve, and the `leetcode` category total matches.
+- [x] LeetCode 2 → 0 → 3 on the same day: the day's points equal three solves.
+- [ ] LeetCode 1 → 0 → 1 → 0: the day's points are 0; every step appears in the points log ✔, and the points banner shows each change ✘ (no LeetCode banner exists; see verification notes).
+- [x] The balance equals the sum of category totals after each sequence above.
+- [x] Tests cover each case above, for both misc tasks and LeetCode.
 
 ## Reuse notes
 
@@ -59,14 +59,20 @@ Fix this once in the ledger (a way to reinstate a superseded earn), not separate
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck: no new errors
-- [ ] Reuse check done
-- [ ] Committed as `F08 M4-03: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked (one open part, below)
+- [x] `npm run build` passes
+- [x] `npm test` passes (known baseline aside; see the flakiness note)
+- [x] API typecheck: no new errors
+- [x] Reuse check done
+- [x] Committed as `F08 M4-03: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+- New `reinstateEarn` in `pointsLedger.ts`: for a superseded earn it inserts an adjust event worth the new amount minus whatever the earn still holds after its reverse (0 unless that reverse was clamped), clears `superseded`, drops `reversed_amount` / `clawback_applied`, and sets `current_amount`. Later adjusts and reverses then work as usual. No earn is deleted (R4.3).
+- Misc: `awardMiscTaskComplete` checks for a superseded earn first and reinstates it at the misc formula's value (`miscTaskBreakdown`, the same formula `adjustTaskCompleteActual` uses). The reflection add-on stays if the original earn had one or the new completion has one.
+- LeetCode: `syncLeetcodeDailyPoints` reinstates the day's superseded earn when the count rises above 0.
+- Points log for complete 30 → reopen → complete 45: earn +30, reverse −30, adjust +45 "Essay complete again · +45 points (30 before reopen, net +15)". The completion banner shows that same message, so it gives the net change and the amount just added. Reopen still has no banner.
+- Open: no banner exists for LeetCode changes (`PATCH /api/progress/leetcode` returns no points info), so "the points banner shows each change" isn't met for LeetCode. Every step is in the points log. Adding a LeetCode banner is new UI, so it's raised with the user rather than built here.
+- Tests: 8 integration tests in `points.api.test.ts` (`reversed earns can be reinstated (M4-03)`). All 8 fail against the previous `pointsAwards.ts` and pass with the fix (checked by running both).
+- Full suite: 204 tests. The `career_digest_test` database can't run integration tests at the moment (see Issues found in the report: `postings` has hit Postgres's 1600-column limit), so the suite was run on a fresh scratch database `career_digest_scratch_test`. There, about 1 run in 2–3 has a single random 404 in an unrelated file. The same happens on the commit before this change (2 of 5 runs), so it's existing flakiness.

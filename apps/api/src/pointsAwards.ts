@@ -12,6 +12,7 @@ import {
   effectiveEarnAmount,
   findEarnEvent,
   recordEarn,
+  reinstateEarn,
   reverseEarn,
   type PointsEventRow,
 } from "./pointsLedger.js";
@@ -51,6 +52,12 @@ export async function awardMiscTaskComplete(
     withReflection?: boolean;
   },
 ): Promise<PointsEventRow> {
+  const sourceId = taskCompleteSourceId(input.taskId);
+  const existing = await findEarnEvent(db, "task_complete", sourceId);
+  if (existing?.meta.superseded === true) {
+    return reinstateMiscTaskComplete(db, existing, input);
+  }
+
   const { total, breakdown } = miscTaskBreakdown({
     actualMinutes: input.actualMinutes,
     withReflection: input.withReflection,
@@ -60,7 +67,7 @@ export async function awardMiscTaskComplete(
     amount: total,
     message: `${input.title} complete! +${total} points`,
     sourceType: "task_complete",
-    sourceId: taskCompleteSourceId(input.taskId),
+    sourceId,
     breakdown,
     meta: {
       actual_minutes: input.actualMinutes ?? null,
@@ -68,6 +75,44 @@ export async function awardMiscTaskComplete(
     },
   });
   return event;
+}
+
+function signedPoints(n: number): string {
+  if (n > 0) return `+${n}`;
+  if (n < 0) return `−${-n}`;
+  return "±0";
+}
+
+/**
+ * Re-complete after reopen (R4.13): the earn comes back at f(new actual), so
+ * across reopen and re-complete the task nets f(new) − f(old). The reflection
+ * add-on stays if the original completion had one.
+ */
+async function reinstateMiscTaskComplete(
+  db: Queryable,
+  existing: PointsEventRow,
+  input: { taskId: string; title: string; actualMinutes?: number | null; withReflection?: boolean },
+): Promise<PointsEventRow> {
+  const withReflection =
+    Boolean(input.withReflection) || existing.meta.with_reflection === true;
+  const { total } = miscTaskBreakdown({
+    actualMinutes: input.actualMinutes,
+    withReflection,
+  });
+  const beforeReopen = Number(existing.meta.reversed_amount ?? 0);
+  const { earn, adjust } = await reinstateEarn(
+    db,
+    "task_complete",
+    taskCompleteSourceId(input.taskId),
+    total,
+    (delta) =>
+      `${input.title} complete again · ${signedPoints(delta)} points (${beforeReopen} before reopen, net ${signedPoints(total - beforeReopen)})`,
+    {
+      actual_minutes: input.actualMinutes ?? null,
+      with_reflection: withReflection,
+    },
+  );
+  return adjust ?? earn ?? existing;
 }
 
 export async function awardApplicationApplied(
@@ -181,6 +226,19 @@ export async function syncLeetcodeDailyPoints(
       meta: { count },
     });
     return event;
+  }
+
+  if (existing.meta.superseded === true) {
+    if (target <= 0) return existing;
+    const { earn } = await reinstateEarn(
+      db,
+      sourceType,
+      sourceId,
+      target,
+      (delta) => `LC ${count} · ${signedPoints(delta)} points`,
+      { count },
+    );
+    return earn;
   }
 
   const current = effectiveEarnAmount(existing);

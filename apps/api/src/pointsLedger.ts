@@ -299,6 +299,101 @@ export async function reverseEarn(
 }
 
 /**
+ * Bring a reversed earn back at `newAmount` (re-complete, LC count raised from 0).
+ * Emits an adjust event for newAmount minus what the earn still holds after its
+ * reverse (non-zero only if that reverse was clamped), clears `superseded`, and
+ * sets meta.current_amount so later adjusts and reverses work from it.
+ * Returns nulls if there's no earn or it isn't superseded.
+ */
+export async function reinstateEarn(
+  db: Queryable,
+  sourceType: string,
+  sourceId: string,
+  newAmount: number,
+  message: (delta: number) => string,
+  meta: Record<string, unknown> = {},
+): Promise<{
+  earn: PointsEventRow | null;
+  adjust: PointsEventRow | null;
+  appliedDelta: number;
+}> {
+  const earn = await findEarnEvent(db, sourceType, sourceId);
+  if (!earn || earn.meta.superseded !== true) {
+    return { earn: null, adjust: null, appliedDelta: 0 };
+  }
+
+  const reversed = Number(earn.meta.reversed_amount ?? 0);
+  const clawedBack = Number(earn.meta.clawback_applied ?? reversed);
+  const retained = Math.max(0, reversed - clawedBack);
+  const target = Math.max(0, Math.floor(newAmount));
+  const requestedDelta = target - retained;
+
+  let adjust: PointsEventRow | null = null;
+  let appliedDelta = 0;
+  if (requestedDelta !== 0) {
+    const balance = await getPointsBalance(db);
+    const clamped = clampDeltaToBalance(balance, requestedDelta);
+    appliedDelta = clamped.appliedDelta;
+    const base = message(appliedDelta);
+    const { rows } = await db.query({
+      text: `INSERT INTO points_events (
+         kind, category, amount, balance_after, message,
+         source_type, source_id, breakdown, meta, reverses_event_id
+       ) VALUES (
+         'adjust', $1, $2, $3, $4, $5, $6, NULL, $7::jsonb, $8
+       )
+       RETURNING
+         id, created_at, kind, category, amount, balance_after, message,
+         source_type, source_id, breakdown, meta, reverses_event_id`,
+      values: [
+        earn.category,
+        appliedDelta,
+        clamped.balanceAfter,
+        appliedDelta === requestedDelta
+          ? base
+          : `${base} · ${appliedDelta} available of ${requestedDelta}`,
+        sourceType,
+        sourceId,
+        JSON.stringify({
+          reinstated: true,
+          requested_delta: requestedDelta,
+          applied_delta: appliedDelta,
+          clamped: appliedDelta !== requestedDelta,
+          previous_amount: retained,
+          new_amount: retained + appliedDelta,
+        }),
+        earn.id,
+      ],
+    });
+    adjust = mapEvent(rows[0] as Parameters<typeof mapEvent>[0]);
+  }
+
+  const { rows: updated } = await db.query({
+    text: `UPDATE points_events
+     SET meta = (meta - 'reversed_amount' - 'clawback_applied') || $2::jsonb
+     WHERE id = $1
+     RETURNING
+       id, created_at, kind, category, amount, balance_after, message,
+       source_type, source_id, breakdown, meta, reverses_event_id`,
+    values: [
+      earn.id,
+      JSON.stringify({
+        ...meta,
+        superseded: false,
+        current_amount: retained + appliedDelta,
+        last_adjusted_at: new Date().toISOString(),
+      }),
+    ],
+  });
+
+  return {
+    earn: mapEvent(updated[0] as Parameters<typeof mapEvent>[0]),
+    adjust,
+    appliedDelta,
+  };
+}
+
+/**
  * Move an earn to `newAmount` (e.g. actual minutes edit).
  * Emits an adjust event for the delta; keeps earn.amount as the original
  * historical delta so category SUM(amount) stays correct. Current value lives

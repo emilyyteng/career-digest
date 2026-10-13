@@ -298,3 +298,135 @@ describe.skipIf(!integrationReady)("points ledger", () => {
     expect(summary.categories.find((c) => c.category === "task")?.points).toBe(55);
   });
 });
+
+describe.skipIf(!integrationReady)("reversed earns can be reinstated (M4-03)", () => {
+  async function complete(id: string, actualMinutes?: number | null) {
+    const res = await apiClient()
+      .post(`/api/tasks/${id}/complete`)
+      .send(actualMinutes === undefined ? {} : { actualMinutes });
+    expect(res.status).toBe(200);
+    return res.body as { points?: { amount: number; message: string; balanceAfter: number } };
+  }
+
+  async function reopen(id: string) {
+    const res = await apiClient().post(`/api/tasks/${id}/reopen`);
+    expect(res.status).toBe(200);
+  }
+
+  async function expectLedger(balance: number, category: string, points: number) {
+    const summary = await getPointsSummary(pool);
+    expect(summary.balance).toBe(balance);
+    expect(categoryPoints(summary, category)).toBe(points);
+    expect(summary.categories.reduce((sum, c) => sum + c.points, 0)).toBe(balance);
+  }
+
+  it("complete 30, reopen, complete 30 nets 0", async () => {
+    await truncateAll();
+    const task = await seedTask({ title: "Essay", category: "school" });
+    await complete(task.id, 30);
+    await reopen(task.id);
+    await expectLedger(0, "task", 0);
+    const again = await complete(task.id, 30);
+    await expectLedger(30, "task", 30);
+    expect(again.points?.message).toBe(
+      "Essay complete again · +30 points (30 before reopen, net ±0)",
+    );
+    expect(again.points?.balanceAfter).toBe(30);
+  });
+
+  it("re-complete at 45 nets +15; at 20 nets −10", async () => {
+    await truncateAll();
+    const up = await seedTask({ title: "Up", category: "school" });
+    await complete(up.id, 30);
+    await reopen(up.id);
+    const upAgain = await complete(up.id, 45);
+    expect(upAgain.points?.message).toContain("net +15");
+    await expectLedger(45, "task", 45);
+
+    const down = await seedTask({ title: "Down", category: "school" });
+    await complete(down.id, 30);
+    await reopen(down.id);
+    const downAgain = await complete(down.id, 20);
+    expect(downAgain.points?.message).toContain("net −10");
+    await expectLedger(65, "task", 65);
+  });
+
+  it("blank actual, reopen, blank actual nets 0", async () => {
+    await truncateAll();
+    const task = await seedTask({ title: "Blank", category: "school" });
+    await complete(task.id);
+    await expectLedger(15, "task", 15);
+    await reopen(task.id);
+    await complete(task.id);
+    await expectLedger(15, "task", 15);
+  });
+
+  it("several reopen/re-complete cycles depend only on the last actual, and later edits adjust from it", async () => {
+    await truncateAll();
+    const task = await seedTask({ title: "Cycle", category: "school" });
+    await complete(task.id, 30);
+    await reopen(task.id);
+    await complete(task.id, 50);
+    await reopen(task.id);
+    await complete(task.id, 10);
+    await reopen(task.id);
+    await complete(task.id, 40);
+    await expectLedger(40, "task", 40);
+
+    const patched = await apiClient().patch(`/api/tasks/${task.id}`).send({ actualMinutes: 25 });
+    expect(patched.status).toBe(200);
+    expect(patched.body.pointsEarned).toBe(25);
+    await expectLedger(25, "task", 25);
+
+    await reopen(task.id);
+    await expectLedger(0, "task", 0);
+  });
+
+  it("keeps the reflection add-on from the first completion", async () => {
+    await truncateAll();
+    const task = await seedTask({ title: "Reflected", category: "school" });
+    const first = await apiClient()
+      .post(`/api/tasks/${task.id}/complete`)
+      .send({ actualMinutes: 30, reflection: { lane: "other", body: "Went well" } });
+    expect(first.status).toBe(200);
+    expect(first.body.points?.amount).toBe(30 + POINTS.reflectionDefault);
+    await reopen(task.id);
+    await complete(task.id, 30);
+    await expectLedger(30 + POINTS.reflectionDefault, "task", 30 + POINTS.reflectionDefault);
+  });
+
+  it("LeetCode 1 → 0 → 1 earns one solve", async () => {
+    await truncateAll();
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 1);
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 0);
+    await expectLedger(0, "leetcode", 0);
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 1);
+    await expectLedger(30, "leetcode", 30);
+  });
+
+  it("LeetCode 2 → 0 → 3 earns three solves, then later changes adjust", async () => {
+    await truncateAll();
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 2);
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 0);
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 3);
+    await expectLedger(90, "leetcode", 90);
+    await syncLeetcodeDailyPoints(pool, "2026-03-10", 4);
+    await expectLedger(120, "leetcode", 120);
+  });
+
+  it("LeetCode 1 → 0 → 1 → 0 ends at 0 with every step in the log", async () => {
+    await truncateAll();
+    for (const count of [1, 0, 1, 0]) {
+      await syncLeetcodeDailyPoints(pool, "2026-03-10", count);
+    }
+    await expectLedger(0, "leetcode", 0);
+    const events = (await listPointsEvents(pool, { limit: 20 })).reverse();
+    expect(events.map((e) => [e.kind, e.amount])).toEqual([
+      ["earn", 30],
+      ["reverse", -30],
+      ["adjust", 30],
+      ["reverse", -30],
+    ]);
+    expect(events[2].message).toBe("LC 1 · +30 points");
+  });
+});
