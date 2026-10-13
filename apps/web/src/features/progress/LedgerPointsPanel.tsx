@@ -98,7 +98,21 @@ export default function LedgerPointsPanel() {
   if (loading && !summary) return <p className="muted">Loading points…</p>;
   if (!summary) return null;
 
-  const max = Math.max(...summary.categories.map((c) => c.points), 1);
+  const rows = [
+    ...summary.categories
+      .filter((c) => c.category !== "task")
+      .map((c) => ({
+        key: c.category,
+        label: CATEGORY_LABELS[c.category] ?? c.category,
+        points: c.points,
+      })),
+    ...summary.taskCategories.map((c) => ({
+      key: `task:${c.taskCategoryId ?? "deleted"}`,
+      label: c.name,
+      points: c.points,
+    })),
+  ].sort((a, b) => b.points - a.points);
+  const max = Math.max(...rows.map((r) => r.points), 1);
 
   return (
     <div className="ledger-points">
@@ -113,15 +127,15 @@ export default function LedgerPointsPanel() {
         </span>
       </div>
 
-      {summary.categories.length > 0 && (
+      {rows.length > 0 && (
         <div className="ledger-cats">
-          {summary.categories.map((cat) => (
-            <div key={cat.category} className="ledger-cat-row">
-              <span>{CATEGORY_LABELS[cat.category] ?? cat.category}</span>
+          {rows.map((row) => (
+            <div key={row.key} className="ledger-cat-row">
+              <span>{row.label}</span>
               <div className="ledger-cat-bar">
-                <span style={{ width: `${(Math.max(cat.points, 0) / max) * 100}%` }} />
+                <span style={{ width: `${(Math.max(row.points, 0) / max) * 100}%` }} />
               </div>
-              <span className="amt">{cat.points}</span>
+              <span className="amt">{row.points}</span>
             </div>
           ))}
         </div>

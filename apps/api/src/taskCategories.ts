@@ -135,6 +135,13 @@ export async function deleteTaskCategory(db: Queryable, id: string): Promise<"ok
       [id, adminId],
     );
   }
+  // The points breakdown labels these earns by their recorded name once the category is gone.
+  await db.query(
+    `UPDATE points_events
+     SET meta = meta || jsonb_build_object('task_category_name', $2::text)
+     WHERE kind = 'earn' AND meta->>'task_category_id' = $1`,
+    [id, existing.name],
+  );
   await db.query(`DELETE FROM task_categories WHERE id = $1`, [id]);
   return "ok";
 }

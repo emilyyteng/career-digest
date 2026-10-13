@@ -42,6 +42,25 @@ export function weeklyGoalSourceId(weekStart: string, slot: "lc" | "apps"): stri
   return `${weekStart}:${slot}`;
 }
 
+/**
+ * R5.21: the task's category at completion, kept on the earn. The name is kept too,
+ * so the breakdown still has a label after the category is deleted.
+ */
+async function taskCategoryMeta(
+  db: Queryable,
+  taskId: string,
+): Promise<{ task_category_id: string; task_category_name: string } | Record<string, never>> {
+  const { rows } = await db.query<{ id: string; name: string }>(
+    `SELECT c.id, c.name
+     FROM tasks t
+     JOIN task_categories c ON c.id = t.category_id
+     WHERE t.id::text = $1`,
+    [taskId],
+  );
+  const row = rows[0];
+  return row ? { task_category_id: row.id, task_category_name: row.name } : {};
+}
+
 export async function awardMiscTaskComplete(
   db: Queryable,
   input: {
@@ -53,8 +72,9 @@ export async function awardMiscTaskComplete(
 ): Promise<PointsEventRow> {
   const sourceId = taskCompleteSourceId(input.taskId);
   const existing = await findEarnEvent(db, "task_complete", sourceId);
+  const categoryMeta = await taskCategoryMeta(db, input.taskId);
   if (existing?.meta.superseded === true) {
-    return reinstateMiscTaskComplete(db, existing, input);
+    return reinstateMiscTaskComplete(db, existing, input, categoryMeta);
   }
 
   const { total, breakdown } = miscTaskBreakdown({
@@ -71,6 +91,7 @@ export async function awardMiscTaskComplete(
     meta: {
       actual_minutes: input.actualMinutes ?? null,
       with_reflection: Boolean(input.withReflection),
+      ...categoryMeta,
     },
   });
   return event;
@@ -85,12 +106,14 @@ function signedPoints(n: number): string {
 /**
  * Re-complete after reopen (R4.13): the earn comes back at f(new actual), so
  * across reopen and re-complete the task nets f(new) − f(old). The reflection
- * add-on stays if the original completion had one.
+ * add-on stays if the original completion had one. The earn moves to the task's
+ * category at this completion; the earlier earn and its reverse net 0 wherever they sit.
  */
 async function reinstateMiscTaskComplete(
   db: Queryable,
   existing: PointsEventRow,
   input: { taskId: string; title: string; actualMinutes?: number | null; withReflection?: boolean },
+  categoryMeta: Record<string, string>,
 ): Promise<PointsEventRow> {
   const withReflection =
     Boolean(input.withReflection) || existing.meta.with_reflection === true;
@@ -109,6 +132,7 @@ async function reinstateMiscTaskComplete(
     {
       actual_minutes: input.actualMinutes ?? null,
       with_reflection: withReflection,
+      ...categoryMeta,
     },
   );
   return adjust ?? earn ?? existing;

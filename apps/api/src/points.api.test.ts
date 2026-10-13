@@ -436,3 +436,109 @@ describe.skipIf(!integrationReady)("reversed earns can be reinstated (M4-03)", (
     expect(events[2].message).toBe("LC 1 · +30 points");
   });
 });
+
+describe.skipIf(!integrationReady)("points breakdown by task category (M5-03)", () => {
+  async function categoryId(name: string): Promise<string> {
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT id FROM task_categories WHERE lower(name) = lower($1)`,
+      [name],
+    );
+    return rows[0].id;
+  }
+
+  async function complete(id: string, actualMinutes: number) {
+    const res = await apiClient().post(`/api/tasks/${id}/complete`).send({ actualMinutes });
+    expect(res.status).toBe(200);
+  }
+
+  async function moveTo(id: string, name: string) {
+    const res = await apiClient().patch(`/api/tasks/${id}`).send({ categoryId: await categoryId(name) });
+    expect(res.status).toBe(200);
+  }
+
+  /** Task category rows by name, after checking they sum to the `task` row. */
+  async function breakdown(): Promise<Record<string, number>> {
+    const res = await apiClient().get("/api/points");
+    expect(res.status).toBe(200);
+    const summary = res.body as Awaited<ReturnType<typeof getPointsSummary>>;
+    const sum = summary.taskCategories.reduce((s, c) => s + c.points, 0);
+    expect(sum).toBe(categoryPoints(summary, "task"));
+    return Object.fromEntries(summary.taskCategories.map((c) => [c.name, c.points]));
+  }
+
+  it("splits task points across two categories", async () => {
+    await truncateAll();
+    const essay = await seedTask({ title: "Essay", categoryName: "School" });
+    const book = await seedTask({ title: "Book", categoryName: "Reading" });
+    await complete(essay.id, 30);
+    await complete(book.id, 20);
+    expect(await breakdown()).toEqual({ School: 40, Reading: 30 });
+  });
+
+  it("keeps points with the category at completion when the task moves, including later adjusts", async () => {
+    await truncateAll();
+    const essay = await seedTask({ title: "Essay", categoryName: "School" });
+    await complete(essay.id, 30);
+    await moveTo(essay.id, "Reading");
+    expect(await breakdown()).toEqual({ School: 40 });
+
+    const res = await apiClient().patch(`/api/tasks/${essay.id}`).send({ actualMinutes: 50 });
+    expect(res.status).toBe(200);
+    expect(await breakdown()).toEqual({ School: 60 });
+  });
+
+  it("an earn from before M5-03 falls back to the task's current category", async () => {
+    await truncateAll();
+    const essay = await seedTask({ title: "Essay", categoryName: "School" });
+    await complete(essay.id, 30);
+    await pool.query(
+      `UPDATE points_events SET meta = meta - 'task_category_id' - 'task_category_name'
+       WHERE source_type = 'task_complete'`,
+    );
+    await moveTo(essay.id, "Reading");
+    expect(await breakdown()).toEqual({ Reading: 40 });
+  });
+
+  it("a reopened task nets 0 and drops out; re-completing counts under its new category", async () => {
+    await truncateAll();
+    const essay = await seedTask({ title: "Essay", categoryName: "School" });
+    await complete(essay.id, 30);
+    const reopened = await apiClient().post(`/api/tasks/${essay.id}/reopen`);
+    expect(reopened.status).toBe(200);
+    expect(await breakdown()).toEqual({});
+
+    await moveTo(essay.id, "Writing");
+    await complete(essay.id, 45);
+    expect(await breakdown()).toEqual({ Writing: 55 });
+  });
+
+  it("a deleted task's points go to Deleted tasks, which is hidden at 0", async () => {
+    await truncateAll();
+    const kept = await seedTask({ title: "Kept", categoryName: "School" });
+    const gone = await seedTask({ title: "Gone", categoryName: "School" });
+    const zero = await seedTask({ title: "Zero", categoryName: "Reading" });
+    await complete(kept.id, 30);
+    await complete(gone.id, 20);
+    await complete(zero.id, 20);
+    await apiClient().post(`/api/tasks/${zero.id}/reopen`).expect(200);
+
+    await apiClient().delete(`/api/tasks/${gone.id}`).expect(200);
+    await apiClient().delete(`/api/tasks/${zero.id}`).expect(200);
+    expect(await breakdown()).toEqual({ School: 40, "Deleted tasks": 30 });
+  });
+
+  it("a renamed category shows its new name; a deleted one keeps its recorded name", async () => {
+    await truncateAll();
+    const name = `Side ${Date.now()}`;
+    const created = await apiClient().post("/api/task-categories").send({ name });
+    expect(created.status).toBe(201);
+    const task = await seedTask({ title: "Side task", categoryName: name });
+    await complete(task.id, 20);
+
+    await apiClient().patch(`/api/task-categories/${created.body.id}`).send({ name: `${name} 2` }).expect(200);
+    expect(await breakdown()).toEqual({ [`${name} 2`]: 30 });
+
+    await apiClient().delete(`/api/task-categories/${created.body.id}`).expect(200);
+    expect(await breakdown()).toEqual({ [`${name} 2`]: 30 });
+  });
+});

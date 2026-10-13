@@ -24,9 +24,18 @@ export type PointsEventRow = {
   reversesEventId: string | null;
 };
 
+export type TaskCategoryPoints = {
+  /** null is the "Deleted tasks" row. */
+  taskCategoryId: string | null;
+  name: string;
+  points: number;
+};
+
 export type PointsSummary = {
   balance: number;
   categories: Array<{ category: PointsCategory; points: number }>;
+  /** The `task` category split by task category (R5.21); sums to its `task` row. */
+  taskCategories: TaskCategoryPoints[];
 };
 
 /** Compact earn payload for complete/applied/finish API responses. */
@@ -117,7 +126,55 @@ export async function getPointsSummary(db: Queryable): Promise<PointsSummary> {
     categories: rows
       .map((r) => ({ category: r.category, points: Number(r.points) }))
       .filter((r) => r.points !== 0),
+    taskCategories: await getTaskCategoryPoints(db),
   };
+}
+
+/**
+ * Each task's events (earn, adjusts, reverses) go where its earn says: the category
+ * recorded at completion, else the task's current one (earns from before R5.21).
+ * Events whose task no longer exists go to "Deleted tasks".
+ */
+async function getTaskCategoryPoints(db: Queryable): Promise<TaskCategoryPoints[]> {
+  const { rows } = await db.query<{
+    category_id: string | null;
+    name: string | null;
+    points: string;
+  }>(
+    `WITH per_task AS (
+       SELECT source_type, source_id, SUM(amount) AS points
+       FROM points_events
+       WHERE category = 'task'
+       GROUP BY source_type, source_id
+     ),
+     attributed AS (
+       SELECT
+         pt.points,
+         CASE WHEN t.id IS NULL THEN NULL
+              ELSE COALESCE(e.meta->>'task_category_id', t.category_id::text)
+         END AS category_id,
+         CASE WHEN t.id IS NULL THEN NULL ELSE e.meta->>'task_category_name' END AS recorded_name
+       FROM per_task pt
+       LEFT JOIN points_events e
+         ON e.kind = 'earn' AND e.source_type = pt.source_type AND e.source_id = pt.source_id
+       LEFT JOIN tasks t ON t.id::text = pt.source_id
+     )
+     SELECT
+       a.category_id,
+       COALESCE(c.name, MAX(a.recorded_name)) AS name,
+       SUM(a.points)::text AS points
+     FROM attributed a
+     LEFT JOIN task_categories c ON c.id::text = a.category_id
+     GROUP BY a.category_id, c.name
+     ORDER BY SUM(a.points) DESC, COALESCE(c.name, MAX(a.recorded_name))`,
+  );
+  return rows
+    .map((r) => ({
+      taskCategoryId: r.category_id,
+      name: r.category_id === null ? "Deleted tasks" : (r.name ?? "Uncategorized"),
+      points: Number(r.points),
+    }))
+    .filter((r) => r.points !== 0);
 }
 
 export async function listPointsEvents(

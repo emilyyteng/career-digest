@@ -1,7 +1,7 @@
 # M5-03: Points breakdown splits tasks by task category
 
-**Status:** Ready (after M4-02)
-**Blocked by:** M4-02 (category totals must be correct first)
+**Status:** Done
+**Blocked by:** M4-02 (done)
 **Implements:** R5.21 (from `../../spec.md`)
 **Type:** build
 
@@ -19,13 +19,13 @@ Today task earns don't record a task category ([`pointsAwards.ts` L45–71](../.
 
 ## Acceptance criteria
 
-- [ ] The breakdown shows one row per task category that has non-zero points, instead of a single task row.
-- [ ] Category rows sum to what the task row showed before (after M4-02's fix).
-- [ ] New task earns record the task's category at completion; moving the task afterwards doesn't change the breakdown.
-- [ ] Earns from before this ticket appear under the task's current category.
-- [ ] Earns whose task was deleted appear in a "Deleted tasks" row, hidden when it nets to 0, so the rows still sum to the old task total.
-- [ ] Adjust and reverse events count toward the same category as their earn.
-- [ ] Tests cover two categories, a task moved after completion, a pre-existing earn, a reopened task, and a deleted task.
+- [x] The breakdown shows one row per task category that has non-zero points, instead of a single task row.
+- [x] Category rows sum to what the task row showed before (after M4-02's fix).
+- [x] New task earns record the task's category at completion; moving the task afterwards doesn't change the breakdown.
+- [x] Earns from before this ticket appear under the task's current category.
+- [x] Earns whose task was deleted appear in a "Deleted tasks" row, hidden when it nets to 0, so the rows still sum to the old task total.
+- [x] Adjust and reverse events count toward the same category as their earn.
+- [x] Tests cover two categories, a task moved after completion, a pre-existing earn, a reopened task, and a deleted task.
 
 ## Reuse notes
 
@@ -33,13 +33,17 @@ Extend `getPointsSummary` rather than adding a second summary endpoint. The Rewa
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Reuse check done
-- [ ] Committed as `F08 M5-03: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Reuse check done
+- [x] Committed as `F08 M5-03: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+**Done 2026-10-13** (commit hash added to the board).
+
+- Task earns record `task_category_id` and `task_category_name` in `meta` at completion ([`pointsAwards.ts` `taskCategoryMeta`](../../../../../apps/api/src/pointsAwards.ts)). `GET /api/points` keeps the `task` row and adds `taskCategories` ([`pointsLedger.ts` `getTaskCategoryPoints`](../../../../../apps/api/src/pointsLedger.ts)); each task's earn, adjusts and reverses are summed and placed by its earn. `LedgerPointsPanel.tsx` shows the category rows in place of the single Tasks row, sorted by points with the other categories. No migration: the category lives in `meta`.
+- Checked by running: 6 new integration tests in `points.api.test.ts` (two categories, moved after completion with a later adjust, pre-existing earn, reopened then re-completed, deleted task with a hidden 0 row, renamed and deleted category); each asserts the rows sum to the `task` row. `npm run check` passes (249 tests). Dev data: Tasks 1598 splits into School 1220 and Admin 378.
+- Proposed (not in the spec): re-completing a reopened task records its category at the new completion, since the earlier earn and its reverse net 0. A renamed category shows its current name; when a category is deleted, its earns keep its last name ([`taskCategories.ts` `deleteTaskCategory`](../../../../../apps/api/src/taskCategories.ts)).

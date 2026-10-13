@@ -1050,6 +1050,8 @@ export type PointsCategory =
 export type PointsSummary = {
   balance: number;
   categories: Array<{ category: PointsCategory; points: number }>;
+  /** The `task` row split by task category; `taskCategoryId` null is "Deleted tasks". */
+  taskCategories: Array<{ taskCategoryId: string | null; name: string; points: number }>;
 };
 
 export type PointsEvent = {
