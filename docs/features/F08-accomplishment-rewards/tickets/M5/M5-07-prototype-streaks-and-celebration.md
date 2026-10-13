@@ -2,7 +2,7 @@
 
 **Status:** Ready
 **Blocked by:** (none)
-**Implements:** R5.1, RX.2; designs for R5.2, R5.25–R5.27 (from `../../spec.md`)
+**Implements:** R5.1, RX.2; designs for R5.2, R5.25–R5.28 (from `../../spec.md`)
 **Type:** prototype
 
 ## What to build
@@ -15,15 +15,18 @@ Every variant must satisfy all Established requirements, including:
 - count-based achievements for applications, LC and interview steps per kind (R5.26)
 - the today strip on Home and Progress showing current streaks instead of `x/3` (R5.27)
 
-Use the Q42 proposal numbers as mock values until they're confirmed.
+- the weekly-goal streak is display only (R5.28)
+- no deep-work toggle or badges anywhere (R5.29)
+
+Use the numbers in R5.25 and R5.26 as mock values.
 
 ## Design questions (prototype tickets only)
 
-1. **Today strip with streaks (R5.27):** how the apps and LC streaks read at a glance, including "today not done yet"; what happens to the deep-work badges (Q47).
+1. **Today strip with streaks (R5.27):** how the apps and LC streaks read at a glance, including "today not done yet", with the deep-work badges gone.
 2. **Streak and achievement surface:** where they're seen before M8 (for example a block on Progress) and how locked, unlocked and next achievements look.
 3. **Unlock moment:** how a streak milestone or achievement is announced (`EarnFlash`, the one-time notice, or something else).
 4. **Completion flourish (Q7):** keep or drop; if kept, which events trigger it and whether it replaces `EarnFlash`.
-5. **Weekly-goal streak display (if Q43 says yes):** where "3 weeks in a row" appears.
+5. **Weekly-goal streak display (R5.28):** how "3 weeks in a row" reads in the congrats banner and the Progress weekly block.
 
 Prototype URL: `/prototype/f08/streaks`
 

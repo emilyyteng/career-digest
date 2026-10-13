@@ -1,8 +1,8 @@
 # M5-05: Week close and weekly records
 
-**Status:** Draft (open: spec Q44)
+**Status:** Ready (after M4-01)
 **Blocked by:** M4-01 (one mark-applied hook for weekly apps progress)
-**Implements:** R5.7, R5.8, R5.9, R5.11, R5.12, R5.14, R5.15, R5.22, R5.23, R5.24, B1 (from `../../spec.md`)
+**Implements:** R5.7, R5.8, R5.9, R5.11, R5.12, R5.14, R5.15, R5.22, R5.23, R5.24, R5.28 (data), B1 (from `../../spec.md`)
 **Type:** build
 
 ## What to build
@@ -17,11 +17,10 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 6. **Apps membership (R5.24):** untagging an open task shrinks the goal; a deleted tagged task drops out.
 7. **Start and switch-over (R5.22):** records start with the week this ships. Earlier weeks are never closed or scored. In the switch-over week, a flat +100 already paid the old way isn't paid again.
 8. **Completion log (R5.8):** each closed week adds one entry per goal (for example `Apps 6/10`, `LC 12/10`, with its points) to the completions diary ([`completionsDiary.ts`](../../../../../apps/api/src/completionsDiary.ts)) as a new kind. Its look comes from M5-06.
-9. **After close:** per Q44.
+9. **After close (R5.23):** a closed week's record is fixed. A weekly solve logged late counts toward the current week; a carried-over task counts toward the week it's completed in.
+10. **Weekly-goal streak (R5.28):** expose each goal's current run of met weeks from the records, for display only (no points).
 
 ## Acceptance criteria
-
-(Draft. Finalize after Q44.)
 
 - [ ] Closing a week with 6/10 apps done records 6/10, not met, +120.
 - [ ] 10/10 apps: met, +300. LC 12/10: met, +340.
@@ -33,6 +32,8 @@ When a week ends, each goal's result is recorded once, points are awarded from t
 - [ ] LC progress can exceed the target and is shown as such by the API.
 - [ ] The switch-over week doesn't pay the flat bonus twice; weeks before it get no record.
 - [ ] Closed weeks appear in the completions diary, one entry per goal.
+- [ ] After close, no action changes a closed week's record or points; a late weekly solve raises the current week instead.
+- [ ] Each goal's run of consecutive met weeks is available from the API.
 - [ ] Tests cover all of the above, including week boundaries in a non-UTC time zone (B2).
 
 ## Reuse notes

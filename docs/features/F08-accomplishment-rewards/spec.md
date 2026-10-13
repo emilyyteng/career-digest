@@ -77,7 +77,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R2.1b** (Established) When an application task is marked applied, every reflection linked to that task moves to the application.
 - **R2.2** (Established) Reflections can be linked after the fact from task and application pages, and from wherever reflection logs are shown. The final entry points are settled in M8 (R8.7).
 - **R2.3** (Established) A task or application can have multiple reflections, listed flat by date created.
-- **R2.4** (Established) Deep work is a toggle that defaults on for every reflection. A deep-work unit is never granted without a reflection.
+- **R2.4** (Established; superseded in M5 by R5.29) Deep work is a toggle that defaults on for every reflection. A deep-work unit is never granted without a reflection.
 - **R2.5** (Established) "Other" is a reflection category for deep work that is neither application nor technical.
 
 **Linking edge cases** (Established 2026-10-13)
@@ -188,7 +188,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R5.13** (Established) **LC carry-over.** The LC target number carries forward and stays editable. Progress starts at 0, and the label clears.
 - **R5.14** (Established) LC progress can go past the target, for example when dipping into next week's set. It is recorded as reached (12/10).
 - **R5.22** (Established 2026-10-13) Weekly records start with the week M5's week close ships. Earlier weeks get no record and no points; their apps results can't be trusted, because carry-over moved members out of them. In the week of the switch, a flat bonus already paid the old way isn't paid again at close.
-- **R5.23** (Established 2026-10-13) The first request after a week ends closes every unclosed week, oldest first. A week closes even if the app wasn't opened on Sunday. The points are dated when the week closes and labelled with the week ("Week of Oct 5").
+- **R5.23** (Established 2026-10-13) The first request after a week ends closes every unclosed week, oldest first. A week closes even if the app wasn't opened on Sunday. The points are dated when the week closes and labelled with the week ("Week of Oct 5"). A closed week's record is fixed: a weekly solve logged late counts toward the current week, and a carried-over task counts toward the week it's completed in. There's no grace window.
 - **R5.24** (Established 2026-10-13) Apps goal membership:
   - Untagging an open task shrinks the goal, even if that makes it met.
   - A tagged task that's deleted (for example, its posting left the board) drops out of the goal.
@@ -214,18 +214,34 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 
 **Streaks and achievements**
 
-- **R5.25** (Established 2026-10-13; numbers pending Q42) **Daily streaks** for LC and for applications.
+- **R5.25** (Established 2026-10-13) **Daily streaks** for LC and for applications. The numbers are a starting point and may be tuned.
   - A day counts for the LC streak if it has at least 1 solve. It counts for the apps streak if at least 1 application was marked applied that day (Proposed definition).
   - Today doesn't break a streak until the day ends.
-  - Every day the streak continues earns a small number of points that grows with the streak's length. Small daily points are more motivating than large milestone payouts.
-  - Separately, reaching streak milestones (for example 5, 10 or 20 days) earns a one-time reward.
-- **R5.26** (Established 2026-10-13; numbers pending Q42) **Achievements** for accumulated counts, with points roughly proportional to the count:
-  - applications marked applied
-  - LC solves
-  - finished interview steps, counted per kind (for example x coding assessments, x technical screens). These reward more than applications or LC.
+  - **Daily points:** each day the streak continues earns 2 × the streak's length, capped at 20 (day 1 = 2, day 10 onward = 20). Small daily points are more motivating than large milestone payouts.
+  - **Milestones:** 5, 10, 20, 30, 50 and 100 days, each worth 5 × the length (+25 to +500). Each new streak can earn them again.
+  - **Timing:** a day's streak points are awarded on its first qualifying action and reversed if that day drops back to 0. Editing a past day in History updates the displayed streak, but doesn't award or reverse streak points for that day or any later day.
+  - **Launch:** a streak running at launch keeps its earlier days; daily points start from launch.
+  - Streak points have their own ledger category, `streak`.
+- **R5.26** (Established 2026-10-13) **Achievements** for accumulated counts, with points roughly proportional to the count. Each pays once. The numbers are a starting point.
+  - Applications marked applied: 10, 25, 50, 100, 150, 200, 300, 500; 3 × N points.
+  - LC solves: 25, 50, 100, 200, 300, 500; 5 × N points.
+  - Finished interview steps, counted per kind, worth the step's own points × N (they reward more than applications or LC): assessment and phone at 5, 10, 25, 50; technical at 3, 5, 10, 25; onsite at 1, 3, 5, 10; offer at 1, 2, 3, 5. Custom steps don't count.
+  - There are no "first of a kind" achievements; every achievement is a count.
+  - **Launch:** achievements already passed unlock at launch with no points; only crossings after launch earn.
+- **R5.27** (Established 2026-10-13; built after R5.25) The today strip on Home and Progress shows the current apps and LC streaks instead of today's `x/3` counts, which aren't motivating. The deep-work badges go with deep work (R5.29).
+- **R5.28** (Established 2026-10-13) **Weekly-goal streak** is display only, with no points: hitting a target already pays per unit plus the flat bonus. It's shown per goal (for example "LC: 3 weeks in a row") in the congrats banner and the Progress weekly block, read from the week-close records.
 
-  There are no "first of a kind" achievements; every achievement is a count.
-- **R5.27** (Established 2026-10-13; built after R5.25) The today strip on Home and Progress shows the current apps and LC streaks instead of today's `x/3` counts, which aren't motivating. What happens to the deep-work badges is Q47.
+**Retiring deep work**
+
+- **R5.29** (Established 2026-10-13) Deep work is retired. It was a motivational display; now that reflections carry minutes and points, whether one is marked deep work adds little. The toggle leaves every reflection form, and the today strip loses its deep-work badges. This supersedes R2.4 and B5. What replaces deep work in the Progress heatmap marks and summary counts is Q49.
+
+**Reflection minutes**
+
+- **R5.30** (Proposed; Q50) One model for reflection minutes:
+  - Every reflection can have minutes, entered when it's created and editable later, wherever reflections are created or edited.
+  - A reflection's minutes move points only where that reflection created points: a standalone reflection's own earn, or the reflection add-on of the application or interview earn it was written in (R5.19). Otherwise editing minutes changes no points: reflections linked later, and the misc task's modal reflection, whose add-on is flat.
+  - In the misc completion modal, the task's actual time stays the one time field; the reflection there has no separate minutes.
+  - Editing the minutes of an application's modal reflection also updates the completed application task's actual time, which was copied from it.
 
 **LeetCode logging**
 
@@ -263,6 +279,7 @@ M7 is devoted to the gacha and spending points.
 - **R7.5** (Established) v1 is the working product. Ongoing design updates go to a separate feature, created only when needed.
 - **R7.6** (Established) The pull banner loads quickly. The prototype is far too slow; recheck during implementation.
 - **R7.8** (Established) Rewards hosts the points log, with a simple filter: earnings only, pulls only, or both. What a pull entry shows is decided in M7.
+- **R7.9** (Established 2026-10-13; placement revisited in M7) The app includes a readable reference of the points rules, so they can be checked without leaving the app: the points formula, weekly scoring, streaks (including that the weekly-goal streak earns nothing), achievements, and later the gacha rates. It's a tab in Rewards or Progress; which one is decided in M7, alongside M8's information architecture. (Proposed: it reads the same values the code uses, so it can't drift from the rules.)
 - **R7.7** (Proposed; Q21) The gacha parameters from the prototype:
   - 180 points per pull; CE base rate 1.5%
   - soft pity from pull 13 (+8 percentage points per pull); hard pity at 20
@@ -296,7 +313,7 @@ M8 follows M7, so Progress is redesigned knowing what Rewards covers.
 - **B2** (Established) The week runs Monday to Sunday in the user's local time zone.
 - **B3** (Established) Points are forward-only (R4.3). An item that earns once never earns again for the same completion (R4.10, R4.11).
 - **B4** (Established, from M7) The balance may go negative. Spending is blocked whenever the balance is below the cost (R7.2, R7.3).
-- **B5** (Established) A deep-work unit always comes from a reflection (R2.4).
+- **B5** (Superseded in M5 by R5.29) A deep-work unit always comes from a reflection (R2.4).
 - **B6** (Established) The weekly LC label applies to LC only and clears at each week boundary (R5.5).
 - **B7** (Established) Every path that completes the same kind of work has the same outcome: points, reflection transfer, actual time and weekly progress (R2.13, R5.17).
 
@@ -337,10 +354,11 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | When both postings have applications, merge moves interview threads but not reflections, then deletes the removed application, leaving its reflections unattached | [`mergeDuplicatePostings.ts` L184–217](../../../apps/api/src/mergeDuplicatePostings.ts) | Conflicts R2.17 | Ticket M2-01 |
 | Only misc tasks can be reopened | [`tasks.ts` L947–961](../../../apps/api/src/tasks.ts) | Conforms R2.18 | |
 | The modal's reflection links to the application in mark-applied mode | [`routes.ts` L429–437](../../../apps/api/src/routes.ts) | Conforms R2.20 for applications | Misc-task link not re-verified |
-| `deep_work` stored on the reflection, default on | [`ReflectionDraftFields.tsx` L24–28](../../../apps/web/src/features/completion/ReflectionDraftFields.tsx), [`progress.ts` L743](../../../apps/api/src/progress.ts) | Conforms R2.4 | |
+| `deep_work` stored on the reflection, default on | [`ReflectionDraftFields.tsx` L24–28](../../../apps/web/src/features/completion/ReflectionDraftFields.tsx), [`progress.ts` L743](../../../apps/api/src/progress.ts) | Conforms R2.4; conflicts R5.29 | Retired by M5-14 |
 | Shared `CompleteWorkModal`; `OptionalPanel` toggles, keeps text on collapse, confirms discard; defaults match R2.9 | [`CompleteWorkModal.tsx`](../../../apps/web/src/features/completion/CompleteWorkModal.tsx), [`OptionalPanel.tsx`](../../../apps/web/src/features/completion/OptionalPanel.tsx), [`FinishInterviewStepModal.tsx`](../../../apps/web/src/features/interviews/FinishInterviewStepModal.tsx) | Conforms R2.6–R2.9, R2.11 | Turning the reflection off in application mode clears its minutes but keeps its text (Unspecified) |
 | Misc actual time: set in the modal, editable in Edit details, edits adjust points | [`routes.ts` L931–963](../../../apps/api/src/routes.ts) | Conforms R2.10 | |
-| Editing a reflection's minutes never changes points | [`progress.ts` `updateReflectionLog`](../../../apps/api/src/progress.ts) | Conflicts R5.19 | Planned M5 change |
+| Reflection minutes can't be edited at all: the update accepts no minutes field. They can be entered at creation in the Progress compose form and the application and interview completion modals, but not in the misc completion modal (the task's actual time is used) or when creating from a detail page's Reflections panel | [`progress.ts` L790–865](../../../apps/api/src/progress.ts), [`CompleteWorkModal.tsx` L100–115](../../../apps/web/src/features/completion/CompleteWorkModal.tsx), [`ReflectionsPanel.tsx` L110–130](../../../apps/web/src/features/reflections/ReflectionsPanel.tsx) | Conflicts R5.19, R5.30 | M5-04 |
+| Creating a reflection from a detail page's Reflections panel earns the standalone +20, since it's a create, not a link | [`ReflectionsPanel.tsx` L114](../../../apps/web/src/features/reflections/ReflectionsPanel.tsx), [`progress.ts` L772–785](../../../apps/api/src/progress.ts) | Conforms R4.4 | |
 
 ### M4
 
@@ -407,23 +425,18 @@ Nothing that depends on an open question may be implemented.
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
 | Q7 | Keep the completion flourish at all? You lean toward removing it after the first prototype. If kept: which events trigger it, and does it replace `EarnFlash`? | R5.2 | M5 design |
-| Q42 | Streak and achievement numbers. Proposal: **daily streak points** of 2 × streak length, capped at 20 (day 1 = 2, day 10 onward = 20), the same for apps and LC. **Streak milestones** at 5, 10, 20, 30, 50 and 100 days, worth 5 × the length (+25 to +500), earned again by each new streak. **Achievements:** applications 10, 25, 50, 100, 150, 200, 300, 500 at 3 × N; LC 25, 50, 100, 200, 300, 500 at 5 × N; interview steps at the step's own points × N, with thresholds assessment and phone 5/10/25/50, technical 3/5/10/25, onsite 1/3/5/10, offer 1/2/3/5, and custom excluded. | R5.25, R5.26 | M5 design |
-| Q43 | Weekly-goal streak: display only, with no points? Recommendation: yes, shown per goal (for example "3 weeks in a row" in the congrats banner and Progress weekly block); revisit points after a month of data. | R5.16 | M5 design |
-| Q44 | Once a week is closed, is its record fixed? If so, a weekly LC solve logged on Monday morning for Sunday counts toward the new week, and a carried-over task completed late counts toward the week it's completed in. The alternative is a grace window (for example until Monday noon) for logging into the closed week, which then re-scores it with an adjust event. Recommendation: fixed, no grace. | R5.8, R5.23 | M5 design |
-| Q45 | Streak points when days change after the fact. Recommendation: a day's streak points are awarded on its first qualifying action, for immediate feedback, and reversed if that day drops back to 0. Editing a past day in History updates the displayed streak, but doesn't award or reverse streak points for that day or any later day, so there are no cascades. | R5.25 | M5 design |
-| Q46 | Counts and streaks from before M5. Applications, LC solves and interview steps already exist, so many achievements are already passed. **(a)** unlock them at launch with no points; **(b)** award their points at launch as a one-time lump; **(c)** count only activity after launch. Streaks: does a streak that's running at launch count its earlier days? Recommendation: (a), and yes for streaks, with daily points only from launch. | R5.25, R5.26 | M5 design |
-| Q47 | Today strip: when streaks replace the `x/3` counts, do the deep-work badges (app, tech, other) stay on the strip, move elsewhere (for example the Progress Today panel), or go? The heatmaps keep their 3-per-day scale either way. | R5.27 | M5 design |
-| Q48 | Editing reflection minutes (R5.19): application and interview earns store the reflection's minutes but not which reflection they came from ([`pointsAwards.ts` L95, L126](../../../apps/api/src/pointsAwards.ts)). Recommendation: record the reflection id on new earns, and leave earns from before M5-04 unadjusted rather than guess. | R5.19, M5-04 | M5-04 build |
+| Q49 | Retiring deep work: the flag also drives the Progress heatmap's per-lane "effort" marks ([`progress.ts` L293–310](../../../apps/api/src/progress.ts)) and the "deep work units" summary count (L425). **(a)** keep both, counting every reflection instead of deep-work ones; **(b)** remove both; **(c)** replace the count with reflection minutes. Recommendation: (a) for the heatmap marks and (c) for the summary. The `deep_work` column stays in the database, unused, so no history is lost. | R5.29, M5-14 | M5-14 build |
+| Q50 | Confirm the reflection minutes model in R5.30, which makes minutes consistently enterable and editable everywhere and settles which edits move points. | R5.30, M5-04 | M5-04 build |
 | Q32 | LeetCode tier point values (easy, medium, hard). Medium is the reference, since past solves count as medium (today +30). Settled during M5 work, before M5-01's build. | R5.20, M5-01 | M5-01 build |
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
 | Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
-| Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. | R7.7 | M7 design |
+| Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
 | Q35 | Does the points log leave Progress in M7, when Rewards gets it, or stay on both until the M8 redesign? What does a pull log entry show? | R7.8, R8.2 | M7 design |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (36)</summary>
+<summary>Resolved questions (43)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -463,6 +476,13 @@ Nothing that depends on an open question may be implemented.
 | Q39 | Which category gets a task's points? | Its category at completion, recorded on the earn; older earns fall back to the current category (2026-10-13) | R5.21, M5-03 |
 | Q40 | LeetCode storage with tiers | Yes to all: counts per tier per day; decrement picks a tier; misc −1 never touches weekly progress, and a day below its weekly solves is accepted; History edits per tier (2026-10-13) | R5.17, M5-01 |
 | Q41 | Points from deleted tasks in the category breakdown | One "Deleted tasks" row, shown only if non-zero (2026-10-13) | R5.21, M5-03 |
+| Q42 | Streak and achievement numbers | The proposed numbers, as a starting point (2026-10-13) | R5.25, R5.26 |
+| Q43 | Weekly-goal streak | Display only, no points; recorded in the spec and the in-app rules (2026-10-13) | R5.28, R7.9 |
+| Q44 | Is a closed week's record fixed? | Yes, no grace window (2026-10-13) | R5.23 |
+| Q45 | Streak points when days change after the fact | Awarded on the day's first qualifying action, reversed if that day drops to 0; past-day edits change only the displayed streak (2026-10-13) | R5.25 |
+| Q46 | Counts and streaks from before M5 | Passed achievements unlock without points; running streaks keep earlier days, daily points from launch (2026-10-13) | R5.25, R5.26 |
+| Q47 | Deep-work badges on the today strip | Deep work is retired in M5 (2026-10-13) | R5.27, R5.29 |
+| Q48 | Matching edited reflection minutes to earns | Record the reflection id on new earns; older earns aren't adjusted (2026-10-13) | R5.19, M5-04 |
 
 </details>
 
@@ -493,4 +513,5 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Task points belong to the category at completion. LeetCode days store counts per tier. R2.21 joins M4-01; the LeetCode re-earn bug joins M4-03.
 - **2026-10-13:** Weekly scoring is +20 per unit and +100 flat when met. Weekly records start when week close ships, and weeks close on the first request after they end.
 - **2026-10-13:** Streaks (LC, apps) earn small daily points plus milestone rewards; achievements are count-based, with interview steps per kind worth more. The today strip will show streaks instead of `x/3`.
+- **2026-10-13:** Streak and achievement numbers set as a starting point. The weekly-goal streak is display only. Closed weeks are fixed. Deep work is retired in M5. The app gets an in-app rules reference, placed in M7. Weekly points, per-unit included, are all awarded at week close, so the congrats banner shows the full amount.
 - **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs.

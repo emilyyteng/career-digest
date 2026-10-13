@@ -9,7 +9,7 @@
 
 After the week resets, the first time the user opens Home they see one congratulations banner covering last week's met targets.
 
-- **Content:** it names the targets that were met (apps, LC, or both), the count out of the target for each (for example `Apps 10/10 · LC 12/10`), and the points each met goal earned at week close (R5.15: +20 per unit plus the +100 flat, for example `Apps 10/10 · +300`). This shows the goal's full week-close points, not only the flat bonus; confirm when prototyping.
+- **Content:** it names the targets that were met (apps, LC, or both), the count out of the target for each (for example `Apps 10/10 · LC 12/10`), and the points each met goal earned at week close (R5.15: +20 per unit plus the +100 flat, for example `Apps 10/10 · +300`). All weekly points, per-unit included, are awarded at week close, so the banner shows that full amount (confirmed 2026-10-13). It also shows each met goal's weekly streak (R5.28), worded as chosen in M5-07.
 - **Only for met targets:** if neither target was met, no banner appears. Missed goals are never shown on Home (B1).
 - **Shows once** (Q38, 2026-10-13): × closes it early. It's marked seen per week in `localStorage` as soon as it's shown, so it's gone on the next visit whether or not it was closed.
 - **Standardize it:** this is the first "one-time notice". Once it works, document the pattern in `docs/design-system.md` (alongside the transient flash, `EarnFlash`) so later banners pick one of the two instead of inventing a third. Moving the Jobs ranking banner onto this pattern is F09's job (F09 R.6), not this ticket's.
