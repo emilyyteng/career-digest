@@ -4,13 +4,12 @@
  * Must satisfy R5.3 (bars, counts, pace), R5.4 (apps as a plain list: no
  * checkmarks, no untag), R5.5 (LC-only label, 50 characters), R5.14 (past
  * target) and R5.28 (weekly streak, display only).
+ * Verdict so far: variant A; these variants compare where the target field sits.
  */
 import { useState } from "react";
 import F08Shell, { btn, ParamToggle, useParam, useVariant } from "./F08Shell";
 import {
   APP_MEMBERS,
-  computePace,
-  FRACTION_ELAPSED,
   LC_LABEL_MAX,
   LC_LABEL_SAMPLE,
   LC_SCENARIOS,
@@ -21,23 +20,20 @@ import {
 import { GoalBar, PaceText } from "./parts";
 
 const VARIANTS = [
-  { key: "A", name: "Label line under title · +N tail" },
-  { key: "B", name: "Inline label field · met tick" },
-  { key: "C", name: "Title carries label · pace sentence" },
+  { key: "A", name: "Chosen A · target below the bar, left" },
+  { key: "A2", name: "A · target right, on the label line above the bar" },
+  { key: "A3", name: "A · target right, below the bar" },
 ] as const;
 
-const LONG_LABEL = "Grind 75 Week 4 · graphs + DP, finish before Friday".slice(0, LC_LABEL_MAX);
+type TargetPlacement = "below-left" | "label-row" | "below-right";
 
-function paceSentence(done: number, total: number): string {
-  if (done > total) return `${done - total} past target`;
-  if (done === total) return "target met";
-  const daysLeft = Math.max(1, 7 - Math.floor(FRACTION_ELAPSED * 7));
-  const left = total - done;
-  const perDay = Math.ceil(left / daysLeft);
-  const pace = computePace(done, total);
-  const tail = pace.label === "behind" ? ` · ${pace.amount} behind` : "";
-  return `${left} left · about ${perDay} a day${tail}`;
-}
+const PLACEMENT: Record<string, TargetPlacement> = {
+  A: "below-left",
+  A2: "label-row",
+  A3: "below-right",
+};
+
+const LONG_LABEL = "Grind 75 Week 4 · graphs + DP, finish before Friday".slice(0, LC_LABEL_MAX);
 
 function LabelCounter({ value }: { value: string }) {
   return (
@@ -85,7 +81,7 @@ function LabelEditor({
 
 function TargetField({ target, onChange }: { target: number; onChange: (n: number) => void }) {
   return (
-    <label className="weekly-goal-target-field">
+    <label className="weekly-goal-target-field f08-target-field">
       <span className="muted">Target</span>
       <input
         type="number"
@@ -136,8 +132,36 @@ function AppsGoal({ members }: { members: AppMember[] }) {
   );
 }
 
-function LcGoalA({ done, target, label, setLabel, setTarget }: LcProps) {
+type LcProps = {
+  done: number;
+  target: number;
+  label: string;
+  setLabel: (v: string) => void;
+  setTarget: (n: number) => void;
+  placement: TargetPlacement;
+};
+
+function LcGoal({ done, target, label, setLabel, setTarget, placement }: LcProps) {
   const [editing, setEditing] = useState(false);
+  const targetField = <TargetField target={target} onChange={setTarget} />;
+  const labelNode = editing ? (
+    <LabelEditor
+      value={label}
+      onCancel={() => setEditing(false)}
+      onSave={(v) => {
+        setLabel(v);
+        setEditing(false);
+      }}
+    />
+  ) : (
+    <div className="f08-label-line">
+      {label ? <span className="f08-label-text">{label}</span> : null}
+      <button type="button" className={btn("ghost", "sm")} onClick={() => setEditing(true)}>
+        {label ? "Edit label" : "+ Add label"}
+      </button>
+    </div>
+  );
+
   return (
     <div className="weekly-goal-row">
       <div className="weekly-goal-row-head">
@@ -148,122 +172,29 @@ function LcGoalA({ done, target, label, setLabel, setTarget }: LcProps) {
         <PaceText done={done} total={target} />
         <span className="f08-streak">LC: {LC_STREAK_WEEKS} weeks in a row</span>
       </div>
-      {editing ? (
-        <LabelEditor
-          value={label}
-          onCancel={() => setEditing(false)}
-          onSave={(v) => {
-            setLabel(v);
-            setEditing(false);
-          }}
-        />
-      ) : (
-        <div className="f08-label-line">
-          {label ? <span className="f08-label-text">{label}</span> : null}
-          <button type="button" className={btn("ghost", "sm")} onClick={() => setEditing(true)}>
-            {label ? "Edit label" : "+ Add label"}
-          </button>
+      {placement === "label-row" ? (
+        <div className="f08-label-target-row">
+          {labelNode}
+          {targetField}
         </div>
+      ) : (
+        labelNode
       )}
       <GoalBar done={done} total={target} showOverflow />
-      <div className="weekly-goal-lc-controls">
-        <TargetField target={target} onChange={setTarget} />
-      </div>
-    </div>
-  );
-}
-
-function LcGoalB({ done, target, label, setLabel, setTarget }: LcProps) {
-  const [focused, setFocused] = useState(false);
-  const met = done >= target;
-  return (
-    <div className="weekly-goal-row">
-      <div className="weekly-goal-row-head">
-        <strong className="weekly-goal-title">Weekly LC</strong>
-        <span className="weekly-goal-fraction muted">
-          {done}/{target}
-        </span>
-        {met ? (
-          <span className="weekly-pace on-track f08-met-tick">✓ target met{done > target ? ` · +${done - target}` : ""}</span>
-        ) : (
-          <PaceText done={done} total={target} />
-        )}
-      </div>
-      <div className="f08-label-inline">
-        <input
-          type="text"
-          maxLength={LC_LABEL_MAX}
-          value={label}
-          placeholder="Label (optional), e.g. Grind 75 Week 4"
-          aria-label="LC goal label"
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onChange={(e) => setLabel(e.target.value)}
-        />
-        {focused && <LabelCounter value={label} />}
-      </div>
-      <GoalBar done={done} total={target} />
-      <div className="weekly-goal-lc-controls">
-        <TargetField target={target} onChange={setTarget} />
-        <span className="f08-streak-chip">{LC_STREAK_WEEKS}-week streak</span>
-      </div>
-    </div>
-  );
-}
-
-function LcGoalC({ done, target, label, setLabel, setTarget }: LcProps) {
-  const [editing, setEditing] = useState(false);
-  const pace = computePace(done, target);
-  return (
-    <div className="weekly-goal-row">
-      {editing ? (
-        <LabelEditor
-          value={label}
-          onCancel={() => setEditing(false)}
-          onSave={(v) => {
-            setLabel(v);
-            setEditing(false);
-          }}
-        />
-      ) : (
-        <div className="weekly-goal-row-head">
-          <strong className="weekly-goal-title">
-            Weekly LC goal{label ? ` · ${label}` : ""}
-          </strong>
-          <button
-            type="button"
-            className={btn("ghost", "sm")}
-            aria-label={label ? "Edit label" : "Add label"}
-            onClick={() => setEditing(true)}
-          >
-            ✎{label ? "" : " label"}
-          </button>
+      {placement !== "label-row" && (
+        <div
+          className={
+            placement === "below-right"
+              ? "weekly-goal-lc-controls f08-controls-end"
+              : "weekly-goal-lc-controls"
+          }
+        >
+          {targetField}
         </div>
       )}
-      <div className="f08-big-fraction">
-        <strong>{done}</strong>
-        <span className="muted"> / {target}</span>
-        <span className={pace.label === "behind" ? "weekly-pace behind" : "weekly-pace on-track"}>
-          {" "}
-          {paceSentence(done, target)}
-        </span>
-      </div>
-      <GoalBar done={done} total={target} showOverflow />
-      <div className="weekly-goal-lc-controls">
-        <TargetField target={target} onChange={setTarget} />
-        <span className="muted f08-streak">LC: {LC_STREAK_WEEKS} weeks in a row</span>
-      </div>
     </div>
   );
 }
-
-type LcProps = {
-  done: number;
-  target: number;
-  label: string;
-  setLabel: (v: string) => void;
-  setTarget: (n: number) => void;
-};
 
 export default function ProgressWeeklyPrototypePage() {
   const variant = useVariant(VARIANTS);
@@ -276,7 +207,7 @@ export default function ProgressWeeklyPrototypePage() {
   return (
     <F08Shell
       title="Progress · Weekly goals block"
-      question="Q2: editing the LC label, showing 12/10, and pace text. The apps list is plain (R5.4)."
+      question="Q2: editing the LC label, showing 12/10, and pace text. Variant A is chosen; these compare where the target field sits."
       variants={VARIANTS}
       surfaceLabel="Q2 Weekly block"
       controls={
@@ -307,16 +238,15 @@ export default function ProgressWeeklyPrototypePage() {
       }
       notes={
         <p>
-          The label is LC-only and clears each week (R5.5, R5.13); the target carries forward. The apps
-          list has no checkbox or untag; membership is managed on Tasks (R5.4). Today&apos;s production
-          pace says “on track” once a goal is met; each variant proposes something clearer for met and
-          past-target weeks (Proposed).
+          The target field is narrower here in all three, so the comparison is only about placement; its
+          final size is an F09 form-field question. Try “Edit label” and the 50-character label in A2, where
+          the label and target share a line. The streak text is a placeholder: its design is M5-07 Q5.
         </p>
       }
     >
       <WeeklyBlock
         key={`${variant}-${lcKey}-${labelKey}`}
-        variant={variant}
+        placement={PLACEMENT[variant] ?? "below-left"}
         initialDone={done}
         initialLabel={initialLabel}
         members={appsKey === "none" ? [] : APP_MEMBERS}
@@ -326,26 +256,30 @@ export default function ProgressWeeklyPrototypePage() {
 }
 
 function WeeklyBlock({
-  variant,
+  placement,
   initialDone,
   initialLabel,
   members,
 }: {
-  variant: string;
+  placement: TargetPlacement;
   initialDone: number;
   initialLabel: string;
   members: AppMember[];
 }) {
   const [label, setLabel] = useState(initialLabel);
   const [target, setTarget] = useState(LC_TARGET);
-  const props: LcProps = { done: initialDone, target, label, setLabel, setTarget };
   return (
     <section className="card weekly-goals-card f08-card f08-narrow">
       <h3 className="weekly-goals-heading">Weekly goals</h3>
       <div className="weekly-goals-list">
-        {variant === "A" && <LcGoalA {...props} />}
-        {variant === "B" && <LcGoalB {...props} />}
-        {variant === "C" && <LcGoalC {...props} />}
+        <LcGoal
+          done={initialDone}
+          target={target}
+          label={label}
+          setLabel={setLabel}
+          setTarget={setTarget}
+          placement={placement}
+        />
         <AppsGoal members={members} />
       </div>
     </section>

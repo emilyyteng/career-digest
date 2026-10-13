@@ -3,7 +3,7 @@
  * Q1 primary button style and accent, Q2 elevation, Q3 button sizes, Q4 keep
  * or revise the pastel tokens, Q5 which conflicting patterns win.
  * Every direction uses existing `:root` tokens only. The same direction can be
- * applied to the other F08 weekly prototypes with `?dir=a|b|c`.
+ * applied to the other F08 weekly prototypes with `?dir=w|a|b|c`.
  */
 import { Link } from "react-router-dom";
 import F08Shell, { btn, DIRECTIONS, HUB_PATH, useVariant } from "./F08Shell";
@@ -13,6 +13,12 @@ import { GoalBar, PaceText, TierStepper } from "./parts";
 const VARIANTS = DIRECTIONS.map((d) => ({ key: d.key.toUpperCase(), name: d.name }));
 
 const DIRECTION_NOTES: Record<string, { q1: string; q2: string; q3: string; q4: string }> = {
+  w: {
+    q1: "Working choice for M5: B's tinted purple primary; toggles use the goal-bar blue (2026-10-13).",
+    q2: "Flat for M5 prototypes and builds; F09 Q2 stays open.",
+    q3: "Two sizes, as in A.",
+    q4: "Palette kept.",
+  },
   a: {
     q1: "Filled blue-deep primary (today's global button default).",
     q2: "Shadows on buttons and cards (--shadow-button, --shadow-soft).",
@@ -108,7 +114,7 @@ export default function VisualDirectionPrototypePage() {
               <Link to={`${HUB_PATH}/${path}?dir=${dir}`}>{label}</Link>
             </span>
           ))}
-          . All three directions use existing tokens only. Every recommendation here is Proposed.
+          . Every direction uses existing tokens only. Every recommendation here is Proposed.
         </p>
       }
     >

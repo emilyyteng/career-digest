@@ -11,6 +11,7 @@ import "./prototype-f08-weekly.css";
 export const HUB_PATH = "/prototype/f08/weekly";
 
 export const DIRECTIONS = [
+  { key: "w", name: "Working (M5) · purple buttons, blue toggles, flat" },
   { key: "a", name: "Current · filled blue, shadows" },
   { key: "b", name: "Tinted flat · purple" },
   { key: "c", name: "Ink · pink accent" },

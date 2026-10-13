@@ -49,6 +49,15 @@ Each entry will list allowed variants, sizes, and when to use them.
 | Deadline urgency | `DeadlineUrgency` (pie circles + countdown) | n/a | Existing shared component |
 | Priority | `PriorityBadge` | n/a | Existing shared component |
 
+## Interim decisions (F08 M5, until F09 M0)
+
+Working choices for the F08 M5 prototypes and builds, decided by the user on 2026-10-13 in the M5-06 review. They don't settle F09 Q1–Q5; F09 may replace them. Shown as direction **W** at `/prototype/f08/weekly/visual-direction`.
+
+- **Elevation:** flat. New M5 surfaces add no shadow to buttons or cards.
+- **Primary buttons** (for example Save): tinted purple, i.e. a pastel `--accent-purple` fill with `--accent-purple-deep` text and border, not filled blue.
+- **Toggles and segmented controls** (for example the LC weekly/misc switch): the active option uses `--accent-blue` / `--accent-blue-deep`, matching the weekly goal bar. Not pink.
+- **Pace text** (ahead, behind, on track, met) uses normal weight everywhere, never bold.
+
 ## Conflicting patterns → chosen standard
 
 Filled in during migration M0 after an audit. Until then, don't add another competing variant.

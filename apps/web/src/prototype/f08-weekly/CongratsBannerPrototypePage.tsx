@@ -51,6 +51,11 @@ function streakText(goal: LastWeekGoal["goal"]): string | null {
   return n >= 2 ? `${goalName(goal)}: ${n} weeks in a row` : null;
 }
 
+/** "target" when one goal was met, "targets" when both were. */
+function targetWord(metCount: number): string {
+  return metCount === 1 ? "target" : "targets";
+}
+
 function DismissButton({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" className="earn-flash-dismiss f08-dismiss" aria-label="Dismiss" onClick={onClick}>
@@ -64,7 +69,7 @@ function BannerA({ met, onDismiss }: { met: LastWeekGoal[]; onDismiss: () => voi
   return (
     <p className="f08-congrats f08-congrats-strip" role="status">
       <span>
-        <strong>Last week&apos;s targets met</strong> · {LAST_WEEK_LABEL}
+        <strong>Last week&apos;s {targetWord(met.length)} met</strong> · {LAST_WEEK_LABEL}
         {met.map((g) => (
           <span key={g.goal}>
             {" · "}
@@ -83,7 +88,7 @@ function BannerB({ met, onDismiss }: { met: LastWeekGoal[]; onDismiss: () => voi
   return (
     <div className="f08-congrats f08-congrats-box" role="status">
       <div className="f08-row-between">
-        <strong>You hit last week&apos;s targets</strong>
+        <strong>You hit last week&apos;s {targetWord(met.length)}</strong>
         <DismissButton onClick={onDismiss} />
       </div>
       <span className="muted f08-hint">{LAST_WEEK_LABEL}</span>
@@ -98,7 +103,7 @@ function BannerB({ met, onDismiss }: { met: LastWeekGoal[]; onDismiss: () => voi
                 </strong>
                 <span className="muted">
                   {" "}
-                  · {g.done} × {WEEKLY_UNIT_POINTS} + {WEEKLY_MET_BONUS} met
+                  · {g.done} × {WEEKLY_UNIT_POINTS} + {WEEKLY_MET_BONUS}
                 </span>
                 {streak && <span className="f08-congrats-streak"> · {streak}</span>}
               </span>
@@ -121,7 +126,7 @@ function BannerC({ met, onDismiss }: { met: LastWeekGoal[]; onDismiss: () => voi
   return (
     <section className="card f08-card f08-congrats f08-congrats-card" role="status">
       <div className="f08-row-between">
-        <h3 className="home-section-title">{LAST_WEEK_LABEL} · targets met</h3>
+        <h3 className="home-section-title">{LAST_WEEK_LABEL} · {targetWord(met.length)} met</h3>
         <DismissButton onClick={onDismiss} />
       </div>
       <div className="f08-chip-row">

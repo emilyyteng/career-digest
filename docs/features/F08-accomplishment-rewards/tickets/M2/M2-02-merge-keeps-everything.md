@@ -83,3 +83,4 @@ Done 2026-10-13. Checked by running `npm run check`; the new `applicationMerge.a
 
 - The task PATCH's write to the application now clears the due date when the application is past to-do, and the task's own write leaves its actual time alone unless the request sets it. Without those, the task path would overwrite the merge's time sync.
 - Not checked against real data: no merge was run on the local database.
+- The user confirmed the edge-case choices on 2026-10-13: folding two threads into the survivor's, an active removed thread reopening the survivor's thread, closing the open application task when the merged status is past to-do, and keeping both earns when both applications earned.

@@ -1,6 +1,23 @@
 /* F08 M5-06 weekly-surface prototypes. Tokens only; every rule is scoped to .f08-proto. */
 
 /* F09 visual directions: each maps prototype variables to existing tokens. */
+/* Working decisions for the M5 builds until F09 settles Q1/Q2: B's buttons, flat, toggles in the goal-bar blue. */
+.f08-proto[data-dir="w"] {
+  --f08-primary-bg: color-mix(in srgb, var(--accent-purple) 26%, var(--surface));
+  --f08-primary-fg: var(--accent-purple-deep);
+  --f08-primary-border: color-mix(in srgb, var(--accent-purple) 55%, var(--surface));
+  --f08-primary-hover-bg: color-mix(in srgb, var(--accent-purple) 38%, var(--surface));
+  --f08-secondary-bg: transparent;
+  --f08-secondary-fg: var(--text-muted);
+  --f08-secondary-border: var(--border);
+  --f08-active-bg: color-mix(in srgb, var(--accent-blue) 20%, var(--surface));
+  --f08-active-fg: var(--accent-blue-deep);
+  --f08-active-border: var(--accent-blue);
+  --f08-btn-radius: var(--radius-soft-box);
+  --f08-btn-shadow: var(--shadow-minimal);
+  --f08-card-shadow: var(--shadow-minimal);
+  --f08-raised-shadow: var(--shadow-minimal);
+}
 .f08-proto[data-dir="a"] {
   --f08-primary-bg: var(--accent-blue-deep);
   --f08-primary-fg: var(--on-primary);
@@ -285,6 +302,26 @@
 .f08-proto .f08-label-inline input {
   flex: 1 1 14rem;
   max-width: 22rem;
+}
+.f08-proto .f08-target-field input {
+  width: 3.25rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.82rem;
+}
+.f08-proto .f08-label-target-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.f08-proto .f08-label-target-row .f08-label-line,
+.f08-proto .f08-label-target-row .f08-label-edit {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.f08-proto .f08-controls-end {
+  justify-content: flex-end;
 }
 .f08-proto .f08-label-text {
   font-size: 0.88rem;

@@ -40,13 +40,13 @@ const SURFACES = [
     path: "visual-direction",
     title: "F09 Q1–Q5 · Visual direction",
     blurb:
-      "Primary button + accent, elevation, sizes, palette, conflicting-pattern audit. A current · B tinted flat · C ink. Apply to any page above with ?dir=a|b|c.",
+      "Primary button + accent, elevation, sizes, palette, conflicting-pattern audit. W working choice for M5 · A current · B tinted flat · C ink. Apply to any page above with ?dir=w|a|b|c.",
   },
 ] as const;
 
 export default function F08WeeklyHub() {
   return (
-    <section className="prototype-hub f08-proto" data-dir="a">
+    <section className="prototype-hub f08-proto" data-dir="w">
       <p className="prototype-banner">
         <strong>Experimental prototype</strong> · F08 M5-06 weekly surfaces · mock data only. ← / → flips
         variants on each page; the “Visual direction” toggle applies F09 options to any page.

@@ -29,9 +29,9 @@ const LAST_SUNDAY = new Date(LAST_MONDAY.getFullYear(), LAST_MONDAY.getMonth(), 
 const CLOSE_TIME = "9:02 AM";
 
 function breakdown(e: WeekEntry): string {
-  if (e.target <= 0) return "no tagged applications · no reward";
+  if (e.target <= 0) return "no tagged applications";
   const units = `${e.done} × ${WEEKLY_UNIT_POINTS}`;
-  return e.done >= e.target ? `${units} + ${WEEKLY_MET_BONUS} met` : `${units} · target missed`;
+  return e.done >= e.target ? `${units} + ${WEEKLY_MET_BONUS} · target met` : units;
 }
 
 function entryTitle(e: WeekEntry): string {

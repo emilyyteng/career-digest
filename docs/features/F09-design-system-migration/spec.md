@@ -41,7 +41,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| A global `button` rule makes every button filled `--accent-blue-deep` with `--shadow-button`; buttons escape only via a `:not(...)` chain of 23 classes (repeated on hover) | `apps/web/src/styles.css` | Conflicts R.1 | Most likely mechanism behind the blue-button and shadow complaints |
+| A global `button` rule makes every button filled `--accent-blue-deep` with `--shadow-button`; buttons escape only via a `:not(...)` chain of 22 classes, repeated on hover with 21 (`.rank-batch-dismiss` is missing, so it still gets the blue hover) | `apps/web/src/styles.css` L367–375 | Conflicts R.1 | Most likely mechanism behind the blue-button and shadow complaints. 51 of the file's 81 `box-shadow` declarations are `none` (7 with `!important`), mostly undoing the default. New variants must be built on `.secondary` to escape it (checked by running, 2026-10-13) |
 | Global element rules style `a`, `input`, `textarea`, `select` | `styles.css` | Conflicts R.1 | |
 | `button.secondary` is the de facto second variant (about 120 uses) | across `apps/web/src` | Unspecified | Candidate starting point for explicit variants |
 | `:root` tokens ("Sakura Terminal" palette): `--accent-{pink,blue,purple,mint,yellow}` + `-deep`, `--surface`, `--border`, `--text*`, `--danger*`, `--radius-*`, `--shadow-*` | `styles.css` | Unspecified | Keep or revise is Q4 |
@@ -59,8 +59,8 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 
 | # | Question | Blocks | Answer |
 |---|----------|--------|--------|
-| Q1 | Visual direction: what does a primary button look like if not filled blue? Which accent is primary? | M0 | (open) |
-| Q2 | Elevation: flat, or a subtle shadow? Where (cards, modals, buttons)? | M0 | (open) |
+| Q1 | Visual direction: what does a primary button look like if not filled blue? Which accent is primary? | M0 | (open) Preferences (2026-10-13, F08 M5-06 review): not the filled blue default, which keeps causing issues. Likes the tinted purple pastel buttons for a neutral look; the black (ink) buttons are bold and also appealing. Toggles: blue or purple, not pink, which is too bright for a switcher. M5 uses tinted purple buttons and blue toggles meanwhile (`docs/design-system.md` → Interim decisions) |
+| Q2 | Elevation: flat, or a subtle shadow? Where (cards, modals, buttons)? | M0 | (open) Undecided (2026-10-13): flat looks clean, a slight elevation has its appeal, and the app mixes both today. M5 is flat meanwhile. There's no token for raised surfaces: `.modal` uses a raw `0 16px 40px var(--shadow-strong)` and popovers (link bubble, suggest list) `0 8px 20px var(--shadow-strong)` |
 | Q3 | Button sizes: how many (e.g. sm / md), and which contexts use each? | M0 | (open) |
 | Q4 | Is the current pastel token set kept as the base, or open to revision? | M0 | (open) |
 | Q5 | Which conflicting existing patterns win (needs an audit of buttons, tabs, chips, modal anatomy, form fields)? | M0 | (open) |
@@ -72,4 +72,5 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 - **2026-10-12:** Reference doc (`docs/design-system.md`) and migration (this spec) are kept separate: the reference is permanent, the migration is a bounded project.
 - **2026-10-12:** No full-app migration yet; scope M1 from F08 M5's dependencies.
 - **2026-10-13:** M0's questions (Q1–Q5) are settled during the F08 M5 design pass rather than before it. M1 then builds only what M5 needs (at least the one-time notice, the LC stepper and the Home target row).
+- **2026-10-13 (later):** The F08 M5-06 review didn't settle Q1–Q5; they stay in F09. F08 M5 uses interim working decisions (flat, tinted purple primary buttons, blue toggles, pace text never bold), recorded in `docs/design-system.md`. The `:not(...)` chain and the missing raised-surface shadow token stay in F09's scope. The M5-06 prototypes' direction page (`/prototype/f08/weekly/visual-direction`) and its conflicting-patterns audit remain the test case.
 - **2026-10-13:** Banner behavior is standardized. F08 M5-02 defines the one-time notice; F09 owns moving the Jobs ranking banner onto it (R.6).
