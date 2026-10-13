@@ -383,14 +383,10 @@ export default function Tasks() {
     try {
       // Complete API creates reflection (awardPoints false) + one ledger event.
       const completed = await completeTask(row.id, {
-        actualMinutes: application ? null : result.actualMinutes,
+        actualMinutes: result.actualMinutes,
         notes: result.notes,
         reflection: result.reflection
-          ? {
-              lane: result.reflection.lane,
-              body: result.reflection.body,
-              actualMinutes: application ? result.actualMinutes : null,
-            }
+          ? { lane: result.reflection.lane, body: result.reflection.body }
           : null,
       });
       setCompleteConfirm(null);
@@ -459,7 +455,8 @@ export default function Tasks() {
     setPendingId(row.id);
     setError(null);
     try {
-      const updated = await patchTask(row.id, { actualMinutes });
+      const { points, ...updated } = await patchTask(row.id, { actualMinutes });
+      if (points) setEarnFlash(points);
       setRows((current) =>
         current.map((item) => (item.id === row.id ? { ...item, ...updated } : item)),
       );
@@ -1043,9 +1040,6 @@ export default function Tasks() {
           }
           confirmLabel={isApplicationTask(completeConfirm) ? "Applied" : "Complete"}
           defaultLane={defaultLaneForTask(isApplicationTask(completeConfirm))}
-          actualTimeMode={
-            isApplicationTask(completeConfirm) ? "gated" : "task"
-          }
           estimateMinutes={
             isApplicationTask(completeConfirm)
               ? null

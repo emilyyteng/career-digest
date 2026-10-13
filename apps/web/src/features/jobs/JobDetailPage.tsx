@@ -156,13 +156,13 @@ export default function JobDetail() {
       const created = await createApplication({
         postingId: job.id,
         status: "applied",
+        actualMinutes: result.actualMinutes,
         ...(result.notes ? { notes: result.notes } : {}),
         ...(result.reflection
           ? {
               reflection: {
                 lane: result.reflection.lane,
                 body: result.reflection.body,
-                actualMinutes: result.reflection.actualMinutes,
               },
             }
           : {}),
@@ -409,8 +409,7 @@ export default function JobDetail() {
           description="This removes the role from Jobs and moves it to Applications."
           confirmLabel="Mark applied"
           defaultLane="application"
-          actualTimeMode="gated"
-          pending={pending}
+                    pending={pending}
           onCancel={() => setAppliedConfirm(false)}
           onConfirm={(result) => void confirmApplied(result)}
         />

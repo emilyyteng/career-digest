@@ -32,6 +32,7 @@ type FinishStepTarget = {
   stepTitle: string;
   mode: FinishStepMode;
   primaryApplicationId: string;
+  actualMinutes: number | null;
 };
 
 type ThreadCardProps = {
@@ -116,6 +117,7 @@ function ThreadCard({
                   stepTitle: step.title,
                   mode: "actionable",
                   primaryApplicationId: row.primaryApplicationId,
+                  actualMinutes: step.actualMinutes ?? null,
                 })
               }
             >
@@ -149,6 +151,7 @@ function ThreadCard({
                   stepTitle: awaitingStep.title,
                   mode: "awaiting_response",
                   primaryApplicationId: row.primaryApplicationId,
+                  actualMinutes: awaitingStep.actualMinutes ?? null,
                 })
               }
             >
@@ -213,12 +216,12 @@ export default function Interviews() {
         finishStepTarget.stepId,
         {
           status,
+          actualMinutes: result.actualMinutes,
           ...(result.reflection
             ? {
                 reflection: {
                   lane: result.reflection.lane,
                   body: result.reflection.body,
-                  actualMinutes: result.reflection.actualMinutes,
                 },
               }
             : {}),
@@ -325,6 +328,7 @@ export default function Interviews() {
           <FinishInterviewStepModal
             stepTitle={finishStepTarget.stepTitle}
             mode={finishStepTarget.mode}
+            initialActualMinutes={finishStepTarget.actualMinutes}
             busy={pendingAction === finishStepTarget.threadId}
             onCancel={() => setFinishStepTarget(null)}
             onFinish={runFinishStep}

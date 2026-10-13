@@ -562,7 +562,6 @@ export function ReflectionCompose({
   onSubmit: (input: {
     lane: ProgressLane;
     body: string;
-    actualMinutes: number | null;
     taskId: string | null;
     applicationId: string | null;
     interviewStepId: string | null;
@@ -570,12 +569,11 @@ export function ReflectionCompose({
   onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [body, setBody] = useState("");
-  const [minutes, setMinutes] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    onDirtyChange?.(body.trim().length > 0 || minutes.trim().length > 0);
-  }, [body, minutes, onDirtyChange]);
+    onDirtyChange?.(body.trim().length > 0);
+  }, [body, onDirtyChange]);
 
   useEffect(() => {
     return () => onDirtyChange?.(false);
@@ -588,26 +586,18 @@ export function ReflectionCompose({
         event.preventDefault();
         if (!body.trim() || busy) return;
         const opt = linkOptions.find((o) => o.key === linkKey);
-        const raw = minutes.trim();
-        let actualMinutes: number | null = null;
-        if (raw) {
-          const n = Number(raw);
-          if (Number.isFinite(n) && n >= 0) actualMinutes = Math.floor(n);
-        }
         void (async () => {
           setBusy(true);
           try {
             await onSubmit({
               lane,
               body,
-              actualMinutes,
               taskId: opt?.taskId ?? null,
               applicationId: opt?.applicationId ?? null,
               interviewStepId:
                 opt?.applicationId && interviewStepId ? interviewStepId : null,
             });
             setBody("");
-            setMinutes("");
           } finally {
             setBusy(false);
           }
@@ -635,19 +625,6 @@ export function ReflectionCompose({
       <div className="progress-compose-meta">
         <LaneChips value={lane} onChange={onLaneChange} disabled={busy} />
       </div>
-      <label className="reflection-minutes-field">
-        <span className="reflection-minutes-label">Time (min)</span>
-        <input
-          type="number"
-          min={0}
-          step={1}
-          inputMode="numeric"
-          placeholder="20"
-          value={minutes}
-          disabled={busy}
-          onChange={(event) => setMinutes(event.target.value)}
-        />
-      </label>
       <div className="progress-compose-actions">
         <button
           type="submit"

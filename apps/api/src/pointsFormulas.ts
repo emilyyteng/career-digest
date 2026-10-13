@@ -3,9 +3,11 @@
  */
 
 export const POINTS = {
-  miscTaskDefaultMinutes: 15,
+  /** Every kind of work has a flat base; time adds 1 point a minute on top (R5.31). */
+  miscTaskBase: 10,
   applicationBase: 5,
-  reflectionDefault: 20,
+  /** A reflection is a flat +20, whether written with the work or on its own. */
+  reflectionBonus: 20,
   leetcodePerUnit: 30,
   weeklyGoalBonus: 100,
   interviewByKind: {
@@ -41,25 +43,10 @@ export type InterviewStepKind =
   | "offer"
   | "custom";
 
-export function pointsForMiscTaskActual(actualMinutes: number | null | undefined): number {
-  if (actualMinutes == null || !Number.isFinite(actualMinutes)) {
-    return POINTS.miscTaskDefaultMinutes;
-  }
-  const n = Math.floor(actualMinutes);
-  if (n < 0) return POINTS.miscTaskDefaultMinutes;
-  return n;
-}
-
-/** Reflection slice: 1 pt/min when minutes set, else flat default. */
-export function pointsForReflectionMinutes(
-  actualMinutes: number | null | undefined,
-): number {
-  if (actualMinutes == null || !Number.isFinite(actualMinutes)) {
-    return POINTS.reflectionDefault;
-  }
-  const n = Math.floor(actualMinutes);
-  if (n < 0) return POINTS.reflectionDefault;
-  return n;
+/** 1 point a minute; blank or negative time adds 0. */
+export function pointsForMinutes(actualMinutes: number | null | undefined): number {
+  if (actualMinutes == null || !Number.isFinite(actualMinutes)) return 0;
+  return Math.max(0, Math.floor(actualMinutes));
 }
 
 export function pointsForInterviewKind(kind: string | null | undefined): number {
@@ -67,19 +54,15 @@ export function pointsForInterviewKind(kind: string | null | undefined): number 
   return POINTS.interviewByKind[key] ?? POINTS.interviewByKind.custom;
 }
 
-export function miscTaskBreakdown(input: {
-  actualMinutes?: number | null;
-  /** When true, add flat reflection (+20); minutes already counted on task. */
-  withReflection?: boolean;
-}): { total: number; breakdown: PointsBreakdownSlice[] } {
-  const taskPts = pointsForMiscTaskActual(input.actualMinutes);
-  const breakdown: PointsBreakdownSlice[] = [
-    { category: "task", amount: taskPts, label: "task" },
-  ];
-  if (input.withReflection) {
+function withReflectionSlice(
+  work: PointsBreakdownSlice,
+  withReflection: boolean | undefined,
+): { total: number; breakdown: PointsBreakdownSlice[] } {
+  const breakdown = [work];
+  if (withReflection) {
     breakdown.push({
       category: "reflection",
-      amount: POINTS.reflectionDefault,
+      amount: POINTS.reflectionBonus,
       label: "reflection",
     });
   }
@@ -89,57 +72,47 @@ export function miscTaskBreakdown(input: {
   };
 }
 
-export function applicationAppliedBreakdown(input: {
-  /** Minutes only when a reflection is included. */
-  reflectionMinutes?: number | null;
+export function miscTaskBreakdown(input: {
+  actualMinutes?: number | null;
   withReflection?: boolean;
 }): { total: number; breakdown: PointsBreakdownSlice[] } {
-  const breakdown: PointsBreakdownSlice[] = [
+  return withReflectionSlice(
+    {
+      category: "task",
+      amount: POINTS.miscTaskBase + pointsForMinutes(input.actualMinutes),
+      label: "task",
+    },
+    input.withReflection,
+  );
+}
+
+export function applicationAppliedBreakdown(input: {
+  actualMinutes?: number | null;
+  withReflection?: boolean;
+}): { total: number; breakdown: PointsBreakdownSlice[] } {
+  return withReflectionSlice(
     {
       category: "application",
-      amount: POINTS.applicationBase,
+      amount: POINTS.applicationBase + pointsForMinutes(input.actualMinutes),
       label: "app",
     },
-  ];
-  if (input.withReflection) {
-    const refl = pointsForReflectionMinutes(input.reflectionMinutes);
-    breakdown.push({
-      category: "reflection",
-      amount: refl,
-      label: "reflection",
-    });
-  }
-  return {
-    total: breakdown.reduce((s, b) => s + b.amount, 0),
-    breakdown,
-  };
+    input.withReflection,
+  );
 }
 
 export function interviewFinishBreakdown(input: {
   kind: string | null | undefined;
-  reflectionMinutes?: number | null;
+  actualMinutes?: number | null;
   withReflection?: boolean;
 }): { total: number; breakdown: PointsBreakdownSlice[] } {
-  const base = pointsForInterviewKind(input.kind);
-  const breakdown: PointsBreakdownSlice[] = [
+  return withReflectionSlice(
     {
       category: "interview",
-      amount: base,
+      amount: pointsForInterviewKind(input.kind) + pointsForMinutes(input.actualMinutes),
       label: (input.kind ?? "custom") || "custom",
     },
-  ];
-  if (input.withReflection) {
-    const refl = pointsForReflectionMinutes(input.reflectionMinutes);
-    breakdown.push({
-      category: "reflection",
-      amount: refl,
-      label: "reflection",
-    });
-  }
-  return {
-    total: breakdown.reduce((s, b) => s + b.amount, 0),
-    breakdown,
-  };
+    input.withReflection,
+  );
 }
 
 export function leetcodePointsForCount(count: number): number {

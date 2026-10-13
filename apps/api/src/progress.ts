@@ -59,7 +59,6 @@ export type ProgressReflection = {
   id: string;
   lane: ProgressLane;
   body: string;
-  actualMinutes: number | null;
   taskId: string | null;
   applicationId: string | null;
   interviewStepId: string | null;
@@ -95,7 +94,6 @@ const reflectionSelect = `
     r.id,
     r.lane,
     r.body,
-    r.actual_minutes AS "actualMinutes",
     r.task_id AS "taskId",
     r.application_id AS "applicationId",
     r.interview_step_id AS "interviewStepId",
@@ -694,7 +692,6 @@ export async function createReflectionLog(
   input: {
     lane: ProgressLane;
     body: string;
-    actualMinutes?: number | null;
     taskId?: string | null;
     applicationId?: string | null;
     interviewStepId?: string | null;
@@ -731,24 +728,15 @@ export async function createReflectionLog(
     createdAt = atRows[0]?.created_at ?? null;
   }
 
-  let actualMinutes: number | null = null;
-  if (input.actualMinutes !== undefined && input.actualMinutes !== null) {
-    if (!Number.isFinite(input.actualMinutes) || input.actualMinutes < 0) {
-      throw new Error("actualMinutes must be a non-negative number");
-    }
-    actualMinutes = Math.floor(input.actualMinutes);
-  }
-
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO reflection_logs (
-       lane, body, actual_minutes, task_id, application_id, interview_step_id, created_at
+       lane, body, task_id, application_id, interview_step_id, created_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, now()))
+     VALUES ($1, $2, $3, $4, $5, COALESCE($6, now()))
      RETURNING id`,
     [
       input.lane,
       body,
-      actualMinutes,
       taskId,
       applicationId,
       interviewStepId,
@@ -769,7 +757,6 @@ export async function createReflectionLog(
     await awardReflectionCreate(pool, {
       reflectionId: row.id,
       label,
-      actualMinutes: row.actualMinutes,
     });
   }
 

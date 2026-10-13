@@ -5,7 +5,6 @@ import {
   interviewFinishBreakdown,
   leetcodePointsForCount,
   miscTaskBreakdown,
-  pointsForReflectionMinutes,
 } from "./pointsFormulas.js";
 import {
   adjustEarnAmount,
@@ -121,12 +120,12 @@ export async function awardApplicationApplied(
     applicationId: string;
     label: string;
     withReflection?: boolean;
-    reflectionMinutes?: number | null;
+    actualMinutes?: number | null;
   },
 ): Promise<{ event: PointsEventRow; created: boolean }> {
   const { total, breakdown } = applicationAppliedBreakdown({
     withReflection: input.withReflection,
-    reflectionMinutes: input.reflectionMinutes,
+    actualMinutes: input.actualMinutes,
   });
   return recordEarn(db, {
     category: "application",
@@ -137,7 +136,7 @@ export async function awardApplicationApplied(
     breakdown,
     meta: {
       with_reflection: Boolean(input.withReflection),
-      reflection_minutes: input.reflectionMinutes ?? null,
+      actual_minutes: input.actualMinutes ?? null,
     },
   });
 }
@@ -149,15 +148,15 @@ export async function awardInterviewFinish(
     label: string;
     kind: string | null | undefined;
     withReflection?: boolean;
-    reflectionMinutes?: number | null;
+    actualMinutes?: number | null;
   },
-): Promise<PointsEventRow> {
+): Promise<{ event: PointsEventRow; created: boolean }> {
   const { total, breakdown } = interviewFinishBreakdown({
     kind: input.kind,
     withReflection: input.withReflection,
-    reflectionMinutes: input.reflectionMinutes,
+    actualMinutes: input.actualMinutes,
   });
-  const { event } = await recordEarn(db, {
+  return recordEarn(db, {
     category: "interview",
     amount: total,
     message: `${input.label} finished! +${total} points`,
@@ -167,22 +166,20 @@ export async function awardInterviewFinish(
     meta: {
       step_kind: input.kind ?? "custom",
       with_reflection: Boolean(input.withReflection),
-      reflection_minutes: input.reflectionMinutes ?? null,
+      actual_minutes: input.actualMinutes ?? null,
     },
   });
-  return event;
 }
 
-/** Standalone Progress reflection create (not bundled into a completion event). */
+/** A reflection created on its own (not in a completion modal): flat +20 from any form. */
 export async function awardReflectionCreate(
   db: Queryable,
   input: {
     reflectionId: string;
     label: string;
-    actualMinutes?: number | null;
   },
 ): Promise<PointsEventRow> {
-  const amount = pointsForReflectionMinutes(input.actualMinutes);
+  const amount = POINTS.reflectionBonus;
   const { event } = await recordEarn(db, {
     category: "reflection",
     amount,
@@ -192,7 +189,6 @@ export async function awardReflectionCreate(
     breakdown: [
       { category: "reflection", amount, label: "reflection" },
     ],
-    meta: { actual_minutes: input.actualMinutes ?? null },
   });
   return event;
 }
@@ -309,6 +305,68 @@ export async function reverseTaskComplete(
   );
 }
 
+export type WorkTimeAdjustResult = {
+  /** The adjust event, or the earn seeded for work from before the ledger; null if unchanged. */
+  event: PointsEventRow | null;
+  appliedDelta: number;
+  requestedDelta: number;
+};
+
+/**
+ * A time edit on finished work re-scores its earn under the current formula with one
+ * adjust event (R5.31). Work finished before the ledger has no earn yet, so `seed` records it.
+ */
+async function adjustWorkEarn(
+  db: Queryable,
+  input: {
+    sourceType: string;
+    sourceId: string;
+    label: string;
+    total: number;
+    actualMinutes: number | null;
+    seed: () => Promise<{ event: PointsEventRow; created: boolean }>;
+  },
+): Promise<WorkTimeAdjustResult> {
+  const existing = await findEarnEvent(db, input.sourceType, input.sourceId);
+  if (!existing) {
+    const { event, created } = await input.seed();
+    return created
+      ? { event, appliedDelta: event.amount, requestedDelta: event.amount }
+      : { event: null, appliedDelta: 0, requestedDelta: 0 };
+  }
+  const delta = input.total - effectiveEarnAmount(existing);
+  const result = await adjustEarnAmount(
+    db,
+    input.sourceType,
+    input.sourceId,
+    input.total,
+    `${input.label} time updated · ${signedPoints(delta)} points`,
+  );
+  if (result.earn) {
+    await db.query(
+      `UPDATE points_events SET meta = meta || $2::jsonb WHERE id = $1`,
+      [result.earn.id, JSON.stringify({ actual_minutes: input.actualMinutes })],
+    );
+  }
+  return {
+    event: result.adjust,
+    appliedDelta: result.appliedDelta,
+    requestedDelta: result.requestedDelta,
+  };
+}
+
+async function hasLinkedReflection(
+  db: Queryable,
+  column: "task_id" | "application_id" | "interview_step_id",
+  id: string,
+): Promise<boolean> {
+  const { rows } = await db.query<{ ok: boolean }>(
+    `SELECT EXISTS(SELECT 1 FROM reflection_logs WHERE ${column} = $1) AS ok`,
+    [id],
+  );
+  return Boolean(rows[0]?.ok);
+}
+
 export async function adjustTaskCompleteActual(
   db: Queryable,
   input: {
@@ -317,38 +375,87 @@ export async function adjustTaskCompleteActual(
     actualMinutes: number | null;
     withReflection: boolean;
   },
-): Promise<{ appliedDelta: number; requestedDelta: number }> {
+): Promise<WorkTimeAdjustResult> {
   const { total } = miscTaskBreakdown({
     actualMinutes: input.actualMinutes,
     withReflection: input.withReflection,
   });
-  const sourceId = taskCompleteSourceId(input.taskId);
-  const existing = await findEarnEvent(db, "task_complete", sourceId);
-
-  // Pre-ledger completions have no earn row — seed one on first actual edit
-  // so Points log gets a visible entry and later edits can adjust.
-  if (!existing) {
-    const event = await awardMiscTaskComplete(db, {
-      taskId: input.taskId,
-      title: input.title,
-      actualMinutes: input.actualMinutes,
-      withReflection: input.withReflection,
-    });
-    return {
-      appliedDelta: event.amount,
-      requestedDelta: event.amount,
-    };
-  }
-
-  const result = await adjustEarnAmount(
-    db,
-    "task_complete",
-    sourceId,
+  return adjustWorkEarn(db, {
+    sourceType: "task_complete",
+    sourceId: taskCompleteSourceId(input.taskId),
+    label: input.title,
     total,
-    `${input.title} actual updated`,
-  );
-  return {
-    appliedDelta: result.appliedDelta,
-    requestedDelta: result.requestedDelta,
-  };
+    actualMinutes: input.actualMinutes,
+    seed: async () => {
+      const event = await awardMiscTaskComplete(db, input);
+      return { event, created: true };
+    },
+  });
+}
+
+export async function adjustApplicationActual(
+  db: Queryable,
+  input: { applicationId: string; label: string; actualMinutes: number | null },
+): Promise<WorkTimeAdjustResult> {
+  const sourceId = applicationAppliedSourceId(input.applicationId);
+  const existing = await findEarnEvent(db, "application_applied", sourceId);
+  const withReflection = existing
+    ? existing.meta.with_reflection === true
+    : await hasLinkedReflection(db, "application_id", input.applicationId);
+  const { total } = applicationAppliedBreakdown({
+    actualMinutes: input.actualMinutes,
+    withReflection,
+  });
+  return adjustWorkEarn(db, {
+    sourceType: "application_applied",
+    sourceId,
+    label: input.label,
+    total,
+    actualMinutes: input.actualMinutes,
+    seed: () =>
+      awardApplicationApplied(db, {
+        applicationId: input.applicationId,
+        label: input.label,
+        withReflection,
+        actualMinutes: input.actualMinutes,
+      }),
+  });
+}
+
+export async function adjustInterviewFinishActual(
+  db: Queryable,
+  input: {
+    stepId: string;
+    label: string;
+    kind: string | null | undefined;
+    actualMinutes: number | null;
+  },
+): Promise<WorkTimeAdjustResult> {
+  const sourceId = interviewFinishSourceId(input.stepId);
+  const existing = await findEarnEvent(db, "interview_finish", sourceId);
+  const withReflection = existing
+    ? existing.meta.with_reflection === true
+    : await hasLinkedReflection(db, "interview_step_id", input.stepId);
+  const kind =
+    typeof existing?.meta.step_kind === "string" ? existing.meta.step_kind : input.kind;
+  const { total } = interviewFinishBreakdown({
+    kind,
+    actualMinutes: input.actualMinutes,
+    withReflection,
+  });
+  return adjustWorkEarn(db, {
+    sourceType: "interview_finish",
+    sourceId,
+    label: input.label,
+    total,
+    actualMinutes: input.actualMinutes,
+    seed: () =>
+      awardInterviewFinish(db, {
+        stepId: input.stepId,
+        label: input.label,
+        kind,
+        withReflection,
+        actualMinutes: input.actualMinutes,
+      }),
+  });
 }

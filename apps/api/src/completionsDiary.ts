@@ -9,7 +9,6 @@ export type CompletionReflectionNest = {
   id: string;
   body: string;
   preview: string;
-  minutes: number | null;
 };
 
 export type CompletionDiaryItem = {
@@ -58,14 +57,12 @@ function nestReflections(
   rows: Array<{
     id: string;
     body: string;
-    actual_minutes: number | null;
   }>,
 ): CompletionReflectionNest[] {
   return rows.map((r) => ({
     id: r.id,
     body: r.body,
     preview: r.body.length > 120 ? `${r.body.slice(0, 117)}…` : r.body,
-    minutes: r.actual_minutes,
   }));
 }
 
@@ -122,9 +119,8 @@ export async function getCompletionsDiary(
       const { rows: refl } = await pool.query<{
         id: string;
         body: string;
-        actual_minutes: number | null;
       }>(
-        `SELECT id, body, actual_minutes
+        `SELECT id, body
          FROM reflection_logs
          WHERE task_id = $1
          ORDER BY created_at ASC`,
@@ -153,6 +149,7 @@ export async function getCompletionsDiary(
       title: string | null;
       company: string | null;
       applied_at: Date;
+      actual_minutes: number | null;
     }>(
       `SELECT
          a.id,
@@ -162,7 +159,8 @@ export async function getCompletionsDiary(
            CASE WHEN p.source = 'simplify' THEN NULLIF(p.department, '') END,
            c.name
          ) AS company,
-         a.applied_at
+         a.applied_at,
+         a.actual_minutes
        FROM applications a
        LEFT JOIN postings p ON p.id = a.posting_id
        LEFT JOIN companies c ON c.id = p.company_id
@@ -178,9 +176,8 @@ export async function getCompletionsDiary(
       const { rows: refl } = await pool.query<{
         id: string;
         body: string;
-        actual_minutes: number | null;
       }>(
-        `SELECT id, body, actual_minutes
+        `SELECT id, body
          FROM reflection_logs
          WHERE application_id = $1
          ORDER BY created_at ASC`,
@@ -196,7 +193,7 @@ export async function getCompletionsDiary(
         at,
         localDate,
         estimateMinutes: null,
-        actualMinutes: null,
+        actualMinutes: row.actual_minutes,
         points: earn ? effectiveEarnAmount(earn) : null,
         href: `/applications/${row.id}`,
         reflections: nestReflections(refl),
@@ -214,6 +211,7 @@ export async function getCompletionsDiary(
       completed_at: Date;
       thread_id: string;
       company: string | null;
+      actual_minutes: number | null;
     }>(
       `SELECT
          s.id,
@@ -221,6 +219,7 @@ export async function getCompletionsDiary(
          s.kind,
          s.status,
          s.completed_at,
+         s.actual_minutes,
          t.id AS thread_id,
          COALESCE(
            (
@@ -254,9 +253,8 @@ export async function getCompletionsDiary(
       const { rows: refl } = await pool.query<{
         id: string;
         body: string;
-        actual_minutes: number | null;
       }>(
-        `SELECT id, body, actual_minutes
+        `SELECT id, body
          FROM reflection_logs
          WHERE interview_step_id = $1
          ORDER BY created_at ASC`,
@@ -273,7 +271,7 @@ export async function getCompletionsDiary(
         at,
         localDate,
         estimateMinutes: null,
-        actualMinutes: null,
+        actualMinutes: row.actual_minutes,
         points: earn ? effectiveEarnAmount(earn) : null,
         href: `/interviews/${row.thread_id}`,
         reflections: nestReflections(refl),
@@ -287,7 +285,6 @@ export async function getCompletionsDiary(
       id: string;
       body: string;
       lane: string;
-      actual_minutes: number | null;
       created_at: Date;
       task_id: string | null;
       application_id: string | null;
@@ -297,7 +294,7 @@ export async function getCompletionsDiary(
     }>(
       kindFilter === "reflection"
         ? `SELECT
-             r.id, r.body, r.lane, r.actual_minutes, r.created_at,
+             r.id, r.body, r.lane, r.created_at,
              r.task_id, r.application_id,
              t.title AS task_title,
              COALESCE(a.title, p.title) AS application_title,
@@ -314,7 +311,7 @@ export async function getCompletionsDiary(
            ORDER BY r.created_at DESC
            LIMIT $1`
         : `SELECT
-             r.id, r.body, r.lane, r.actual_minutes, r.created_at,
+             r.id, r.body, r.lane, r.created_at,
              r.task_id, r.application_id,
              t.title AS task_title,
              COALESCE(a.title, p.title) AS application_title,
@@ -356,7 +353,7 @@ export async function getCompletionsDiary(
         at,
         localDate,
         estimateMinutes: null,
-        actualMinutes: row.actual_minutes,
+        actualMinutes: null,
         points: earn ? effectiveEarnAmount(earn) : null,
         href: row.task_id
           ? `/tasks/${row.task_id}`
@@ -406,33 +403,36 @@ export async function getCompletionsDiary(
     counts.tasks = Number(tasks.rows[0]?.n ?? 0);
     counts.minutes += Number(tasks.rows[0]?.mins ?? 0);
 
-    const apps = await pool.query<{ n: string }>(
-      `SELECT COUNT(*)::text AS n FROM applications
+    const apps = await pool.query<{ n: string; mins: string }>(
+      `SELECT COUNT(*)::text AS n, COALESCE(SUM(actual_minutes), 0)::text AS mins
+       FROM applications
        WHERE status <> 'todo' AND applied_at IS NOT NULL
          AND (timezone($3, applied_at))::date >= $1::date
          AND (timezone($3, applied_at))::date <= $2::date`,
       [start, end, tz],
     );
     counts.apps = Number(apps.rows[0]?.n ?? 0);
+    counts.minutes += Number(apps.rows[0]?.mins ?? 0);
 
-    const interview = await pool.query<{ n: string }>(
-      `SELECT COUNT(*)::text AS n FROM application_steps
+    const interview = await pool.query<{ n: string; mins: string }>(
+      `SELECT COUNT(*)::text AS n, COALESCE(SUM(actual_minutes), 0)::text AS mins
+       FROM application_steps
        WHERE status IN ('completed', 'awaiting_employer') AND completed_at IS NOT NULL
          AND (timezone($3, completed_at))::date >= $1::date
          AND (timezone($3, completed_at))::date <= $2::date`,
       [start, end, tz],
     );
     counts.interview = Number(interview.rows[0]?.n ?? 0);
+    counts.minutes += Number(interview.rows[0]?.mins ?? 0);
 
-    const reflections = await pool.query<{ n: string; mins: string }>(
-      `SELECT COUNT(*)::text AS n, COALESCE(SUM(actual_minutes), 0)::text AS mins
+    const reflections = await pool.query<{ n: string }>(
+      `SELECT COUNT(*)::text AS n
        FROM reflection_logs
        WHERE (timezone($3, created_at))::date >= $1::date
          AND (timezone($3, created_at))::date <= $2::date`,
       [start, end, tz],
     );
     counts.reflections = Number(reflections.rows[0]?.n ?? 0);
-    counts.minutes += Number(reflections.rows[0]?.mins ?? 0);
     return counts;
   }
 

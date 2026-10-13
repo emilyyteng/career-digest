@@ -186,10 +186,11 @@ export default function TaskDetailPage() {
           body.descriptionHtml = isEmptyRichHtml(descriptionHtml) ? null : descriptionHtml;
         }
       }
-      const row = await patchTask(task.id, body);
+      const { points, ...row } = await patchTask(task.id, body);
       if (isApplication) {
         await setWeeklyAppTargetMember(browserTz(), task.id, weeklyTarget);
       }
+      if (points) setEarnFlash(points);
       setTask(row);
       hydrateForm(row);
       invalidateListCache("tasks:");
@@ -207,15 +208,10 @@ export default function TaskDetailPage() {
     setSaving(true);
     try {
       const row = await completeTask(task.id, {
-        actualMinutes: task.category === "application" ? null : result.actualMinutes,
+        actualMinutes: result.actualMinutes,
         notes: result.notes,
         reflection: result.reflection
-          ? {
-              lane: result.reflection.lane,
-              body: result.reflection.body,
-              actualMinutes:
-                task.category === "application" ? result.actualMinutes : null,
-            }
+          ? { lane: result.reflection.lane, body: result.reflection.body }
           : null,
       });
       setCompleteConfirm(false);
@@ -671,7 +667,6 @@ export default function TaskDetailPage() {
           }
           confirmLabel={isApplication ? "Mark applied" : "Complete"}
           defaultLane={defaultLaneForTask(isApplication)}
-          actualTimeMode={isApplication ? "gated" : "task"}
           estimateMinutes={isApplication ? null : task.estimateMinutes}
           pending={saving}
           onCancel={() => setCompleteConfirm(false)}

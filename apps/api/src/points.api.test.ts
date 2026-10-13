@@ -231,11 +231,11 @@ describe.skipIf(!integrationReady)("points ledger", () => {
       actualMinutes: 45,
       withReflection: true,
     });
-    expect(await getPointsBalance(pool)).toBe(45 + POINTS.reflectionDefault);
+    expect(await getPointsBalance(pool)).toBe(POINTS.miscTaskBase + 45 + POINTS.reflectionBonus);
 
     const res = await apiClient().get("/api/points");
     expect(res.status).toBe(200);
-    expect(res.body.balance).toBe(65);
+    expect(res.body.balance).toBe(75);
   });
 
   it("syncLeetcodeDailyPoints tracks count up and down", async () => {
@@ -256,9 +256,9 @@ describe.skipIf(!integrationReady)("points ledger", () => {
       .send({ actualMinutes: 25 });
     expect(res.status).toBe(200);
     expect(res.body.actualMinutes).toBe(25);
-    expect(res.body.points?.amount).toBe(25);
-    expect(res.body.points?.balanceAfter).toBe(25);
-    expect(await getPointsBalance(pool)).toBe(25);
+    expect(res.body.points?.amount).toBe(35);
+    expect(res.body.points?.balanceAfter).toBe(35);
+    expect(await getPointsBalance(pool)).toBe(35);
   });
 
   it("PATCH actual on pre-ledger completed task seeds earn, then adjusts", async () => {
@@ -268,7 +268,7 @@ describe.skipIf(!integrationReady)("points ledger", () => {
       .post(`/api/tasks/${task.id}/complete`)
       .send({ actualMinutes: 20 });
     expect(completed.status).toBe(200);
-    expect(await getPointsBalance(pool)).toBe(20);
+    expect(await getPointsBalance(pool)).toBe(30);
 
     // Simulate pre-ledger completion: wipe events but keep completed task.
     await pool.query(`DELETE FROM points_events`);
@@ -279,23 +279,29 @@ describe.skipIf(!integrationReady)("points ledger", () => {
       .send({ actualMinutes: 40 });
     expect(seeded.status).toBe(200);
     expect(seeded.body.actualMinutes).toBe(40);
-    expect(seeded.body.pointsEarned).toBe(40);
-    expect(await getPointsBalance(pool)).toBe(40);
+    expect(seeded.body.pointsEarned).toBe(50);
+    expect(seeded.body.points?.amount).toBe(50);
+    expect(await getPointsBalance(pool)).toBe(50);
 
     const events = await listPointsEvents(pool, { limit: 10 });
-    expect(events.some((e) => e.kind === "earn" && e.amount === 40)).toBe(true);
+    expect(events.some((e) => e.kind === "earn" && e.amount === 50)).toBe(true);
 
     const adjusted = await apiClient()
       .patch(`/api/tasks/${task.id}`)
       .send({ actualMinutes: 55 });
     expect(adjusted.status).toBe(200);
-    expect(await getPointsBalance(pool)).toBe(55);
+    expect(adjusted.body.points).toMatchObject({
+      amount: 15,
+      message: "Old homework time updated · +15 points",
+      balanceAfter: 65,
+    });
+    expect(await getPointsBalance(pool)).toBe(65);
     const after = await listPointsEvents(pool, { limit: 10 });
     expect(after.some((e) => e.kind === "adjust" && e.amount === 15)).toBe(true);
-    expect(after.some((e) => e.kind === "earn" && e.amount === 40)).toBe(true);
+    expect(after.some((e) => e.kind === "earn" && e.amount === 50)).toBe(true);
     const summary = await getPointsSummary(pool);
-    expect(summary.balance).toBe(55);
-    expect(summary.categories.find((c) => c.category === "task")?.points).toBe(55);
+    expect(summary.balance).toBe(65);
+    expect(summary.categories.find((c) => c.category === "task")?.points).toBe(65);
   });
 });
 
@@ -327,11 +333,11 @@ describe.skipIf(!integrationReady)("reversed earns can be reinstated (M4-03)", (
     await reopen(task.id);
     await expectLedger(0, "task", 0);
     const again = await complete(task.id, 30);
-    await expectLedger(30, "task", 30);
+    await expectLedger(40, "task", 40);
     expect(again.points?.message).toBe(
-      "Essay complete again · +30 points (30 before reopen, net ±0)",
+      "Essay complete again · +40 points (40 before reopen, net ±0)",
     );
-    expect(again.points?.balanceAfter).toBe(30);
+    expect(again.points?.balanceAfter).toBe(40);
   });
 
   it("re-complete at 45 nets +15; at 20 nets −10", async () => {
@@ -341,24 +347,24 @@ describe.skipIf(!integrationReady)("reversed earns can be reinstated (M4-03)", (
     await reopen(up.id);
     const upAgain = await complete(up.id, 45);
     expect(upAgain.points?.message).toContain("net +15");
-    await expectLedger(45, "task", 45);
+    await expectLedger(55, "task", 55);
 
     const down = await seedTask({ title: "Down", category: "school" });
     await complete(down.id, 30);
     await reopen(down.id);
     const downAgain = await complete(down.id, 20);
     expect(downAgain.points?.message).toContain("net −10");
-    await expectLedger(65, "task", 65);
+    await expectLedger(85, "task", 85);
   });
 
   it("blank actual, reopen, blank actual nets 0", async () => {
     await truncateAll();
     const task = await seedTask({ title: "Blank", category: "school" });
     await complete(task.id);
-    await expectLedger(15, "task", 15);
+    await expectLedger(10, "task", 10);
     await reopen(task.id);
     await complete(task.id);
-    await expectLedger(15, "task", 15);
+    await expectLedger(10, "task", 10);
   });
 
   it("several reopen/re-complete cycles depend only on the last actual, and later edits adjust from it", async () => {
@@ -371,12 +377,12 @@ describe.skipIf(!integrationReady)("reversed earns can be reinstated (M4-03)", (
     await complete(task.id, 10);
     await reopen(task.id);
     await complete(task.id, 40);
-    await expectLedger(40, "task", 40);
+    await expectLedger(50, "task", 50);
 
     const patched = await apiClient().patch(`/api/tasks/${task.id}`).send({ actualMinutes: 25 });
     expect(patched.status).toBe(200);
-    expect(patched.body.pointsEarned).toBe(25);
-    await expectLedger(25, "task", 25);
+    expect(patched.body.pointsEarned).toBe(35);
+    await expectLedger(35, "task", 35);
 
     await reopen(task.id);
     await expectLedger(0, "task", 0);
@@ -389,10 +395,10 @@ describe.skipIf(!integrationReady)("reversed earns can be reinstated (M4-03)", (
       .post(`/api/tasks/${task.id}/complete`)
       .send({ actualMinutes: 30, reflection: { lane: "other", body: "Went well" } });
     expect(first.status).toBe(200);
-    expect(first.body.points?.amount).toBe(30 + POINTS.reflectionDefault);
+    expect(first.body.points?.amount).toBe(60);
     await reopen(task.id);
     await complete(task.id, 30);
-    await expectLedger(30 + POINTS.reflectionDefault, "task", 30 + POINTS.reflectionDefault);
+    await expectLedger(60, "task", 60);
   });
 
   it("LeetCode 1 → 0 → 1 earns one solve", async () => {

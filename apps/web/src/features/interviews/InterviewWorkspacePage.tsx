@@ -11,6 +11,11 @@ import {
 } from "../../api";
 import DeadlineUrgency from "../../DeadlineUrgency";
 import EarnFlash from "../completion/EarnFlash";
+import {
+  MinutesField,
+  minutesInputFromDraft,
+  parseMinutesInput,
+} from "../completion/ReflectionDraftFields";
 import InterviewStepFields, {
   emptyInterviewStepFields,
   interviewStepFieldsToPayload,
@@ -47,6 +52,47 @@ function stepIsActionable(step: InterviewStep): boolean {
 
 type StepConfirmAction = "reopen";
 
+function stepIsFinished(step: InterviewStep): boolean {
+  return step.status === "completed" || step.status === "awaiting_employer";
+}
+
+/** A finished step's actual time; saving re-scores its earn (R5.31). */
+function StepTimeEditor({
+  step,
+  onSave,
+}: {
+  step: InterviewStep;
+  onSave: (actualMinutes: number | null) => Promise<void>;
+}) {
+  const [value, setValue] = useState(() => minutesInputFromDraft(step.actualMinutes));
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setValue(minutesInputFromDraft(step.actualMinutes));
+  }, [step.actualMinutes]);
+  const parsed = parseMinutesInput(value);
+  const invalid = value.trim() !== "" && parsed == null;
+  const changed = !invalid && parsed !== step.actualMinutes;
+
+  return (
+    <div className="save-inline-row interview-step-time">
+      <MinutesField value={value} onChange={setValue} disabled={busy} />
+      {changed && (
+        <button
+          type="button"
+          className="secondary"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            void onSave(parsed).finally(() => setBusy(false));
+          }}
+        >
+          Save time
+        </button>
+      )}
+    </div>
+  );
+}
+
 const NOTES_FLASH_MS = 2500;
 
 export default function InterviewWorkspace() {
@@ -72,6 +118,7 @@ export default function InterviewWorkspace() {
     stepId: string;
     stepTitle: string;
     mode: FinishStepMode;
+    actualMinutes: number | null;
   } | null>(null);
   const [finishBusy, setFinishBusy] = useState(false);
   const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
@@ -229,12 +276,12 @@ export default function InterviewWorkspace() {
       const status = result.outcome === "waiting" ? "awaiting_employer" : "completed";
       const finished = await patchInterviewStep(threadId, finishStepTarget.stepId, {
         status,
+        actualMinutes: result.actualMinutes,
         ...(result.reflection
           ? {
               reflection: {
                 lane: result.reflection.lane,
                 body: result.reflection.body,
-                actualMinutes: result.reflection.actualMinutes,
               },
             }
           : {}),
@@ -250,6 +297,18 @@ export default function InterviewWorkspace() {
       setError(err instanceof Error ? err.message : "Could not finish step");
     } finally {
       setFinishBusy(false);
+    }
+  }
+
+  async function saveStepTime(stepId: string, actualMinutes: number | null) {
+    if (!threadId) return;
+    setError(null);
+    try {
+      const saved = await patchInterviewStep(threadId, stepId, { actualMinutes });
+      if (saved.points) setEarnFlash(saved.points);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save time");
     }
   }
 
@@ -319,6 +378,12 @@ export default function InterviewWorkspace() {
                   )}
                 </div>
                 {step.notes && <p className="muted interview-step-notes">{step.notes}</p>}
+                {stepIsFinished(step) && (
+                  <StepTimeEditor
+                    step={step}
+                    onSave={(minutes) => saveStepTime(step.id, minutes)}
+                  />
+                )}
                 {thread.status === "active" && (
                   <button
                     type="button"
@@ -388,6 +453,7 @@ export default function InterviewWorkspace() {
                         stepId: nextStep.id,
                         stepTitle: nextStep.title,
                         mode: "actionable",
+                        actualMinutes: nextStep.actualMinutes ?? null,
                       })
                     }
                   >
@@ -458,6 +524,7 @@ export default function InterviewWorkspace() {
                         stepId: awaitingStep.id,
                         stepTitle: awaitingStep.title,
                         mode: "awaiting_response",
+                        actualMinutes: awaitingStep.actualMinutes ?? null,
                       })
                     }
                   >
@@ -567,6 +634,7 @@ export default function InterviewWorkspace() {
           <FinishInterviewStepModal
             stepTitle={finishStepTarget.stepTitle}
             mode={finishStepTarget.mode}
+            initialActualMinutes={finishStepTarget.actualMinutes}
             busy={finishBusy}
             onCancel={() => setFinishStepTarget(null)}
             onFinish={runFinishStep}

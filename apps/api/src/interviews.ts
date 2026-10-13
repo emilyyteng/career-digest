@@ -36,6 +36,8 @@ export type InterviewStepRow = {
   prepNotes: string | null;
   sortOrder: number;
   completedAt: string | null;
+  /** Time spent on the step (R5.31), set when it's finished. */
+  actualMinutes: number | null;
 };
 
 export type InterviewThreadListItem = {
@@ -115,7 +117,8 @@ async function loadSteps(db: Queryable, threadId: string): Promise<InterviewStep
        notes,
        prep_notes AS "prepNotes",
        sort_order AS "sortOrder",
-       completed_at AS "completedAt"
+       completed_at AS "completedAt",
+       actual_minutes AS "actualMinutes"
      FROM application_steps
      WHERE thread_id = $1
      ORDER BY sort_order ASC, created_at ASC`,
@@ -748,6 +751,17 @@ export async function patchInterviewStep(
   );
 
   await db.query(`UPDATE interview_threads SET updated_at = now() WHERE id = $1`, [threadId]);
+}
+
+export async function setInterviewStepActualMinutes(
+  db: Queryable,
+  stepId: string,
+  actualMinutes: number | null,
+): Promise<void> {
+  await db.query(
+    `UPDATE application_steps SET actual_minutes = $2, updated_at = now() WHERE id = $1`,
+    [stepId, actualMinutes],
+  );
 }
 
 export { applicationResolutionFromStatus };

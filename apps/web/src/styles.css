@@ -1203,6 +1203,9 @@ button.complete-optional-bar:not(:disabled):hover {
 .finish-step-modal .complete-optional-panel {
   margin-top: 0.35rem;
 }
+.finish-step-modal > .reflection-minutes-field {
+  margin-top: 0.6rem;
+}
 @media (max-width: 520px) {
   .complete-work-time {
     grid-template-columns: 1fr;

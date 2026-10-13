@@ -7,57 +7,60 @@ import {
   leetcodePointsForCount,
   miscTaskBreakdown,
   pointsForInterviewKind,
-  pointsForMiscTaskActual,
-  pointsForReflectionMinutes,
+  pointsForMinutes,
 } from "./pointsFormulas.js";
 
 describe("pointsFormulas", () => {
-  it("misc task uses actual minutes 1:1 and defaults to 15", () => {
-    expect(pointsForMiscTaskActual(null)).toBe(15);
-    expect(pointsForMiscTaskActual(undefined)).toBe(15);
-    expect(pointsForMiscTaskActual(52)).toBe(52);
-    expect(pointsForMiscTaskActual(0)).toBe(0);
+  it("time is 1 point a minute; blank or negative adds 0", () => {
+    expect(pointsForMinutes(null)).toBe(0);
+    expect(pointsForMinutes(undefined)).toBe(0);
+    expect(pointsForMinutes(-5)).toBe(0);
+    expect(pointsForMinutes(52.9)).toBe(52);
   });
 
-  it("misc + reflection adds flat +20 (not second minutes)", () => {
+  it("misc is +10 base + minutes, +20 with a reflection", () => {
+    expect(miscTaskBreakdown({ actualMinutes: 30 }).total).toBe(40);
+    expect(miscTaskBreakdown({}).total).toBe(10);
+    expect(miscTaskBreakdown({ withReflection: true }).total).toBe(30);
     const { total, breakdown } = miscTaskBreakdown({
-      actualMinutes: 40,
+      actualMinutes: 30,
       withReflection: true,
     });
     expect(total).toBe(60);
     expect(breakdown).toEqual([
       { category: "task", amount: 40, label: "task" },
-      { category: "reflection", amount: 20, label: "reflection" },
+      { category: "reflection", amount: POINTS.reflectionBonus, label: "reflection" },
     ]);
   });
 
-  it("application is flat 5; reflection minutes optional", () => {
+  it("application is +5 base + minutes, +20 with a reflection", () => {
     expect(applicationAppliedBreakdown({}).total).toBe(5);
+    expect(applicationAppliedBreakdown({ actualMinutes: 60 }).total).toBe(65);
     expect(
-      applicationAppliedBreakdown({ withReflection: true, reflectionMinutes: null }).total,
-    ).toBe(5 + POINTS.reflectionDefault);
-    expect(
-      applicationAppliedBreakdown({ withReflection: true, reflectionMinutes: 30 }).total,
-    ).toBe(35);
+      applicationAppliedBreakdown({ actualMinutes: 60, withReflection: true }).total,
+    ).toBe(85);
   });
 
-  it("interview bases by kind + optional reflection", () => {
+  it("interview is kind points + minutes, +20 with a reflection", () => {
     expect(pointsForInterviewKind("technical")).toBe(80);
     expect(pointsForInterviewKind("offer")).toBe(200);
     expect(pointsForInterviewKind("unknown")).toBe(40);
+    expect(interviewFinishBreakdown({ kind: "technical", actualMinutes: 30 }).total).toBe(110);
     const { total, breakdown } = interviewFinishBreakdown({
       kind: "technical",
       withReflection: true,
-      reflectionMinutes: 20,
+      actualMinutes: 30,
     });
-    expect(total).toBe(100);
-    expect(breakdown[0]?.amount).toBe(80);
+    expect(total).toBe(130);
+    expect(breakdown[0]?.amount).toBe(110);
     expect(breakdown[1]?.amount).toBe(20);
   });
 
-  it("reflection minutes 1:1 else 20", () => {
-    expect(pointsForReflectionMinutes(null)).toBe(20);
-    expect(pointsForReflectionMinutes(15)).toBe(15);
+  it("each kind of work's base is a named constant", () => {
+    expect(POINTS.miscTaskBase).toBe(10);
+    expect(POINTS.applicationBase).toBe(5);
+    expect(POINTS.reflectionBonus).toBe(20);
+    expect(POINTS).not.toHaveProperty("miscTaskDefaultMinutes");
   });
 
   it("LC is uncapped 30 per unit", () => {

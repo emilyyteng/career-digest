@@ -15,6 +15,10 @@ import {
 import { formatDueDateMdY, toDateInputValue } from "../../formatDate";
 import ApplicationMetaBadges from "./ApplicationMetaBadges";
 import EarnFlash from "../completion/EarnFlash";
+import {
+  minutesInputFromDraft,
+  parseMinutesInput,
+} from "../completion/ReflectionDraftFields";
 import ReflectionsPanel from "../reflections/ReflectionsPanel";
 import RichTextField, { isEmptyRichHtml } from "../../RichTextField";
 import DocumentPreviewModal from "./DocumentPreviewModal";
@@ -42,6 +46,7 @@ export default function ApplicationDetail() {
   const [status, setStatus] = useState("applied");
   const [appliedAt, setAppliedAt] = useState("");
   const [url, setUrl] = useState("");
+  const [actualTime, setActualTime] = useState("");
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<JobCard[]>([]);
   const [previewDoc, setPreviewDoc] = useState<{
@@ -92,6 +97,7 @@ export default function ApplicationDetail() {
     setStatus(data.status === "todo" ? "applied" : data.status);
     setAppliedAt(toDateInputValue(data.appliedAt));
     setUrl(data.url ?? "");
+    setActualTime(minutesInputFromDraft(data.actualMinutes));
     setReflections(refl.reflections);
   }
 
@@ -99,15 +105,23 @@ export default function ApplicationDetail() {
     load().catch((err: Error) => setError(err.message));
   }, [id]);
 
+  const actualTimeChanged =
+    row != null && parseMinutesInput(actualTime) !== (row.actualMinutes ?? null);
   const stageDirty =
     row != null &&
     (status !== (row.status === "todo" ? "applied" : row.status) ||
       appliedAt !== toDateInputValue(row.appliedAt) ||
-      url.trim() !== (row.url ?? ""));
+      url.trim() !== (row.url ?? "") ||
+      actualTimeChanged);
 
   async function saveStage(event: FormEvent) {
     event.preventDefault();
     if (!id || !row || !stageDirty || stageSaving) return;
+    const trimmedTime = actualTime.trim();
+    if (trimmedTime !== "" && parseMinutesInput(trimmedTime) == null) {
+      setError("Actual time must be 0 or more minutes");
+      return;
+    }
     setStageSaving(true);
     setError(null);
     try {
@@ -115,6 +129,7 @@ export default function ApplicationDetail() {
         status,
         appliedAt: appliedAt || null,
         url: url.trim() || null,
+        ...(actualTimeChanged ? { actualMinutes: parseMinutesInput(trimmedTime) } : {}),
       });
       if (patched.points) setEarnFlash(patched.points);
       invalidateListCache("applications:");
@@ -296,6 +311,19 @@ export default function ApplicationDetail() {
                   onChange={(e) => setUrl(e.target.value)}
                 />
               </label>
+              {row.status !== "todo" && (
+                <label>
+                  Actual time (min)
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    value={actualTime}
+                    onChange={(e) => setActualTime(e.target.value)}
+                  />
+                </label>
+              )}
               <div className="application-detail-actions">
                 {flash?.target === "stage" && (
                   <span className="save-flash-inline" role="status">

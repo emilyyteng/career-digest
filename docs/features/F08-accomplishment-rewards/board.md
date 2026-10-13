@@ -50,7 +50,6 @@ No open tickets.
 | [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Draft | After M5-06 (M4-03 done); open: Q32 (settle before build) |
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | build | Draft | After M5-05, M5-06; documents banner patterns in the design system |
 | [M5-03](./tickets/M5/M5-03-points-by-task-category.md) | Points breakdown splits tasks by task category | build | Ready | M4-02 done, so unblocked |
-| [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | build | Ready | M4-01 and M5-14 done |
 | [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | build | Ready | M4-01 done, so unblocked |
 | [M5-06](./tickets/M5/M5-06-prototype-weekly-surfaces.md) | Prototype weekly goal surfaces | prototype | Ready | F09 M0 decided alongside |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | prototype | Ready | Mock numbers from R5.25–R5.26 |
@@ -62,10 +61,11 @@ No open tickets.
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | build | Draft | Only if Q7 keeps it after M5-07 |
 
 <details>
-<summary>Done (1)</summary>
+<summary>Done (2)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M5-04](./tickets/M5/M5-04-work-time.md) | Time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base | (pending) |
 | [M5-14](./tickets/M5/M5-14-retire-deep-work.md) | Retire deep work | `d42626b` |
 
 </details>

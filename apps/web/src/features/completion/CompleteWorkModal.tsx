@@ -8,26 +8,17 @@ import ReflectionDraftFields, {
   minutesInputFromDraft,
   parseMinutesInput,
   type ReflectionDraft,
-  type ReflectionMinutesMode,
 } from "./ReflectionDraftFields";
 
 export type CompleteWorkResult = {
   notes: string | null;
   reflection: ReflectionDraft | null;
-  /**
-   * Task-mode actual minutes (misc). For gated app/interview mode this mirrors
-   * reflection.actualMinutes when a reflection is included, else null.
-   */
+  /** The work's actual time (misc task or application); blank → null. */
   actualMinutes: number | null;
 };
 
-/** Where the minutes field lives in the complete modal. */
-export type CompleteActualTimeMode =
-  /** Misc task: always visible below notes; reflection has no minutes. */
-  | "task"
-  /** App mark-applied: minutes only inside reflection when toggle on. */
-  | "gated"
-  | "off";
+/** Whether the modal asks for the work's actual time, below notes and outside the reflection. */
+export type CompleteActualTimeMode = "task" | "off";
 
 type Props = {
   title: string;
@@ -39,7 +30,7 @@ type Props = {
   showNotes?: boolean;
   showReflection?: boolean;
   actualTimeMode?: CompleteActualTimeMode;
-  /** Prefill task actual (typically estimate minutes). */
+  /** Prefill the actual time (typically the task's estimate). */
   estimateMinutes?: number | null;
   pending?: boolean;
   onCancel: () => void;
@@ -47,13 +38,6 @@ type Props = {
 };
 
 type DiscardTarget = "reflection" | "notes" | "both";
-
-function reflectionMinutesMode(
-  actualTimeMode: CompleteActualTimeMode,
-): ReflectionMinutesMode {
-  if (actualTimeMode === "gated") return "with-reflection";
-  return "none";
-}
 
 export default function CompleteWorkModal({
   title,
@@ -85,7 +69,6 @@ export default function CompleteWorkModal({
     !pending &&
     (notes.trim() !== "" ||
       reflection.body.trim() !== "" ||
-      reflection.actualMinutes != null ||
       (actualTimeMode === "task" &&
         taskActual.trim() !== minutesInputFromDraft(estimateMinutes ?? null)));
 
@@ -98,25 +81,13 @@ export default function CompleteWorkModal({
     const includeReflection =
       opts.includeReflection && reflectionOn && reflection.body.trim() !== "";
     const reflectionOut = includeReflection
-      ? {
-          body: reflection.body.trim(),
-          lane: reflection.lane,
-          actualMinutes:
-            actualTimeMode === "gated" ? reflection.actualMinutes : null,
-        }
+      ? { body: reflection.body.trim(), lane: reflection.lane }
       : null;
-
-    let actualMinutes: number | null = null;
-    if (actualTimeMode === "task") {
-      actualMinutes = parseMinutesInput(taskActual);
-    } else if (actualTimeMode === "gated" && reflectionOut) {
-      actualMinutes = reflectionOut.actualMinutes;
-    }
 
     return {
       notes: notesOut,
       reflection: reflectionOut,
-      actualMinutes,
+      actualMinutes: actualTimeMode === "task" ? parseMinutesInput(taskActual) : null,
     };
   }
 
@@ -184,19 +155,13 @@ export default function CompleteWorkModal({
           <OptionalPanel
             label="Reflection"
             enabled={reflectionOn}
-            onEnabledChange={(on) => {
-              setReflectionOn(on);
-              if (!on && actualTimeMode === "gated") {
-                setReflection((prev) => ({ ...prev, actualMinutes: null }));
-              }
-            }}
+            onEnabledChange={setReflectionOn}
             disabled={pending}
           >
             <ReflectionDraftFields
               value={reflection}
               onChange={setReflection}
               disabled={pending}
-              minutesMode={reflectionMinutesMode(actualTimeMode)}
             />
           </OptionalPanel>
         )}
@@ -219,13 +184,7 @@ export default function CompleteWorkModal({
         )}
 
         {actualTimeMode === "task" && (
-          <MinutesField
-            label="Actual time (min)"
-            value={taskActual}
-            onChange={setTaskActual}
-            disabled={pending}
-            placeholder="15"
-          />
+          <MinutesField value={taskActual} onChange={setTaskActual} disabled={pending} />
         )}
 
         <div className="form-actions">

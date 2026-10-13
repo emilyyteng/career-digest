@@ -1,7 +1,10 @@
 import { useState } from "react";
 import OptionalPanel from "../completion/OptionalPanel";
 import ReflectionDraftFields, {
+  MinutesField,
   emptyReflectionDraft,
+  minutesInputFromDraft,
+  parseMinutesInput,
   type ReflectionDraft,
 } from "../completion/ReflectionDraftFields";
 import InterviewStepFields, {
@@ -18,11 +21,15 @@ export type FinishStepResult = {
   outcome: FinishStepOutcome;
   nextStep?: ReturnType<typeof interviewStepFieldsToPayload>;
   reflection: ReflectionDraft | null;
+  /** The step's actual time; blank → null. */
+  actualMinutes: number | null;
 };
 
 type Props = {
   stepTitle: string;
   mode?: FinishStepMode;
+  /** The step's saved time, when it's being finished again after a reopen. */
+  initialActualMinutes?: number | null;
   onCancel: () => void;
   onFinish: (result: FinishStepResult) => void | Promise<void>;
   busy?: boolean;
@@ -33,6 +40,7 @@ type DiscardTarget = "reflection" | null;
 export default function FinishInterviewStepModal({
   stepTitle,
   mode = "actionable",
+  initialActualMinutes = null,
   onCancel,
   onFinish,
   busy = false,
@@ -48,6 +56,9 @@ export default function FinishInterviewStepModal({
   const [reflection, setReflection] = useState<ReflectionDraft>(() =>
     emptyReflectionDraft("application"),
   );
+  const [actualTime, setActualTime] = useState(() =>
+    minutesInputFromDraft(initialActualMinutes),
+  );
   const [discardTarget, setDiscardTarget] = useState<DiscardTarget>(null);
 
   const nextStepInvalid =
@@ -55,11 +66,11 @@ export default function FinishInterviewStepModal({
     addNextStep &&
     !nextFields.title.trim();
 
-  function buildPage1Result(): Omit<FinishStepResult, "reflection"> {
+  function buildPage1Result(): Omit<FinishStepResult, "reflection" | "actualMinutes"> {
     const resolvedOutcome: FinishStepOutcome = awaitingResponse
       ? "round_done"
       : outcome;
-    const result: Omit<FinishStepResult, "reflection"> = {
+    const result: Omit<FinishStepResult, "reflection" | "actualMinutes"> = {
       outcome: resolvedOutcome,
     };
     if (resolvedOutcome === "round_done" && addNextStep && nextFields.title.trim()) {
@@ -72,13 +83,13 @@ export default function FinishInterviewStepModal({
     const base = buildPage1Result();
     const reflectionOut =
       includeReflection && reflectionOn && reflection.body.trim()
-        ? {
-            body: reflection.body.trim(),
-            lane: reflection.lane,
-            actualMinutes: reflection.actualMinutes,
-          }
+        ? { body: reflection.body.trim(), lane: reflection.lane }
         : null;
-    await onFinish({ ...base, reflection: reflectionOut });
+    await onFinish({
+      ...base,
+      reflection: reflectionOut,
+      actualMinutes: parseMinutesInput(actualTime),
+    });
   }
 
   function tryFinish() {
@@ -198,28 +209,23 @@ export default function FinishInterviewStepModal({
         </>
       ) : (
         <>
-          <h3 id="finish-step-title">Reflection</h3>
+          <h3 id="finish-step-title">Reflection and time</h3>
           <p id="finish-step-desc" className="muted finish-step-context">
-            Optional note for <strong>{stepTitle}</strong>
+            Both optional for <strong>{stepTitle}</strong>
           </p>
           <OptionalPanel
             label="Reflection"
             enabled={reflectionOn}
-            onEnabledChange={(on) => {
-              setReflectionOn(on);
-              if (!on) {
-                setReflection((prev) => ({ ...prev, actualMinutes: null }));
-              }
-            }}
+            onEnabledChange={setReflectionOn}
             disabled={busy}
           >
             <ReflectionDraftFields
               value={reflection}
               onChange={setReflection}
               disabled={busy}
-              minutesMode="with-reflection"
             />
           </OptionalPanel>
+          <MinutesField value={actualTime} onChange={setActualTime} disabled={busy} />
           <div className="form-actions">
             <button
               type="button"

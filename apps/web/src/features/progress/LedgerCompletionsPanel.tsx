@@ -173,7 +173,6 @@ function CompletionRow({
                   }}
                 >
                   ✎ {r.preview}
-                  {r.minutes != null ? ` · ${r.minutes}m` : ""}
                 </button>
               ),
             )}

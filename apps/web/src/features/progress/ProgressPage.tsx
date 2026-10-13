@@ -345,7 +345,6 @@ export default function Progress() {
     input: {
       lane: ProgressLane;
       body: string;
-      actualMinutes?: number | null;
       taskId: string | null;
       applicationId: string | null;
       interviewStepId: string | null;
@@ -355,7 +354,6 @@ export default function Progress() {
     await createProgressReflection({
       lane: input.lane,
       body: input.body,
-      actualMinutes: input.actualMinutes ?? null,
       taskId: input.taskId,
       applicationId: input.applicationId,
       interviewStepId: input.interviewStepId,

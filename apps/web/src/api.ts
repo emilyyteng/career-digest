@@ -33,6 +33,8 @@ export type ApplicationRow = {
   notes: string | null;
   appliedAt: string | null;
   dueAt: string | null;
+  /** Time spent on the application (R5.31); its application task shows the same. */
+  actualMinutes?: number | null;
   company: string | null;
   title: string | null;
   location: string | null;
@@ -415,7 +417,7 @@ export const createApplication = (body: Record<string, unknown>) =>
   );
 
 export const patchApplication = (id: string, body: Record<string, unknown>) =>
-  parse<{ id: string; points?: PointsEarnInfo | null }>(
+  parse<ApplicationRow & { points?: PointsEarnInfo | null }>(
     api(`/api/applications/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -534,6 +536,7 @@ export type InterviewStep = {
   prepNotes: string | null;
   sortOrder: number;
   completedAt: string | null;
+  actualMinutes: number | null;
 };
 
 export type InterviewThreadListItem = {
@@ -736,7 +739,7 @@ export const createTask = (body: Record<string, unknown>) =>
   );
 
 export const patchTask = (id: string, body: Record<string, unknown>) =>
-  parse<TaskRow>(
+  parse<TaskRow & { points?: PointsEarnInfo | null }>(
     api(`/api/tasks/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -752,7 +755,6 @@ export const completeTask = (
     reflection?: {
       lane: string;
       body: string;
-      actualMinutes?: number | null;
     } | null;
   },
 ) =>
@@ -884,7 +886,6 @@ export type ProgressReflection = {
   id: string;
   lane: ProgressLane;
   body: string;
-  actualMinutes: number | null;
   taskId: string | null;
   applicationId: string | null;
   interviewStepId: string | null;
@@ -995,7 +996,6 @@ export type CompletionDiaryItem = {
     id: string;
     body: string;
     preview: string;
-    minutes: number | null;
   }>;
 };
 
@@ -1090,7 +1090,6 @@ export const patchProgressLeetcode = (
 export const createProgressReflection = (body: {
   lane: ProgressLane;
   body: string;
-  actualMinutes?: number | null;
   awardPoints?: boolean;
   taskId?: string | null;
   applicationId?: string | null;

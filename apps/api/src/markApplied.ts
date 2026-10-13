@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from "pg";
-import { getApplication } from "./applications.js";
+import { getApplication, setApplicationActualMinutes } from "./applications.js";
 import { awardApplicationApplied, awardWeeklyGoalIfNeeded } from "./pointsAwards.js";
 import type { PointsEventRow } from "./pointsLedger.js";
 import {
@@ -12,7 +12,6 @@ import { getWeeklyGoalsSnapshot } from "./weeklyGoals.js";
 export type MarkAppliedReflection = {
   lane: ProgressLane;
   body: string;
-  actualMinutes: number | null;
 };
 
 export class MarkAppliedError extends Error {
@@ -34,6 +33,8 @@ export type MarkAppliedInput = {
   appliedAt?: Date | null;
   /** The modal's notes; appended to the application's notes, since the task is being completed. */
   notes?: string | null;
+  /** The modal's time; blank keeps an open task's existing actual time. */
+  actualMinutes?: number | null;
   reflection: MarkAppliedReflection | null;
   tz: string;
 };
@@ -101,21 +102,23 @@ async function markAppliedInTransaction(
     [applicationId, input.appliedAt ?? null, notes],
   );
 
-  // Until M5-04 moves time onto the application, the modal's minutes are the task's actual time (R2.10).
-  const minutes = input.reflection?.actualMinutes ?? null;
-  const completed = await client.query<{ id: string }>(
+  const completed = await client.query<{ id: string; actual_minutes: number | null }>(
     `UPDATE tasks
      SET status = 'completed',
          completed_at = now(),
-         actual_minutes = COALESCE($2, actual_minutes),
          updated_at = now()
      WHERE application_id = $1
        AND status = 'open'
        AND category = 'application'
-     RETURNING id`,
-    [applicationId, minutes],
+     RETURNING id, actual_minutes`,
+    [applicationId],
   );
   const completedTaskIds = completed.rows.map((row) => row.id);
+  const minutes =
+    input.actualMinutes ??
+    completed.rows.find((row) => row.actual_minutes != null)?.actual_minutes ??
+    null;
+  await setApplicationActualMinutes(client, applicationId, minutes);
   for (const taskId of completedTaskIds) {
     await transferTaskReflectionsToApplication(client, taskId, applicationId);
   }
@@ -124,7 +127,6 @@ async function markAppliedInTransaction(
     await createReflectionLog(client, {
       lane: input.reflection.lane,
       body: input.reflection.body,
-      actualMinutes: minutes,
       applicationId,
       awardPoints: false,
     });
@@ -138,7 +140,7 @@ async function markAppliedInTransaction(
     applicationId,
     label,
     withReflection: input.reflection != null,
-    reflectionMinutes: minutes,
+    actualMinutes: minutes,
   });
 
   return { applicationId, completedTaskIds, points: created ? event : null };

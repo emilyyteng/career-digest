@@ -15,8 +15,8 @@ const TZ = "UTC";
 const MODAL_REFLECTION = {
   lane: "application",
   body: "Tailored the resume to the team",
-  actualMinutes: 45,
 };
+const MODAL_MINUTES = 45;
 
 const MODAL_NOTES = "Submitted via the portal";
 
@@ -49,7 +49,7 @@ async function markAppliedVia(path: Path, ids: { postingId: string; taskId: stri
   if (path === "tasks") {
     return apiClient()
       .post(`/api/tasks/${ids.taskId}/complete?tz=${TZ}`)
-      .send({ actualMinutes: null, notes: MODAL_NOTES, reflection: MODAL_REFLECTION });
+      .send({ actualMinutes: MODAL_MINUTES, notes: MODAL_NOTES, reflection: MODAL_REFLECTION });
   }
   return apiClient()
     .post(`/api/applications?tz=${TZ}`)
@@ -57,6 +57,7 @@ async function markAppliedVia(path: Path, ids: { postingId: string; taskId: stri
       postingId: ids.postingId,
       status: "applied",
       notes: MODAL_NOTES,
+      actualMinutes: MODAL_MINUTES,
       reflection: MODAL_REFLECTION,
     });
 }
@@ -69,8 +70,9 @@ async function outcome(ids: { postingId: string; taskId: string }) {
     applied: boolean;
     due_at: Date | null;
     notes: string | null;
+    actual_minutes: number | null;
   }>(
-    `SELECT id, status, applied_at IS NOT NULL AS applied, due_at, notes
+    `SELECT id, status, applied_at IS NOT NULL AS applied, due_at, notes, actual_minutes
      FROM applications WHERE posting_id = $1`,
     [ids.postingId],
   );
@@ -110,6 +112,7 @@ async function outcome(ids: { postingId: string; taskId: string }) {
       applied: app.rows[0]!.applied,
       dueAt: app.rows[0]!.due_at,
       notes: app.rows[0]!.notes,
+      actualMinutes: app.rows[0]!.actual_minutes,
     },
     task: task.rows[0],
     reflections: reflections.rows,
@@ -125,20 +128,26 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
       const ids = await seedTaggedApplicationTask();
       const res = await markAppliedVia(path, ids);
       expect(res.status, `${path}: ${JSON.stringify(res.body)}`).toBeLessThan(300);
-      expect(res.body.points?.amount).toBe(5 + 45);
+      expect(res.body.points?.amount).toBe(5 + MODAL_MINUTES + 20);
       results[path] = await outcome(ids);
     }
 
     expect(results.jobs).toEqual(results.tasks);
     expect(results.tasks).toEqual({
-      application: { status: "applied", applied: true, dueAt: null, notes: MODAL_NOTES },
-      task: { status: "completed", actual_minutes: 45, notes: null },
+      application: {
+        status: "applied",
+        applied: true,
+        dueAt: null,
+        notes: MODAL_NOTES,
+        actualMinutes: MODAL_MINUTES,
+      },
+      task: { status: "completed", actual_minutes: MODAL_MINUTES, notes: null },
       reflections: [
         { body: "Researched the team", on_application: true, on_task: false, actual_minutes: null },
-        { body: "Tailored the resume to the team", on_application: true, on_task: false, actual_minutes: 45 },
+        { body: "Tailored the resume to the team", on_application: true, on_task: false, actual_minutes: null },
       ],
       events: [
-        { kind: "earn", category: "application", amount: 50, source_type: "application_applied" },
+        { kind: "earn", category: "application", amount: 70, source_type: "application_applied" },
         { kind: "earn", category: "weekly_goal", amount: expect.any(Number), source_type: "weekly_goal" },
       ],
     });
@@ -269,7 +278,7 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
     expect(detail.body.appliedAt).toMatch(/^2025-08-01/);
   });
 
-  it("an application task without a reflection keeps its existing actual time", async () => {
+  it("a blank modal time keeps the application task's existing actual time, which then scores", async () => {
     const app = await seedManualApplication({ status: "todo" });
     const task = await seedTask({ category: "application", applicationId: app.id });
     await pool.query(`UPDATE tasks SET actual_minutes = 20 WHERE id = $1`, [task.id]);
@@ -279,6 +288,8 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
       .send({ actualMinutes: null })
       .expect(200);
     expect(res.body).toMatchObject({ status: "completed", actualMinutes: 20 });
-    expect(res.body.points.amount).toBe(5);
+    expect(res.body.points.amount).toBe(5 + 20);
+    const detail = await apiClient().get(`/api/applications/${app.id}`).expect(200);
+    expect(detail.body.actualMinutes).toBe(20);
   });
 });

@@ -18,6 +18,7 @@ const applicationSelect = `
     a.notes,
     a.applied_at AS "appliedAt",
     a.due_at AS "dueAt",
+    a.actual_minutes AS "actualMinutes",
     a.status_changed_at AS "statusChangedAt",
     a.created_at AS "createdAt",
     a.updated_at AS "updatedAt",
@@ -59,6 +60,8 @@ export type ApplicationRow = {
   notes: string | null;
   appliedAt: string | null;
   dueAt: string | null;
+  /** Time spent on the application (R5.31); its application task shows the same. */
+  actualMinutes: number | null;
   statusChangedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -182,6 +185,26 @@ export async function getApplication(
     [id],
   );
   return { ...result.rows[0], documents: docs.rows, openTaskId: openTask.rows[0]?.id ?? null };
+}
+
+/**
+ * Sets an application's time and its completed application task's, so the two never
+ * disagree. Points are the caller's job (`adjustApplicationActual`).
+ */
+export async function setApplicationActualMinutes(
+  db: Queryable,
+  applicationId: string,
+  actualMinutes: number | null,
+): Promise<void> {
+  await db.query(
+    `UPDATE applications SET actual_minutes = $2, updated_at = now() WHERE id = $1`,
+    [applicationId, actualMinutes],
+  );
+  await db.query(
+    `UPDATE tasks SET actual_minutes = $2, updated_at = now()
+     WHERE application_id = $1 AND category = 'application' AND status = 'completed'`,
+    [applicationId, actualMinutes],
+  );
 }
 
 /**

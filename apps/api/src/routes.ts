@@ -20,6 +20,7 @@ import {
   listApplicationLocations,
   listApplications,
   patchApplication,
+  setApplicationActualMinutes,
 } from "./applications.js";
 import { pool } from "./db.js";
 import { getHomeDashboard } from "./home.js";
@@ -57,6 +58,7 @@ import {
   listPickerApplications,
   patchInterviewStep,
   patchInterviewThread,
+  setInterviewStepActualMinutes,
 } from "./interviews.js";
 import {
   completeTask,
@@ -114,6 +116,8 @@ import {
   setAppTargetMembership,
 } from "./weeklyGoals.js";
 import {
+  adjustApplicationActual,
+  adjustInterviewFinishActual,
   awardApplicationApplied,
   awardInterviewFinish,
   awardMiscTaskComplete,
@@ -146,18 +150,32 @@ export const api = express.Router();
 
 /** The optional reflection from a completion / mark-applied modal. */
 function parseModalReflection(
-  raw: { lane?: string; body?: string; actualMinutes?: number | null } | null | undefined,
+  raw: { lane?: string; body?: string } | null | undefined,
 ): { value: MarkAppliedReflection | null } | { error: string } {
   if (!raw?.body || typeof raw.body !== "string") return { value: null };
   const lane = raw.lane ?? "";
   if (!isProgressLane(lane)) {
     return { error: "reflection.lane must be application, technical, or other" };
   }
-  const actualMinutes =
-    raw.actualMinutes === undefined || raw.actualMinutes === null
-      ? null
-      : Math.floor(raw.actualMinutes);
-  return { value: { lane, body: raw.body, actualMinutes } };
+  return { value: { lane, body: raw.body } };
+}
+
+/** Work time from a request body: absent, cleared (null), or whole minutes ≥ 0. */
+function parseActualMinutes(
+  raw: unknown,
+): { value: number | null | undefined } | { error: string } {
+  if (raw === undefined) return { value: undefined };
+  if (raw === null) return { value: null };
+  if (typeof raw !== "number" || !Number.isFinite(raw) || raw < 0) {
+    return { error: "Invalid actualMinutes" };
+  }
+  return { value: Math.floor(raw) };
+}
+
+function applicationLabel(app: { company: string | null; title: string | null }): string {
+  return app.company
+    ? `${app.company}${app.title ? ` · ${app.title}` : ""}`
+    : app.title ?? "Application";
 }
 
 function requestTimezone(req: express.Request): string {
@@ -412,10 +430,10 @@ api.post("/applications", async (req, res) => {
     descriptionHtml?: string;
     appliedAt?: string | null;
     dueAt?: string | null;
+    actualMinutes?: number | null;
     reflection?: {
       lane?: string;
       body?: string;
-      actualMinutes?: number | null;
     } | null;
   };
   if (body.status && isLegacyApplicationBacklogStatus(body.status)) {
@@ -431,6 +449,11 @@ api.post("/applications", async (req, res) => {
   const reflection = parseModalReflection(body.reflection);
   if ("error" in reflection) {
     res.status(400).json({ error: reflection.error });
+    return;
+  }
+  const actualMinutes = parseActualMinutes(body.actualMinutes);
+  if ("error" in actualMinutes) {
+    res.status(400).json({ error: actualMinutes.error });
     return;
   }
 
@@ -455,6 +478,7 @@ api.post("/applications", async (req, res) => {
           }),
         appliedAt,
         notes: body.notes ?? null,
+        actualMinutes: actualMinutes.value ?? null,
         reflection: reflection.value,
         tz: requestTimezone(req),
       });
@@ -503,6 +527,7 @@ api.patch("/applications/:id", async (req, res) => {
     url?: string | null;
     description?: string;
     descriptionHtml?: string | null;
+    actualMinutes?: number | null;
   };
   if (body.status && isLegacyApplicationBacklogStatus(body.status)) {
     res.status(400).json({ error: "Use Tasks for apply backlog" });
@@ -512,10 +537,15 @@ api.patch("/applications/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid status" });
     return;
   }
+  const actualMinutes = parseActualMinutes(body.actualMinutes);
+  if ("error" in actualMinutes) {
+    res.status(400).json({ error: actualMinutes.error });
+    return;
+  }
   try {
     const before = await getApplication(pool, req.params.id);
     const nextStatus = body.status ? normalizeApplicationStatus(body.status) : undefined;
-    if (before?.status === "todo" && nextStatus) {
+    if (before?.status === "todo" && (nextStatus || actualMinutes.value !== undefined)) {
       res.status(409).json({ error: TODO_APPLICATION_STATUS_ERROR });
       return;
     }
@@ -539,14 +569,28 @@ api.patch("/applications/:id", async (req, res) => {
       nextStatus === "applied" &&
       before.status !== "applied"
     ) {
-      const label = before.company
-        ? `${before.company}${before.title ? ` · ${before.title}` : ""}`
-        : before.title ?? "Application";
       const { event, created } = await awardApplicationApplied(pool, {
         applicationId: before.id,
-        label,
+        label: applicationLabel(before),
+        actualMinutes: before.actualMinutes,
       });
       if (created) points = serializePointsEarn(event);
+    }
+    if (
+      before &&
+      actualMinutes.value !== undefined &&
+      actualMinutes.value !== before.actualMinutes
+    ) {
+      await setApplicationActualMinutes(pool, before.id, actualMinutes.value);
+      const { event } = await adjustApplicationActual(pool, {
+        applicationId: before.id,
+        label: applicationLabel(before),
+        actualMinutes: actualMinutes.value,
+      });
+      if (event) points = serializePointsEarn(event);
+      const refreshed = await getApplication(pool, before.id);
+      res.json({ ...(refreshed ?? result), points });
+      return;
     }
     res.json({ ...result, points });
   } catch (err) {
@@ -697,57 +741,83 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
       url?: string | null;
       notes?: string | null;
       prepNotes?: string | null;
+      actualMinutes?: number | null;
       reflection?: {
         lane?: string;
         body?: string;
-        actualMinutes?: number | null;
       } | null;
     };
+    const actualMinutes = parseActualMinutes(body.actualMinutes);
+    if ("error" in actualMinutes) {
+      res.status(400).json({ error: actualMinutes.error });
+      return;
+    }
+    const reflection = parseModalReflection(body.reflection);
+    if ("error" in reflection) {
+      res.status(400).json({ error: reflection.error });
+      return;
+    }
     const thread = await getInterviewThread(pool, req.params.threadId);
     const before = thread?.steps.find((s) => s.id === req.params.stepId);
-    await patchInterviewStep(pool, req.params.threadId, req.params.stepId, body);
     const finishStatuses = new Set(["completed", "awaiting_employer"]);
-    if (
-      before &&
-      body.status &&
+    const finishing =
+      before != null &&
+      body.status != null &&
       finishStatuses.has(body.status) &&
-      !finishStatuses.has(before.status)
-    ) {
-      let withReflection = false;
-      let reflectionMinutes: number | null = null;
-      if (body.reflection?.body && typeof body.reflection.body === "string") {
-        const lane = body.reflection.lane ?? "";
-        if (!isProgressLane(lane)) {
-          res.status(400).json({ error: "reflection.lane must be application, technical, or other" });
-          return;
-        }
-        withReflection = true;
-        if (
-          body.reflection.actualMinutes !== undefined &&
-          body.reflection.actualMinutes !== null
-        ) {
-          reflectionMinutes = Math.floor(body.reflection.actualMinutes);
-        }
+      !finishStatuses.has(before.status);
+    const finishedAfter = body.status
+      ? finishStatuses.has(body.status)
+      : before != null && finishStatuses.has(before.status);
+    if (actualMinutes.value !== undefined && !finishedAfter) {
+      res.status(400).json({ error: "Time can only be set on a finished step" });
+      return;
+    }
+    await patchInterviewStep(pool, req.params.threadId, req.params.stepId, body);
+    if (!before || !thread) {
+      res.json({ ok: true, points: null });
+      return;
+    }
+    const label = thread.company ? `${thread.company} · ${before.title}` : before.title;
+    const kind = body.kind ?? before.kind;
+    // Like mark applied, a blank time when finishing keeps the step's saved time.
+    const minutes = finishing
+      ? actualMinutes.value ?? before.actualMinutes
+      : actualMinutes.value !== undefined
+        ? actualMinutes.value
+        : before.actualMinutes;
+    if (minutes !== before.actualMinutes) {
+      await setInterviewStepActualMinutes(pool, before.id, minutes);
+    }
+    if (finishing) {
+      if (reflection.value) {
         await createReflectionLog(pool, {
-          lane,
-          body: body.reflection.body,
-          actualMinutes: reflectionMinutes,
-          applicationId: thread?.primaryApplicationId ?? null,
+          ...reflection.value,
+          applicationId: thread.primaryApplicationId ?? null,
           interviewStepId: before.id,
           awardPoints: false,
         });
       }
-      const label = thread?.company
-        ? `${thread.company} · ${before.title}`
-        : before.title;
-      const event = await awardInterviewFinish(pool, {
+      const { event, created } = await awardInterviewFinish(pool, {
         stepId: before.id,
         label,
-        kind: body.kind ?? before.kind,
-        withReflection,
-        reflectionMinutes,
+        kind,
+        withReflection: reflection.value != null,
+        actualMinutes: minutes,
       });
-      res.json({ ok: true, points: serializePointsEarn(event) });
+      if (created) {
+        res.json({ ok: true, points: serializePointsEarn(event) });
+        return;
+      }
+    }
+    // A re-finish earns nothing again (R4.11), but a changed time still re-scores the one earn.
+    if (minutes !== before.actualMinutes) {
+      const { event } = await adjustInterviewFinishActual(pool, {
+        stepId: before.id,
+        label,
+        kind,
+        actualMinutes: minutes,
+      });
+      res.json({ ok: true, points: event ? serializePointsEarn(event) : null });
       return;
     }
     res.json({ ok: true, points: null });
@@ -963,6 +1033,28 @@ api.patch("/tasks/:id", async (req, res) => {
   }
   try {
     const before = await getTaskById(pool, req.params.id);
+    if (
+      before?.category === "application" &&
+      before.status === "completed" &&
+      before.applicationId &&
+      parsed.actualMinutes !== undefined
+    ) {
+      const { actualMinutes, ...rest } = parsed;
+      if (Object.keys(rest).length > 0) await patchTask(pool, before.id, rest);
+      let points: PointsEarnInfo | null = null;
+      if (actualMinutes !== before.actualMinutes) {
+        const app = await getApplication(pool, before.applicationId);
+        await setApplicationActualMinutes(pool, before.applicationId, actualMinutes ?? null);
+        const { event } = await adjustApplicationActual(pool, {
+          applicationId: before.applicationId,
+          label: app ? applicationLabel(app) : before.title,
+          actualMinutes: actualMinutes ?? null,
+        });
+        if (event) points = serializePointsEarn(event);
+      }
+      res.json({ ...(await getTaskById(pool, before.id)), points });
+      return;
+    }
     const task = await patchTask(pool, req.params.id, parsed);
     if (!task) {
       res.status(404).json({ error: "Task not found" });
@@ -991,14 +1083,14 @@ api.patch("/tasks/:id", async (req, res) => {
         );
         withReflection = Boolean(linked.rows[0]?.ok);
       }
-      await adjustTaskCompleteActual(pool, {
+      const { event } = await adjustTaskCompleteActual(pool, {
         taskId: task.id,
         title: task.title,
         actualMinutes: task.actualMinutes,
         withReflection,
       });
       const refreshed = await getTaskById(pool, task.id);
-      res.json(refreshed ?? task);
+      res.json({ ...(refreshed ?? task), points: event ? serializePointsEarn(event) : null });
       return;
     }
     res.json(task);
@@ -1020,7 +1112,6 @@ api.post("/tasks/:id/complete", async (req, res) => {
     reflection?: {
       lane?: string;
       body?: string;
-      actualMinutes?: number | null;
     } | null;
     notes?: string | null;
   };
@@ -1057,6 +1148,7 @@ api.post("/tasks/:id/complete", async (req, res) => {
       const result = await markApplied(pool, {
         resolveApplication: async () => applicationId,
         notes: typeof body.notes === "string" ? body.notes : null,
+        actualMinutes: actualMinutes ?? null,
         reflection: reflection.value,
         tz: requestTimezone(req),
       });
@@ -1519,7 +1611,6 @@ api.post("/progress/reflections", async (req, res) => {
   const body = req.body as {
     lane?: string;
     body?: string;
-    actualMinutes?: number | null;
     taskId?: string | null;
     applicationId?: string | null;
     interviewStepId?: string | null;
@@ -1540,7 +1631,6 @@ api.post("/progress/reflections", async (req, res) => {
     const row = await createReflectionLog(pool, {
       lane,
       body: body.body,
-      actualMinutes: body.actualMinutes,
       taskId: body.taskId ?? null,
       applicationId: body.applicationId ?? null,
       interviewStepId: body.interviewStepId ?? null,
