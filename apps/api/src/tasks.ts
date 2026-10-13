@@ -1,4 +1,4 @@
-import type { Pool, PoolClient } from "pg";
+import pg, { type Pool, type PoolClient } from "pg";
 import { normalizeDescriptionHtml } from "./descriptionFromHtml.js";
 import { resolveThreadsForApplication } from "./interviews.js";
 import { applicationResolutionFromStatus } from "./interviewStatuses.js";
@@ -362,7 +362,7 @@ async function createManualApplicationTask(
   const duePair = resolveDuePair(input.dueAt ?? null, input.dueKind, null, null);
   const dueAt = duePair.dueAt ? new Date(duePair.dueAt) : null;
   const dueKind = duePair.dueKind;
-  const client = "connect" in db ? await db.connect() : null;
+  const client = db instanceof pg.Pool ? await db.connect() : null;
   const queryable = client ?? db;
   try {
     if (client) await client.query("BEGIN");
@@ -446,7 +446,7 @@ export async function duplicateTask(db: Queryable, id: string): Promise<TaskRow 
   if (!source) return null;
 
   const copyTitle = `${source.title} (copy)`;
-  const client = "connect" in db ? await db.connect() : null;
+  const client = db instanceof pg.Pool ? await db.connect() : null;
   const queryable = client ?? db;
 
   try {
@@ -641,7 +641,7 @@ export async function createTaskFromPosting(db: Queryable, postingId: string): P
   );
   if (!posting.rows[0]) throw new Error("Posting not found");
 
-  const client = "connect" in db ? await db.connect() : null;
+  const client = db instanceof pg.Pool ? await db.connect() : null;
   const queryable = client ?? db;
   try {
     if (client) await client.query("BEGIN");
@@ -781,7 +781,7 @@ export async function patchTask(
     }
   }
 
-  const client = "connect" in db && patch.postingId ? await db.connect() : null;
+  const client = db instanceof pg.Pool && patch.postingId ? await db.connect() : null;
   const queryable = client ?? db;
   try {
     if (client) await client.query("BEGIN");
@@ -885,7 +885,7 @@ export async function completeTask(
   const existing = await getTaskById(db, id);
   if (!existing || existing.status !== "open") return null;
 
-  const client = "connect" in db ? await db.connect() : null;
+  const client = db instanceof pg.Pool ? await db.connect() : null;
   const queryable = client ?? db;
   try {
     if (client) await client.query("BEGIN");
@@ -964,7 +964,7 @@ export async function deleteTask(db: Queryable, id: string): Promise<boolean> {
   const existing = await getTaskById(db, id);
   if (!existing) return false;
 
-  const client = "connect" in db ? await db.connect() : null;
+  const client = db instanceof pg.Pool ? await db.connect() : null;
   const queryable = client ?? db;
   try {
     if (client) await client.query("BEGIN");

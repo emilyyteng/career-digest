@@ -1,6 +1,6 @@
 # MT-01: Fix API typecheck errors and keep them from coming back
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** n/a (maintenance)
 **Type:** bug
@@ -50,14 +50,14 @@ The API `build` script only prints a message (`apps/api/package.json`); nothing 
 
 ## Acceptance criteria
 
-- [ ] Group A: confirm the shared root cause at each call site before changing it; if any error has a different cause, stop and report
-- [ ] Group A: fixed by typing pool checkouts as `PoolClient`; transactions still begin, commit/rollback and release as before
-- [ ] Group B: **ask the user** whether creating an application should always complete its open application tasks before fixing; record the answer in this ticket
-- [ ] Group C: `req.params.id` narrowed to `string` without changing route behavior
-- [ ] `npx tsc --noEmit -p apps/api` reports 0 errors
-- [ ] A typecheck command exists for the API (e.g. a `typecheck` script) and a single root command runs the API typecheck alongside the existing build and tests (e.g. `npm run check`)
-- [ ] `AGENTS.md` Known baseline no longer lists typecheck errors; its Definition of done references the new command
-- [ ] `npm test` passes (flaky baseline aside, see MT-03)
+- [x] Group A: confirm the shared root cause at each call site before changing it; if any error has a different cause, stop and report
+- [x] Group A: fixed by typing pool checkouts as `PoolClient`; transactions still begin, commit/rollback and release as before
+- [x] Group B: **ask the user** whether creating an application should always complete its open application tasks before fixing; record the answer in this ticket
+- [x] Group C: `req.params.id` narrowed to `string` without changing route behavior
+- [x] `npx tsc --noEmit -p apps/api` reports 0 errors
+- [x] A typecheck command exists for the API (e.g. a `typecheck` script) and a single root command runs the API typecheck alongside the existing build and tests (e.g. `npm run check`)
+- [x] `AGENTS.md` Known baseline no longer lists typecheck errors; its Definition of done references the new command
+- [x] `npm test` passes
 
 ## Out of scope
 
@@ -71,13 +71,18 @@ Use the existing `Queryable` alias in each file being fixed; don't introduce ano
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run build` passes
-- [ ] `npm test` passes (known baseline aside)
-- [ ] API typecheck reports 0 errors
-- [ ] Committed as `MT-01: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run build` passes
+- [x] `npm test` passes
+- [x] API typecheck reports 0 errors
+- [x] Committed as `MT-01: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+- **Group A (14 errors), one root cause, confirmed at all 7 sites by reading:** `const client = "connect" in db ? await db.connect() : null` (`tasks.ts` 6 sites, `interviews.ts` 1). `PoolClient` also has a `connect` method, so the `in` check doesn't narrow `Pool | PoolClient`; TypeScript typed `client` as the base `Client` (no `release`), and every use of `client` or `queryable` failed. It was also a latent runtime bug: given a `PoolClient`, the code would call `connect()` on an already-connected client. Fixed with `db instanceof pg.Pool`, so `db.connect()` returns a `PoolClient`. Transaction begin, commit/rollback and release are unchanged.
+- **Group B (2 errors):** the user chose (2026-10-13) to keep the current behavior, so the dead `input.status !== "todo"` checks in `createApplication` were removed; creating an application always completes its open application tasks, as it did at runtime before.
+- **Group C (1 error):** `routes.ts` reads `:id` as one string (`req.params as { id: string }`); multer's handler typing had widened it.
+- **Commands:** `npm run typecheck` (API, `tsc --noEmit -p .`) and root `npm run check` (typecheck, web build, API tests; stops at the first failure). `AGENTS.md` Definition of done and Known baseline use it; README lists both commands.
+- **Results:** `npm run typecheck` 0 errors; `npm run check` passes (208/208 tests).
+- Not covered: the API tsconfig excludes test files (MT-08). CI (`.github/workflows/test.yml`) runs tests and the web build but not the typecheck; CI was out of scope here.

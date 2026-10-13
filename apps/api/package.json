@@ -15,6 +15,7 @@
     "merge-postings": "tsx src/mergeDuplicatePostings.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p .",
     "build": "node -e \"console.log(\\\"api: no emit step; start uses tsx\\\")\"",
     "start": "tsx src/index.ts"
   },

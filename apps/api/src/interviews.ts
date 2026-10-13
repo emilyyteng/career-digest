@@ -1,4 +1,4 @@
-import type { Pool, PoolClient } from "pg";
+import pg, { type Pool, type PoolClient } from "pg";
 import {
   ACTIONABLE_STEP_STATUSES,
   applicationResolutionFromStatus,
@@ -558,7 +558,7 @@ export async function patchInterviewThread(
   }
 
   const resolving = body.status === "resolved";
-  const client = resolving && "connect" in db ? await db.connect() : null;
+  const client = resolving && db instanceof pg.Pool ? await db.connect() : null;
   const queryable = client ?? db;
   try {
     if (client) await client.query("BEGIN");

@@ -734,7 +734,9 @@ api.post("/applications/:id/documents", upload.single("file"), async (req, res) 
     res.status(400).json({ error: "Missing file" });
     return;
   }
-  const inserted = await addApplicationDocument(pool, req.params.id, {
+  // multer's handler typing widens params; a `:id` segment is always one string.
+  const { id: applicationId } = req.params as { id: string };
+  const inserted = await addApplicationDocument(pool, applicationId, {
     originalName: req.file.originalname,
     storedName: req.file.filename,
     mimeType: req.file.mimetype,

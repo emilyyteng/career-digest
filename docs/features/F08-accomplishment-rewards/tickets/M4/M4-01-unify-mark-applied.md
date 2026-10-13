@@ -71,7 +71,7 @@ Extract from `completeTask` ([`tasks.ts`](../../../../../apps/api/src/tasks.ts))
 
 This ticket keeps today's points and time rules (reflection minutes saved as the task's actual time). M5-04 then changes them (R5.31): the time moves onto the application and the earn becomes +5 + minutes + 20 if a reflection. Build the shared operation so that change lands in one place.
 
-Out of scope: MT-01's `"todo"` type error (it may disappear as a side effect; note it if so).
+MT-01 removed the dead `"todo"` check in `createApplication` (2026-10-13); creating an application still always completes its open application tasks.
 
 ## Definition of done
 

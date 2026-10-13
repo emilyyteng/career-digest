@@ -70,7 +70,7 @@ After any pass that changes files, end with a report in this order:
 3. **Tests and checks:**
    - Tests added or changed, and the behavior each one validates.
    - If no tests were added, say so and why (e.g. docs-only change).
-   - Checks run and their results (build, tests, typecheck), compared against the known baseline.
+   - Checks run and their results (`npm run check`: typecheck, build, tests).
 4. **Issues found:** per Issues found during work, or "None".
 5. **Next step / decisions needed:** only what genuinely needs the user.
 
@@ -92,9 +92,7 @@ Surface everything; fix nothing outside the ticket's scope; create tickets only 
 ## Definition of done (every ticket)
 
 - [ ] Every acceptance criterion is met and checked, not assumed
-- [ ] `npm run build` (web) passes
-- [ ] `npm test` (API) passes, apart from the known baseline below
-- [ ] `npx tsc --noEmit -p apps/api` adds no new errors beyond the known baseline
+- [ ] `npm run check` passes: API typecheck (0 errors), web build, then API tests. It stops at the first failure.
 - [ ] UI changes follow `docs/design-system.md`: component variants only, no new global or element-level CSS, no one-off modal
 - [ ] Reuse check done: searched for existing components/helpers first; reused pieces listed in the ticket
 - [ ] No prototype code imported by production code
@@ -102,10 +100,7 @@ Surface everything; fix nothing outside the ticket's scope; create tickets only 
 - [ ] Committed
 - [ ] End-of-task report given (see End-of-task report), including tests added and **Issues found**
 
-**Known baseline (2026-10-12):**
-
-- `npx tsc --noEmit -p apps/api` reports **17 errors** (details and fix plan: `docs/features/maintenance/tickets/MT-01-api-typecheck-errors.md`).
-Report the baseline; don't hide new failures behind it.
+**Known baseline (2026-10-13):** none. `npm run check` is clean; any failure is new and gets reported.
 
 ## Git
 

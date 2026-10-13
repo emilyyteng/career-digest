@@ -24,6 +24,8 @@
     "cron:install-backup": "bash scripts/install-daily-backup.sh",
     "test": "npm run test -w @career-digest/api",
     "test:watch": "npm run test:watch -w @career-digest/api",
+    "typecheck": "npm run typecheck -w @career-digest/api",
+    "check": "npm run typecheck && npm run build && npm test",
     "build": "npm run build -w @career-digest/web",
     "start": "npm run start -w @career-digest/api",
     "build:web": "npm run build -w @career-digest/web",

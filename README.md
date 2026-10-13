@@ -62,7 +62,7 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 
 | Command                              | Purpose                                                           |
 | ------------------------------------ | ----------------------------------------------------------------- |
-| `npm run migrate`                    | Apply SQL migrations                                              |
+| `npm run migrate`                    | Apply new SQL migrations (each file runs once)                    |
 | `npm run ingest`                     | Pull ATS boards + Simplify listings                               |
 | `npm run scrape`                     | Fill blank Simplify descriptions                                  |
 | `npm run rank`                       | Rank via OpenAI Batch API                                         |
@@ -71,6 +71,8 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `npm run build`                      | Build the web UI for production                                   |
 | `npm start`                          | Serve API + built UI on `PORT` (default 3000)                     |
 | `npm run test`                       | API unit + integration tests                                      |
+| `npm run typecheck`                  | Typecheck the API                                                 |
+| `npm run check`                      | Typecheck, build, then test; stops at the first failure           |
 | `npm run backup` / `npm run restore` | Logical DB backup to `backups/` (stop dev servers before restore) |
 | `npm run discover-boards`            | Diff Simplify ATS URLs vs `tracked_boards` (`--write` to upsert)  |
 | `npm run merge-postings`             | Collapse duplicate postings across sources                        |
@@ -86,6 +88,8 @@ Integration and unit tests both require `TEST_DATABASE_URL` pointing at a **sepa
 export TEST_DATABASE_URL=postgres://YOUR_USER@localhost:5432/career_digest_test
 npm run test
 ```
+
+Before committing, run `npm run check` (typecheck, build, tests).
 
 
 

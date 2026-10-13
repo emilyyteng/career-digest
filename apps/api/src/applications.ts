@@ -227,9 +227,7 @@ export async function createApplication(
       [input.postingId, input.status, input.notes ?? null, appliedAt, dueAt],
     );
     const id = inserted.rows[0]!.id;
-    if (input.status !== "todo") {
-      await completeOpenApplicationTasksForApplication(db, id);
-    }
+    await completeOpenApplicationTasksForApplication(db, id);
     return { id };
   }
 
@@ -256,9 +254,7 @@ export async function createApplication(
     ],
   );
   const id = inserted.rows[0]!.id;
-  if (input.status !== "todo") {
-    await completeOpenApplicationTasksForApplication(db, id);
-  }
+  await completeOpenApplicationTasksForApplication(db, id);
   return { id };
 }
 
