@@ -770,7 +770,7 @@ export async function patchTask(
     if (patch.actualMinutes === null) {
       actualMinutes = null;
     } else {
-      const parsed = parseTaskEstimateMinutes(patch.actualMinutes);
+      const parsed = parseTaskActualMinutes(patch.actualMinutes);
       if (parsed === undefined) {
         throw Object.assign(new Error("Invalid actualMinutes"), { status: 400 });
       }
@@ -984,6 +984,17 @@ export async function completeOpenApplicationTasksForApplication(
   );
 }
 
+/** Actual time may be 0, unlike an estimate: blank and 0 both score no minutes (R5.31). */
+function parseTaskActualMinutes(value: unknown): number | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(n) || n < 0) {
+    throw Object.assign(new Error("actualMinutes must be 0 or more whole minutes"), { status: 400 });
+  }
+  return n;
+}
+
 export function parseCreateTaskBody(body: Record<string, unknown>): CreateTaskInput | null {
   const categoryId = typeof body.categoryId === "string" ? body.categoryId.trim() : "";
   if (!categoryId) return null;
@@ -1135,7 +1146,7 @@ export function parsePatchTaskBody(body: Record<string, unknown>): PatchTaskInpu
       if (body.actualMinutes === null) {
         patch.actualMinutes = null;
       } else {
-        patch.actualMinutes = parseTaskEstimateMinutes(body.actualMinutes) ?? null;
+        patch.actualMinutes = parseTaskActualMinutes(body.actualMinutes) ?? null;
       }
     }
   } catch {

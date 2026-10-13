@@ -238,6 +238,15 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
     }
   });
 
+  it("a misc task's time can be edited to 0, like every other work time", async () => {
+    const task = await seedTask({ category: "school" });
+    await apiClient().post(`/api/tasks/${task.id}/complete`).send({ actualMinutes: 30 }).expect(200);
+    const zero = await apiClient().patch(`/api/tasks/${task.id}`).send({ actualMinutes: 0 }).expect(200);
+    expect(zero.body.actualMinutes).toBe(0);
+    expect(zero.body.points.amount).toBe(-30);
+    await apiClient().patch(`/api/tasks/${task.id}`).send({ actualMinutes: -1 }).expect(400);
+  });
+
   it("an old blank-time misc earn of 15 is re-scored on its first edit, or on re-complete", async () => {
     const legacy = async (title: string) => {
       const task = await seedTask({ category: "school", title, status: "completed", completedAt: new Date() });
