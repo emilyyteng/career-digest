@@ -155,7 +155,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R4.10** (Established) An application's points never reverse. Once applied, an application only moves forward (interviewing, accepted, declined). Un-applying isn't supported.
 - **R4.11** (Established) Reopening an interview step doesn't reverse its points, and finishing it again doesn't earn again.
 - **R4.12** (Established) Lowering a day's LeetCode count reverses that many solves' points.
-- **R4.13** (Established 2026-10-13) Re-completing a reopened misc task is treated like editing its actual time after completion (R2.10). Across the reopen and re-complete, the task's points change by f(new actual) − f(old actual), so the same actual time nets 0. Ticket: M4-03.
+- **R4.13** (Established 2026-10-13) Re-completing a reopened misc task is treated like editing its actual time after completion (R2.10). Across the reopen and re-complete, the task's points change by f(new actual) − f(old actual), so the same actual time nets 0. Ticket: M4-03. (From M5-04, f is the current formula, so an earn from before the R5.31 misc change is re-scored on re-complete.)
 
 ### M5: Weekly goals, streaks & achievements, points rules, celebration (Design)
 
@@ -213,16 +213,16 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 
     | Action | Points |
     |--------|--------|
-    | Misc task complete | 1 × actual minutes (was 15 if blank; now 0) |
+    | Misc task complete | Flat +10, plus 1 × actual minutes (was 1 × minutes, or 15 if blank) |
     | Application mark-applied | Flat +5, plus 1 × actual minutes |
     | Interview step finish | Flat by kind (unchanged values), plus 1 × actual minutes |
     | Reflection | Flat +20 wherever it's written: in a completion modal, from Progress, or from a detail page. Linking an existing reflection to work later earns nothing more. |
 
-    Time counts whether or not there's a reflection. For example, an application with 60 minutes and a reflection earns 5 + 60 + 20 = 85 (65 before).
+    Time counts whether or not there's a reflection. For example, an application with 60 minutes and a reflection earns 5 + 60 + 20 = 85 (65 before). A misc task with 30 minutes earns 10 + 30 = 40 (30 before).
 
-    **Blank time adds 0, for every kind of work** (2026-10-13), so the rules have no hidden time defaults. So a misc task completed with no time and no reflection earns 0. The only flat amounts are the application's +5, the interview kind points and the reflection's +20.
+    **Every kind of work has a flat base, and blank time adds 0** (2026-10-13), so the rules have no hidden time defaults. The bases are: misc +10, application +5, interview step by kind. So a misc task completed with no time and no reflection earns 10 (15 before).
   - **Applications store their time on the application,** since some have no task (2026-10-13). An application task's actual time shows the application's.
-  - **Existing data:** minutes on reflections written with an application or interview step are copied onto that work if it has no time yet. All other reflection minutes stay in the database, unused, so no history is lost. Past earns keep their points, including misc earns that got 15 for blank time. An earn is re-scored under the current formula only when its work's time is next edited (2026-10-13). (Proposed: re-completing a reopened misc task also re-scores it, since M4-03 reinstates to the current formula's amount. So a task that earned 15 for blank time and is re-completed blank goes to 0.)
+  - **Existing data:** minutes on reflections written with an application or interview step are copied onto that work if it has no time yet. All other reflection minutes stay in the database, unused, so no history is lost. Past earns keep their points, including misc earns that got 15 for blank time. An earn is re-scored under the current formula only when its work's time is next edited, or when a reopened misc task is re-completed (2026-10-13). For example, a task that earned 15 for blank time and is re-completed blank goes to 10; edited to 30 minutes, it goes to 40.
   - Applications never reverse (R4.10): a lower time is an adjust down, not a reverse. Re-finishing an interview step still earns nothing again (R4.11).
 - **R5.20** (Established; values pending Q32) LeetCode points vary by difficulty tier (easy, medium, hard). Tiers are built in M5, in the same stepper rework as R5.17, because they change points from then on; their visual polish is M8 (R8.3). Existing untiered counts aren't migrated and keep their points. Wherever past days are shown by tier, they count as medium. Ticket: M5-01.
 - **R5.21** (Established 2026-10-13) The points breakdown splits its single task row by task category (School, Reading, Writing, Admin, custom), because tasks make up most of the total and a single row isn't informative. A task's points belong to its category at completion, recorded on the earn. Earns from before M5-03 fall back to the task's current category (2026-10-13). Earns whose task was since deleted go to one "Deleted tasks" row, shown only when it isn't 0 (2026-10-13). Ticket: M5-03.
@@ -289,7 +289,7 @@ M7 is devoted to the gacha and spending points.
 - **R7.5** (Established) v1 is the working product. Ongoing design updates go to a separate feature, created only when needed.
 - **R7.6** (Established) The pull banner loads quickly. The prototype is far too slow; recheck during implementation.
 - **R7.8** (Established) Rewards hosts the points log, with a simple filter: earnings only, pulls only, or both. What a pull entry shows is decided in M7.
-- **R7.9** (Established 2026-10-13; placement revisited in M7) The app includes a readable reference of the points rules, so they can be checked without leaving the app: the points formula, including how work time and reflections earn (R5.31), weekly scoring, streaks (including that the weekly-goal streak earns nothing), achievements, and later the gacha rates. It's a tab in Rewards or Progress; which one is decided in M7, alongside M8's information architecture. (Proposed: it reads the same values the code uses, so it can't drift from the rules.)
+- **R7.9** (Established 2026-10-13; placement revisited in M7) The app includes a readable reference of the points rules, so they can be checked without leaving the app: the points formula, including each kind of work's flat base and how work time and reflections earn (R5.31), weekly scoring, streaks (including that the weekly-goal streak earns nothing), achievements, and later the gacha rates. It's a tab in Rewards or Progress; which one is decided in M7, alongside M8's information architecture. (Proposed: it reads the same values the code uses, so it can't drift from the rules.)
 - **R7.7** (Proposed; Q21) The gacha parameters from the prototype:
   - 180 points per pull; CE base rate 1.5%
   - soft pity from pull 13 (+8 percentage points per pull); hard pity at 20
@@ -438,7 +438,7 @@ Nothing that depends on an open question may be implemented.
 | Q32 | LeetCode tier point values (easy, medium, hard). Medium is the reference, since past solves count as medium (today +30). Settled during M5 work, before M5-01's build. | R5.20, M5-01 | M5-01 build |
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
 | Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
-| Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (more once R5.31 counts application and interview time without a reflection) (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
+| Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (more once R5.31 counts application and interview time without a reflection and gives misc tasks a +10 base) (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
 | Q35 | Does the points log leave Progress in M7, when Rewards gets it, or stay on both until the M8 redesign? What does a pull log entry show? | R7.8, R8.2 | M7 design |
 
 ## Resolved questions
@@ -493,7 +493,7 @@ Nothing that depends on an open question may be implemented.
 | Q48 | Matching edited reflection minutes to earns | Record the reflection id on new earns; older earns aren't adjusted (2026-10-13). Moot after Q51: reflections carry no minutes | — |
 | Q49 | What replaces deep work on Progress | Reflections in general: heatmap and calendar marks count any reflection in the lane; the summary counts reflections (2026-10-13; first answered as minutes, changed to a count with Q51) | R5.29, M5-14 |
 | Q50 | Reflection minutes model | Confirmed, then superseded the same day by Q51 (2026-10-13) | R5.30 → R5.31 |
-| Q51 | Where does time live? | On the work (misc task, application, interview step), editable afterwards. A reflection is a note worth +20 everywhere. Application and interview time counts with or without a reflection. Points rules may change for this; they're untested and the gacha can adapt (2026-10-13). Follow-ups, same day: blank time adds 0 for every kind of work, misc included (no 15 default); application time is stored on the application; old earns are re-scored on their first time edit; Progress compose loses its minutes field | R5.31, R7.9, M5-04 |
+| Q51 | Where does time live? | On the work (misc task, application, interview step), editable afterwards. A reflection is a note worth +20 everywhere. Application and interview time counts with or without a reflection. Points rules may change for this; they're untested and the gacha can adapt (2026-10-13). Follow-ups, same day: blank time adds 0 for every kind of work, misc included (no 15 default); misc tasks get a flat +10 base, like the application's +5; application time is stored on the application; old earns are re-scored on their first time edit or misc re-complete (blank 15 → 10); Progress compose loses its minutes field | R5.31, R7.9, M5-04 |
 
 </details>
 
@@ -527,5 +527,5 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Streak and achievement numbers set as a starting point. The weekly-goal streak is display only. Closed weeks are fixed. Deep work is retired in M5. The app gets an in-app rules reference, placed in M7. Weekly points, per-unit included, are all awarded at week close, so the congrats banner shows the full amount.
 - **2026-10-13:** Reflections in general replace deep work on Progress: marks count any reflection, and the summary shows reflection minutes. The reflection minutes model (R5.30) is confirmed and belongs to the points rules, in-app too.
 - **2026-10-13:** Time belongs to the work, not the reflection (R5.31). Applications and interview steps get their own editable time, which counts with or without a reflection; every reflection is a flat +20 note. The Progress summary counts reflections. This replaces R5.19 and R5.30 and raises application and interview earns.
-- **2026-10-13:** Blank time adds 0 for every kind of work; the misc 15-minute default is removed so there's one consistent baseline. Application time is stored on the application. Old earns are re-scored only when their time is next edited. Study time without a task is logged as a misc task.
+- **2026-10-13:** Blank time adds 0 for every kind of work; the misc 15-minute default is removed so there's one consistent baseline. Misc tasks get a flat +10 base, like applications' +5. Application time is stored on the application. Old earns are re-scored only when their time is next edited or a reopened misc task is re-completed. Study time without a task is logged as a misc task.
 - **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs.
