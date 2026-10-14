@@ -875,6 +875,8 @@ export type ProgressToday = {
   applications: ActivityCredit;
   leetcode: ActivityCredit;
   leetcodeTiers: LeetcodeTierCounts;
+  /** Monday through today, the weekly goals' week. */
+  leetcodeWeekTiers: LeetcodeTierCounts;
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -1105,6 +1107,7 @@ export type LeetcodeChangeResult = {
   localDate: string;
   count: number;
   tiers: LeetcodeTierCounts;
+  weekTiers: LeetcodeTierCounts;
   weeklyProgress: number | null;
   points: PointsEarnInfo | null;
 };

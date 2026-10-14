@@ -29,6 +29,8 @@ export type ProgressToday = {
   leetcode: ActivityCredit;
   /** The day's solves per tier; untiered solves count as medium. Sums to `leetcode.raw`. */
   leetcodeTiers: LeetcodeTierCounts;
+  /** This week's solves per tier, Monday to today (the weekly goals' week). */
+  leetcodeWeekTiers: LeetcodeTierCounts;
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -338,6 +340,7 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
   const appRaw = await countApplicationsInRange(pool, tz, localDate, localDate);
   const lcTiers = await readLeetcodeTiers(pool, localDate);
   const lcRaw = lcTiers.easy + lcTiers.medium + lcTiers.hard;
+  const lcWeekTiers = await readLeetcodeWeekTiers(pool, localDate);
   const effortApp = await effortDaysByLane(pool, tz, "application", localDate, localDate);
   const effortTech = await effortDaysByLane(pool, tz, "technical", localDate, localDate);
   const effortOther = await effortDaysByLane(pool, tz, "other", localDate, localDate);
@@ -348,6 +351,7 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
     applications: activityCredit(appRaw),
     leetcode: activityCredit(lcRaw),
     leetcodeTiers: lcTiers,
+    leetcodeWeekTiers: lcWeekTiers,
     effortApplication: effortApp.size > 0,
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,
@@ -507,6 +511,22 @@ async function readLeetcodeTiers(
   return { easy: row.easy_count, medium: row.count - row.easy_count - row.hard_count, hard: row.hard_count };
 }
 
+/** Monday of the week containing `today` through `today`, matching the weekly goals' week. */
+async function readLeetcodeWeekTiers(db: Queryable, today: string): Promise<LeetcodeTierCounts> {
+  const [y, m, d] = today.split("-").map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const { rows } = await db.query<{ count: number; easy: number; hard: number }>(
+    `SELECT COALESCE(SUM(count), 0)::int AS count,
+            COALESCE(SUM(easy_count), 0)::int AS easy,
+            COALESCE(SUM(hard_count), 0)::int AS hard
+     FROM leetcode_daily
+     WHERE local_date >= $1::date - $2::int AND local_date <= $1::date`,
+    [today, (dow + 6) % 7],
+  );
+  const row = rows[0] ?? { count: 0, easy: 0, hard: 0 };
+  return { easy: row.easy, medium: row.count - row.easy - row.hard, hard: row.hard };
+}
+
 export type LeetcodeType = "weekly" | "misc";
 
 export type LeetcodeChange = {
@@ -521,6 +541,8 @@ export type LeetcodeChangeResult = {
   localDate: string;
   count: number;
   tiers: LeetcodeTierCounts;
+  /** This week's solves per tier after the change (see `ProgressToday.leetcodeWeekTiers`). */
+  weekTiers: LeetcodeTierCounts;
   /** This week's LC progress after a weekly change; null for misc. */
   weeklyProgress: number | null;
   /** The points change for the banner; null if points didn't move. */
@@ -590,12 +612,14 @@ export async function changeLeetcode(
         ? `${TIER_NAME[input.tier]} LeetCode (${where})`
         : `Removed one ${input.tier} LeetCode (${where})`;
     const { change } = await syncLeetcodeDailyPoints(client, localDate, tiers, label);
+    const weekTiers = await readLeetcodeWeekTiers(client, today);
     await client.query("COMMIT");
 
     return {
       localDate,
       count: tiers.easy + tiers.medium + tiers.hard,
       tiers,
+      weekTiers,
       weeklyProgress,
       points: serializePointsEarn(change),
     };

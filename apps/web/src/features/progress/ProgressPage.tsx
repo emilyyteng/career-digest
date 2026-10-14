@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   completeTask,
@@ -12,6 +12,8 @@ import {
   getWeeklyGoals,
   patchProgressLeetcode,
   patchProgressReflection,
+  type ActivityCredit,
+  type LeetcodeChangeResult,
   type LeetcodeTier,
   type LeetcodeType,
   type PointsEarnInfo,
@@ -75,6 +77,10 @@ function formatLong(date: string): string {
     day: "numeric",
     timeZone: "UTC",
   });
+}
+
+function creditFor(raw: number, cap: number): ActivityCredit {
+  return { raw, earned: Math.min(raw, cap), cap };
 }
 
 function buildMarks(
@@ -196,7 +202,9 @@ export default function Progress() {
     action?.();
   }
 
-  const reloadOverview = useCallback(async () => {
+  const writeSeq = useRef(0);
+
+  const reloadOverview = useCallback(async (isCurrent: () => boolean = () => true) => {
     const [todayRow, weekRow, monthRow, appRow, techRow, goals] = await Promise.all([
       getProgressToday(tz),
       getProgressOutcome(tz, "week"),
@@ -205,6 +213,8 @@ export default function Progress() {
       getProgressHeatmap(tz, "technical", 400),
       getWeeklyGoals(tz),
     ]);
+    const detail = await getProgressDay(tz, todayRow.localDate);
+    if (!isCurrent()) return;
     setToday(todayRow);
     setWeek(weekRow);
     setMonth(monthRow);
@@ -213,14 +223,13 @@ export default function Progress() {
     setWeeklyGoals(goals);
     setHistoryDate((prev) => prev ?? todayRow.localDate);
     setMonthAnchor((prev) => prev ?? `${todayRow.localDate.slice(0, 7)}-01`);
-    const detail = await getProgressDay(tz, todayRow.localDate);
     setTodayDetail(detail);
   }, [tz]);
 
   const reloadHistoryDay = useCallback(
-    async (date: string) => {
+    async (date: string, isCurrent: () => boolean = () => true) => {
       const detail = await getProgressDay(tz, date);
-      setHistoryDetail(detail);
+      if (isCurrent()) setHistoryDetail(detail);
     },
     [tz],
   );
@@ -277,13 +286,39 @@ export default function Progress() {
     setSearchParams(params, { replace: true });
   }
 
-  async function refreshAfterWrite(date: string) {
-    await reloadOverview();
-    if (date === today?.localDate) {
-      setTodayDetail(await getProgressDay(tz, date));
-    }
-    if (date === selectedHistory) {
-      await reloadHistoryDay(date);
+  async function refreshAfterWrite(date: string, isCurrent: () => boolean = () => true) {
+    await Promise.all([
+      reloadOverview(isCurrent),
+      date === selectedHistory ? reloadHistoryDay(date, isCurrent) : null,
+    ]);
+  }
+
+  function applyLeetcodeResult(result: LeetcodeChangeResult) {
+    setToday((prev) =>
+      prev && {
+        ...prev,
+        leetcodeWeekTiers: result.weekTiers,
+        ...(prev.localDate === result.localDate
+          ? { leetcodeTiers: result.tiers, leetcode: creditFor(result.count, prev.leetcode.cap) }
+          : {}),
+      },
+    );
+    const patchDay = (prev: ProgressDayDetail | null) =>
+      prev && prev.date === result.localDate
+        ? { ...prev, leetcodeTiers: result.tiers, leetcode: creditFor(result.count, prev.leetcode.cap) }
+        : prev;
+    setTodayDetail(patchDay);
+    setHistoryDetail(patchDay);
+    if (result.weeklyProgress != null) {
+      const progress = result.weeklyProgress;
+      setWeeklyGoals((prev) =>
+        prev && {
+          ...prev,
+          goals: prev.goals.map((g) =>
+            g.slot === "lc" ? { ...g, progressCount: progress, done: progress } : g,
+          ),
+        },
+      );
     }
   }
 
@@ -296,8 +331,10 @@ export default function Progress() {
     try {
       const result = await patchProgressLeetcode(tz, { tier, delta, type, date });
       setError(null);
+      applyLeetcodeResult(result);
       if (result.points) setEarn(result.points);
-      await refreshAfterWrite(result.localDate);
+      const seq = ++writeSeq.current;
+      void refreshAfterWrite(result.localDate, () => seq === writeSeq.current).catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "LeetCode update failed");
     }
@@ -502,6 +539,7 @@ export default function Progress() {
                 <h4 className="progress-section-title">LeetCode</h4>
                 <LeetcodeLogger
                   tiers={today.leetcodeTiers}
+                  weekTiers={today.leetcodeWeekTiers}
                   weeklyProgress={weeklyLcProgress}
                   dayLabel="Today"
                   onChange={(tier, delta, type) => changeLeetcode(tier, delta, type)}

@@ -64,6 +64,7 @@ No open tickets.
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Draft | After M5-07, M5-01 |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Draft | After M5-07, M5-10 (M5-14 done) |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | build | Draft | Only if Q7 keeps it after M5-07 |
+| [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | build | Draft | Waits on Q52–Q54; after M5-01 |
 
 <details>
 <summary>Done (6)</summary>

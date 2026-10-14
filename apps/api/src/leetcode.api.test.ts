@@ -6,6 +6,7 @@ import { localDateInTimezone } from "./progress.js";
 import { apiClient } from "./test/apiClient.js";
 import { seedLeetcodeDaily, truncateAll } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
+import { mondayOfLocalWeek } from "./weeklyGoals.js";
 
 const TZ = "UTC";
 const q = `?tz=${encodeURIComponent(TZ)}`;
@@ -157,6 +158,21 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
       .expect(200);
     expect(outcome.body.leetcodeSolves).toBe(4);
     expect(await balance()).toBe(20 + 30 + 50 + 50);
+  });
+
+  it("week tiers sum Monday through today, with untiered days as medium", async () => {
+    const today = localDateInTimezone(new Date(), TZ);
+    const monday = mondayOfLocalWeek(new Date(), TZ);
+    await seedLeetcodeDaily(addCivilDays(monday, -1), 5);
+    const earlier = monday === today ? 0 : 2;
+    if (earlier) await seedLeetcodeDaily(monday, earlier);
+
+    const res = await log("hard", 1, "misc").expect(200);
+    expect(res.body.weekTiers).toEqual({ easy: 0, medium: earlier, hard: 1 });
+
+    const t = await apiClient().get(`/api/progress/today${q}`).expect(200);
+    expect(t.body.leetcodeWeekTiers).toEqual({ easy: 0, medium: earlier, hard: 1 });
+    expect(t.body.leetcodeTiers).toEqual({ easy: 0, medium: 0, hard: 1 });
   });
 
   it("validates tier, delta and type", async () => {
