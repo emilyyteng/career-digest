@@ -1,6 +1,6 @@
 # M5-09: Weekly goal rows under Home Targets
 
-**Status:** Draft (after M5-08; finalize acceptance criteria before building)
+**Status:** Done
 **Blocked by:** M5-08 (the LC label API; decided 2026-10-13). M5-06 done
 **Implements:** R5.5 (Home), R5.6, R5.7, R5.24 (Home row) (from `../../spec.md`)
 **Type:** build
@@ -18,24 +18,22 @@ Home Upcoming's Targets section shows the week's goals as rows on Sunday, styled
 
 ## Acceptance criteria
 
-(Finalize after M5-06.)
-
-- [ ] Both rows appear on Sunday under Targets while unmet.
-- [ ] Meeting a target removes its row on the next load.
-- [ ] No apps row with 0 tagged tasks.
-- [ ] The label shows in the LC row and nowhere else on Home.
-- [ ] Rows never show as overdue, including on Sunday evening.
+- [x] Both rows appear on Sunday under Targets while unmet.
+- [x] Meeting a target removes its row on the next load.
+- [x] No apps row with 0 tagged tasks.
+- [x] The label shows in the LC row and nowhere else on Home.
+- [x] Rows never show as overdue, including on Sunday evening.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M5-09: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M5-09: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+Commit: see board. `kind: "weekly_goal"` items injected into Targets day groups for this week's Sunday; special-cased to never enter Overdue. Hero compact `WeeklyGoalsBlock` removed (M5-06 Q3 B).

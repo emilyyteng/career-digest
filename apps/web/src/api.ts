@@ -247,6 +247,7 @@ export type HomeJobPick = {
 
 export type TaskPriority = 0 | 1 | 2;
 export type TaskDueKind = "deadline" | "target";
+export type WeeklyPaceLabel = "on_track" | "ahead" | "behind";
 
 export type HomeUpcomingItem =
   | {
@@ -288,9 +289,21 @@ export type HomeUpcomingItem =
       title: string;
       organization: string | null;
       categoryName: string;
+    }
+  | {
+      kind: "weekly_goal";
+      at: string;
+      deadlineLabel: string;
+      dueKind: TaskDueKind;
+      priority: TaskPriority | null;
+      estimateMinutes: number | null;
+      slot: "lc" | "apps";
+      title: string;
+      done: number;
+      total: number;
+      pace: { label: WeeklyPaceLabel; amount: number };
+      sundayDate: string;
     };
-
-export type WeeklyPaceLabel = "on_track" | "ahead" | "behind";
 
 export type WeeklyCongratsGoal = {
   slot: "lc" | "apps";
@@ -305,7 +318,6 @@ export type WeeklyCongrats = {
   weekLabel: string;
   goals: WeeklyCongratsGoal[];
 };
-
 
 export type WeeklyGoalMember = {
   taskId: string;
@@ -381,7 +393,6 @@ export type HomeDashboard = {
   /** Last week's met goals for the one-time congrats banner (R5.18). */
   weeklyCongrats: WeeklyCongrats | null;
 };
-
 
 export const getHomeDashboard = (tz?: string, upcomingDays?: 7 | 14) => {
   const params = new URLSearchParams();

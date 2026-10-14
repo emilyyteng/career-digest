@@ -7,13 +7,12 @@ import {
   type HomeJobPick,
   type HomeUpcomingItem,
   type ProgressToday,
-  type WeeklyGoalsSnapshot,
+  type WeeklyPaceLabel,
 } from "../api";
 import DeadlineUrgency, { DeadlineUrgencyPiesOnly } from "../DeadlineUrgency";
 import { endOfLocalCivilDayIso } from "../formatDate";
 import WeeklyCongratsBanner from "../features/home/WeeklyCongratsBanner";
 import TodayStrip from "../features/progress/TodayStrip";
-import WeeklyGoalsBlock from "../features/progress/WeeklyGoalsBlock";
 import PriorityBadge from "../PriorityBadge";
 import ThemeEmoji from "../ThemeEmoji";
 import { formatEstimateMinutes, formatStepWhen } from "../formatDate";
@@ -82,7 +81,15 @@ function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
 function upcomingItemKey(item: HomeUpcomingItem): string {
   if (item.kind === "interview") return `interview:${item.stepId}`;
   if (item.kind === "subtask") return `subtask:${item.subtaskId}`;
+  if (item.kind === "weekly_goal") return `weekly_goal:${item.slot}`;
   return `task:${item.id}`;
+}
+
+function paceText(label: WeeklyPaceLabel, amount: number, done: number, total: number): string {
+  if (total > 0 && done >= total) return "met";
+  if (label === "ahead") return `${amount} ahead`;
+  if (label === "behind") return `${amount} behind`;
+  return "on track";
 }
 
 function UpcomingRow({
@@ -106,6 +113,36 @@ function UpcomingRow({
         <span className="task-title-text">{text}</span>
         {estimate && <span className="task-estimate-inline">{estimate}</span>}
       </span>
+    );
+  }
+
+  if (item.kind === "weekly_goal") {
+    const pct = item.total > 0 ? Math.min(100, Math.round((item.done / item.total) * 100)) : 0;
+    return (
+      <li className="home-job-row home-interview-row home-weekly-goal-row">
+        <Link to="/progress" className="home-job-main">
+          <span className="home-job-title home-upcoming-title task-title-line home-upcoming-title-oneline">
+            <span className="task-title-text">{item.title}</span>
+          </span>
+          <span className="muted home-job-meta home-weekly-goal-meta">
+            <span className="home-weekly-goal-mini-bar" aria-hidden="true">
+              <span className="weekly-goal-bar">
+                <span style={{ width: `${pct}%` }} />
+              </span>
+            </span>
+            <span>
+              {item.done}/{item.total}
+            </span>
+            <span className={item.pace.label === "behind" ? "weekly-pace behind" : "weekly-pace on-track"}>
+              {paceText(item.pace.label, item.pace.amount, item.done, item.total)}
+            </span>
+          </span>
+        </Link>
+        <div className="home-interview-deadline">
+          <div className="home-interview-deadline-date">{item.deadlineLabel}</div>
+          <span className="muted home-weekly-goal-reset">resets Monday</span>
+        </div>
+      </li>
     );
   }
 
@@ -171,17 +208,13 @@ function sectionIsEmpty(section: HomeDashboard["upcomingThisWeek"]["sections"][n
 export default function Home() {
   const [data, setData] = useState<HomeDashboard | null>(null);
   const [progress, setProgress] = useState<ProgressToday | null>(null);
-  const [weeklyGoals, setWeeklyGoals] = useState<WeeklyGoalsSnapshot | null>(null);
   const [upcomingDays, setUpcomingDays] = useState<7 | 14>(() => readUpcomingDays());
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const tz = browserTz();
     getHomeDashboard(tz, upcomingDays)
-      .then((dash) => {
-        setData(dash);
-        setWeeklyGoals(dash.weeklyGoals);
-      })
+      .then(setData)
       .catch((err: Error) => setError(err.message));
   }, [upcomingDays]);
 
@@ -250,13 +283,6 @@ export default function Home() {
               <Link to="/progress" className="home-section-link">
                 Update progress →
               </Link>
-            </div>
-            <div className="home-progress-row home-progress-row-week">
-              <WeeklyGoalsBlock
-                snapshot={weeklyGoals}
-                compact
-                onChange={setWeeklyGoals}
-              />
             </div>
           </div>
         )}

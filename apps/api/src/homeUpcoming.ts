@@ -1,10 +1,17 @@
 import type { Pool, PoolClient } from "pg";
 import { localDateInTimezone } from "./progress.js";
 import type { TaskPriority } from "./taskSubtasks.js";
+import {
+  getWeeklyGoalsSnapshot,
+  mondayOfLocalWeek,
+  zonedMidnightUtc,
+  type WeeklyGoalSlot,
+  type WeeklyPaceLabel,
+} from "./weeklyGoals.js";
 
 type Queryable = Pool | PoolClient;
 
-export type HomeUpcomingKind = "interview" | "task" | "subtask";
+export type HomeUpcomingKind = "interview" | "task" | "subtask" | "weekly_goal";
 
 export type HomeUpcomingItem = {
   kind: HomeUpcomingKind;
@@ -29,6 +36,13 @@ export type HomeUpcomingItem = {
   parentId?: string;
   parentTitle?: string;
   subtaskId?: string;
+  // weekly_goal (R5.6 / M5-09)
+  slot?: WeeklyGoalSlot;
+  done?: number;
+  total?: number;
+  pace?: { label: WeeklyPaceLabel; amount: number };
+  /** Civil YMD of this week's Sunday (bucketing; never overdue). */
+  sundayDate?: string;
 };
 
 export type HomeUpcomingGroup = {
@@ -147,6 +161,15 @@ export function buildUpcomingGroups(
   const byDay = new Map<string, HomeUpcomingItem[]>();
 
   for (const item of items) {
+    // Weekly goals sit on Sunday and never become overdue (R5.7).
+    if (item.kind === "weekly_goal" && item.sundayDate) {
+      const day = item.sundayDate;
+      if (day < todayYmd || day > lastYmd) continue;
+      const bucket = byDay.get(day);
+      if (bucket) bucket.push(item);
+      else byDay.set(day, [item]);
+      continue;
+    }
     const atMs = new Date(item.at).getTime();
     if (Number.isNaN(atMs)) continue;
     if (atMs < nowMs) {
@@ -411,25 +434,84 @@ export function keepEarliestSubtaskPerParent(
   return [...nonSubtasks, ...keptSubtasks];
 }
 
+function sundayShortLabel(sundayYmd: string): string {
+  const [y, m, d] = sundayYmd.split("-").map(Number);
+  const probe = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(probe);
+}
+
+/** Unmet weekly goals as Sunday Targets rows (R5.6, R5.24). */
+export async function loadWeeklyGoalTargetItems(
+  db: Queryable,
+  tz: string,
+  now: Date,
+  windowDays: number,
+): Promise<HomeUpcomingItem[]> {
+  const snap = await getWeeklyGoalsSnapshot(db, tz, now);
+  if (!snap) return [];
+  const sunday = addCivilDays(snap.weekStart, 6);
+  const todayYmd = localDateInTimezone(now, tz);
+  const lastYmd = addCivilDays(todayYmd, windowDays - 1);
+  if (sunday < todayYmd || sunday > lastYmd) return [];
+
+  // Noon Sunday local — used for sort only; bucketing uses sundayDate (never overdue).
+  const at = new Date(zonedMidnightUtc(sunday, tz).getTime() + 12 * 60 * 60 * 1000).toISOString();
+  const label = sundayShortLabel(sunday);
+  const items: HomeUpcomingItem[] = [];
+
+  for (const goal of snap.goals) {
+    if (goal.slot === "apps" && goal.total === 0) continue;
+    if (goal.total <= 0 || goal.done >= goal.total) continue;
+    const title =
+      goal.slot === "lc"
+        ? goal.label
+          ? `Weekly LC goal · ${goal.label}`
+          : "Weekly LC goal"
+        : "Weekly apps goal";
+    items.push({
+      kind: "weekly_goal",
+      slot: goal.slot,
+      title,
+      done: goal.done,
+      total: goal.total,
+      pace: { label: goal.pace.label, amount: goal.pace.amount },
+      sundayDate: sunday,
+      at,
+      dueKind: "target",
+      deadlineLabel: label,
+      priority: null,
+      estimateMinutes: null,
+    });
+  }
+  return items;
+}
+
 export async function getUpcomingThisWeek(
   db: Queryable,
   tz: string,
   now: Date = new Date(),
   windowDays: UpcomingWindowDays = UPCOMING_WINDOW_DAYS_DEFAULT,
 ): Promise<HomeUpcomingThisWeek> {
-  const [tasks, subtasks, interviews] = await Promise.all([
+  const [tasks, subtasks, interviews, weeklyGoals] = await Promise.all([
     loadDatedOpenTasks(db),
     loadDatedOpenSubtasks(db),
     loadDatedInterviewSteps(db),
+    loadWeeklyGoalTargetItems(db, tz, now, windowDays),
   ]);
   const all = [...tasks, ...subtasks, ...interviews];
   const deadlines = all.filter((i) => i.dueKind === "deadline");
-  const targets = keepEarliestSubtaskPerParent(
-    all.filter((i) => i.dueKind === "target"),
-  );
+  const targets = [
+    ...keepEarliestSubtaskPerParent(all.filter((i) => i.dueKind === "target")),
+    ...weeklyGoals,
+  ];
   return {
     windowDays,
-    groups: buildUpcomingGroups(all, now, tz, windowDays),
+    groups: buildUpcomingGroups([...all, ...weeklyGoals], now, tz, windowDays),
     sections: [
       {
         key: "deadlines",
@@ -447,4 +529,9 @@ export async function getUpcomingThisWeek(
       },
     ],
   };
+}
+
+/** Exported for tests that need this week's Sunday YMD. */
+export function thisWeekSunday(now: Date, tz: string): string {
+  return addCivilDays(mondayOfLocalWeek(now, tz), 6);
 }

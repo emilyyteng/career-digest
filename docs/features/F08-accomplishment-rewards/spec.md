@@ -14,7 +14,7 @@ Finishing work in Career Digest doesn't feel like anything. Tasks and applicatio
 - Completing work is one consistent flow that can capture a reflection and actual time.
 - Effort turns into points in one global ledger that is honest and auditable.
 - Weekly goals are visible from Home, reset cleanly each week, and leave a record of how the week went.
-- Points can be spent on the Cat Cake Collection.
+- Seeds can be spent on the Cat Cake Collection.
 
 ## Sources
 
@@ -38,7 +38,7 @@ Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and
 | M4 | Global points ledger | Done; M4-01, M4-02 and M4-03 done |
 | M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | In progress |
 | M6 | Board departures log | Not started |
-| M7 | Cat Cake Collection v1: spending points, the Rewards page | Not started. The prototype is unfinished (R7.4–R7.6) |
+| M7 | Cat Cake Collection v1: spending Seeds, the Rewards page | Design. Prototype under `apps/web/src/prototype/rewards/`; product tickets drafted |
 | M8 | Progress redesign, LeetCode tier polish, information architecture | Not started |
 
 ## Requirements
@@ -287,35 +287,35 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R6.6** (Established) The log shows every departed posting except those already applied to. The subset that had an open application task is easy to pick out, by filter or highlight.
 - **R6.7** (Established 2026-10-13) Entries are kept for 14 days, in per-day sections, with today expanded by default.
 
-### M7: Cat Cake Collection v1 (Not started)
+### M7: Cat Cake Collection v1 (Design)
 
-M7 is devoted to the gacha and spending points.
+M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*` names; the user-facing currency is **Seeds**.
 
-- **R7.1** (Established) Rewards is its own nav item and is a gacha only: the Cat Cake Collection. There is no self-care shop.
-- **R7.2** (Established) Pulls spend points. Each spend is recorded in the ledger, and Rewards shows the balance. The Pull button is disabled whenever the balance is below the pull cost, which also covers a negative balance.
+- **R7.1** (Established) Rewards is its own nav item and is a gacha only: the Cat Cake Collection. There is no self-care shop. Child routes: **Collection**, **Banner**, **Earnings**, **Pull history**, **Rules** (`/rewards` redirects to Collection).
+- **R7.2** (Established) Pulls spend Seeds. Each spend is recorded in the ledger, and Rewards shows the balance. The Pull button is disabled whenever the balance is below the pull cost, which also covers a negative balance.
 - **R7.3** (Established) The balance may go negative; clamping at 0 is removed. This replaces R4.5.
-- **R7.4** (Established) v1 launches with 12 classic and 12 Collector's Edition (CE) designs:
-  - the existing 6 + 6, with minor edits
-  - a new set of 6 + 6 cats
+- **R7.4** (Established 2026-10-13) v1 launches with 12 classic and 12 Collector's Edition (CE) designs (existing 6+6 with minor edits, plus a new 6+6). Day and Night are **skins of the same CE**, not separate pool entries: the second owned copy of that CE unlocks the Night skin; a free Day/Night toggle appears per CE once unlocked (no Seed or friendship cost). There is one CE pity pool.
 - **R7.5** (Established) v1 is the working product. Ongoing design updates go to a separate feature, created only when needed.
 - **R7.6** (Established) The pull banner loads quickly. The prototype is far too slow; recheck during implementation.
-- **R7.8** (Established) Rewards hosts the points log, with a simple filter: earnings only, pulls only, or both. What a pull entry shows is decided in M7.
-- **R7.9** (Established 2026-10-13; placement revisited in M7) The app includes a readable reference of the points rules, so they can be checked without leaving the app: the points formula, including each kind of work's flat base and how work time and reflections earn (R5.31), weekly scoring, streaks (including that the weekly-goal streak earns nothing), achievements, and later the gacha rates. It's a tab in Rewards or Progress; which one is decided in M7, alongside M8's information architecture. (Proposed: it reads the same values the code uses, so it can't drift from the rules.)
-- **R7.7** (Proposed; Q21) The gacha parameters from the prototype:
-  - 180 points per pull; CE base rate 1.5%
-  - soft pity from pull 13 (+8 percentage points per pull); hard pity at 20
-  - friendship cap of 5 (6 copies)
-  - duplicate refunds of 18 (classic) or 90 (CE)
-  - a ×10 pull
-  - the reveal never auto-advances; reduced motion is supported; designs stay readable at 48px; no new dependencies
-  - a 10,000-run simulation test of the rates
+- **R7.7** (Established 2026-10-13; Q21) Gacha parameters (match the rewards prototype rates; product uses server CSPRNG):
+  - **180 Seeds** per pull; **×10 costs 1,800**
+  - CE base rate **1.5%**; soft pity from pull **13** (+8 percentage points per pull); hard pity at **20**; pity resets only on a CE hit; **no** new-CE protection
+  - Friendship cap of **5** (the original plus 5 friendship copies = **6 kept copies**)
+  - **Manual** duplicate refunds only: classic **+18**, CE **+90**. A copy is refundable only when owned count is **above 6** (friendship must already be maxed). Refunds cannot reduce a cat below 6 copies, so Night unlock (2nd CE copy) is never undone by a refund
+  - Reveal is **one-by-one** (no auto-advance); reduced motion supported; designs readable at card sizes; no new dependencies
+  - Collection product layout is an **album grid**
+  - **No full backfill** of past ledger balance into a gacha starting purse beyond what the live balance already is
+  - A **10,000-run** simulation test of the rates
+- **R7.8** (Established 2026-10-13; Q35) **Earnings** and **Pull history** are separate Rewards routes (not one filterable log). Earnings: range control (Today / This week / Last 7 days / This month / All time), **category bars for the selected range**, and the earn log **grouped by day** even for multi-day ranges. Pull history: spends and refunds from the banner. The earn log **leaves Progress** in M7; completions stay on Progress.
+- **R7.9** (Established 2026-10-13) Rewards hosts a readable **Rules** reference: earning (Seed formula including bases, work time and reflections per R5.31, weekly scoring, streaks including that the weekly-goal streak earns nothing, achievements) and spending (gacha rates, friendship, refunds, Day/Night). It reads the same values the code uses so it can't drift.
+- **R7.10** (Established 2026-10-13; Q20) The currency is named **Seeds** in the UI. Internal/API/storage names may remain `points` / `points_*`.
 
 ### M8: Progress redesign, LeetCode tier polish, information architecture (Not started)
 
 M8 follows M7, so Progress is redesigned knowing what Rewards covers.
 
 - **R8.1** (Established) Fully redesign the Progress page. It is currently a stopgap host for the completions and points logs.
-- **R8.2** (Established) The points log leaves Progress for Rewards (R7.8); completions stay on Progress. When the move happens is pending Q35.
+- **R8.2** (Established) The earn log leaves Progress for Rewards (R7.8); completions stay on Progress. Move happens in M7 (Q35).
 - **R8.3** (Established) Polish the LeetCode tier stepper built in M5 (R5.20): show the increment and the tier in a visually appealing way.
 - **R8.4** (Established) A past-work surface for completion and reflection history. Its name is open, and it may absorb or rename Progress.
 - **R8.5** (Established) A design pass decides what lives where across Progress, past work, Rewards and Status: heatmaps, weekly counters, calendar, board departures, and points chrome.
@@ -407,9 +407,9 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | The first weekly read or write, completions diary request, or mark applied (with the browser's `tz`) after a week ends closes every unclosed week oldest first, under a lock: it stores a fixed record per goal (`weekly_goal_records`), then moves open tagged tasks, and ones completed after the week ended, into the next week. Weeks before the switch-over week (`weekly_close_state`) are never closed | [`weeklyGoals.ts` `closeDueWeeks`](../../../apps/api/src/weeklyGoals.ts), [`029_weekly_goal_records.sql`](../../../apps/api/src/sql/029_weekly_goal_records.sql) | Conforms R5.8, R5.11, R5.22, R5.23 | Fixed by M5-05. Tagging a task still removes it from every week, but only open tasks can be tagged, and closed weeks keep their record |
 | LC progress can pass the target. The weekly block has no stepper; its LC row shows the count, bar, pace and target field, and weekly solves are logged from the Progress LeetCode card | [`weeklyGoals.ts` `stepLcWeeklyProgress`](../../../apps/api/src/weeklyGoals.ts), [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) | Conforms R5.14 | API fixed by M5-05; the stepper removed by M5-01 |
 | Progress apps members are a plain list linking to the task, with a green `applied` tag on completed members (listed after open); no checkbox or Untag | [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) | Conforms R5.4 | Done by M5-08 |
-| LC goal has an optional ≤50-character label (LC row only; clears on new week; target carries forward). Progress weekly block shows A2 label+target line, `met`/`+N` bar tail, and flame weekly-streak from 2 weeks (R5.28). Home compact strip still omits the label | [`033_weekly_goal_label.sql`](../../../apps/api/src/sql/033_weekly_goal_label.sql), [`weeklyGoals.ts` `patchLcGoal`](../../../apps/api/src/weeklyGoals.ts), [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) | Conforms R5.5, R5.13, R5.14, R5.28 (Progress) | Done by M5-08; Home target rows (R5.6) still open (M5-09) |
+| LC goal has an optional ≤50-character label (LC row only; clears on new week; target carries forward). Progress weekly block shows A2 label+target line, `met`/`+N` bar tail, and flame weekly-streak from 2 weeks (R5.28). Home target rows include the label; the hero no longer has compact week bars | [`033_weekly_goal_label.sql`](../../../apps/api/src/sql/033_weekly_goal_label.sql), [`weeklyGoals.ts` `patchLcGoal`](../../../apps/api/src/weeklyGoals.ts), [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx), [`homeUpcoming.ts`](../../../apps/api/src/homeUpcoming.ts) | Conforms R5.5, R5.6, R5.13, R5.14, R5.28 | Done by M5-08 / M5-09 |
 | Count-based achievements unlock once (launch unlocks free); Progress `achievements` tab and unlock modal | [`achievements.ts`](../../../apps/api/src/achievements.ts), [`032_achievements.sql`](../../../apps/api/src/sql/032_achievements.sql) | Conforms R5.16, R5.26 | Done by M5-11 |
-| First Home visit after a week with met goals shows a one-time congrats banner from week-close records (counts, points, flame streak from 2). Unmet weekly goals still missing from Home Targets (compact hero bars remain) | [`weeklyCongrats.ts`](../../../apps/api/src/weeklyCongrats.ts), [`WeeklyCongratsBanner.tsx`](../../../apps/web/src/features/home/WeeklyCongratsBanner.tsx), [`OneTimeNotice.tsx`](../../../apps/web/src/features/notices/OneTimeNotice.tsx) | Conforms R5.18, R5.28 (banner); Conflicts R5.6, R5.7, R5.24 | Congrats Done by M5-02; Home target rows Planned M5-09 |
+| Home shows unmet weekly goals as Sunday Targets rows (mini bar, pace, resets Monday; no apps row when 0 tagged; never overdue). First Home visit after a week with met goals shows a one-time congrats banner from week-close records | [`homeUpcoming.ts`](../../../apps/api/src/homeUpcoming.ts), [`weeklyCongrats.ts`](../../../apps/api/src/weeklyCongrats.ts), [`WeeklyCongratsBanner.tsx`](../../../apps/web/src/features/home/WeeklyCongratsBanner.tsx), [`OneTimeNotice.tsx`](../../../apps/web/src/features/notices/OneTimeNotice.tsx) | Conforms R5.6, R5.7, R5.18, R5.24, R5.28 | Done by M5-09 / M5-02 |
 | Daily LC and apps streaks: length and `todayCounts` on `GET /progress/today`; daily points `min(20, 2×length)` and milestones `5×length` under ledger category `streak`; award/reverse only for today (History is display-only); pre-launch days count toward length only | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`031_streak_category.sql`](../../../apps/api/src/sql/031_streak_category.sql) | Conforms R5.25 | Done by M5-10 (2026-10-13); checked by running `streaks.api.test.ts` |
 | The completion log's `leetcode` tab counts total solves and lists one row per day with solves (`LC: 3 solved`, tier meta, points when earned); `all` includes those rows and adds one per day. The `weekly` tab label is `weekly goals` | [`completionsDiary.ts`](../../../apps/api/src/completionsDiary.ts), [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conforms R5.33, R5.34 | Done by M5-16 (2026-10-13); checked by running `completionsDiary.api.test.ts` |
 | M5 weekly-surface prototypes live under the RX.2 path; the superseded `prototype/m5` is deleted | `apps/web/src/prototype/f08-weekly/` | Conforms R5.5, R5.7, RX.2, RX.3 | Verdict in M5-06 (2026-10-13) |
@@ -424,8 +424,9 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| A gacha prototype exists (lab, pull, collection) with 6 + 6 designs. Nothing writes to the ledger. A pull is blocked when the balance is negative | `apps/web/src/prototype/rewards/` | Unspecified | Unfinished (R7.4, R7.6); not under the RX.2 path; links to an ignored notes file |
-| No rewards or spend events exist in the product | none | Conflicts R7.1–R7.3, R7.8 | Planned |
+| A gacha prototype exists (lab, pull, collection) with 12 + 12 designs, Day/Night CE skins, friendship (6 kept), manual refunds above 6, 180/pull, prototype rates | `apps/web/src/prototype/rewards/` | Unspecified vs product routes; rates align with R7.7 | Not under RX.2 path; nothing writes to the ledger |
+| Prototype refunds only copies beyond `KEPT_COPIES` (6) | [`gacha.ts` `refundableCount`](../../../apps/web/src/prototype/rewards/gacha.ts) | Conforms R7.7 refund rule | |
+| No Rewards nav, spend/refund ledger kinds, or product collection in the app | none | Conflicts R7.1–R7.3, R7.8–R7.10 | Planned in M7 tickets |
 
 ### Cross-cutting
 
@@ -449,14 +450,11 @@ Nothing that depends on an open question may be implemented.
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
-| Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
-| Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (more once R5.31 counts application and interview time without a reflection and gives misc tasks a +10 base) (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
-| Q35 | Does the points log leave Progress in M7, when Rewards gets it, or stay on both until the M8 redesign? What does a pull log entry show? | R7.8, R8.2 | M7 design |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (51)</summary>
+<summary>Resolved questions (54)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -486,7 +484,10 @@ Nothing that depends on an open question may be implemented.
 | Q27 | Milestone structure | M5 covers weekly goals, streaks, achievements and points rules; M8 covers the Progress redesign, after M7 (2026-10-13) | Milestones |
 | Q28 | Reflection edge cases | Confirmed (2026-10-13) | R2.14–R2.20 |
 | Q29 | Block status edits on to-do-backed applications? | Yes; the API rejects them and the page redirects to the task (2026-10-13) | R2.21 |
-| Q30 | Which logs move to Rewards | The points log, with an earn/pull/both filter; completions stay on Progress (2026-10-13) | R7.8, R8.2 |
+| Q20 | Currency name | **Seeds** in the UI; storage may stay `points_*` (2026-10-13) | R7.10 |
+| Q21 | Gacha numbers | 180 Seeds/pull; ×10 = 1,800; prototype CE rate and pity; manual refunds 18/90 only for copies above 6 (friendship maxed); no new-CE protection; no full backfill; priced against ~middle weekly earn (2026-10-13; refund floor clarified same day) | R7.7 |
+| Q30 | Which logs move to Rewards | Earnings and Pull history as **separate** Rewards routes (not one earn/pull/both filter); completions stay on Progress (2026-10-13; refined same day) | R7.8, R8.2 |
+| Q35 | When does the earn log leave Progress? | In M7, onto Rewards Earnings; Pull history is separate; range + day-grouped earn log + category bars for the selected range (2026-10-13) | R7.8, R8.2 |
 | Q31 | Prototype deletion vs milestone close | The feature, not the milestone, waits on deletion; `AGENTS.md` updated (2026-10-13) | RX.3 |
 | Q32 (part) | Migrate existing LC counts to tiers? | No (2026-10-13). Point values stay open | R5.20 |
 | Q32 | LeetCode tier point values | Easy +20, medium +30 (today's value, so past solves counted as medium are unchanged), hard +50 (2026-10-13) | R5.20, M5-01 |
@@ -522,7 +523,8 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** The week is Monday to Sunday.
 - **2026-10-13:** Weekly goals: open app tasks carry over after the result is recorded. A full apps week starts empty. 0/0 earns nothing. The LC target carries forward. LC may exceed the target. Points are awarded at week close, and scoring will weigh partial progress and goal size (formula open). Met targets get a congrats banner on the next Home visit.
 - **2026-10-13:** LeetCode logging becomes weekly-set vs other, through one server write path. This replaces the one-way weekly-to-daily copy and fixes the weekly-stepper points bug.
-- **2026-10-13:** Rewards is a gacha only. M7 ships Cat Cake Collection v1 with 12 classic and 12 CE designs. Later updates go to a future feature, created when needed. The balance may go negative. Rewards hosts the points log with an earn/pull filter.
+- **2026-10-13:** Rewards is a gacha only. M7 ships Cat Cake Collection v1 with 12 classic and 12 CE designs. Later updates go to a future feature, created when needed. The balance may go negative. Rewards hosts Earnings and Pull history as separate routes (not one filter).
+- **2026-10-13:** M7 design lock: currency **Seeds**; Day/Night as CE skins (unlock on 2nd CE copy, free toggle); gacha at 180 / ×10 1,800 with prototype rates and pity; manual refunds only for copies **above 6** (friendship maxed first); no full backfill; one-by-one reveal; album grid; Rules on Rewards; server CSPRNG; tickets M7-01–M7-11 drafted.
 - **2026-10-13:** Settled as already satisfied:
   - the countdown with 12-hour circles is the time visualization
   - reflections have one link, with interview steps as sub-links of an application

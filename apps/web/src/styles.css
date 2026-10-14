@@ -1691,7 +1691,6 @@ button.hide-board-remove:hover:not(:disabled) {
   box-shadow: none !important;
 }
 
-
 /* One-time notice (design-system.md): persists seen in localStorage; × hides for this view. */
 .one-time-notice {
   display: flex;
@@ -1761,6 +1760,22 @@ button.hide-board-remove:hover:not(:disabled) {
   padding-top: 0.3rem;
   border-top: 1px solid color-mix(in srgb, var(--accent-mint) 35%, var(--border));
   font-weight: 600;
+}
+.home-weekly-goal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.home-weekly-goal-mini-bar {
+  width: 5rem;
+  flex-shrink: 0;
+}
+.home-weekly-goal-mini-bar .weekly-goal-bar {
+  width: 100%;
+}
+.home-weekly-goal-reset {
+  font-size: 0.78rem;
 }
 
 /* Interim buttons (design-system.md → Interim decisions, F08 M5). Built on .secondary so the
