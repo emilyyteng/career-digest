@@ -64,7 +64,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | TBD |
+| [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | `ce85f4a` |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | `186f3f6` |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | `eeac25b` |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | Won't do (Q7 drop) |
