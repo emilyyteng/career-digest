@@ -1504,19 +1504,36 @@ api.patch("/weekly-goals/lc", async (req, res) => {
     res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
     return;
   }
-  const body = req.body as { targetCount?: unknown; progressCount?: unknown };
+  const body = req.body as {
+    targetCount?: unknown;
+    progressCount?: unknown;
+    label?: unknown;
+  };
   if (body.progressCount !== undefined) {
     res.status(400).json({
       error: "Weekly LC progress moves only by logging solves (PATCH /api/progress/leetcode)",
     });
     return;
   }
-  if (typeof body.targetCount !== "number") {
+  const hasTarget = Object.prototype.hasOwnProperty.call(body, "targetCount");
+  const hasLabel = Object.prototype.hasOwnProperty.call(body, "label");
+  if (!hasTarget && !hasLabel) {
+    res.status(400).json({ error: "Provide targetCount and/or label" });
+    return;
+  }
+  if (hasTarget && typeof body.targetCount !== "number") {
     res.status(400).json({ error: "targetCount must be a number" });
     return;
   }
+  if (hasLabel && body.label != null && typeof body.label !== "string") {
+    res.status(400).json({ error: "label must be a string" });
+    return;
+  }
   try {
-    const snapshot = await patchLcGoal(pool, tz, { targetCount: body.targetCount });
+    const snapshot = await patchLcGoal(pool, tz, {
+      ...(hasTarget ? { targetCount: body.targetCount as number } : {}),
+      ...(hasLabel ? { label: body.label as string | null } : {}),
+    });
     if (!snapshot) {
       res.status(400).json({ error: "Invalid timezone" });
       return;

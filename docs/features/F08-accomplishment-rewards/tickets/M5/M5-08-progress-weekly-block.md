@@ -1,6 +1,6 @@
 # M5-08: Progress weekly goals block
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** M5-05 (uncapped LC progress and the weekly-streak count, so this UI is verified with real data), M5-01 (removes the weekly stepper, so this block never handles LeetCode logging), M5-07 (Q5 weekly-streak display — done). Decided 2026-10-13; M5-06 done
 **Implements:** R5.3, R5.4, R5.5 (Progress), R5.13 (label clears), R5.14 (display), R5.28 (Progress display) (from `../../spec.md`)
 **Type:** build
@@ -45,38 +45,38 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 ## Acceptance criteria
 
 **Apps list**
-- [ ] No checkbox and no Untag control. The page no longer completes or untags a task from this block.
-- [ ] Each member links to its task's detail page.
-- [ ] Applied members show the green `applied` tag and are listed after the open ones; open members show no tag.
-- [ ] 0 tagged: the empty text shows, with no bar and no pace.
+- [x] No checkbox and no Untag control. The page no longer completes or untags a task from this block.
+- [x] Each member links to its task's detail page.
+- [x] Applied members show the green `applied` tag and are listed after the open ones; open members show no tag.
+- [x] 0 tagged: the empty text shows, with no bar and no pace.
 
 **LC label**
-- [ ] With no label, `+ Add label` shows. Saving `Grind 75 Week 4` shows that text, and it's still there after a reload.
-- [ ] `Edit label` opens the field prefilled. Escape or Cancel leaves the saved label unchanged; Enter or Save saves.
-- [ ] The counter tracks the length in user-visible characters (an emoji counts as one, in the counter and in the database's `char_length`). The field stops at 50 characters, and the API rejects 51 with 400 and no change.
-- [ ] Leading and trailing spaces are trimmed. Saving an empty or all-spaces label clears it, and `+ Add label` returns.
-- [ ] A new week starts with no label and the previous week's target (test across a week boundary in a non-UTC time zone, B2).
-- [ ] The apps goal can't carry a label: the API ignores or rejects one, and the database check refuses it.
-- [ ] The label doesn't appear in Home's hero block or anywhere outside this block and the Home target row.
+- [x] With no label, `+ Add label` shows. Saving `Grind 75 Week 4` shows that text, and it's still there after a reload.
+- [x] `Edit label` opens the field prefilled. Escape or Cancel leaves the saved label unchanged; Enter or Save saves.
+- [x] The counter tracks the length in user-visible characters (an emoji counts as one, in the counter and in the database's `char_length`). The field stops at 50 characters, and the API rejects 51 with 400 and no change.
+- [x] Leading and trailing spaces are trimmed. Saving an empty or all-spaces label clears it, and `+ Add label` returns.
+- [x] A new week starts with no label and the previous week's target (test across a week boundary in a non-UTC time zone, B2).
+- [x] The apps goal can't carry a label: the API ignores or rejects one, and the database check refuses it.
+- [x] The label doesn't appear in Home's hero block or anywhere outside this block and the Home target row.
 
 **Count, bar and pace**
-- [ ] 4/10 midweek shows the pace from the API (`n behind`, `n ahead` or `on track`).
-- [ ] 10/10 shows `met` and a full bar with no tail.
-- [ ] 12/10, reached through the app, shows `12/10`, `met`, a full bar and a `+2` tail.
-- [ ] Pace text has normal weight in every state.
+- [x] 4/10 midweek shows the pace from the API (`n behind`, `n ahead` or `on track`).
+- [x] 10/10 shows `met` and a full bar with no tail.
+- [x] 12/10, reached through the app, shows `12/10`, `met`, a full bar and a `+2` tail.
+- [x] Pace text has normal weight in every state.
 
 **Weekly streak**
-- [ ] Both goals show their current run of met weeks from M5-05's API as M5-07 Q5 B2: 🔥 + “N weeks in a row”, right-aligned on the goal head (same row as title/count/pace).
-- [ ] A goal below the show-from threshold (Proposed: 2 weeks) shows no streak text.
+- [x] Both goals show their current run of met weeks from M5-05's API as M5-07 Q5 B2: 🔥 + “N weeks in a row”, right-aligned on the goal head (same row as title/count/pace).
+- [x] A goal below the show-from threshold (Proposed: 2 weeks) shows no streak text.
 
 
 **Target field**
-- [ ] It sits at the right end of the label line, in both the reading and the editing state, and with a 50-character label (wrapping allowed on narrow screens).
-- [ ] Changing the target updates the count, bar and pace without a reload. 0, negative or non-whole values revert.
+- [x] It sits at the right end of the label line, in both the reading and the editing state, and with a 50-character label (wrapping allowed on narrow screens).
+- [x] Changing the target updates the count, bar and pace without a reload. 0, negative or non-whole values revert.
 
 **General**
-- [ ] Matches the M5-06 A2 prototype in direction W, apart from the open questions' outcomes.
-- [ ] API tests cover the label: save, trim, clear, 51 characters → 400, apps-row refusal, and the new-week reset with the target carried.
+- [x] Matches the M5-06 A2 prototype in direction W, apart from the open questions' outcomes.
+- [x] API tests cover the label: save, trim, clear, 51 characters → 400, apps-row refusal, and the new-week reset with the target carried.
 
 ## Open questions
 
@@ -98,14 +98,14 @@ None. All decided 2026-10-13:
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`, including Interim decisions and rule 7 (log styling issues in F09)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M5-08: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`, including Interim decisions and rule 7 (log styling issues in F09)
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M5-08: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+Commit: see board. Migration 033 adds LC-only `label` (char_length ≤ 50). `PATCH /weekly-goals/lc` accepts `label` and/or `targetCount`. Progress block: A2 label+target row, plain apps links, flame streak from 2 weeks, `met` / `+N` bar. Home compact unchanged aside from titles (`Weekly LC` / `Weekly apps`).

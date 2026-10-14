@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { computePace, mondayOfLocalWeek, weekElapsedFraction } from "./weeklyGoals.js";
+import {
+  computePace,
+  mondayOfLocalWeek,
+  visibleCharLength,
+  weekElapsedFraction,
+} from "./weeklyGoals.js";
 
 describe("weeklyGoals pace", () => {
   it("reports on track when total is 0", () => {
@@ -27,5 +32,12 @@ describe("weeklyGoals pace", () => {
     );
     expect(elapsed).toBeGreaterThan(0.2);
     expect(elapsed).toBeLessThan(0.5);
+  });
+});
+
+describe("visibleCharLength (R5.5)", () => {
+  it("counts emoji as one character", () => {
+    expect(visibleCharLength("🔥")).toBe(1);
+    expect(visibleCharLength("🔥".repeat(50))).toBe(50);
   });
 });

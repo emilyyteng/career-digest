@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  completeTask,
   createProgressReflection,
   getApplications,
   getProgressDay,
@@ -524,12 +523,6 @@ export default function Progress() {
             <WeeklyGoalsBlock
               snapshot={weeklyGoals}
               onChange={(next) => setWeeklyGoals(next)}
-              onCompleteTask={async (taskId) => {
-                await completeTask(taskId);
-                const next = await getWeeklyGoals(tz);
-                setWeeklyGoals(next);
-                await refreshAfterWrite(today.localDate);
-              }}
             />
           )}
 

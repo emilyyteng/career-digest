@@ -26,6 +26,8 @@ export type WeeklyGoalView = {
   kind: WeeklyGoalKind;
   /** Fixed display title */
   title: string;
+  /** LC-only optional label (R5.5); null on apps and when cleared. */
+  label: string | null;
   targetCount: number | null;
   progressCount: number;
   done: number;
@@ -40,6 +42,13 @@ export type WeeklyGoalView = {
   /** Consecutive met weeks ending with the last closed week (R5.28; display only). */
   metWeeksStreak: number;
 };
+
+/** Unicode code points — matches Postgres `char_length` for typical emoji. */
+export function visibleCharLength(value: string): number {
+  return Array.from(value).length;
+}
+
+export const LC_LABEL_MAX = 50;
 
 export type WeeklyGoalRecord = {
   weekStart: string;
@@ -127,7 +136,7 @@ export function computePace(
 }
 
 function slotTitle(slot: WeeklyGoalSlot): string {
-  return slot === "lc" ? "LC target" : "App target";
+  return slot === "lc" ? "Weekly LC" : "Weekly apps";
 }
 
 type GoalRow = {
@@ -137,6 +146,7 @@ type GoalRow = {
   kind: WeeklyGoalKind;
   targetCount: number | null;
   progressCount: number;
+  label: string | null;
 };
 
 async function loadGoalRows(db: Queryable, weekStart: string): Promise<GoalRow[]> {
@@ -147,8 +157,9 @@ async function loadGoalRows(db: Queryable, weekStart: string): Promise<GoalRow[]
     kind: WeeklyGoalKind;
     target_count: number | null;
     progress_count: number;
+    label: string | null;
   }>(
-    `SELECT id, week_start::text AS week_start, slot, kind, target_count, progress_count
+    `SELECT id, week_start::text AS week_start, slot, kind, target_count, progress_count, label
      FROM weekly_goals
      WHERE week_start = $1::date
      ORDER BY CASE slot WHEN 'lc' THEN 0 ELSE 1 END`,
@@ -161,6 +172,7 @@ async function loadGoalRows(db: Queryable, weekStart: string): Promise<GoalRow[]
     kind: r.kind,
     targetCount: r.target_count,
     progressCount: r.progress_count,
+    label: r.label,
   }));
 }
 
@@ -219,6 +231,7 @@ function toView(
     slot: row.slot,
     kind: row.kind,
     title: slotTitle(row.slot),
+    label: row.slot === "lc" ? row.label : null,
     targetCount,
     progressCount,
     done,
@@ -563,25 +576,64 @@ export async function getWeeklyGoalsSnapshot(
   return { tz, weekStart, weekEnd, goals };
 }
 
-/** Sets this week's LC target. Progress moves only through LeetCode logging (R5.17). */
+/**
+ * Sets this week's LC target and/or label (R5.5). Progress moves only through
+ * LeetCode logging (R5.17). An empty/whitespace label clears it.
+ */
 export async function patchLcGoal(
   db: Queryable,
   tz: string,
-  patch: { targetCount: number },
+  patch: { targetCount?: number; label?: string | null },
+  now = new Date(),
 ): Promise<WeeklyGoalsSnapshot | null> {
   if (!isValidTimezone(tz)) return null;
-  if (!Number.isInteger(patch.targetCount) || patch.targetCount < 1) {
+  const hasTarget = patch.targetCount !== undefined;
+  const hasLabel = patch.label !== undefined;
+  if (!hasTarget && !hasLabel) {
+    throw Object.assign(new Error("Provide targetCount and/or label"), { status: 400 });
+  }
+  if (
+    hasTarget &&
+    (!Number.isInteger(patch.targetCount) || (patch.targetCount as number) < 1)
+  ) {
     throw Object.assign(new Error("targetCount must be a positive integer"), { status: 400 });
   }
-  await closeDueWeeks(db, tz);
-  const weekStart = mondayOfLocalWeek(new Date(), tz);
+  let nextLabel: string | null | undefined;
+  if (hasLabel) {
+    if (patch.label != null && typeof patch.label !== "string") {
+      throw Object.assign(new Error("label must be a string"), { status: 400 });
+    }
+    const trimmed = patch.label == null ? "" : patch.label.trim();
+    if (visibleCharLength(trimmed) > LC_LABEL_MAX) {
+      throw Object.assign(new Error(`label must be at most ${LC_LABEL_MAX} characters`), {
+        status: 400,
+      });
+    }
+    nextLabel = trimmed.length === 0 ? null : trimmed;
+  }
+  await closeDueWeeks(db, tz, now);
+  const weekStart = mondayOfLocalWeek(now, tz);
   await ensurePair(db, weekStart);
-  await db.query(
-    `UPDATE weekly_goals SET target_count = $2, updated_at = now()
-     WHERE week_start = $1::date AND slot = 'lc'`,
-    [weekStart, patch.targetCount],
-  );
-  return getWeeklyGoalsSnapshot(db, tz);
+  if (hasTarget && hasLabel) {
+    await db.query(
+      `UPDATE weekly_goals SET target_count = $2, label = $3, updated_at = now()
+       WHERE week_start = $1::date AND slot = 'lc'`,
+      [weekStart, patch.targetCount, nextLabel],
+    );
+  } else if (hasTarget) {
+    await db.query(
+      `UPDATE weekly_goals SET target_count = $2, updated_at = now()
+       WHERE week_start = $1::date AND slot = 'lc'`,
+      [weekStart, patch.targetCount],
+    );
+  } else {
+    await db.query(
+      `UPDATE weekly_goals SET label = $2, updated_at = now()
+       WHERE week_start = $1::date AND slot = 'lc'`,
+      [weekStart, nextLabel],
+    );
+  }
+  return getWeeklyGoalsSnapshot(db, tz, now);
 }
 
 /**

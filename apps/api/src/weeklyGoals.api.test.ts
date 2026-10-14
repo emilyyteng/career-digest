@@ -5,9 +5,18 @@ import { seedTask, truncateAll } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
 import { addCivilDays } from "./homeUpcoming.js";
 import { localDateInTimezone } from "./progress.js";
-import { mondayOfLocalWeek } from "./weeklyGoals.js";
+import {
+  getWeeklyGoalsSnapshot,
+  mondayOfLocalWeek,
+  visibleCharLength,
+} from "./weeklyGoals.js";
 
 const TZ = "UTC";
+const LA = "America/Los_Angeles";
+/** Mon Mar 2 – Sun Mar 8, 2026 (LA); next week starts Mar 9. */
+const W1 = "2026-03-02";
+const W2 = "2026-03-09";
+const IN_W2 = new Date("2026-03-11T19:00:00Z");
 
 describe.skipIf(!integrationReady)("weekly goals API", () => {
   it("ensures lc+apps pair; lc patch sets the target and solves move progress", async () => {
@@ -113,5 +122,82 @@ describe.skipIf(!integrationReady)("weekly goals API", () => {
       .expect(200);
     const apps3 = clear.body.goals.find((g: { slot: string }) => g.slot === "apps");
     expect(apps3.members.some((m: { taskId: string }) => m.taskId === task.id)).toBe(false);
+  });
+
+  it("saves, trims, and clears the LC label; 51 characters → 400", async () => {
+    await truncateAll();
+    const q = `?tz=${encodeURIComponent(TZ)}`;
+    const saved = await apiClient()
+      .patch(`/api/weekly-goals/lc${q}`)
+      .send({ label: "  Grind 75 Week 4  " })
+      .expect(200);
+    expect(saved.body.goals.find((g: { slot: string }) => g.slot === "lc")).toMatchObject({
+      label: "Grind 75 Week 4",
+    });
+
+    const cleared = await apiClient()
+      .patch(`/api/weekly-goals/lc${q}`)
+      .send({ label: "   " })
+      .expect(200);
+    expect(cleared.body.goals.find((g: { slot: string }) => g.slot === "lc").label).toBeNull();
+
+    const fifty = "x".repeat(50);
+    await apiClient().patch(`/api/weekly-goals/lc${q}`).send({ label: fifty }).expect(200);
+    const tooLong = await apiClient()
+      .patch(`/api/weekly-goals/lc${q}`)
+      .send({ label: fifty + "y" })
+      .expect(400);
+    expect(tooLong.body.error).toMatch(/at most 50/);
+    const after = await apiClient().get(`/api/weekly-goals${q}`).expect(200);
+    expect(after.body.goals.find((g: { slot: string }) => g.slot === "lc").label).toBe(fifty);
+
+    // Emoji counts as one character (matches Postgres char_length).
+    const emoji50 = "🔥".repeat(50);
+    expect(visibleCharLength(emoji50)).toBe(50);
+    await apiClient().patch(`/api/weekly-goals/lc${q}`).send({ label: emoji50 }).expect(200);
+    await apiClient()
+      .patch(`/api/weekly-goals/lc${q}`)
+      .send({ label: emoji50 + "🔥" })
+      .expect(400);
+  });
+
+  it("database refuses a label on the apps goal", async () => {
+    await truncateAll();
+    await apiClient().get(`/api/weekly-goals?tz=${encodeURIComponent(TZ)}`).expect(200);
+    await expect(
+      pool.query(
+        `UPDATE weekly_goals SET label = 'nope' WHERE slot = 'apps' AND week_start = (
+           SELECT week_start FROM weekly_goals WHERE slot = 'lc' LIMIT 1
+         )`,
+      ),
+    ).rejects.toThrow(/weekly_goals_label_lc_only|check constraint/i);
+  });
+
+  it("new week clears the label and carries the target (America/Los_Angeles)", async () => {
+    await truncateAll();
+    await pool.query(
+      `INSERT INTO weekly_close_state (start_week) VALUES ($1::date)
+       ON CONFLICT (singleton) DO UPDATE SET start_week = EXCLUDED.start_week`,
+      [W1],
+    );
+    await pool.query(
+      `INSERT INTO weekly_goals (week_start, slot, kind, target_count, progress_count, label)
+       VALUES ($1::date, 'lc', 'count', 15, 3, 'Grind 75 Week 4')`,
+      [W1],
+    );
+
+    const snap = await getWeeklyGoalsSnapshot(pool, LA, IN_W2);
+    expect(snap?.weekStart).toBe(W2);
+    expect(snap?.goals.find((g) => g.slot === "lc")).toMatchObject({
+      targetCount: 15,
+      progressCount: 0,
+      label: null,
+    });
+
+    const { rows } = await pool.query<{ label: string | null }>(
+      `SELECT label FROM weekly_goals WHERE week_start = $1::date AND slot = 'lc'`,
+      [W1],
+    );
+    expect(rows[0]?.label).toBe("Grind 75 Week 4");
   });
 });

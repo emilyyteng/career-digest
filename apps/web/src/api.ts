@@ -306,6 +306,8 @@ export type WeeklyGoalView = {
   slot: "lc" | "apps";
   kind: "count" | "task_set";
   title: string;
+  /** LC-only optional label (R5.5); null when cleared or on apps. */
+  label: string | null;
   targetCount: number | null;
   progressCount: number;
   done: number;
@@ -965,7 +967,10 @@ export const getProgressToday = (tz: string) =>
 export const getWeeklyGoals = (tz: string) =>
   parse<WeeklyGoalsSnapshot>(api(`/api/weekly-goals?${progressTz(tz)}`));
 
-export const patchWeeklyLcGoal = (tz: string, body: { targetCount: number }) =>
+export const patchWeeklyLcGoal = (
+  tz: string,
+  body: { targetCount?: number; label?: string | null },
+) =>
   parse<WeeklyGoalsSnapshot>(
     api(`/api/weekly-goals/lc?${progressTz(tz)}`, {
       method: "PATCH",

@@ -56,14 +56,14 @@ No open tickets.
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | build | Draft | After M5-05, M5-07 (M5-06 design in); documents banner patterns in the design system |
-| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Ready | After M5-05, M5-01, M5-07; weekly streak = flame compact (Q5 B2) |
 | [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | build | Draft | After M5-08 (LC label API); M5-06 design in; finalize acceptance criteria |
 
 <details>
-<summary>Done (13)</summary>
+<summary>Done (14)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | TBD |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | `ce85f4a` |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | `186f3f6` |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | `eeac25b` |
