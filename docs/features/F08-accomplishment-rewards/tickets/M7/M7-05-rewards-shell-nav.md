@@ -19,7 +19,7 @@ Add **Rewards** to app nav and a shell with five child routes:
 
 `/rewards` redirects to Collection (or Banner — pick one and document in the ticket verification notes; default **Collection**).
 
-User-facing currency label is **Seeds** on this shell (balance chip). Broader “points” → “Seeds” copy elsewhere may land with M7-08 or a small follow-up in this ticket if cheap.
+User-facing currency label comes from a **shared display-name constant** (R7.10), defaulting to Seeds on this shell (balance chip). Broader “points” → display-name copy elsewhere may land with M7-08 or a small follow-up in this ticket if cheap. Introduce the constant here (or in a tiny shared module both web and Rules can import) so later tickets reuse it instead of string literals.
 
 Placeholder page bodies are fine; real UIs are M7-06–M7-10.
 
@@ -27,13 +27,14 @@ Placeholder page bodies are fine; real UIs are M7-06–M7-10.
 
 - [ ] Nav shows Rewards; active state works for `/rewards/*`.
 - [ ] All five routes render inside a shared Rewards layout (sub-nav or tabs).
-- [ ] Balance is shown as Seeds (number from existing ledger balance API).
+- [ ] Balance uses the shared currency display-name constant (currently Seeds) with the number from the existing ledger balance API.
+- [ ] Changing that one constant would rename the label on this shell without editing scattered string literals in the shell.
 - [ ] Follows `docs/design-system.md` interim button/nav patterns; no new global element CSS.
 - [ ] Prototype routes under `/prototype/rewards` remain DEV-only and unchanged.
 
 ## Reuse notes
 
-[`App.tsx`](../../../../../apps/web/src/App.tsx) nav/routes; Progress layout patterns; design-system interim `ui-btn` / segmented controls if useful for sub-nav.
+[`App.tsx`](../../../../../apps/web/src/App.tsx) nav/routes; Progress layout patterns; design-system interim `ui-btn` / segmented controls if useful for sub-nav. Prefer one module for currency display labels (singular/plural) over hard-coded `"Seeds"`.
 
 ## Definition of done
 

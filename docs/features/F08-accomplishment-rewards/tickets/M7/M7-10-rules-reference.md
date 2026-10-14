@@ -18,7 +18,7 @@ Readable prose; not a dump of code. Progress does not host this reference.
 
 - [ ] Both sections are present on `/rewards/rules`.
 - [ ] Displayed numbers match live constants (test or snapshot that Rules reads exported values).
-- [ ] Weekly-goal streak called out as display-only / no Seeds.
+- [ ] Weekly-goal streak called out as display-only / no currency earn; currency name comes from the shared display-name constant (R7.10).
 - [ ] Night skin rule described accurately (unlock on second CE copy; toggle; not a separate pity pool).
 - [ ] Refund rule described accurately: only copies above 6 after friendship is maxed.
 - [ ] Follows design-system typography/layout variants.
