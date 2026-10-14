@@ -5387,11 +5387,15 @@ button.progress-cal-cell.effort::after {
   margin-right: 0.35rem;
   color: var(--text-subtle);
 }
-/* Home Upcoming kind chips (M5-09 polish): warm amber for weekly goals, blue for interviews. */
+/* Title lines already use .task-title-line gap (same as PriorityBadge); drop the inline margin. */
+.task-title-line .ledger-kind {
+  margin-right: 0;
+}
+/* Home Upcoming kind chips: dim amber-brown for weekly goals, blue for interviews. */
 .ledger-kind.ledger-kind-goal {
-  color: var(--accent-yellow-deep);
-  border-color: color-mix(in srgb, var(--accent-yellow-deep) 55%, var(--border));
-  background: color-mix(in srgb, var(--accent-yellow) 32%, var(--surface));
+  color: color-mix(in srgb, var(--accent-yellow-deep) 55%, var(--text-muted));
+  border-color: color-mix(in srgb, var(--accent-yellow-deep) 35%, var(--border));
+  background: color-mix(in srgb, var(--accent-yellow-deep) 12%, var(--surface));
 }
 .ledger-kind.ledger-kind-interview {
   color: var(--accent-blue-deep);
