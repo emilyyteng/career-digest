@@ -96,7 +96,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M7-10](./tickets/M7/M7-10-rules-reference.md) | Rewards Rules reference | (this commit) |
+| [M7-10](./tickets/M7/M7-10-rules-reference.md) | Rewards Rules reference | `3768f93` |
 | [M7-09](./tickets/M7/M7-09-pull-history.md) | Pull history | `3addc8d` |
 | [M7-08](./tickets/M7/M7-08-earnings-log.md) | Earnings log on Rewards | `80cbd81` |
 | [M7-07](./tickets/M7/M7-07-collection-album-ui.md) | Collection album UI | `5c2cdb3` |
