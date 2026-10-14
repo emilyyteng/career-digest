@@ -167,6 +167,44 @@ describe.skipIf(!integrationReady)("achievements API (M5-11)", () => {
     expect(rows[0]?.n).toBe(1);
   });
 
+  it("one-shot backfill pays launch unlocks with points_paid 0; does not duplicate", async () => {
+    await seedAppliedApps(25);
+    await seedLeetcodeDaily("2026-01-01", 30);
+    // Simulate a pre-backfill install: free unlocks, flag still false.
+    await pool.query(
+      `INSERT INTO achievement_state (singleton, launch_date, points_backfilled)
+       VALUES (true, '2026-01-01', false)`,
+    );
+    await pool.query(
+      `INSERT INTO achievement_unlocks (achievement_id, points_paid) VALUES
+         ('apps:10', 0), ('apps:25', 0), ('lc:25', 0)`,
+    );
+
+    const paid = await syncAchievements(pool);
+    expect(paid.map((u) => u.id).sort()).toEqual(["apps:10", "apps:25", "lc:25"]);
+    expect(paid.find((u) => u.id === "apps:10")?.points).toBe(30);
+    expect(paid.find((u) => u.id === "lc:25")?.points).toBe(125);
+
+    const listed = await listAchievements(pool);
+    expect(listed.achievements.find((a) => a.id === "apps:10")).toMatchObject({
+      unlocked: true,
+      launchUnlock: false,
+      pointsPaid: 30,
+    });
+    expect(listed.achievements.find((a) => a.id === "lc:25")).toMatchObject({
+      pointsPaid: 125,
+      launchUnlock: false,
+    });
+
+    const again = await syncAchievements(pool);
+    expect(again.filter((u) => ["apps:10", "apps:25", "lc:25"].includes(u.id))).toEqual([]);
+    const { rows } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM points_events
+       WHERE category = 'achievement' AND source_id IN ('apps:10', 'apps:25', 'lc:25') AND kind = 'earn'`,
+    );
+    expect(rows[0]?.n).toBe(3);
+  });
+
   it("awaiting_employer counts toward interview achievements", async () => {
     await syncAchievements(pool);
     const app = await seedManualApplication({ status: "interviewing", company: "Offer Wait Co" });

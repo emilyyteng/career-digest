@@ -8,7 +8,12 @@ import {
   pointsForInterviewKind,
   type InterviewStepKind,
 } from "./pointsFormulas.js";
-import { findEarnEvent, getPointsBalance, recordEarn } from "./pointsLedger.js";
+import {
+  effectiveEarnAmount,
+  findEarnEvent,
+  getPointsBalance,
+  recordEarn,
+} from "./pointsLedger.js";
 import { localDateInTimezone } from "./progress.js";
 
 type Queryable = Pool | PoolClient;
@@ -101,18 +106,86 @@ export const ACHIEVEMENT_CATALOG: AchievementDef[] = buildCatalog();
 export async function ensureAchievementLaunch(
   db: Queryable,
   today: string,
-): Promise<{ launchDate: string; isFirstLaunch: boolean }> {
-  const existing = await db.query<{ launch_date: string }>(
-    `SELECT launch_date::text AS launch_date FROM achievement_state WHERE singleton = true`,
+): Promise<{ launchDate: string; isFirstLaunch: boolean; pointsBackfilled: boolean }> {
+  const existing = await db.query<{
+    launch_date: string;
+    points_backfilled: boolean;
+  }>(
+    `SELECT launch_date::text AS launch_date, points_backfilled
+     FROM achievement_state WHERE singleton = true`,
   );
   if (existing.rows[0]) {
-    return { launchDate: existing.rows[0].launch_date, isFirstLaunch: false };
+    return {
+      launchDate: existing.rows[0].launch_date,
+      isFirstLaunch: false,
+      pointsBackfilled: existing.rows[0].points_backfilled,
+    };
   }
+  // New installs keep free launch unlocks; mark backfill done so we don't pay them later.
   await db.query(
-    `INSERT INTO achievement_state (singleton, launch_date) VALUES (true, $1::date)`,
+    `INSERT INTO achievement_state (singleton, launch_date, points_backfilled)
+     VALUES (true, $1::date, true)`,
     [today],
   );
-  return { launchDate: today, isFirstLaunch: true };
+  return { launchDate: today, isFirstLaunch: true, pointsBackfilled: true };
+}
+
+/**
+ * One-shot: pay catalog points for unlocks that still have points_paid = 0.
+ * Skips any achievement that already has a positive earn (no duplicate pay).
+ */
+export async function backfillAchievementPoints(
+  db: Queryable,
+): Promise<AchievementUnlock[]> {
+  const state = await db.query<{ points_backfilled: boolean }>(
+    `SELECT points_backfilled FROM achievement_state WHERE singleton = true`,
+  );
+  if (!state.rows[0] || state.rows[0].points_backfilled) return [];
+
+  const { rows } = await db.query<{ achievement_id: string }>(
+    `SELECT achievement_id FROM achievement_unlocks WHERE points_paid = 0`,
+  );
+  const paid: AchievementUnlock[] = [];
+
+  for (const row of rows) {
+    const def = ACHIEVEMENT_CATALOG.find((a) => a.id === row.achievement_id);
+    if (!def) continue;
+
+    const existing = await findEarnEvent(db, "achievement", def.id);
+    if (existing && effectiveEarnAmount(existing) > 0) {
+      await db.query(
+        `UPDATE achievement_unlocks SET points_paid = $2 WHERE achievement_id = $1`,
+        [def.id, effectiveEarnAmount(existing)],
+      );
+      continue;
+    }
+
+    const { event, created } = await recordEarn(db, {
+      category: "achievement",
+      amount: def.points,
+      message: `Achievement · ${def.label} · +${def.points} points`,
+      sourceType: "achievement",
+      sourceId: def.id,
+      breakdown: [{ category: "achievement", amount: def.points, label: def.label }],
+    });
+    await db.query(
+      `UPDATE achievement_unlocks SET points_paid = $2 WHERE achievement_id = $1`,
+      [def.id, def.points],
+    );
+    if (created) {
+      paid.push({
+        id: def.id,
+        label: def.label,
+        points: def.points,
+        balanceAfter: event.balanceAfter,
+      });
+    }
+  }
+
+  await db.query(
+    `UPDATE achievement_state SET points_backfilled = true WHERE singleton = true`,
+  );
+  return paid;
 }
 
 async function countApps(db: Queryable): Promise<number> {
@@ -219,6 +292,8 @@ export async function syncAchievements(
     }
   }
 
+  // Existing DBs that launched with free unlocks: pay them once (no duplicates).
+  paid.push(...(await backfillAchievementPoints(db)));
   return paid;
 }
 
@@ -226,7 +301,7 @@ export async function listAchievements(db: Queryable): Promise<{
   achievements: AchievementView[];
   balance: number;
 }> {
-  // Ensure launch unlocks exist before listing.
+  // Ensure launch unlocks exist (and one-shot point backfill) before listing.
   await syncAchievements(db);
   const counts = await achievementCounts(db);
   const { rows: unlocked } = await db.query<{

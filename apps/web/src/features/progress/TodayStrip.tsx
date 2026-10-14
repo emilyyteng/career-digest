@@ -1,30 +1,21 @@
 import type { ProgressToday } from "../../api";
 
-/** Points for extending the streak today vs the streak's current day-rate (2×length, capped). */
-export function streakPointsBreakdown(
-  length: number,
-  todayCounts: boolean,
-): { today: number; total: number } {
-  const total = length <= 0 ? 0 : Math.min(20, 2 * length);
-  if (!todayCounts || length <= 0) return { today: 0, total };
-  const prev = length <= 1 ? 0 : Math.min(20, 2 * (length - 1));
-  return { today: total - prev, total };
-}
-
 function StreakPill({
   label,
   length,
   todayCounts,
+  completedToday,
 }: {
   label: string;
   length: number;
   todayCounts: boolean;
+  completedToday: number;
 }) {
-  const { today, total } = streakPointsBreakdown(length, todayCounts);
+  const n = Math.max(0, completedToday);
   return (
     <div
       className={todayCounts ? "today-streak-pill is-done" : "today-streak-pill is-pending"}
-      aria-label={`${label} ${length}-day daily streak${todayCounts ? ", done today" : ", not yet today"}, +${today} today, +${total} total`}
+      aria-label={`${label} ${length}-day daily streak${todayCounts ? ", done today" : ", not yet today"}, ${n} completed today`}
     >
       <div className="today-streak-pill-top">
         <strong className="today-streak-n">{length}</strong>
@@ -34,7 +25,7 @@ function StreakPill({
       </div>
       <span className="today-streak-label">{label} daily streak</span>
       <span className="today-streak-pts">
-        +{today} today, +{total} total
+        {n} completed today
       </span>
     </div>
   );
@@ -55,8 +46,18 @@ export default function TodayStrip({
 
   return (
     <div className={`${className} today-streak-strip`}>
-      <StreakPill label="Apps" length={apps.length} todayCounts={apps.todayCounts} />
-      <StreakPill label="LC" length={lc.length} todayCounts={lc.todayCounts} />
+      <StreakPill
+        label="Apps"
+        length={apps.length}
+        todayCounts={apps.todayCounts}
+        completedToday={today.applications.raw}
+      />
+      <StreakPill
+        label="LC"
+        length={lc.length}
+        todayCounts={lc.todayCounts}
+        completedToday={today.leetcode.raw}
+      />
     </div>
   );
 }

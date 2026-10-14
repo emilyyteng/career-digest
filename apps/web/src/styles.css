@@ -4502,10 +4502,6 @@ button.progress-cal-cell.effort::after {
   letter-spacing: 0.03em;
   color: var(--accent-mint-deep);
 }
-.weekly-goal-hint {
-  margin: 0.25rem 0 0;
-  font-size: 0.82rem;
-}
 .weekly-goal-empty {
   margin: 0.25rem 0 0;
   font-size: 0.85rem;

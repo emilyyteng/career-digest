@@ -217,7 +217,6 @@ function AppsMembers({ goal }: { goal: WeeklyGoalView }) {
           );
         })}
       </ul>
-      <p className="muted weekly-goal-hint">Tag or untag on Tasks.</p>
     </>
   );
 }

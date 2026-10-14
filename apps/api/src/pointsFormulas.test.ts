@@ -8,7 +8,6 @@ import {
   leetcodePointsForCount,
   streakDailyPoints,
   streakMilestonePoints,
-  streakPointsBreakdown,
   miscTaskBreakdown,
   pointsForInterviewKind,
   pointsForMinutes,
@@ -87,14 +86,6 @@ describe("pointsFormulas", () => {
     expect(streakMilestonePoints(4)).toBeNull();
     expect(streakMilestonePoints(5)).toBe(25);
     expect(streakMilestonePoints(10)).toBe(50);
-  });
-
-  it("streak strip breakdown: today = increment, total = day-rate at length", () => {
-    expect(streakPointsBreakdown(0, false)).toEqual({ today: 0, total: 0 });
-    expect(streakPointsBreakdown(2, false)).toEqual({ today: 0, total: 4 });
-    expect(streakPointsBreakdown(2, true)).toEqual({ today: 2, total: 4 });
-    expect(streakPointsBreakdown(7, true)).toEqual({ today: 2, total: 14 });
-    expect(streakPointsBreakdown(11, true)).toEqual({ today: 0, total: 20 });
   });
 
   it("clampDeltaToBalance never goes negative", () => {
