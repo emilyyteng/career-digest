@@ -3727,6 +3727,7 @@ textarea { min-height: 10rem; width: 100%; }
 .lc-tier-list {
   display: flex;
   flex-direction: column;
+  align-self: center;
   gap: 0.35rem;
 }
 .lc-tier-stepper {

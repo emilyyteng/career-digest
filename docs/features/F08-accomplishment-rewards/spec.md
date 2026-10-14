@@ -274,7 +274,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   - This replaces R0.4 and fixes the weekly-stepper points bug. Ticket: M5-01.
 - **R5.10** (Established) Check that LeetCode logging feels right with points once R5.17 lands. Ticket: M5-01 (the user tries it before the ticket closes).
 - **R5.32** (Established 2026-10-13) The Progress LeetCode card shows this week's solves per tier (Monday to today) on a second line under today's counts, for example `This week: 1 solved · 0 easy · 1 medium · 0 hard`. It's counts feedback for the week, not the weekly target, which the weekly block shows. Ticket: M5-01 (added during the R5.10 check).
-- **R5.33** (Established 2026-10-13) The completion log gets a special `leetcode` tab, like the weekly tab: its count is all-time LeetCode, and it lists LeetCode by date, so past solving is visible, including days from before the points ledger. Untiered days count as medium. Details wait on Q52–Q54. Ticket: M5-16.
+- **R5.33** (Established 2026-10-13) The completion log gets a special `leetcode` tab, like the weekly tab: its count is all-time LeetCode, and it lists LeetCode by date, so past solving is visible, including days from before the points ledger. Untiered days count as medium. The tab counts total solves; LeetCode day rows also show in `all`; each row reads `LC: 3 solved` with a tier line and the day's points (Q52–Q54). Ticket: M5-16.
 - **R5.34** (Established 2026-10-13) The completion log's `weekly` tab is renamed `weekly goals`. Ticket: M5-16.
 
 ### M6: Board departures log (Not started)
@@ -448,15 +448,12 @@ Nothing that depends on an open question may be implemented.
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
 | Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
 | Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (more once R5.31 counts application and interview time without a reflection and gives misc tasks a +10 base) (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
-| Q52 | `leetcode` tab count: total solves (53 in the dev data today) or days with solves (18)? Proposed: total solves; each row is one day | R5.33, M5-16 | M5-16 |
-| Q53 | Do LeetCode day rows also show in the `all` tab and its count, as weekly records do? Proposed: no, only in the `leetcode` tab; a row for every solving day would crowd `all`, and its count would mix solves with items | R5.33, M5-16 | M5-16 |
-| Q54 | What does a LeetCode day row show? Proposed: one row per day with at least one solve; title `LC 3 solved`; meta `1 easy · 1 medium · 1 hard`; the aside shows the day's current LeetCode points when above 0, so pre-ledger days show none. No weekly/misc split, since types aren't stored per day | R5.33, M5-16 | M5-16 |
 | Q35 | Does the points log leave Progress in M7, when Rewards gets it, or stay on both until the M8 redesign? What does a pull log entry show? | R7.8, R8.2 | M7 design |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (47)</summary>
+<summary>Resolved questions (50)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -507,6 +504,9 @@ Nothing that depends on an open question may be implemented.
 | Q49 | What replaces deep work on Progress | Reflections in general: heatmap and calendar marks count any reflection in the lane; the summary counts reflections (2026-10-13; first answered as minutes, changed to a count with Q51) | R5.29, M5-14 |
 | Q50 | Reflection minutes model | Confirmed, then superseded the same day by Q51 (2026-10-13) | R5.30 → R5.31 |
 | Q51 | Where does time live? | On the work (misc task, application, interview step), editable afterwards. A reflection is a note worth +20 everywhere. Application and interview time counts with or without a reflection. Points rules may change for this; they're untested and the gacha can adapt (2026-10-13). Follow-ups, same day: blank time adds 0 for every kind of work, misc included (no 15 default); misc tasks get a flat +10 base, like the application's +5; application time is stored on the application; old earns are re-scored on their first time edit or misc re-complete (blank 15 → 10); Progress compose loses its minutes field | R5.31, R7.9, M5-04 |
+| Q52 | `leetcode` tab count | Total solves, all time; each row is one day (2026-10-13) | R5.33, M5-16 |
+| Q53 | LeetCode days in the `all` tab | Yes, like every other kind; the `all` count adds the `leetcode` tab's count, so it stays the sum of the tabs (2026-10-13; the count rule is Proposed) | R5.33, M5-16 |
+| Q54 | LeetCode day row | One row per day with at least one solve; title `LC: 3 solved`; meta `1 easy · 1 medium · 1 hard`; the day's current LeetCode points in the aside when above 0, so pre-ledger days show none. The weekly goals row badge stays `weekly`; tab order all, tasks, apps, interviews, reflections, weekly goals, leetcode (2026-10-13) | R5.33, R5.34, M5-16 |
 
 </details>
 
@@ -545,4 +545,4 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs. (Superseded later the same day: F09 M0 waits until after M7 and M8; M5 uses interim decisions in `docs/design-system.md`.)
 - **2026-10-13:** LeetCode tiers are worth easy +20, medium +30, hard +50 (Q32). M5 build order: M5-03, M5-05, M5-15, M5-01, M5-10, M5-07, M5-08, M5-09, M5-02, M5-12, M5-11, M5-13. Data and API come before the UI that depends on them, and each surface is built once. M5-05 is split: week close stays backend-only, and the completion-log entries move to M5-15. M5-08 owns the Progress weekly-streak display (R5.28), designed in M5-07.
 - **2026-10-13:** Accepted edge cases from M5-03 and M5-05: re-completing a reopened task records its category at the new completion (R5.21); a renamed category shows its current name, and a deleted one keeps its last name; a tagged task reopened before its week closes is carried forward as open (R5.11); untagging a completed task stays allowed. The `all` completions tab count includes weekly records (M5-15).
-- **2026-10-13:** From the M5-01 R5.10 check: past LeetCode days aren't backfilled with points; the LeetCode card adds a this-week counts line (R5.32); the completion log gets a `leetcode` tab (R5.33) and `weekly` becomes `weekly goals` (R5.34), ticketed as M5-16.
+- **2026-10-13:** From the M5-01 R5.10 check: past LeetCode days aren't backfilled with points; the LeetCode card adds a this-week counts line (R5.32); the completion log gets a `leetcode` tab (R5.33) and `weekly` becomes `weekly goals` (R5.34), ticketed as M5-16. Q52–Q54 answered the same day: the tab counts total solves, LeetCode days show in `all`, rows read `LC: 3 solved`.
