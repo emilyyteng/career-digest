@@ -429,7 +429,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Product collection persistence: pity, owned counts, CE Day/Night selection; Night unlock derived at ≥2 CE copies; `GET /api/rewards/collection` | [`040_cat_cake_collection.sql`](../../../apps/api/src/sql/040_cat_cake_collection.sql), [`catCakeCollection.ts`](../../../apps/api/src/catCakeCollection.ts) | Conforms R7.4, R7.7 (inventory) | Done by M7-03 |
 | Ledger spend/refund kinds and `gacha` category | [`039_gacha_spend_refund.sql`](../../../apps/api/src/sql/039_gacha_spend_refund.sql) | Conforms R7.2 (ledger) | Done by M7-02 |
 | Pull ×1/×10, refund above 6, CE look selection (`POST /api/rewards/pull|refund|look`); CSPRNG | [`catCakeGacha.ts`](../../../apps/api/src/catCakeGacha.ts) | Conforms R7.2, R7.4, R7.7 (API) | Done by M7-04 |
-| No Rewards nav shell or product banner UI yet | none | Conflicts R7.1, R7.8–R7.10 UI | Planned M7-05+ |
+| Rewards nav + five child routes + Seeds balance chrome; placeholder bodies | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`currencyDisplay.ts`](../../../apps/web/src/currencyDisplay.ts) | Conforms R7.1, R7.10 (shell); banner/album/logs still open | Done by M7-05; UIs M7-06–M7-10 |
 
 ### Cross-cutting
 

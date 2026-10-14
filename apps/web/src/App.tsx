@@ -11,6 +11,8 @@ import Status from "./pages/Status";
 import Tasks from "./pages/Tasks";
 import TaskDetailPage from "./pages/TaskDetailPage";
 import Progress from "./features/progress/ProgressPage";
+import RewardsLayout from "./features/rewards/RewardsLayout";
+import RewardsPlaceholderPage from "./features/rewards/RewardsPlaceholderPage";
 import ThemeEmoji from "./ThemeEmoji";
 import { DemoModeProvider, useDemoMode } from "./demoMode";
 import { AchievementUnlockProvider } from "./features/achievements/AchievementUnlockHost";
@@ -93,6 +95,7 @@ export default function App() {
             <NavLink to="/tasks">Tasks</NavLink>
             <NavLink to="/interviews">Interviews</NavLink>
             <NavLink to="/progress">Progress</NavLink>
+            <NavLink to="/rewards">Rewards</NavLink>
             <NavLink to="/status">Status</NavLink>
           </nav>
         </header>
@@ -108,6 +111,29 @@ export default function App() {
             <Route path="/interviews" element={<Interviews />} />
             <Route path="/interviews/:threadId" element={<InterviewWorkspace />} />
             <Route path="/progress" element={<Progress />} />
+            <Route path="/rewards" element={<RewardsLayout />}>
+              <Route index element={<Navigate to="collection" replace />} />
+              <Route
+                path="collection"
+                element={<RewardsPlaceholderPage title="Collection" />}
+              />
+              <Route
+                path="banner"
+                element={<RewardsPlaceholderPage title="Banner" />}
+              />
+              <Route
+                path="earnings"
+                element={<RewardsPlaceholderPage title="Earnings" />}
+              />
+              <Route
+                path="history"
+                element={<RewardsPlaceholderPage title="Pull history" />}
+              />
+              <Route
+                path="rules"
+                element={<RewardsPlaceholderPage title="Rules" />}
+              />
+            </Route>
             <Route path="/status" element={<Status />} />
             {proto ? (
               <>
