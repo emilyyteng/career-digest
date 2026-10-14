@@ -8,7 +8,12 @@ import {
 } from "../../api";
 import { CURRENCY_DISPLAY } from "../../currencyDisplay";
 import { FRIENDSHIP_MAX, friendshipLevel, refundableCount } from "./catCakeMath";
-import { FLAVOR_BY_ID, variantName, type FlavorId } from "./flavors";
+import {
+  FLAVOR_BY_ID,
+  friendshipColors,
+  variantName,
+  type FlavorId,
+} from "./flavors";
 
 const RANGE_OPTIONS: { key: EarningsRange; label: string }[] = [
   { key: "today", label: "Today" },
@@ -98,17 +103,27 @@ function SessionCard({ session }: { session: PullHistorySession }) {
         </div>
         <div className="ledger-log-when">{formatWhen(session.createdAt)}</div>
         <ul className="rewards-pull-results">
-          {session.results.map((r, i) => (
-            <li key={`${session.id}-${i}`}>
-              <span className={r.edition === "collector" ? "rewards-pull-ce" : undefined}>
-                {resultLabel(r)}
-              </span>
-              <span className="muted">
-                {" "}
-                (−{r.seedsSpent} {unit})
-              </span>
-            </li>
-          ))}
+          {session.results.map((r, i) => {
+            const flavorId = r.flavorId as FlavorId;
+            const ceColor =
+              r.edition === "collector" && FLAVOR_BY_ID[flavorId]
+                ? friendshipColors(flavorId)[2]
+                : undefined;
+            return (
+              <li key={`${session.id}-${i}`}>
+                <span
+                  className={ceColor ? "rewards-pull-ce" : undefined}
+                  style={ceColor ? { color: ceColor } : undefined}
+                >
+                  {resultLabel(r)}
+                </span>
+                <span className="muted">
+                  {" "}
+                  (−{r.seedsSpent} {unit})
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </div>
       <span className="ledger-balance-badge">
