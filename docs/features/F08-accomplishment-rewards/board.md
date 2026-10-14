@@ -100,7 +100,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M7-06](./tickets/M7/M7-06-banner-pull-ui.md) | Banner pull UI (one-by-one) | (this commit) |
+| [M7-06](./tickets/M7/M7-06-banner-pull-ui.md) | Banner pull UI (one-by-one) | `d8e228f` |
 | [M7-05](./tickets/M7/M7-05-rewards-shell-nav.md) | Rewards nav shell and Seeds chrome | `68fcf3c` |
 | [M7-04](./tickets/M7/M7-04-pull-refund-api.md) | Pull and refund APIs | `8ffde10` |
 | [M7-03](./tickets/M7/M7-03-collection-pity-schema.md) | Collection, pity, and Night-skin persistence | `a19a46b` |
