@@ -647,29 +647,32 @@ export default function Progress() {
                 <div className="progress-history-flow">
                   <div className="progress-lc-cluster">
                     {editingDay ? (
-                      <div className="card progress-lc-card">
-                        <h4 className="progress-section-title">LeetCode</h4>
-                        <LeetcodeLogger
-                          tiers={historyDetail.leetcodeTiers}
-                          fixedType="misc"
-                          onChange={(tier, delta, type) =>
-                            changeLeetcode(tier, delta, type, selectedHistory!)
-                          }
-                        />
-                      </div>
+                      <>
+                        <div className="card progress-lc-card">
+                          <h4 className="progress-section-title">LeetCode</h4>
+                          <LeetcodeLogger
+                            tiers={historyDetail.leetcodeTiers}
+                            fixedType="misc"
+                            onChange={(tier, delta, type) =>
+                              changeLeetcode(tier, delta, type, selectedHistory!)
+                            }
+                          />
+                        </div>
+                        <div className="lc-counts-aside">
+                          <p className="muted lc-day-line">
+                            {lcCountsLine("This day", historyDetail.leetcodeTiers)}
+                          </p>
+                        </div>
+                      </>
                     ) : (
-                      <h4 className="progress-section-title">LeetCode</h4>
-                    )}
-                    <div className="lc-counts-aside">
-                      <p className="muted lc-day-line">
-                        {lcCountsLine("This day", historyDetail.leetcodeTiers)}
-                      </p>
-                      {!editingDay && (
+                      <>
+                        <h4 className="progress-section-title">LeetCode</h4>
                         <p className="progress-lc-readonly">
+                          {historyDetail.leetcode.raw} solved ·{" "}
                           {historyDetail.leetcode.earned}/3 earned
                         </p>
-                      )}
-                    </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="progress-log-block">
