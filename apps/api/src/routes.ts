@@ -135,6 +135,7 @@ import {
   getCompletionsDiary,
   type CompletionKind,
 } from "./completionsDiary.js";
+import { listAchievements, syncAchievements } from "./achievements.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -479,7 +480,11 @@ api.post("/applications", async (req, res) => {
         reflection: reflection.value,
         tz: resolveTimezone(String(req.query.tz ?? "")),
       });
-      res.status(201).json({ id: result.applicationId, points: serializePointsEarn(result.points) });
+      res.status(201).json({
+        id: result.applicationId,
+        points: serializePointsEarn(result.points),
+        achievementUnlocks: result.achievementUnlocks,
+      });
       return;
     }
 
@@ -561,6 +566,7 @@ api.patch("/applications/:id", async (req, res) => {
       postingIdProvided: Object.prototype.hasOwnProperty.call(body, "postingId"),
     });
     let points: PointsEarnInfo | null = null;
+    let achievementUnlocks: Awaited<ReturnType<typeof syncAchievements>> = [];
     if (
       before &&
       nextStatus === "applied" &&
@@ -572,6 +578,7 @@ api.patch("/applications/:id", async (req, res) => {
         actualMinutes: before.actualMinutes,
       });
       if (created) points = serializePointsEarn(event);
+      achievementUnlocks = await syncAchievements(pool);
     }
     if (
       before &&
@@ -586,10 +593,10 @@ api.patch("/applications/:id", async (req, res) => {
       });
       if (event) points = serializePointsEarn(event);
       const refreshed = await getApplication(pool, before.id);
-      res.json({ ...(refreshed ?? result), points });
+      res.json({ ...(refreshed ?? result), points, achievementUnlocks });
       return;
     }
-    res.json({ ...result, points });
+    res.json({ ...result, points, achievementUnlocks });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
     if (message === "Application not found") {
@@ -812,7 +819,12 @@ api.patch("/interviews/:threadId/steps/:stepId", async (req, res) => {
         actualMinutes: minutes,
       });
       if (created) {
-        res.json({ ok: true, points: serializePointsEarn(event) });
+        const achievementUnlocks = await syncAchievements(pool);
+        res.json({
+          ok: true,
+          points: serializePointsEarn(event),
+          achievementUnlocks,
+        });
         return;
       }
     }
@@ -1163,7 +1175,11 @@ api.post("/tasks/:id/complete", async (req, res) => {
         tz: resolveTimezone(String(req.query.tz ?? "")),
       });
       const task = await getTaskById(pool, before.id);
-      res.json({ ...task, points: serializePointsEarn(result.points) });
+      res.json({
+        ...task,
+        points: serializePointsEarn(result.points),
+        achievementUnlocks: result.achievementUnlocks,
+      });
     } catch (err) {
       if (err instanceof MarkAppliedError) {
         res.status(err.status).json({ error: err.message });
@@ -1457,6 +1473,15 @@ api.get("/progress/completions", async (req, res) => {
       limit: Number.isFinite(limit) ? limit : undefined,
     }),
   );
+});
+
+api.get("/achievements", async (_req, res) => {
+  try {
+    res.json(await listAchievements(pool));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Bad request";
+    res.status(500).json({ error: message });
+  }
 });
 
 api.get("/weekly-goals", async (req, res) => {

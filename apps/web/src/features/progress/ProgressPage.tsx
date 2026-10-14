@@ -35,16 +35,18 @@ import ReflectionAccordion, {
 } from "./ReflectionAccordion";
 import TodayStrip from "./TodayStrip";
 import WeeklyGoalsBlock from "./WeeklyGoalsBlock";
+import AchievementsPanel from "../achievements/AchievementsPanel";
+import { useAchievementUnlocks } from "../achievements/AchievementUnlockHost";
 import EarnFlash from "../completion/EarnFlash";
 import ModalLayer from "../../ModalLayer";
 import StepActionConfirm from "../../StepActionConfirm";
 import { useBeforeUnloadDraftGuard } from "../../useUnsavedDraftGuard";
 
-type ProgressTab = "today" | "history" | "ledger";
+type ProgressTab = "today" | "history" | "ledger" | "achievements";
 type LedgerView = "completions" | "points";
 
 function parseProgressTab(raw: string | null): ProgressTab {
-  if (raw === "history" || raw === "ledger") return raw;
+  if (raw === "history" || raw === "ledger" || raw === "achievements") return raw;
   return "today";
 }
 
@@ -134,6 +136,7 @@ export default function Progress() {
   const [error, setError] = useState<string | null>(null);
   const [earn, setEarn] = useState<PointsEarnInfo | null>(null);
   const dismissEarn = useCallback(() => setEarn(null), []);
+  const { pushUnlocks } = useAchievementUnlocks();
   const [loaded, setLoaded] = useState(false);
 
   const selectedHistory = historyDate ?? today?.localDate ?? null;
@@ -333,6 +336,7 @@ export default function Progress() {
       setError(null);
       applyLeetcodeResult(result);
       if (result.points) setEarn(result.points);
+      pushUnlocks(result.achievementUnlocks);
       const seq = ++writeSeq.current;
       void refreshAfterWrite(result.localDate, () => seq === writeSeq.current).catch(() => {});
     } catch (err) {
@@ -474,10 +478,19 @@ export default function Progress() {
         >
           ledger
         </button>
+        <button
+          type="button"
+          className={`tab ${tab === "achievements" ? "on" : ""}`}
+          onClick={() => setTab("achievements")}
+        >
+          achievements
+        </button>
       </div>
 
       {error && <p className="error">{error}</p>}
-      {tab !== "ledger" && <EarnFlash earn={earn} onDismiss={dismissEarn} />}
+      {tab !== "ledger" && tab !== "achievements" && (
+        <EarnFlash earn={earn} onDismiss={dismissEarn} />
+      )}
 
       {tab === "today" ? (
         <>
@@ -729,6 +742,8 @@ export default function Progress() {
             )}
           </section>
         </div>
+      ) : tab === "achievements" ? (
+        <AchievementsPanel />
       ) : (
         <section className="card progress-ledger">
           <div className="ledger-subtabs" role="tablist" aria-label="Ledger">

@@ -13,6 +13,7 @@ import TaskDetailPage from "./pages/TaskDetailPage";
 import Progress from "./features/progress/ProgressPage";
 import ThemeEmoji from "./ThemeEmoji";
 import { DemoModeProvider, useDemoMode } from "./demoMode";
+import { AchievementUnlockProvider } from "./features/achievements/AchievementUnlockHost";
 import { HEADER_BRAND_EMOJI } from "./pageTheme";
 
 /** Dev-only prototype pages — dead-code eliminated from production builds. */
@@ -75,6 +76,7 @@ function ProtoPage({ page: Page }: { page: LazyExoticComponent<ComponentType> })
 export default function App() {
   return (
     <DemoModeProvider>
+      <AchievementUnlockProvider>
       <div className="shell">
         <DemoBanner />
         <header className="top">
@@ -198,6 +200,7 @@ export default function App() {
           </Routes>
         </main>
       </div>
+      </AchievementUnlockProvider>
     </DemoModeProvider>
   );
 }

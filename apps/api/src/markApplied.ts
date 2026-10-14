@@ -45,6 +45,13 @@ export type MarkAppliedResult = {
   completedTaskIds: string[];
   /** Null if the application had already earned (R4.10: never twice). */
   points: PointsEventRow | null;
+  /** Newly paid achievement unlocks from this write (M5-11). */
+  achievementUnlocks: Array<{
+    id: string;
+    label: string;
+    points: number;
+    balanceAfter: number;
+  }>;
 };
 
 /**
@@ -154,5 +161,13 @@ async function markAppliedInTransaction(
     await syncStreakForDay(client, "apps", input.tz, localDate, true, new Date());
   }
 
-  return { applicationId, completedTaskIds, points: created ? event : null };
+  const { syncAchievements } = await import("./achievements.js");
+  const achievementUnlocks = await syncAchievements(client);
+
+  return {
+    applicationId,
+    completedTaskIds,
+    points: created ? event : null,
+    achievementUnlocks,
+  };
 }

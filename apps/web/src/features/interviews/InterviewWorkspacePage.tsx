@@ -11,6 +11,7 @@ import {
 } from "../../api";
 import DeadlineUrgency from "../../DeadlineUrgency";
 import EarnFlash from "../completion/EarnFlash";
+import { useAchievementUnlocks } from "../achievements/AchievementUnlockHost";
 import {
   MinutesField,
   minutesInputFromDraft,
@@ -122,6 +123,7 @@ export default function InterviewWorkspace() {
   } | null>(null);
   const [finishBusy, setFinishBusy] = useState(false);
   const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
+  const { pushUnlocks } = useAchievementUnlocks();
   const [notesFlash, setNotesFlash] = useState(false);
   const notesFlashTimer = useRef<number | null>(null);
 
@@ -288,6 +290,7 @@ export default function InterviewWorkspace() {
           : {}),
       });
       if (finished.points) setEarnFlash(finished.points);
+      pushUnlocks(finished.achievementUnlocks);
       if (result.outcome === "round_done" && result.nextStep) {
         await addInterviewStep(threadId, result.nextStep);
       }

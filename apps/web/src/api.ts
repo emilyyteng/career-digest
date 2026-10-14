@@ -617,7 +617,11 @@ export const patchInterviewStep = (
   stepId: string,
   body: Record<string, unknown>,
 ) =>
-  parse<{ ok: boolean; points?: PointsEarnInfo | null }>(
+  parse<{
+    ok: boolean;
+    points?: PointsEarnInfo | null;
+    achievementUnlocks?: AchievementUnlock[];
+  }>(
     api(`/api/interviews/${threadId}/steps/${stepId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -661,6 +665,13 @@ export type PointsEarnInfo = {
   balanceAfter: number;
 };
 
+export type AchievementUnlock = {
+  id: string;
+  label: string;
+  points: number;
+  balanceAfter: number;
+};
+
 export type TaskRow = {
   id: string;
   category: TaskKind;
@@ -692,6 +703,7 @@ export type TaskRow = {
 
 export type CompleteTaskResult = TaskRow & {
   points?: PointsEarnInfo | null;
+  achievementUnlocks?: AchievementUnlock[];
 };
 
 export type TasksPage = {
@@ -1118,6 +1130,21 @@ export const getPointsEvents = (opts?: { limit?: number; offset?: number }) => {
   return parse<{ events: PointsEvent[] }>(api(`/api/points/events${q ? `?${q}` : ""}`));
 };
 
+export type AchievementRow = {
+  id: string;
+  family: string;
+  label: string;
+  threshold: number;
+  points: number;
+  current: number;
+  unlocked: boolean;
+  launchUnlock: boolean;
+  pointsPaid: number;
+};
+
+export const getAchievements = () =>
+  parse<{ achievements: AchievementRow[]; balance: number }>(api("/api/achievements"));
+
 export type LeetcodeChangeResult = {
   localDate: string;
   count: number;
@@ -1125,6 +1152,7 @@ export type LeetcodeChangeResult = {
   weekTiers: LeetcodeTierCounts;
   weeklyProgress: number | null;
   points: PointsEarnInfo | null;
+  achievementUnlocks?: AchievementUnlock[];
 };
 
 export const patchProgressLeetcode = (

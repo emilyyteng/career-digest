@@ -555,6 +555,13 @@ export type LeetcodeChangeResult = {
   weeklyProgress: number | null;
   /** The points change for the banner; null if points didn't move. */
   points: PointsEarnInfo | null;
+  /** Newly paid achievement unlocks from this write (M5-11). */
+  achievementUnlocks: Array<{
+    id: string;
+    label: string;
+    points: number;
+    balanceAfter: number;
+  }>;
 };
 
 const TIER_NAME: Record<LeetcodeTier, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
@@ -629,6 +636,8 @@ export async function changeLeetcode(
       tiers.easy + tiers.medium + tiers.hard > 0,
       now,
     );
+    const { syncAchievements } = await import("./achievements.js");
+    const achievementUnlocks = await syncAchievements(client, now);
     const weekTiers = await readLeetcodeWeekTiers(client, today);
     await client.query("COMMIT");
 
@@ -639,6 +648,7 @@ export async function changeLeetcode(
       weekTiers,
       weeklyProgress,
       points: serializePointsEarn(change),
+      achievementUnlocks,
     };
   } catch (error) {
     await client.query("ROLLBACK");

@@ -1,6 +1,6 @@
 # M5-11: Count-based achievements
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** M5-07 (display and unlock moment — done), M5-01 (LC solve counts across tiers)
 **Implements:** R5.16, R5.26 (from `../../spec.md`)
 **Type:** build
@@ -27,13 +27,13 @@ Thresholds and points (R5.26; starting values, kept in one place for tuning and 
 
 ## Acceptance criteria
 
-- [ ] Progress gains an `achievements` tab beside `ledger`, matching the M5-07 Tab prototype (list states; no daily-streak pills on this tab).
-- [ ] Crossing a threshold unlocks it once and records one earn; dropping back below (for example an LC decrement) doesn't re-lock it or reverse the points, and crossing again doesn't pay again.
-- [ ] Interview steps count per kind; reopening and re-finishing a step doesn't count twice (R4.11).
-- [ ] Achievements already passed at launch show as unlocked, with no earn recorded.
-- [ ] Spot checks: 100 applications = +300; 100 LC = +500; 5 assessments = +300; 1 offer = +200.
-- [ ] Unlocks use the modal from M5-07 (“Great work!”, `Balance: N`).
-- [ ] Tests cover each family, a decrement-and-recross, and launch handling.
+- [x] Progress gains an `achievements` tab beside `ledger`, matching the M5-07 Tab prototype (list states; no daily-streak pills on this tab).
+- [x] Crossing a threshold unlocks it once and records one earn; dropping back below (for example an LC decrement) doesn't re-lock it or reverse the points, and crossing again doesn't pay again.
+- [x] Interview steps count per kind; reopening and re-finishing a step doesn't count twice (R4.11).
+- [x] Achievements already passed at launch show as unlocked, with no earn recorded.
+- [x] Spot checks: 100 applications = +300; 100 LC = +500; 5 assessments = +300; 1 offer = +200.
+- [x] Unlocks use the modal from M5-07 (“Great work!”, `Balance: N`).
+- [x] Tests cover each family, a decrement-and-recross, and launch handling.
 
 ## Reuse notes
 
@@ -41,14 +41,14 @@ Counts already exist in `completionsDiary.ts` (L386–436) and `leetcode_daily`.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M5-11: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M5-11: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+Commit: see board. Catalog + `achievement_unlocks` / `achievement_state` (032). Sync on mark-applied, LC patch, interview finish, and `GET /achievements`. Progress tab + unlock modal via `AchievementUnlockProvider`. Launch unlocks pay 0; post-launch crossings pay once.

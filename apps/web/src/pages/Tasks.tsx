@@ -31,6 +31,7 @@ import CompleteWorkModal, {
   type CompleteWorkResult,
 } from "../features/completion/CompleteWorkModal";
 import EarnFlash from "../features/completion/EarnFlash";
+import { useAchievementUnlocks } from "../features/achievements/AchievementUnlockHost";
 import { defaultLaneForTask } from "../features/completion/completeWorkActions";
 import DeadlineUrgency from "../DeadlineUrgency";
 import ModalLayer from "../ModalLayer";
@@ -103,6 +104,7 @@ export default function Tasks() {
   const [completeConfirm, setCompleteConfirm] = useState<TaskRow | null>(null);
   const [reopenConfirm, setReopenConfirm] = useState<TaskRow | null>(null);
   const [earnFlash, setEarnFlash] = useState<PointsEarnInfo | null>(null);
+  const { pushUnlocks } = useAchievementUnlocks();
   const [actualDrafts, setActualDrafts] = useState<Record<string, string>>({});
   const [dueDrafts, setDueDrafts] = useState<
     Record<string, { date: string; time: string; kind: TaskDueKind }>
@@ -391,6 +393,7 @@ export default function Tasks() {
       });
       setCompleteConfirm(null);
       if (completed.points) setEarnFlash(completed.points);
+      pushUnlocks(completed.achievementUnlocks);
       setRows((current) => current.filter((item) => item.id !== row.id));
       setCounts((current) => ({
         open: Math.max(0, current.open - 1),
