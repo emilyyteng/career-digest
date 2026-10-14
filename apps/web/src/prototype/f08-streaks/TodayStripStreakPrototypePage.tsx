@@ -1,15 +1,21 @@
 /**
  * F08 M5-07 · design question 1: today strip with daily streaks (R5.27).
- * Replaces x/3 counts; deep-work badges gone. Optional reflection badges
- * for “wrote a reflection today” (user considering bringing badges back).
+ * Round 2: make “streak” unmistakable vs today’s unit count; keep A’s ✓ for
+ * “done today”; try the achievements-style streak pills on Home.
  */
 import F08StreaksShell, { ParamToggle, useParam, useVariant } from "./F08StreaksShell";
-import { TODAY_STRIP_SCENARIOS } from "./fixtures";
+import { dailyStreakPoints, TODAY_STRIP_SCENARIOS } from "./fixtures";
 
 const VARIANTS = [
-  { key: "A", name: "Text line · “Apps 5 ✓ · LC 12 _”" },
-  { key: "B", name: "Chips · streak count + today / pending" },
-  { key: "C", name: "Compact · short labels, optional reflection badges" },
+  {
+    key: "D",
+    name: "Streak pills · count + “day streak” + pts; ✓ / pending (from achievements)",
+  },
+  { key: "E", name: "Text · “Apps streak 5 ✓ · LC streak 12 _”" },
+  {
+    key: "F",
+    name: "Both · today’s units + day streak (compare clarity)",
+  },
 ] as const;
 
 const LANE_SHORT: Record<"app" | "tech" | "other", string> = {
@@ -31,25 +37,68 @@ function ReflectionBadges({ lanes }: { lanes: Array<"app" | "tech" | "other"> })
   );
 }
 
-function StripA({
-  appsStreak,
-  lcStreak,
-  appsToday,
-  lcToday,
-  showRefl,
-  lanes,
-}: {
+type StripProps = {
   appsStreak: number;
   lcStreak: number;
   appsToday: boolean;
   lcToday: boolean;
+  appsTodayCount: number;
+  lcTodayCount: number;
   showRefl: boolean;
   lanes: Array<"app" | "tech" | "other">;
+};
+
+function StreakPill({
+  label,
+  streak,
+  doneToday,
+}: {
+  label: string;
+  streak: number;
+  doneToday: boolean;
 }) {
+  const earnedOrNext = doneToday
+    ? dailyStreakPoints(streak)
+    : dailyStreakPoints(streak + 1);
+  return (
+    <div
+      className={doneToday ? "f08s-strip-streak-pill is-done" : "f08s-strip-streak-pill is-pending"}
+      aria-label={`${label} ${streak}-day streak${doneToday ? ", done today" : ", not yet today"}`}
+    >
+      <div className="f08s-strip-streak-pill-top">
+        <strong className="f08s-strip-streak-n">{streak}</strong>
+        <span className="f08s-strip-mark" aria-hidden="true">
+          {doneToday ? "✓" : "_"}
+        </span>
+      </div>
+      <span className="f08s-strip-streak-label">{label} day streak</span>
+      <span className="f08s-strip-streak-pts">
+        {doneToday
+          ? `+${earnedOrNext} today`
+          : streak > 0
+            ? `+${earnedOrNext} if you continue`
+            : `+${earnedOrNext} to start`}
+      </span>
+    </div>
+  );
+}
+
+/** Compact Home/Progress strip using the achievements daily-streak pill language. */
+function StripD({ appsStreak, lcStreak, appsToday, lcToday, showRefl, lanes }: StripProps) {
+  return (
+    <div className="f08s-strip-streak-row">
+      <StreakPill label="Apps" streak={appsStreak} doneToday={appsToday} />
+      <StreakPill label="LC" streak={lcStreak} doneToday={lcToday} />
+      {showRefl && <ReflectionBadges lanes={lanes} />}
+    </div>
+  );
+}
+
+function StripE({ appsStreak, lcStreak, appsToday, lcToday, showRefl, lanes }: StripProps) {
   return (
     <p className="f08s-strip progress-today-strip">
       <span className={appsToday ? "f08s-strip-seg is-done" : "f08s-strip-seg is-pending"}>
-        Apps {appsStreak}
+        Apps streak {appsStreak}
         <span className="f08s-strip-mark" aria-hidden="true">
           {" "}
           {appsToday ? "✓" : "_"}
@@ -57,7 +106,7 @@ function StripA({
       </span>
       <span className="f08s-strip-sep"> · </span>
       <span className={lcToday ? "f08s-strip-seg is-done" : "f08s-strip-seg is-pending"}>
-        LC {lcStreak}
+        LC streak {lcStreak}
         <span className="f08s-strip-mark" aria-hidden="true">
           {" "}
           {lcToday ? "✓" : "_"}
@@ -68,59 +117,32 @@ function StripA({
   );
 }
 
-function StripB({
+function StripF({
   appsStreak,
   lcStreak,
   appsToday,
   lcToday,
+  appsTodayCount,
+  lcTodayCount,
   showRefl,
   lanes,
-}: {
-  appsStreak: number;
-  lcStreak: number;
-  appsToday: boolean;
-  lcToday: boolean;
-  showRefl: boolean;
-  lanes: Array<"app" | "tech" | "other">;
-}) {
-  return (
-    <div className="f08s-strip-chips">
-      <span className={appsToday ? "f08s-strip-chip is-done" : "f08s-strip-chip is-pending"}>
-        <span className="f08s-strip-chip-label">Apps {appsStreak}</span>
-        <span className="f08s-strip-chip-meta">{appsToday ? "today" : "pending"}</span>
-      </span>
-      <span className={lcToday ? "f08s-strip-chip is-done" : "f08s-strip-chip is-pending"}>
-        <span className="f08s-strip-chip-label">LC {lcStreak}</span>
-        <span className="f08s-strip-chip-meta">{lcToday ? "today" : "pending"}</span>
-      </span>
-      {showRefl && <ReflectionBadges lanes={lanes} />}
-    </div>
-  );
-}
-
-function StripC({
-  appsStreak,
-  lcStreak,
-  appsToday,
-  lcToday,
-  showRefl,
-  lanes,
-}: {
-  appsStreak: number;
-  lcStreak: number;
-  appsToday: boolean;
-  lcToday: boolean;
-  showRefl: boolean;
-  lanes: Array<"app" | "tech" | "other">;
-}) {
+}: StripProps) {
   return (
     <p className="f08s-strip progress-today-strip">
       <span className={appsToday ? "f08s-strip-seg is-done" : "f08s-strip-seg is-pending"}>
-        {appsStreak} apps{appsToday ? "" : " · open"}
+        Apps {appsTodayCount} today · {appsStreak}-day streak
+        <span className="f08s-strip-mark" aria-hidden="true">
+          {" "}
+          {appsToday ? "✓" : "_"}
+        </span>
       </span>
       <span className="f08s-strip-sep"> · </span>
       <span className={lcToday ? "f08s-strip-seg is-done" : "f08s-strip-seg is-pending"}>
-        {lcStreak} LC{lcToday ? "" : " · open"}
+        LC {lcTodayCount} today · {lcStreak}-day streak
+        <span className="f08s-strip-mark" aria-hidden="true">
+          {" "}
+          {lcToday ? "✓" : "_"}
+        </span>
       </span>
       {showRefl && <ReflectionBadges lanes={lanes} />}
     </p>
@@ -137,21 +159,23 @@ export default function TodayStripStreakPrototypePage() {
   const scenario = TODAY_STRIP_SCENARIOS.find((s) => s.key === scenarioKey)!;
   const showRefl = badges === "on";
 
-  const props = {
+  const props: StripProps = {
     appsStreak: scenario.appsStreak,
     lcStreak: scenario.lcStreak,
     appsToday: scenario.appsToday,
     lcToday: scenario.lcToday,
+    appsTodayCount: scenario.appsTodayCount,
+    lcTodayCount: scenario.lcTodayCount,
     showRefl,
     lanes: scenario.reflectionLanes,
   };
 
-  const Strip = variant === "B" ? StripB : variant === "C" ? StripC : StripA;
+  const Strip = variant === "E" ? StripE : variant === "F" ? StripF : StripD;
 
   return (
     <F08StreaksShell
       title="Today strip · daily streaks"
-      question="Q1: how apps and LC streaks read at a glance, including “today not done yet”, with deep-work badges gone. Decide whether reflection-written badges return."
+      question="Q1: make the day-streak count obvious (not today’s unit tally). ✓ = checked off for today. Compare streak-only vs streak + today’s counts."
       variants={VARIANTS}
       surfaceLabel="Q1 Today strip"
       controls={
@@ -173,9 +197,10 @@ export default function TodayStripStreakPrototypePage() {
       }
       notes={
         <p>
-          Today doesn’t break a streak until the day ends (R5.25), so “pending” still shows the current
-          length. Deep-work badges are retired (R5.29). Reflection badges are optional — at least one
-          variant with and without; verdict here.
+          R5.27 replaces the old <code>x/3</code> daily caps with streaks. Round 1 copy read like a per-day
+          count; D/E/F say “streak” / “day streak” explicitly. D borrows the Progress achievements pills (length,
+          +pts, pending vs done). F shows both today’s units and the streak so you can pick streak-only vs both.
+          Deep-work badges stay gone (R5.29).
         </p>
       }
     >

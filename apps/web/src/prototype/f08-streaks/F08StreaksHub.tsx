@@ -12,24 +12,24 @@ const SURFACES = [
     path: "weekly-streak",
     title: "Q5 · Weekly-goal streak display",
     blurb:
-      "Progress A2 + congrats B. A accent pill · B flame row · C count callout. Streak lengths and show-from toggles.",
+      "B2 chosen direction: flame compact — right on Progress, inline gap on congrats. A/C kept for compare.",
   },
   {
     path: "today-strip",
     title: "Q1 · Today strip with streaks",
     blurb:
-      "Apps and LC streaks instead of x/3. A text · B chips · C compact. Reflection badges on/off.",
+      "Round 2: D streak pills (✓/pending) · E “Apps streak N” text · F today units + day streak. Pick clarity.",
   },
   {
     path: "achievements",
     title: "Q2+Q3 · Achievements surface & unlock",
     blurb:
-      "A Progress card · B full list · C filtered catalog. Unlock via EarnFlash, modal, or notice.",
+      "Surface on Progress (provisional → M8). Unlock: modal ✓ (“Great work!”, Balance: N). A/B/C surfaces.",
   },
   {
     path: "flourish",
-    title: "Q4 · Completion flourish (Q7 keep/drop)",
-    blurb: "A drop (EarnFlash only) · B confetti · C vanish. Event and EarnFlash keep/replace toggles.",
+    title: "Q4 · Completion flourish (Q7)",
+    blurb: "Verdict: drop. EarnFlash only. Confetti/vanish rejected as distracting.",
   },
 ] as const;
 
@@ -43,8 +43,8 @@ export default function F08StreaksHub() {
       </p>
       <h2>F08 M5 · Streaks, achievements &amp; flourish</h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        Order for review: Q5 → Q1 → Q2/Q3 → Q4. Record a verdict per question (including flourish keep/drop)
-        in M5-07 before the build tickets.
+        Partial verdicts (2026-10-13): Q5 flame compact · Q3 modal · Q4 drop flourish. Q1/Q2 still open — review
+        the round-2 strip (D/E/F) and confirm Progress surface A/B/C.
       </p>
       {SURFACES.map((s) => (
         <Link key={s.path} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}`}>

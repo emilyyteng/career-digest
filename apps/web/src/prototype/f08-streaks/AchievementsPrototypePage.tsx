@@ -155,7 +155,7 @@ function SurfaceC({ list, filter }: { list: Achievement[]; filter: string }) {
 
 export default function AchievementsPrototypePage() {
   const variant = useVariant(VARIANTS);
-  const unlockStyle = useParam("unlock", ["flash", "modal", "notice"] as const);
+  const unlockStyle = useParam("unlock", ["modal", "flash", "notice"] as const);
   const unlockKind = useParam("kind", ["achievement", "streak-milestone"] as const);
   const filter = useParam("filter", ["all", "apps", "lc", "interview"] as const);
   const sample = UNLOCK_SAMPLES[unlockKind];
@@ -195,8 +195,8 @@ export default function AchievementsPrototypePage() {
             name="unlock"
             label="Unlock moment"
             options={[
+              { key: "modal", label: "Modal ✓" },
               { key: "flash", label: "EarnFlash" },
-              { key: "modal", label: "Modal" },
               { key: "notice", label: "Notice" },
             ]}
           />
@@ -227,9 +227,9 @@ export default function AchievementsPrototypePage() {
       }
       notes={
         <p>
-          Mock counts from R5.26. Placement is provisional (R8.5). Launch unlocks show with no points.
-          Compare EarnFlash (mint toast), a centered modal, and a one-time Progress notice like the weekly
-          congrats banner.
+          Mock counts from R5.26. Surface placement is provisional on Progress until M8 (R8.5). Unlock
+          verdict (2026-10-13): modal. Launch unlocks show with no points. The daily streak pills here also
+          inform the Home today-strip redesign (Q1).
         </p>
       }
     >
@@ -262,9 +262,13 @@ export default function AchievementsPrototypePage() {
                 {sample.detail}
               </p>
               <p className="f08s-unlock-pts">+{sample.points}</p>
-              <p className="muted f08-hint">Balance {balance}</p>
-              <button type="button" className={btn("primary", "sm")} onClick={() => setModalOpen(false)}>
-                Nice
+              <p className="f08s-unlock-balance">Balance: {balance}</p>
+              <button
+                type="button"
+                className={`${btn("primary", "sm")} f08s-unlock-cta`}
+                onClick={() => setModalOpen(false)}
+              >
+                Great work!
               </button>
             </div>
           </div>

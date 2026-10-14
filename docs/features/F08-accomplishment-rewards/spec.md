@@ -170,7 +170,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 **Process and celebration**
 
 - **R5.1** (Established) A design pass with prototypes comes before implementation, following the prototype rules in `AGENTS.md`.
-- **R5.2** (Established; may be dropped after prototyping, Q7) Completing work triggers a visible, dynamic flourish (for example confetti, or the task vanishing near the last click), not a plain toast. Affirmations are skipped.
+- **R5.2** (Dropped 2026-10-13, Q7) Completing work was going to trigger a visible flourish (confetti or vanish). Dropped after M5-07: too distracting and hard to get right. Completions keep `EarnFlash` only; no affirmations. M5-13 is won't-do.
 
 **Progress weekly block** (content and behavior only; the page layout is M8's)
 
@@ -446,7 +446,6 @@ Nothing that depends on an open question may be implemented.
 
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
-| Q7 | Keep the completion flourish at all? You lean toward removing it after the first prototype. If kept: which events trigger it, and does it replace `EarnFlash`? | R5.2 | M5 design |
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
 | Q20 | Rename the currency from "points"? Crumbs and Bakes are ruled out. | M7 | M7 design |
 | Q21 | Gacha numbers. (a) The rate sweep assumes 160 points per pull, but the cost is 180. (b) ×10 is priced at 1,600, but 10 × 180 is 1,800. (c) New-CE protection is "Off" yet cited as making things easier. Also: ×10 vs ×5, automatic duplicate refunds, the earn rate, and rates for 24 designs instead of 12. With M5's weekly scoring and streaks, a strong week earns roughly 1,500 points (more once R5.31 counts application and interview time without a reflection and gives misc tasks a +10 base) (about 8 pulls at 180); price pulls against that. | R7.7 | M7 design |
@@ -455,7 +454,7 @@ Nothing that depends on an open question may be implemented.
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (50)</summary>
+<summary>Resolved questions (51)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -465,6 +464,7 @@ Nothing that depends on an open question may be implemented.
 | Q4 | Weekly record format; LC over target | One entry per goal per week; LC may exceed (2026-10-13) | R5.8, R5.14 |
 | Q5 | LC label limits and placement | 50 characters; only on Progress and the Home target row (2026-10-13) | R5.5 |
 | Q6 | Anything on Home after a missed week | Nothing for misses; a congrats banner for met targets (2026-10-13) | R5.18, M5-02 |
+| Q7 | Keep the completion flourish? | Drop; EarnFlash only. Confetti too distracting (2026-10-13) | R5.2 dropped; M5-13 won't-do |
 | Q8 | Was the time visualization built? | Yes, as the countdown with 12-hour circles (2026-10-13) | R1.3 |
 | Q9 | One link per reflection | Yes, a task or an application (2026-10-13) | R2.1 |
 | Q10 | Interview steps in linking | Sub-link of an application; lists are flat (2026-10-13) | R2.1a, R2.3 |
@@ -546,5 +546,6 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Application merges keep everything from the removed application on the survivor, including its time and its earn when the survivor has none; points never change at a merge (R2.22, M2-02, which also covers M2-01).
 - **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs. (Superseded later the same day: F09 M0 waits until after M7 and M8; M5 uses interim decisions in `docs/design-system.md`.)
 - **2026-10-13:** LeetCode tiers are worth easy +20, medium +30, hard +50 (Q32). M5 build order: M5-03, M5-05, M5-15, M5-01, M5-16, M5-10, M5-07, M5-08, M5-09, M5-02, M5-12, M5-11, M5-13 (M5-16 added 2026-10-13 after M5-01; Proposed placement before streaks). Data and API come before the UI that depends on them, and each surface is built once. M5-05 is split: week close stays backend-only, and the completion-log entries move to M5-15. M5-08 owns the Progress weekly-streak display (R5.28), designed in M5-07.
+- **2026-10-13:** Completion flourish dropped (Q7 / R5.2); M5-13 won't-do. Unlock moment for achievements/milestones: modal. Weekly-goal streak: flame, compact (right on Progress, inline on congrats).
 - **2026-10-13:** Accepted edge cases from M5-03 and M5-05: re-completing a reopened task records its category at the new completion (R5.21); a renamed category shows its current name, and a deleted one keeps its last name; a tagged task reopened before its week closes is carried forward as open (R5.11); untagging a completed task stays allowed. The `all` completions tab count includes weekly records (M5-15).
 - **2026-10-13:** From the M5-01 R5.10 check: past LeetCode days aren't backfilled with points; the LeetCode card adds a this-week counts line (R5.32); the completion log gets a `leetcode` tab (R5.33) and `weekly` becomes `weekly goals` (R5.34), ticketed as M5-16. Q52–Q54 answered the same day: the `leetcode` tab counts total solves, LeetCode days show in `all` (1 per day), rows read `LC: 3 solved`.

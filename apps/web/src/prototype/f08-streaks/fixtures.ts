@@ -75,6 +75,9 @@ export type TodayStripScenario = {
   lcStreak: number;
   appsToday: boolean;
   lcToday: boolean;
+  /** Today's unit counts (apps marked / LC solves) — for “streak vs today” compare. */
+  appsTodayCount: number;
+  lcTodayCount: number;
   reflectionLanes: Array<"app" | "tech" | "other">;
 };
 
@@ -87,6 +90,8 @@ export const TODAY_STRIP_SCENARIOS: TodayStripScenario[] = [
     lcStreak: 12,
     appsToday: true,
     lcToday: true,
+    appsTodayCount: 2,
+    lcTodayCount: 3,
     reflectionLanes: ["app", "tech"],
   },
   {
@@ -96,6 +101,8 @@ export const TODAY_STRIP_SCENARIOS: TodayStripScenario[] = [
     lcStreak: 11,
     appsToday: false,
     lcToday: false,
+    appsTodayCount: 0,
+    lcTodayCount: 0,
     reflectionLanes: [],
   },
   {
@@ -105,6 +112,8 @@ export const TODAY_STRIP_SCENARIOS: TodayStripScenario[] = [
     lcStreak: 11,
     appsToday: true,
     lcToday: false,
+    appsTodayCount: 1,
+    lcTodayCount: 0,
     reflectionLanes: ["app"],
   },
   {
@@ -114,6 +123,8 @@ export const TODAY_STRIP_SCENARIOS: TodayStripScenario[] = [
     lcStreak: 12,
     appsToday: false,
     lcToday: true,
+    appsTodayCount: 0,
+    lcTodayCount: 2,
     reflectionLanes: ["tech"],
   },
   {
@@ -123,6 +134,8 @@ export const TODAY_STRIP_SCENARIOS: TodayStripScenario[] = [
     lcStreak: 1,
     appsToday: true,
     lcToday: true,
+    appsTodayCount: 1,
+    lcTodayCount: 1,
     reflectionLanes: ["other"],
   },
   {
@@ -132,6 +145,8 @@ export const TODAY_STRIP_SCENARIOS: TodayStripScenario[] = [
     lcStreak: 0,
     appsToday: false,
     lcToday: false,
+    appsTodayCount: 0,
+    lcTodayCount: 0,
     reflectionLanes: [],
   },
 ];

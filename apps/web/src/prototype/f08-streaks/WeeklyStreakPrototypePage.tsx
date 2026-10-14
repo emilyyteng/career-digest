@@ -2,6 +2,9 @@
  * F08 M5-07 · design question 5: weekly-goal streak display (R5.28).
  * Chosen M5-06 layouts: Progress block A2 and congrats banner B.
  * Streak is display-only; no points. Shown per goal.
+ *
+ * Round-2 direction (2026-10-13): flame treatment, compact — right-aligned on
+ * Progress head (no dedicated line); inline with a slight gap on congrats.
  */
 import { useState } from "react";
 import F08StreaksShell, { btn, ParamToggle, useParam, useVariant } from "./F08StreaksShell";
@@ -21,9 +24,9 @@ import {
 import { GoalBar, PaceText } from "../f08-weekly/parts";
 
 const VARIANTS = [
-  { key: "A", name: "Accent pill · beside title / after goal line" },
-  { key: "B", name: "Flame row · dedicated streak line under the head" },
-  { key: "C", name: "Count callout · large weeks number on the right" },
+  { key: "B2", name: "Chosen · flame compact: right on Progress, inline on congrats" },
+  { key: "A", name: "Earlier · accent pill" },
+  { key: "C", name: "Earlier · large count callout" },
 ] as const;
 
 function streakLabel(weeks: number): string {
@@ -34,25 +37,21 @@ function streakShort(weeks: number): string {
   return weeks === 1 ? "1 week" : `${weeks} weeks`;
 }
 
-function StreakPill({ weeks, quiet }: { weeks: number; quiet?: boolean }) {
+function FlameInline({ weeks, className }: { weeks: number; className?: string }) {
   if (weeks <= 0) return null;
   return (
-    <span className={quiet ? "f08s-streak-pill is-quiet" : "f08s-streak-pill"}>
-      {streakShort(weeks)}
-    </span>
-  );
-}
-
-function StreakRow({ weeks }: { weeks: number }) {
-  if (weeks <= 0) return null;
-  return (
-    <p className="f08s-streak-row">
+    <span className={className ?? "f08s-flame-inline"}>
       <span className="f08s-flame" aria-hidden="true">
         🔥
       </span>
       <span>{streakLabel(weeks)}</span>
-    </p>
+    </span>
   );
+}
+
+function StreakPill({ weeks }: { weeks: number }) {
+  if (weeks <= 0) return null;
+  return <span className="f08s-streak-pill">{streakShort(weeks)}</span>;
 }
 
 function StreakCallout({ weeks }: { weeks: number }) {
@@ -78,22 +77,32 @@ function ProgressGoalHead({
   weeks: number;
   variant: string;
 }) {
-  const fraction = (
-    <>
-      <strong className="weekly-goal-title">{title}</strong>
-      <span className="weekly-goal-fraction muted">
-        {done}/{total}
-      </span>
-      <PaceText done={done} total={total} />
-      {variant === "A" && <StreakPill weeks={weeks} />}
-    </>
-  );
+  if (variant === "B2") {
+    return (
+      <div className="weekly-goal-row-head f08s-goal-head-spread">
+        <div className="f08s-goal-head-main weekly-goal-row-head">
+          <strong className="weekly-goal-title">{title}</strong>
+          <span className="weekly-goal-fraction muted">
+            {done}/{total}
+          </span>
+          <PaceText done={done} total={total} />
+        </div>
+        <FlameInline weeks={weeks} className="f08s-flame-inline is-end" />
+      </div>
+    );
+  }
 
   if (variant === "C") {
     return (
       <div className="f08s-goal-head-with-callout">
         <div className="f08s-goal-head-main">
-          <div className="weekly-goal-row-head">{fraction}</div>
+          <div className="weekly-goal-row-head">
+            <strong className="weekly-goal-title">{title}</strong>
+            <span className="weekly-goal-fraction muted">
+              {done}/{total}
+            </span>
+            <PaceText done={done} total={total} />
+          </div>
         </div>
         <StreakCallout weeks={weeks} />
       </div>
@@ -101,10 +110,14 @@ function ProgressGoalHead({
   }
 
   return (
-    <>
-      <div className="weekly-goal-row-head">{fraction}</div>
-      {variant === "B" && <StreakRow weeks={weeks} />}
-    </>
+    <div className="weekly-goal-row-head">
+      <strong className="weekly-goal-title">{title}</strong>
+      <span className="weekly-goal-fraction muted">
+        {done}/{total}
+      </span>
+      <PaceText done={done} total={total} />
+      <StreakPill weeks={weeks} />
+    </div>
   );
 }
 
@@ -205,14 +218,14 @@ function CongratsB({
                   {" "}
                   · {g.done} × {WEEKLY_UNIT_POINTS} + {WEEKLY_MET_BONUS}
                 </span>
+                {variant === "B2" && weeks > 0 && (
+                  <FlameInline weeks={weeks} className="f08s-flame-inline is-gap" />
+                )}
                 {variant === "A" && weeks > 0 && (
                   <>
                     {" "}
                     <StreakPill weeks={weeks} />
                   </>
-                )}
-                {variant === "B" && weeks > 0 && (
-                  <span className="f08s-congrats-line-extra">🔥 {streakLabel(weeks)}</span>
                 )}
                 {variant === "C" && weeks > 0 && (
                   <span className="f08s-congrats-line-extra">{streakLabel(weeks)}</span>
@@ -229,18 +242,6 @@ function CongratsB({
           </li>
         )}
       </ul>
-      {variant === "C" && (lcWeeks > 0 || appsWeeks > 0) && (
-        <div className="f08s-congrats-streak-block" aria-label="Weekly streaks">
-          {met.map((g) => {
-            const weeks = weeksFor(g.goal);
-            return weeks > 0 ? (
-              <span key={g.goal} className="f08s-streak-pill">
-                {goalName(g.goal)} · {streakShort(weeks)}
-              </span>
-            ) : null;
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -252,7 +253,7 @@ export default function WeeklyStreakPrototypePage() {
     WEEKLY_STREAK_SCENARIOS.map((s) => s.key),
   );
   const metKey = useParam("met", ["both", "lc"] as const);
-  const showFrom = useParam("from", ["1", "2"] as const);
+  const showFrom = useParam("from", ["2", "1"] as const);
   const scenario = WEEKLY_STREAK_SCENARIOS.find((s) => s.key === streakKey)!;
   const minWeeks = Number(showFrom);
   const lcWeeks = scenario.lcWeeks >= minWeeks ? scenario.lcWeeks : 0;
@@ -263,7 +264,7 @@ export default function WeeklyStreakPrototypePage() {
   return (
     <F08StreaksShell
       title="Weekly-goal streak display"
-      question="Q5: how “3 weeks in a row” reads in the Progress weekly block (A2) and the congrats banner (B). More visible than M5-06’s grey/mint placeholders. Display only — no points."
+      question="Q5: how “3 weeks in a row” reads in Progress (A2) and the congrats banner (B). Flame, compact — not a dedicated line."
       variants={VARIANTS}
       surfaceLabel="Q5 Weekly streak"
       controls={
@@ -285,8 +286,8 @@ export default function WeeklyStreakPrototypePage() {
             name="from"
             label="Show from"
             options={[
-              { key: "1", label: "1 week" },
               { key: "2", label: "2 weeks" },
+              { key: "1", label: "1 week" },
             ]}
           />
           {dismissed && (
@@ -298,9 +299,9 @@ export default function WeeklyStreakPrototypePage() {
       }
       notes={
         <p>
-          Layouts are locked to M5-06 verdicts (Progress A2, congrats B). Streak is per goal and display
-          only (R5.28). “Show from” compares hiding a 1-week streak vs showing it. Proposed: show from 2
-          weeks so a first met week doesn’t claim a streak.
+          Verdict direction (2026-10-13): flame from B, but compact — right-justified on the Progress goal
+          head (same row as title/counts), and inline with a slight gap after the points breakdown on the Home
+          congrats banner. Display only (R5.28). Proposed: show from 2 weeks.
         </p>
       }
     >

@@ -34,7 +34,7 @@ Prototype URL: `/prototype/f08/streaks`
 
 - [x] 2–3 variants per design question, switchable with the shared prototype switcher, under `apps/web/src/prototype/f08-streaks/`
 - [x] No production imports of prototype code; mock data only
-- [ ] The user records a verdict per question, including a keep/drop on the flourish (Q7)
+- [ ] The user records a verdict per question, including a keep/drop on the flourish (Q7) — partial; see verification notes
 
 ## Reuse notes
 
@@ -42,13 +42,25 @@ Prototype URL: `/prototype/f08/streaks`
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked (verdicts still open)
+- [ ] Acceptance criteria met and checked (Q1/Q2 still open)
 - [x] `npm run check` passes
 - [x] Follows `docs/design-system.md`
 - [x] No production imports of prototype code
 - [x] Committed as `F08 M5-07: …`
-- [ ] End-of-task report given, including **Issues found** (after verdicts)
+- [ ] End-of-task report given, including **Issues found** (after remaining verdicts)
 
 ## Verification notes
 
-Prototypes ready for review at `/prototype/f08/streaks` (order Q5 → Q1 → Q2/Q3 → Q4). Verdicts and final commit hash TBD.
+Hub: `/prototype/f08/streaks`.
+
+**Verdicts (2026-10-13, round 2):**
+
+| Q | Verdict | Notes |
+|---|---------|-------|
+| Q5 | Flame compact (B2) | Like B’s flame, but no dedicated line: right-aligned on Progress weekly goal head; inline with a slight gap on Home congrats. |
+| Q1 | Open | Round-1 copy unclear (looked like daily counts). Round-2: D streak pills with ✓/pending (from achievements), E “Apps streak N”, F today units + day streak. Prefer streak clarity; ✓ = done today. |
+| Q2 | Open (surface OK in spirit) | Progress block makes sense; final home is M8 (R8.5). Confirm A/B/C. |
+| Q3 | Modal | “Great work!”; `Balance: N`; larger gap above the button. |
+| Q4 / Q7 | **Drop** flourish | EarnFlash only. R5.2 dropped; M5-13 won't-do. |
+
+Still needed: pick Q1 (D/E/F + reflection badges on/off); confirm Q2 surface variant.

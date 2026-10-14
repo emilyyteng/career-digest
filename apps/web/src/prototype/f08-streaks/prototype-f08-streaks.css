@@ -53,9 +53,45 @@
   color: var(--accent-purple-deep);
 }
 
-.f08-proto .f08s-streak-row .f08s-flame {
-  font-size: 0.95rem;
+.f08-proto .f08s-flame {
+  font-size: 0.9rem;
   line-height: 1;
+}
+
+.f08-proto .f08s-flame-inline {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-purple-deep);
+  white-space: nowrap;
+}
+
+.f08-proto .f08s-flame-inline.is-end {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.f08-proto .f08s-flame-inline.is-gap {
+  margin-left: 0.65rem;
+}
+
+.f08-proto .f08s-goal-head-spread {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  width: 100%;
+}
+
+.f08-proto .f08s-goal-head-spread > .f08s-goal-head-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  min-width: 0;
 }
 
 .f08-proto .f08s-streak-callout {
@@ -207,6 +243,69 @@
   background: color-mix(in srgb, var(--accent-blue) 16%, var(--surface));
   color: var(--accent-blue-deep);
   border: 1px solid color-mix(in srgb, var(--accent-blue) 40%, var(--border));
+}
+
+.f08-proto .f08s-strip-streak-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+.f08-proto .f08s-strip-streak-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  min-width: 7.25rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.f08-proto .f08s-strip-streak-pill.is-done {
+  border-color: color-mix(in srgb, var(--accent-mint) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-mint) 12%, var(--surface));
+}
+
+.f08-proto .f08s-strip-streak-pill.is-pending {
+  border-style: dashed;
+}
+
+.f08-proto .f08s-strip-streak-pill-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.f08-proto .f08s-strip-streak-n {
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+
+.f08-proto .f08s-strip-streak-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.f08-proto .f08s-strip-streak-pts {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.f08-proto .f08s-strip-streak-pill.is-done .f08s-strip-streak-pts {
+  color: var(--accent-mint-deep);
+  font-weight: 600;
+}
+
+.f08-proto .f08s-strip-streak-pill.is-done .f08s-strip-mark {
+  color: #3f6b5c;
+  font-weight: 600;
 }
 
 /* —— Q2/Q3 achievements —— */
@@ -368,11 +467,22 @@
 }
 
 .f08-proto .f08s-unlock-card .f08s-unlock-pts {
-  margin: 0.5rem 0 0.85rem;
+  margin: 0.5rem 0 0.35rem;
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--accent-mint-deep);
   font-variant-numeric: tabular-nums;
+}
+
+.f08-proto .f08s-unlock-card .f08s-unlock-balance {
+  margin: 0 0 1.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.f08-proto .f08s-unlock-card .f08s-unlock-cta {
+  min-width: 8.5rem;
 }
 
 .f08-proto .f08s-unlock-notice {
