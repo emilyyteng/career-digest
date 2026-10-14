@@ -1,6 +1,6 @@
 # M5-07: Prototype streaks, achievements and the completion flourish
 
-**Status:** Ready
+**Status:** In progress
 **Blocked by:** (none)
 **Implements:** R5.1, RX.2; designs for R5.2, R5.25–R5.28 (from `../../spec.md`)
 **Type:** prototype
@@ -32,8 +32,8 @@ Prototype URL: `/prototype/f08/streaks`
 
 ## Acceptance criteria
 
-- [ ] 2–3 variants per design question, switchable with the shared prototype switcher, under `apps/web/src/prototype/f08-streaks/`
-- [ ] No production imports of prototype code; mock data only
+- [x] 2–3 variants per design question, switchable with the shared prototype switcher, under `apps/web/src/prototype/f08-streaks/`
+- [x] No production imports of prototype code; mock data only
 - [ ] The user records a verdict per question, including a keep/drop on the flourish (Q7)
 
 ## Reuse notes
@@ -42,13 +42,13 @@ Prototype URL: `/prototype/f08/streaks`
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M5-07: …`
-- [ ] End-of-task report given, including **Issues found**
+- [ ] Acceptance criteria met and checked (verdicts still open)
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M5-07: …`
+- [ ] End-of-task report given, including **Issues found** (after verdicts)
 
 ## Verification notes
 
-(Filled in when done: the verdict per question, and the last prototype commit hash.)
+Prototypes ready for review at `/prototype/f08/streaks` (order Q5 → Q1 → Q2/Q3 → Q4). Verdicts and final commit hash TBD.

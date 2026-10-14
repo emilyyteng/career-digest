@@ -37,6 +37,11 @@ const proto = import.meta.env.DEV
       F08Congrats: lazy(() => import("./prototype/f08-weekly/CongratsBannerPrototypePage")),
       F08WeeklyRecord: lazy(() => import("./prototype/f08-weekly/WeeklyRecordPrototypePage")),
       F08VisualDirection: lazy(() => import("./prototype/f08-weekly/VisualDirectionPrototypePage")),
+      F08StreaksHub: lazy(() => import("./prototype/f08-streaks/F08StreaksHub")),
+      F08WeeklyStreak: lazy(() => import("./prototype/f08-streaks/WeeklyStreakPrototypePage")),
+      F08TodayStripStreak: lazy(() => import("./prototype/f08-streaks/TodayStripStreakPrototypePage")),
+      F08Achievements: lazy(() => import("./prototype/f08-streaks/AchievementsPrototypePage")),
+      F08Flourish: lazy(() => import("./prototype/f08-streaks/FlourishPrototypePage")),
       RewardsHub: lazy(() => import("./prototype/rewards/RewardsPrototypeHub")),
       RewardsLab: lazy(() => import("./prototype/rewards/CatCakeLabPage")),
       RewardsPull: lazy(() => import("./prototype/rewards/PullPrototypePage")),
@@ -161,6 +166,23 @@ export default function App() {
                 <Route
                   path="/prototype/f08/weekly/visual-direction"
                   element={<ProtoPage page={proto.F08VisualDirection} />}
+                />
+                <Route path="/prototype/f08/streaks" element={<ProtoPage page={proto.F08StreaksHub} />} />
+                <Route
+                  path="/prototype/f08/streaks/weekly-streak"
+                  element={<ProtoPage page={proto.F08WeeklyStreak} />}
+                />
+                <Route
+                  path="/prototype/f08/streaks/today-strip"
+                  element={<ProtoPage page={proto.F08TodayStripStreak} />}
+                />
+                <Route
+                  path="/prototype/f08/streaks/achievements"
+                  element={<ProtoPage page={proto.F08Achievements} />}
+                />
+                <Route
+                  path="/prototype/f08/streaks/flourish"
+                  element={<ProtoPage page={proto.F08Flourish} />}
                 />
                 <Route path="/prototype/rewards" element={<ProtoPage page={proto.RewardsHub} />} />
                 <Route path="/prototype/rewards/lab" element={<ProtoPage page={proto.RewardsLab} />} />

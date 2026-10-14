@@ -33,6 +33,8 @@ export default function M4PrototypeHub() {
         reflection+minutes. ← / → flips variants.{" "}
         <Link to="/prototype/f08/weekly">F08 weekly hub</Link>
         {" · "}
+        <Link to="/prototype/f08/streaks">F08 streaks hub</Link>
+        {" · "}
         <Link to="/prototype/m2">M2 hub</Link>
         {" · "}
         <Link to="/prototype/m1">M1 hub</Link>

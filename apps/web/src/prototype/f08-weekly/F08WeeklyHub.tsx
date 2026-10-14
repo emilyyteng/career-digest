@@ -54,7 +54,8 @@ export default function F08WeeklyHub() {
       <h2>F08 M5 · Weekly goal surfaces</h2>
       <p className="muted" style={{ marginTop: 0 }}>
         Verdict recorded in M5-06 (2026-10-13): Q1 A, Q2 A2, Q3 B, Q4 B, Q5 A, direction W. Kept as the
-        reference for the M5 builds.
+        reference for the M5 builds.{" "}
+        <Link to="/prototype/f08/streaks">M5-07 streaks hub →</Link>
       </p>
       {SURFACES.map((s) => (
         <Link key={s.path} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}`}>
