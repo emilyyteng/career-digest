@@ -242,11 +242,7 @@ export default function Home() {
         {progress && (
           <div className="home-progress-stack">
             <div className="home-progress-row">
-              <TodayStrip
-                today={progress}
-                prefix="Today: "
-                className="home-progress-strip"
-              />
+              <TodayStrip today={progress} className="home-progress-strip" />
               <Link to="/progress" className="home-section-link">
                 Update progress →
               </Link>

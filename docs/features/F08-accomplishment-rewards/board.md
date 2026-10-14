@@ -59,13 +59,13 @@ No open tickets.
 | [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Ready | After M5-05, M5-01, M5-07; weekly streak = flame compact (Q5 B2) |
 | [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | build | Draft | After M5-08 (LC label API); M5-06 design in; finalize acceptance criteria |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Ready | Progress `achievements` tab + modal unlock; after M5-01 |
-| [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Ready | M5-07 D pills; after M5-10 (M5-14 done) |
 
 <details>
-<summary>Done (11)</summary>
+<summary>Done (12)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | TBD |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | `eeac25b` |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | Won't do (Q7 drop) |
 | [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | `8bac4da` |

@@ -2820,6 +2820,64 @@ textarea { min-height: 10rem; width: 100%; }
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
+
+/* M5-12 · today strip day-streak pills (R5.27) */
+.today-streak-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+.today-streak-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  min-width: 7.25rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-variant-numeric: tabular-nums;
+}
+.today-streak-pill.is-done {
+  border-color: color-mix(in srgb, var(--accent-mint) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-mint) 12%, var(--surface));
+}
+.today-streak-pill.is-pending {
+  border-style: dashed;
+}
+.today-streak-pill-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+.today-streak-n {
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+.today-streak-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+.today-streak-pts {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+.today-streak-pill.is-done .today-streak-pts {
+  color: var(--accent-mint-deep);
+  font-weight: 600;
+}
+.today-streak-mark {
+  font-weight: 700;
+  color: var(--accent-purple-deep);
+}
+.today-streak-pill.is-done .today-streak-mark {
+  color: #3f6b5c;
+}
 .home-last-digest {
   display: grid;
   gap: 0.2rem;
