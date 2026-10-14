@@ -36,7 +36,7 @@ Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and
 | M2 | Reflections linked to work; shared completion modals | Done |
 | M3 | Recurring tasks | Not started |
 | M4 | Global points ledger | Done; M4-01, M4-02 and M4-03 done |
-| M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | In progress |
+| M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | Done |
 | M6 | Board departures log | Not started |
 | M7 | Cat Cake Collection v1: spending Seeds, the Rewards page | Design. Prototype under `apps/web/src/prototype/rewards/`; product tickets drafted |
 | M8 | Progress redesign, LeetCode tier polish, information architecture | Not started |

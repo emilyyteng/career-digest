@@ -263,6 +263,31 @@ One global points balance makes effort visible, and later spendable.
 
 **Later fixes.** Marking an application applied from Jobs now has the same outcome as from Tasks: the task's reflections move to the application, the modal's time and notes are saved, and the weekly apps goal is checked. Re-completing a reopened task or raising a LeetCode day back up earns its points again instead of nothing, and category totals no longer count a reversed earn twice.
 
+### M5: Weekly goals, streaks, achievements and celebration
+
+Weekly goals become a closed loop: Progress edits the week, week close writes fixed records and awards points, Home celebrates met weeks and surfaces unmet Sunday targets, and the completion log keeps the history.
+
+**Weekly goals.**
+
+- LeetCode logs as weekly or misc by difficulty tier through one write path (easy +20, medium +30, hard +50). An optional ≤50-character LC label clears on a new week; the target carries forward.
+- Week close (oldest first, under a lock) stores `weekly_goal_records`, awards per-unit and flat bonus points, and carries open tagged apps into the next week. 0/0 apps never counts as met.
+- Progress shows the weekly block with pace, `met`/`+N` bar tail, flame weekly-goal streak from 2 weeks, and plain apps members (applied tags, no untag).
+- Home Upcoming lists unmet goals as Sunday Targets rows (mini bar, pace, `resets Monday`; LC label; no apps row when none tagged; never overdue). The hero's compact "This week" bars are gone.
+- The first Home visit after a week with met goals shows a one-time congrats banner from the week-close record (counts, points, flame streak). Seen per week in `localStorage`; the pattern is documented next to `EarnFlash` in the design system.
+
+**Streaks and achievements.**
+
+- Daily LC and apps streaks: length and today counts on Progress; daily points `min(20, 2×length)` and milestones `5×length` under ledger category `streak`.
+- The today strip shows day-streak pills plus raw day counts and today's points.
+- Count-based achievements unlock once (launch unlocks free) with a Progress achievements tab and unlock modal.
+
+**Points rule adjustments.**
+
+- Ledger totals split tasks by task category. Work time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base. Deep work is retired.
+- Weekly records and LeetCode day rows appear in the completion log; the weekly tab is labeled weekly goals.
+
+**Outcome:** Hitting a weekly target pays at week close, shows up on Home once, and leaves a durable record. Daily streaks and achievements add lighter celebration without inventing a third banner pattern.
+
 ---
 
 ## Documentation & development process (F10)
