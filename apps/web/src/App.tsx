@@ -16,7 +16,7 @@ import CollectionPage from "./features/rewards/CollectionPage";
 import EarningsPage from "./features/rewards/EarningsPage";
 import PullHistoryPage from "./features/rewards/PullHistoryPage";
 import RewardsLayout from "./features/rewards/RewardsLayout";
-import RewardsPlaceholderPage from "./features/rewards/RewardsPlaceholderPage";
+import RulesPage from "./features/rewards/RulesPage";
 import ThemeEmoji from "./ThemeEmoji";
 import { DemoModeProvider, useDemoMode } from "./demoMode";
 import { AchievementUnlockProvider } from "./features/achievements/AchievementUnlockHost";
@@ -121,10 +121,7 @@ export default function App() {
               <Route path="collection" element={<CollectionPage />} />
               <Route path="earnings" element={<EarningsPage />} />
               <Route path="history" element={<PullHistoryPage />} />
-              <Route
-                path="rules"
-                element={<RewardsPlaceholderPage title="Rules" />}
-              />
+              <Route path="rules" element={<RulesPage />} />
             </Route>
             <Route path="/status" element={<Status />} />
             {proto ? (

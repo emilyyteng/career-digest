@@ -89,14 +89,14 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M7-10](./tickets/M7/M7-10-rules-reference.md) | Rewards Rules reference | build | Draft | Earn + gacha |
-| [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | build | Draft | After M7-04 |
+| [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | build | Ready | After M7-04 |
 
 <details>
-<summary>Done (9)</summary>
+<summary>Done (10)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M7-10](./tickets/M7/M7-10-rules-reference.md) | Rewards Rules reference | (this commit) |
 | [M7-09](./tickets/M7/M7-09-pull-history.md) | Pull history | `3addc8d` |
 | [M7-08](./tickets/M7/M7-08-earnings-log.md) | Earnings log on Rewards | `80cbd81` |
 | [M7-07](./tickets/M7/M7-07-collection-album-ui.md) | Collection album UI | `5c2cdb3` |

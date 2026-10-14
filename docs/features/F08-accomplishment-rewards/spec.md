@@ -432,6 +432,8 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Rewards nav + Banner/Collection UIs; `{balance} seeds ({lifetime} lifetime)` chrome | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`BannerPage.tsx`](../../../apps/web/src/features/rewards/BannerPage.tsx), [`CollectionPage.tsx`](../../../apps/web/src/features/rewards/CollectionPage.tsx) | Conforms R7.1, R7.2, R7.4, R7.6, R7.7 (UI), R7.10 | M7-05–M7-07 |
 | Earnings route: ranged earn-side bars (Cake), day-grouped log, Progress points stubbed | [`EarningsPage.tsx`](../../../apps/web/src/features/rewards/EarningsPage.tsx), [`GET /api/rewards/earnings`](../../../apps/api/src/routes.ts) | Conforms R7.8, R8.2 | Done by M7-08 |
 | Pull history: ranged spends, lifetime spend, n-th variant pull per result | [`PullHistoryPage.tsx`](../../../apps/web/src/features/rewards/PullHistoryPage.tsx), [`pullHistory.ts`](../../../apps/api/src/pullHistory.ts) | Conforms R7.8 (history) | Done by M7-09 |
+| Rules reference from live POINTS / gacha / achievements | [`RulesPage.tsx`](../../../apps/web/src/features/rewards/RulesPage.tsx), [`rewardsRules.ts`](../../../apps/api/src/rewardsRules.ts) | Conforms R7.9 | Done by M7-10 |
+| 10k-run gacha Monte Carlo on production rates | [`gachaSimulate.ts`](../../../apps/api/src/gachaSimulate.ts) | Conforms R7.7 (sim) | Done by M7-11 |
 
 ### Cross-cutting
 

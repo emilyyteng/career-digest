@@ -146,6 +146,7 @@ import {
 } from "./catCakeGacha.js";
 import { resolveEarningsRangeBounds } from "./earningsRange.js";
 import { getPullHistorySnapshot } from "./pullHistory.js";
+import { getRewardsRulesPayload } from "./rewardsRules.js";
 import { isValidTimezone } from "./progress.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
@@ -1315,6 +1316,10 @@ api.get("/rewards/earnings", async (req, res) => {
       error: err instanceof Error ? err.message : "Bad earnings range",
     });
   }
+});
+
+api.get("/rewards/rules", (_req, res) => {
+  res.json(getRewardsRulesPayload());
 });
 
 api.get("/rewards/history", async (req, res) => {

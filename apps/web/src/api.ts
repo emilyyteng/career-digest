@@ -1431,3 +1431,53 @@ export const getRewardsHistory = (opts: {
   if (opts.limit != null) params.set("limit", String(opts.limit));
   return parse<PullHistorySnapshot>(api(`/api/rewards/history?${params}`));
 };
+
+export type RewardsRulesPayload = {
+  currency: { singular: string; plural: string };
+  earning: {
+    points: {
+      miscTaskBase: number;
+      applicationBase: number;
+      reflectionBonus: number;
+      leetcodePerUnit: number;
+      leetcodeByTier: { easy: number; medium: number; hard: number };
+      weeklyGoalPerUnit: number;
+      weeklyGoalBonus: number;
+      interviewByKind: Record<string, number>;
+      streakDailyPerLength: number;
+      streakDailyCap: number;
+      streakMilestonePerLength: number;
+      streakMilestones: readonly number[];
+    };
+    achievements: Array<{
+      id: string;
+      family: string;
+      label: string;
+      threshold: number;
+      points: number;
+    }>;
+    notes: {
+      weeklyGoalStreakEarnsNothing: boolean;
+      reflectionIsNoteNotTime: boolean;
+      blankTimeAddsZero: boolean;
+    };
+  };
+  spending: {
+    gacha: {
+      costPerPull: number;
+      collectorBaseRate: number;
+      softPityStart: number;
+      softPityStep: number;
+      hardPity: number;
+      refund: { classic: number; collector: number };
+    };
+    friendshipMax: number;
+    keptCopies: number;
+    flavorCount: number;
+    nightUnlockAtCopies: number;
+    pityLadder: Array<{ pull: number; rate: number }>;
+  };
+};
+
+export const getRewardsRules = () =>
+  parse<RewardsRulesPayload>(api("/api/rewards/rules"));
