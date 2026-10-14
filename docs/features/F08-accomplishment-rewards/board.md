@@ -56,17 +56,17 @@ No open tickets.
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | build | Draft | After M5-05, M5-07 (M5-06 design in); documents banner patterns in the design system |
-| [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | prototype | In progress | Round 2 at `/prototype/f08/streaks`; Q1/Q2 open, Q3–Q5 partial |
-| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Draft | After M5-05, M5-01, M5-07; owns the weekly-streak display (R5.28); Q5 flame compact |
+| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Ready | After M5-05, M5-01, M5-07; weekly streak = flame compact (Q5 B2) |
 | [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | build | Draft | After M5-08 (LC label API); M5-06 design in; finalize acceptance criteria |
-| [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Draft | After M5-07, M5-01; unlock = modal |
-| [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Draft | After M5-07, M5-10 (M5-14 done); criteria wait on Q1 |
+| [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Ready | Progress `achievements` tab + modal unlock; after M5-01 |
+| [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Ready | M5-07 D pills; after M5-10 (M5-14 done) |
 
 <details>
-<summary>Done (10)</summary>
+<summary>Done (11)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | TBD |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | Won't do (Q7 drop) |
 | [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | `8bac4da` |
 | [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | `148420b` |

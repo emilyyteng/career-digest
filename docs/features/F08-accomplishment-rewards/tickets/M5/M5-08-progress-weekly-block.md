@@ -1,7 +1,7 @@
 # M5-08: Progress weekly goals block
 
-**Status:** Draft (streak display criteria wait on M5-07 Q5; everything else is final)
-**Blocked by:** M5-05 (uncapped LC progress and the weekly-streak count, so this UI is verified with real data), M5-01 (removes the weekly stepper, so this block never handles LeetCode logging), M5-07 (Q5 designs the weekly-streak display). Decided 2026-10-13; M5-06 done
+**Status:** Ready
+**Blocked by:** M5-05 (uncapped LC progress and the weekly-streak count, so this UI is verified with real data), M5-01 (removes the weekly stepper, so this block never handles LeetCode logging), M5-07 (Q5 weekly-streak display — done). Decided 2026-10-13; M5-06 done
 **Implements:** R5.3, R5.4, R5.5 (Progress), R5.13 (label clears), R5.14 (display), R5.28 (Progress display) (from `../../spec.md`)
 **Type:** build
 
@@ -21,7 +21,7 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 - The target field keeps today's behavior: a positive whole number, committed on blur; an invalid value reverts.
 
 - No LeetCode stepper: M5-01 already moved logging to the Progress LeetCode card. The row updates without a reload after each LeetCode change.
-- **Weekly streak (R5.28):** each goal (LC and apps) shows its current run of met weeks, read from M5-05's records, as designed in M5-07 Q5. Display only; no points.
+- **Weekly streak (R5.28):** each goal (LC and apps) shows its current run of met weeks, read from M5-05's records, as designed in M5-07 Q5 **B2** (`/prototype/f08/streaks/weekly-streak?variant=B2`): 🔥 flame + “N weeks in a row”, **compact and right-aligned** on the goal head row (same line as title / count / pace — not a dedicated line). Display only; no points. Proposed: show from 2 weeks. Congrats banner (M5-02) uses the same flame **inline** with a slight gap after the points breakdown.
 
 **Apps goal row**
 
@@ -66,8 +66,9 @@ The Progress weekly goals block as chosen in M5-06 (variant A with target placem
 - [ ] Pace text has normal weight in every state.
 
 **Weekly streak**
-- [ ] Both goals show their current run of met weeks from M5-05's API, in M5-07 Q5's design. (Finalize the wording and placement after M5-07.)
-- [ ] A goal with no current run shows what M5-07 decides (nothing, or a zero state).
+- [ ] Both goals show their current run of met weeks from M5-05's API as M5-07 Q5 B2: 🔥 + “N weeks in a row”, right-aligned on the goal head (same row as title/count/pace).
+- [ ] A goal below the show-from threshold (Proposed: 2 weeks) shows no streak text.
+
 
 **Target field**
 - [ ] It sits at the right end of the label line, in both the reading and the editing state, and with a 50-character label (wrapping allowed on narrow screens).
@@ -87,7 +88,7 @@ None. All decided 2026-10-13:
 - **Target field size** (was 6): today's size, logged in F09.
 - **Character count** (was 7): user-visible characters.
 - **Weekly stepper** (was 2): M5-01 comes first and removes it; this ticket never touches LeetCode logging.
-- **Weekly streak display** (was 3): owned here. Its look comes from M5-07 Q5, so this ticket waits on M5-07.
+- **Weekly streak display** (was 3): owned here; M5-07 Q5 B2 locked (flame compact, right-aligned; show from 2 weeks Proposed).
 
 ## Reuse notes
 

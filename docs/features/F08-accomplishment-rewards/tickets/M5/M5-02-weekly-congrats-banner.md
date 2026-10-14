@@ -1,7 +1,7 @@
 # M5-02: Weekly targets congrats banner on Home
 
-**Status:** Draft (waits on M5-05, M5-07; M5-06 verdict in)
-**Blocked by:** M5-05 (week records and streak count), M5-07 (Q5 streak wording). M5-06 done
+**Status:** Draft (waits on M5-05; M5-06/M5-07 design in)
+**Blocked by:** M5-05 (week records and streak count). M5-06 and M5-07 (Q5 streak) done
 **Implements:** R5.18 (from `../../spec.md`)
 **Type:** build
 
@@ -14,7 +14,7 @@ After the week resets, the first time the user opens Home they see one congratul
 - **Shows once** (Q38, 2026-10-13): × closes it early. It's marked seen per week in `localStorage` as soon as it's shown, so it's gone on the next visit whether or not it was closed.
 - **Standardize it:** this is the first "one-time notice". Once it works, document the pattern in `docs/design-system.md` (alongside the transient flash, `EarnFlash`) so later banners pick one of the two instead of inventing a third. Moving the Jobs ranking banner onto this pattern is F09's job (F09 R.6), not this ticket's.
 
-**Design (M5-06 verdict, Q4 variant B, 2026-10-13):** inside the Home hero card under the greeting. Heading `You hit last week's target` (one met) or `targets` (both), the week label, one row per met goal (`LC 12/10 · 12 × 20 + 100`, points right-aligned), and a total when both were met. × dismisses. Reference: `/prototype/f08/weekly/congrats`. Streak wording comes from M5-07 Q5.
+**Design (M5-06 verdict, Q4 variant B, 2026-10-13):** inside the Home hero card under the greeting. Heading `You hit last week's target` (one met) or `targets` (both), the week label, one row per met goal (`LC 12/10 · 12 × 20 + 100`, points right-aligned), and a total when both were met. × dismisses. Reference: `/prototype/f08/weekly/congrats`. Weekly streak (M5-07 Q5 B2): 🔥 + “N weeks in a row” **inline** on the goal row with a slight gap after the points breakdown (`/prototype/f08/streaks/weekly-streak?variant=B2`).
 
 ## Acceptance criteria
 

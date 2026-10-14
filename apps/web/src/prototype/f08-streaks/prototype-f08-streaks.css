@@ -305,10 +305,29 @@
 
 .f08-proto .f08s-strip-streak-pill.is-done .f08s-strip-mark {
   color: #3f6b5c;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.f08-proto .f08s-strip-streak-pill.is-pending .f08s-strip-mark {
+  color: var(--accent-purple-deep);
+  font-weight: 700;
+}
+
+.f08-proto .f08s-strip-streak-pill.is-pending .f08s-strip-streak-pts {
+  color: var(--text-subtle);
 }
 
 /* —— Q2/Q3 achievements —— */
+
+.f08-proto .f08s-progress-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.f08-proto .f08s-progress-chrome .tabs {
+  margin-bottom: 0;
+}
 
 .f08-proto .f08s-ach-grid {
   display: grid;

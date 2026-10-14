@@ -1,24 +1,21 @@
 /**
- * F08 M5-07 · design questions 2 + 3: streaks/achievements surface before M8,
- * and the unlock moment (EarnFlash vs modal vs one-time notice).
+ * F08 M5-07 · design questions 2 + 3: achievements surface and unlock moment.
+ * Verdict (2026-10-13): Progress tab “achievements” (next to ledger) for M5-11;
+ * M8 may still redesign Progress overall. Unlock = modal (“Great work!”, Balance: N).
  */
-import { useCallback, useState } from "react";
-import EarnFlash from "../../features/completion/EarnFlash";
-import type { PointsEarnInfo } from "../../api";
+import { useCallback, useState, type ReactNode } from "react";
 import F08StreaksShell, { btn, ParamToggle, useParam, useVariant } from "./F08StreaksShell";
 import {
   ACHIEVEMENTS,
-  DAILY_STREAKS_MOCK,
   UNLOCK_SAMPLES,
-  dailyStreakPoints,
   type Achievement,
   type AchievementKind,
 } from "./fixtures";
 
 const VARIANTS = [
-  { key: "A", name: "Progress card · daily streaks + next achievements" },
-  { key: "B", name: "Full list · locked / next / unlocked states" },
-  { key: "C", name: "Filtered catalog · kind chips" },
+  { key: "Tab", name: "Chosen · Progress tab “achievements” (list + modal unlock)" },
+  { key: "B", name: "Earlier · full list card only" },
+  { key: "C", name: "Earlier · filtered catalog" },
 ] as const;
 
 function nextForKind(kind: AchievementKind, list: Achievement[]): Achievement | null {
@@ -56,100 +53,58 @@ function AchItem({ a, emphasizeNext }: { a: Achievement; emphasizeNext?: boolean
         {a.launchUnlock && <span className="muted">at launch · no points</span>}
       </div>
       <span className={a.unlocked && !a.launchUnlock ? "f08s-ach-pts" : "f08s-ach-pts is-muted"}>
-        {a.unlocked && !a.launchUnlock ? `+${a.points}` : `+${a.points}`}
+        +{a.points}
       </span>
       {!a.unlocked && <AchProgress a={a} />}
     </li>
   );
 }
 
-function DailyStreaks() {
-  const { apps, lc } = DAILY_STREAKS_MOCK;
-  return (
-    <div className="f08s-daily-row">
-      <div className="f08s-daily-pill">
-        <strong>{apps.length}</strong>
-        <span>Apps streak</span>
-        <span className="muted" style={{ textTransform: "none", letterSpacing: 0 }}>
-          +{dailyStreakPoints(apps.length)} today
-        </span>
-      </div>
-      <div className="f08s-daily-pill">
-        <strong>{lc.length}</strong>
-        <span>LC streak</span>
-        <span className="muted" style={{ textTransform: "none", letterSpacing: 0 }}>
-          +{dailyStreakPoints(lc.length)} today
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function SurfaceA({ list }: { list: Achievement[] }) {
-  const nextApps = nextForKind("apps", list);
-  const nextLc = nextForKind("lc", list);
-  const nextIv = nextForKind("interview", list);
-  const nexts = [nextApps, nextLc, nextIv].filter(Boolean) as Achievement[];
-  const unlocked = list.filter((a) => a.unlocked);
-  return (
-    <section className="card f08-card f08s-ach-grid">
-      <h3 style={{ margin: 0 }}>Streaks &amp; achievements</h3>
-      <p className="muted f08-hint" style={{ margin: 0 }}>
-        Provisional Progress block (M8 may move this).
-      </p>
-      <DailyStreaks />
-      <p className="f08s-surface-label">Next</p>
-      <ul className="f08s-ach-list">
-        {nexts.map((a) => (
-          <AchItem key={a.id} a={a} emphasizeNext />
-        ))}
-      </ul>
-      {unlocked.length > 0 && (
-        <>
-          <p className="f08s-surface-label">Unlocked</p>
-          <ul className="f08s-ach-list">
-            {unlocked.map((a) => (
-              <AchItem key={a.id} a={a} />
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
-  );
-}
-
-function SurfaceB({ list }: { list: Achievement[] }) {
+function AchievementsList({ list, filter }: { list: Achievement[]; filter?: string }) {
+  const filtered = !filter || filter === "all" ? list : list.filter((a) => a.kind === filter);
   const nextIds = new Set(
     (["apps", "lc", "interview"] as AchievementKind[])
       .map((k) => nextForKind(k, list)?.id)
       .filter(Boolean),
   );
   return (
-    <section className="card f08-card">
-      <h3 style={{ marginTop: 0 }}>Achievements</h3>
-      <DailyStreaks />
-      <ul className="f08s-ach-list">
-        {list.map((a) => (
-          <AchItem key={a.id} a={a} emphasizeNext={nextIds.has(a.id)} />
-        ))}
-      </ul>
-    </section>
+    <ul className="f08s-ach-list">
+      {filtered.map((a) => (
+        <AchItem key={a.id} a={a} emphasizeNext={nextIds.has(a.id)} />
+      ))}
+    </ul>
   );
 }
 
-function SurfaceC({ list, filter }: { list: Achievement[]; filter: string }) {
-  const filtered = filter === "all" ? list : list.filter((a) => a.kind === filter);
+function ProgressTabsChrome({
+  active,
+  children,
+}: {
+  active: "today" | "history" | "ledger" | "achievements";
+  children: ReactNode;
+}) {
+  const tabs = [
+    { key: "today", label: "today" },
+    { key: "history", label: "history" },
+    { key: "ledger", label: "ledger" },
+    { key: "achievements", label: "achievements" },
+  ] as const;
   return (
-    <section className="card f08-card">
-      <h3 style={{ marginTop: 0 }}>Achievements</h3>
-      <p className="muted f08-hint">Filter by kind. Daily streaks stay above.</p>
-      <DailyStreaks />
-      <ul className="f08s-ach-list">
-        {filtered.map((a) => (
-          <AchItem key={a.id} a={a} emphasizeNext={!a.unlocked && a.current / a.threshold >= 0.5} />
+    <div className="f08s-progress-chrome">
+      <div className="tabs" role="tablist" aria-label="Progress (mock)">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            className={active === t.key ? "tab on" : "tab"}
+            aria-selected={active === t.key}
+          >
+            {t.label}
+          </button>
         ))}
-      </ul>
-    </section>
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -159,34 +114,54 @@ export default function AchievementsPrototypePage() {
   const unlockKind = useParam("kind", ["achievement", "streak-milestone"] as const);
   const filter = useParam("filter", ["all", "apps", "lc", "interview"] as const);
   const sample = UNLOCK_SAMPLES[unlockKind];
-  const [earn, setEarn] = useState<PointsEarnInfo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [notice, setNotice] = useState(false);
   const [balance, setBalance] = useState(1420);
+  const [flashLine, setFlashLine] = useState<string | null>(null);
 
   const trigger = useCallback(() => {
     const nextBalance = balance + sample.points;
     setBalance(nextBalance);
-    setEarn(null);
     setModalOpen(false);
     setNotice(false);
-    if (unlockStyle === "flash") {
-      setEarn({
-        amount: sample.points,
-        message: `${sample.title}: ${sample.detail}`,
-        balanceAfter: nextBalance,
-      });
-    } else if (unlockStyle === "modal") {
+    setFlashLine(null);
+    if (unlockStyle === "modal") {
       setModalOpen(true);
-    } else {
+    } else if (unlockStyle === "notice") {
       setNotice(true);
+    } else {
+      setFlashLine(`${sample.title}: ${sample.detail} · +${sample.points} · balance ${nextBalance}`);
     }
   }, [balance, sample, unlockStyle]);
 
+  const listBlock = (
+    <section className="card f08-card">
+      <h3 style={{ marginTop: 0 }}>Achievements</h3>
+      <p className="muted f08-hint">
+        Locked, next (accent), and unlocked. Daily streaks live on the today strip (Q1), not here.
+      </p>
+      {(variant === "C" || variant === "Tab") && (
+        <div className="f08s-ach-filters" role="group" aria-label="Filter">
+          {(["all", "apps", "lc", "interview"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              className={btn("ghost", "sm", (variant === "C" ? filter : "all") === k ? "is-active" : "")}
+              disabled={variant !== "C" && k !== "all"}
+            >
+              {k}
+            </button>
+          ))}
+        </div>
+      )}
+      <AchievementsList list={ACHIEVEMENTS} filter={variant === "C" ? filter : "all"} />
+    </section>
+  );
+
   return (
     <F08StreaksShell
-      title="Streaks & achievements surface"
-      question="Q2: where streaks and achievements are seen before M8, and how locked / unlocked / next look. Q3: how a milestone or achievement unlock is announced."
+      title="Achievements surface & unlock"
+      question="Q2: Progress tab “achievements” next to ledger for M5-11 (M8 may still redesign Progress). Q3: unlock modal."
       variants={VARIANTS}
       surfaceLabel="Q2+Q3 Achievements"
       controls={
@@ -227,14 +202,26 @@ export default function AchievementsPrototypePage() {
       }
       notes={
         <p>
-          Mock counts from R5.26. Surface placement is provisional on Progress until M8 (R8.5). Unlock
-          verdict (2026-10-13): modal. Launch unlocks show with no points. The daily streak pills here also
-          inform the Home today-strip redesign (Q1).
+          Verdict (2026-10-13): surface = Progress <strong>achievements</strong> tab beside ledger (M5-11);
+          M8 owns the broader Progress IA (R8.5). Unlock = modal with “Great work!” and{" "}
+          <code>Balance: N</code>. List shows locked / next / unlocked (and launch unlocks with no points).
         </p>
       }
     >
       <div className="f08s-unlock-stage">
-        {earn && <EarnFlash earn={earn} onDismiss={() => setEarn(null)} />}
+        {flashLine && (
+          <p className="earn-flash" role="status">
+            <span className="earn-flash-msg">{flashLine}</span>
+            <button
+              type="button"
+              className="earn-flash-dismiss"
+              aria-label="Dismiss"
+              onClick={() => setFlashLine(null)}
+            >
+              ×
+            </button>
+          </p>
+        )}
         {notice && (
           <p className="f08s-unlock-notice" role="status">
             <span>
@@ -251,9 +238,11 @@ export default function AchievementsPrototypePage() {
             </button>
           </p>
         )}
-        {variant === "A" && <SurfaceA list={ACHIEVEMENTS} />}
-        {variant === "B" && <SurfaceB list={ACHIEVEMENTS} />}
-        {variant === "C" && <SurfaceC list={ACHIEVEMENTS} filter={filter} />}
+        {variant === "Tab" ? (
+          <ProgressTabsChrome active="achievements">{listBlock}</ProgressTabsChrome>
+        ) : (
+          listBlock
+        )}
         {modalOpen && (
           <div className="f08s-unlock-modal" role="dialog" aria-modal="true" aria-label={sample.title}>
             <div className="f08s-unlock-card">

@@ -1,6 +1,6 @@
 # M5-07: Prototype streaks, achievements and the completion flourish
 
-**Status:** In progress
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R5.1, RX.2; designs for R5.2, R5.25–R5.28 (from `../../spec.md`)
 **Type:** prototype
@@ -34,7 +34,7 @@ Prototype URL: `/prototype/f08/streaks`
 
 - [x] 2–3 variants per design question, switchable with the shared prototype switcher, under `apps/web/src/prototype/f08-streaks/`
 - [x] No production imports of prototype code; mock data only
-- [ ] The user records a verdict per question, including a keep/drop on the flourish (Q7) — partial; see verification notes
+- [x] The user records a verdict per question, including a keep/drop on the flourish (Q7)
 
 ## Reuse notes
 
@@ -42,25 +42,21 @@ Prototype URL: `/prototype/f08/streaks`
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked (Q1/Q2 still open)
+- [x] Acceptance criteria met and checked
 - [x] `npm run check` passes
 - [x] Follows `docs/design-system.md`
 - [x] No production imports of prototype code
 - [x] Committed as `F08 M5-07: …`
-- [ ] End-of-task report given, including **Issues found** (after remaining verdicts)
+- [x] End-of-task report given, including **Issues found**
 
 ## Verification notes
 
-Hub: `/prototype/f08/streaks`.
+Hub: `/prototype/f08/streaks`. Last prototype commit: see board.
 
-**Verdicts (2026-10-13, round 2):**
-
-| Q | Verdict | Notes |
-|---|---------|-------|
-| Q5 | Flame compact (B2) | Like B’s flame, but no dedicated line: right-aligned on Progress weekly goal head; inline with a slight gap on Home congrats. |
-| Q1 | Open | Round-1 copy unclear (looked like daily counts). Round-2: D streak pills with ✓/pending (from achievements), E “Apps streak N”, F today units + day streak. Prefer streak clarity; ✓ = done today. |
-| Q2 | Open (surface OK in spirit) | Progress block makes sense; final home is M8 (R8.5). Confirm A/B/C. |
-| Q3 | Modal | “Great work!”; `Balance: N`; larger gap above the button. |
-| Q4 / Q7 | **Drop** flourish | EarnFlash only. R5.2 dropped; M5-13 won't-do. |
-
-Still needed: pick Q1 (D/E/F + reflection badges on/off); confirm Q2 surface variant.
+| Q | Verdict | Build ticket |
+|---|---------|--------------|
+| Q5 | Flame compact (B2): right on Progress weekly head; inline gap on congrats B | M5-08, M5-02 |
+| Q1 | **D** streak pills; ✓ done / − pending; `+N today` or `+0 today`; no reflection badges; streak starts at 1 | M5-12 |
+| Q2 | Progress tab **achievements** next to ledger (M8 may still redesign Progress) | M5-11 |
+| Q3 | Modal: “Great work!”, `Balance: N`, room above the button | M5-11 |
+| Q4 / Q7 | **Drop** flourish; EarnFlash only | M5-13 won't-do; R5.2 dropped |
