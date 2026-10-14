@@ -5624,6 +5624,21 @@ button.progress-cal-cell.effort::after {
 .ledger-points-moved {
   padding: 0.35rem 0 0.5rem;
 }
+.rewards-pull-session {
+  align-items: flex-start;
+}
+.rewards-pull-results {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.rewards-pull-results li {
+  margin: 0.2rem 0;
+}
+.rewards-pull-ce {
+  font-weight: 600;
+}
 .rewards-subnav {
   display: flex;
   flex-wrap: wrap;

@@ -76,8 +76,27 @@ describe.skipIf(!integrationReady)("cat cake gacha pull/refund", () => {
     expect(res.results[0]!.flavorId).toBe("strawberry");
     expect(res.results[0]!.isNew).toBe(true);
     expect(res.results[0]!.copiesAfter).toBe(1);
+    expect(res.results[0]!.timesPulled).toBe(1);
     expect(res.pity).toBe(1);
     expect(await getPointsBalance(pool)).toBe(20);
+  });
+
+  it("timesPulled counts historical pulls even after refunds reduce owned", async () => {
+    await truncateAll();
+    await fund(2000);
+    const rng = () => scriptedRng([0.99, 0]);
+    for (let i = 0; i < 3; i++) {
+      const res = await pullCatCakes(pool, 1, rng());
+      expect("results" in res).toBe(true);
+      if (!("results" in res)) return;
+      expect(res.results[0]!.timesPulled).toBe(i + 1);
+    }
+    await setOwnedCopies(pool, "strawberry", "classic", 1);
+    const again = await pullCatCakes(pool, 1, scriptedRng([0.99, 0]));
+    expect("results" in again).toBe(true);
+    if (!("results" in again)) return;
+    expect(again.results[0]!.copiesAfter).toBe(2);
+    expect(again.results[0]!.timesPulled).toBe(4);
   });
 
   it("pull ×10 spends 1,800 and returns ten results", async () => {

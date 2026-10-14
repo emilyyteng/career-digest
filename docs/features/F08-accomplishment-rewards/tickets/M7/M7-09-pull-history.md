@@ -1,6 +1,6 @@
 # M7-09: Pull history
 
-**Status:** Draft
+**Status:** Done
 **Blocked by:** M7-04, M7-05; Earnings patterns from M7-08
 **Implements:** R7.8 (from `../../spec.md`)
 **Type:** build
@@ -15,7 +15,7 @@ Each pull row (or expandable group for ×10) should make clear:
 
 - When
 - Flavor and edition (classic / CE)
-- New vs duplicate; friendship level; refundable only when owned &gt; 6
+- New vs duplicate; friendship level; refundable only when owned &gt; 6; n-th time variant was pulled
 - Pity at pull; hard pity if applicable
 - seeds spent (180 or share of ×10)
 
@@ -25,26 +25,29 @@ Optional range control may match Earnings; day grouping is welcome for consisten
 
 ## Acceptance criteria
 
-- [ ] History shows spend events only (no work earns; refunds stay on Earnings / Cake).
-- [ ] Lifetime spend is visible similarly to Earnings’ lifetime earned.
-- [ ] ×1 and ×10 pulls are attributable; ×10 can show as one session with ten results or ten rows — pick one UX and stick to it.
-- [ ] CE vs classic and Night unlock moments are understandable from the row or detail (Night unlock itself may only appear on Collection).
-- [ ] Empty state when the user has never pulled.
-- [ ] No production imports of prototype code.
+- [x] History shows spend events only (no work earns; refunds stay on Earnings / Cake).
+- [x] Lifetime spend is visible similarly to Earnings’ lifetime earned.
+- [x] ×1 and ×10 pulls are attributable; ×10 can show as one session with ten results or ten rows — pick one UX and stick to it.
+- [x] CE vs classic and Night unlock moments are understandable from the row or detail (Night unlock itself may only appear on Collection).
+- [x] Empty state when the user has never pulled.
+- [x] No production imports of prototype code.
+- [x] Each result records/shows the n-th time that variant was pulled (survives refunds).
 
 ## Reuse notes
 
-Ledger events from M7-02/M7-04 meta; Rewards shell from M7-05. Earnings day-grouping / range patterns from M7-08.
+Ledger spend meta from M7-04; Earnings range/day patterns; `CURRENCY_DISPLAY`; flavor names from `flavors.ts`.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] Committed as `F08 M7-09: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] Committed as `F08 M7-09: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(filled when done)
+- UX: one session card per spend (`×1` or `×10`) with nested result lines.
+- `timesPulled` written into spend `meta.results` at pull time; history API backfills older rows missing the field.
+- Badge **spent:** = running lifetime spend after that session.

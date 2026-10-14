@@ -1294,6 +1294,7 @@ export type GachaPullResult = {
   pityAt: number;
   viaHardPity: boolean;
   nightUnlocked: boolean | null;
+  timesPulled: number;
 };
 
 export type GachaPullOk = {
@@ -1387,4 +1388,46 @@ export const getRewardsEarnings = (opts: {
   });
   if (opts.limit != null) params.set("limit", String(opts.limit));
   return parse<EarningsSnapshot>(api(`/api/rewards/earnings?${params}`));
+};
+
+export type PullHistoryResult = {
+  flavorId: string;
+  edition: CatCakeEdition;
+  isNew: boolean;
+  copiesAfter: number;
+  pityAt: number;
+  viaHardPity: boolean;
+  timesPulled: number;
+  seedsSpent: number;
+};
+
+export type PullHistorySession = {
+  id: string;
+  createdAt: string;
+  count: 1 | 10;
+  cost: number;
+  lifetimeSpendAfter: number;
+  results: PullHistoryResult[];
+};
+
+export type PullHistorySnapshot = {
+  range: EarningsRange;
+  from: string | null;
+  to: string | null;
+  lifetimeSpend: number;
+  rangeSpend: number;
+  sessions: PullHistorySession[];
+};
+
+export const getRewardsHistory = (opts: {
+  range: EarningsRange;
+  tz: string;
+  limit?: number;
+}) => {
+  const params = new URLSearchParams({
+    range: opts.range,
+    tz: opts.tz,
+  });
+  if (opts.limit != null) params.set("limit", String(opts.limit));
+  return parse<PullHistorySnapshot>(api(`/api/rewards/history?${params}`));
 };

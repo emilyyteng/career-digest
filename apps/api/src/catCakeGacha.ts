@@ -70,6 +70,8 @@ export type PullResult = {
   pityAt: number;
   viaHardPity: boolean;
   nightUnlocked: boolean | null;
+  /** 1-based count of how many times this flavor+edition has been pulled (survives refunds). */
+  timesPulled: number;
 };
 
 export type PullOk = {
@@ -90,11 +92,42 @@ function pickFlavor(rng: Rng): CatCakeFlavorId {
   return CAT_CAKE_FLAVOR_IDS[idx]!;
 }
 
+function variantKey(flavorId: string, edition: string): string {
+  return `${flavorId}:${edition}`;
+}
+
+/** How many times each variant appears in past gacha_pull meta.results. */
+export async function countHistoricalPullsByVariant(
+  db: Queryable,
+): Promise<Map<string, number>> {
+  const { rows } = await db.query<{ flavor_id: string; edition: string; n: string }>(
+    `SELECT r.elem->>'flavorId' AS flavor_id,
+            r.elem->>'edition' AS edition,
+            COUNT(*)::text AS n
+     FROM points_events e
+     CROSS JOIN LATERAL jsonb_array_elements(
+       CASE
+         WHEN jsonb_typeof(e.meta->'results') = 'array' THEN e.meta->'results'
+         ELSE '[]'::jsonb
+       END
+     ) AS r(elem)
+     WHERE e.kind = 'spend' AND e.source_type = 'gacha_pull'
+     GROUP BY r.elem->>'flavorId', r.elem->>'edition'`,
+  );
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    if (!row.flavor_id || !row.edition) continue;
+    map.set(variantKey(row.flavor_id, row.edition), Number(row.n));
+  }
+  return map;
+}
+
 async function rollOnce(
   db: Queryable,
   pityBefore: number,
   rng: Rng,
   cfg: GachaConfig,
+  pullCounts: Map<string, number>,
 ): Promise<{ pityAfter: number; result: PullResult }> {
   const pityAt = pityBefore + 1;
   const rate = collectorRateAt(pityAt, cfg);
@@ -103,6 +136,9 @@ async function rollOnce(
   const flavorId = pickFlavor(rng);
   const prev = await getOwnedCopies(db, flavorId, edition);
   const copiesAfter = await incrementOwned(db, flavorId, edition);
+  const key = variantKey(flavorId, edition);
+  const timesPulled = (pullCounts.get(key) ?? 0) + 1;
+  pullCounts.set(key, timesPulled);
   return {
     pityAfter: hitCollector ? 0 : pityAt,
     result: {
@@ -113,6 +149,7 @@ async function rollOnce(
       pityAt,
       viaHardPity: hitCollector && rate >= 1,
       nightUnlocked: edition === "collector" ? nightUnlocked(copiesAfter) : null,
+      timesPulled,
     },
   };
 }
@@ -145,9 +182,10 @@ export async function pullCatCakes(
   });
 
   let pity = await getPity(db);
+  const pullCounts = await countHistoricalPullsByVariant(db);
   const results: PullResult[] = [];
   for (let i = 0; i < count; i++) {
-    const rolled = await rollOnce(db, pity, rng, cfg);
+    const rolled = await rollOnce(db, pity, rng, cfg, pullCounts);
     pity = rolled.pityAfter;
     results.push(rolled.result);
   }
@@ -166,6 +204,7 @@ export async function pullCatCakes(
           copiesAfter: r.copiesAfter,
           pityAt: r.pityAt,
           viaHardPity: r.viaHardPity,
+          timesPulled: r.timesPulled,
         })),
       }),
     ],

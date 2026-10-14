@@ -145,6 +145,7 @@ import {
   selectCeLook,
 } from "./catCakeGacha.js";
 import { resolveEarningsRangeBounds } from "./earningsRange.js";
+import { getPullHistorySnapshot } from "./pullHistory.js";
 import { isValidTimezone } from "./progress.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
@@ -1312,6 +1313,40 @@ api.get("/rewards/earnings", async (req, res) => {
   } catch (err) {
     res.status(400).json({
       error: err instanceof Error ? err.message : "Bad earnings range",
+    });
+  }
+});
+
+api.get("/rewards/history", async (req, res) => {
+  const rawRange = typeof req.query.range === "string" ? req.query.range : "all";
+  if (!isEarningsRange(rawRange)) {
+    res.status(400).json({
+      error: "range must be today, this_week, last_7_days, this_month, or all",
+    });
+    return;
+  }
+  const tz =
+    typeof req.query.tz === "string" && req.query.tz.trim()
+      ? req.query.tz.trim()
+      : "UTC";
+  if (!isValidTimezone(tz)) {
+    res.status(400).json({ error: "Invalid timezone" });
+    return;
+  }
+  const limit = Number(req.query.limit);
+  try {
+    const { from, to } = resolveEarningsRangeBounds(rawRange, new Date(), tz);
+    res.json(
+      await getPullHistorySnapshot(pool, {
+        range: rawRange,
+        from,
+        to,
+        limit: Number.isFinite(limit) ? limit : undefined,
+      }),
+    );
+  } catch (err) {
+    res.status(400).json({
+      error: err instanceof Error ? err.message : "Bad history range",
     });
   }
 });

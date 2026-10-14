@@ -14,6 +14,7 @@ import Progress from "./features/progress/ProgressPage";
 import BannerPage from "./features/rewards/BannerPage";
 import CollectionPage from "./features/rewards/CollectionPage";
 import EarningsPage from "./features/rewards/EarningsPage";
+import PullHistoryPage from "./features/rewards/PullHistoryPage";
 import RewardsLayout from "./features/rewards/RewardsLayout";
 import RewardsPlaceholderPage from "./features/rewards/RewardsPlaceholderPage";
 import ThemeEmoji from "./ThemeEmoji";
@@ -119,10 +120,7 @@ export default function App() {
               <Route path="banner" element={<BannerPage />} />
               <Route path="collection" element={<CollectionPage />} />
               <Route path="earnings" element={<EarningsPage />} />
-              <Route
-                path="history"
-                element={<RewardsPlaceholderPage title="Pull history" />}
-              />
+              <Route path="history" element={<PullHistoryPage />} />
               <Route
                 path="rules"
                 element={<RewardsPlaceholderPage title="Rules" />}
