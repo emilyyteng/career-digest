@@ -103,7 +103,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M7-03](./tickets/M7/M7-03-collection-pity-schema.md) | Collection, pity, and Night-skin persistence | (this commit) |
+| [M7-03](./tickets/M7/M7-03-collection-pity-schema.md) | Collection, pity, and Night-skin persistence | `a19a46b` |
 | [M7-02](./tickets/M7/M7-02-spend-refund-ledger.md) | Ledger spend and refund events | `21126f9` |
 | [M7-01](./tickets/M7/M7-01-unclamp-balance.md) | Allow a negative Seed balance | `9ff21d2` |
 
