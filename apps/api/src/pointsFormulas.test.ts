@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   POINTS,
   applicationAppliedBreakdown,
-  clampDeltaToBalance,
+  applyDeltaToBalance,
   interviewFinishBreakdown,
   leetcodeDayPoints,
   leetcodePointsForCount,
@@ -88,16 +88,16 @@ describe("pointsFormulas", () => {
     expect(streakMilestonePoints(10)).toBe(50);
   });
 
-  it("clampDeltaToBalance never goes negative", () => {
-    expect(clampDeltaToBalance(100, -40)).toEqual({
+  it("applyDeltaToBalance allows a negative balance", () => {
+    expect(applyDeltaToBalance(100, -40)).toEqual({
       appliedDelta: -40,
       requestedDelta: -40,
       balanceAfter: 60,
     });
-    expect(clampDeltaToBalance(10, -40)).toEqual({
-      appliedDelta: -10,
+    expect(applyDeltaToBalance(10, -40)).toEqual({
+      appliedDelta: -40,
       requestedDelta: -40,
-      balanceAfter: 0,
+      balanceAfter: -30,
     });
   });
 });

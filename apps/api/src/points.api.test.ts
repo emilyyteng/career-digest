@@ -129,6 +129,39 @@ describe.skipIf(!integrationReady)("points ledger", () => {
     expect(events.find((e) => e.kind === "reverse")?.amount).toBe(-30);
   });
 
+  it("a reverse that exceeds the remaining balance goes negative (R7.3)", async () => {
+    await truncateAll();
+    await recordEarn(pool, {
+      category: "task",
+      amount: 50,
+      message: "keep",
+      sourceType: "task_complete",
+      sourceId: "t-keep",
+    });
+    // Simulate a prior spend that drained most of the purse (gacha arrives in M7-02).
+    await pool.query(
+      `INSERT INTO points_events (
+         kind, category, amount, balance_after, message, source_type, source_id
+       ) VALUES (
+         'adjust', 'task', -40, 10, 'simulate prior spend', 'manual_test', 'spend-sim'
+       )`,
+    );
+    expect(await getPointsBalance(pool)).toBe(10);
+
+    const { appliedDelta, event } = await reverseEarn(
+      pool,
+      "task_complete",
+      "t-keep",
+      "reopened with thin balance",
+    );
+    expect(appliedDelta).toBe(-50);
+    expect(event?.balanceAfter).toBe(-40);
+    expect(await getPointsBalance(pool)).toBe(-40);
+
+    const summary = await getPointsSummary(pool);
+    expect(summary.balance).toBe(-40);
+  });
+
   it("earn, adjust, then reverse nets to 0 in its category", async () => {
     await truncateAll();
     await recordEarn(pool, {

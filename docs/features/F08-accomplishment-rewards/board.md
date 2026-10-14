@@ -89,9 +89,8 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M7-01](./tickets/M7/M7-01-unclamp-balance.md) | Allow a negative Seed balance | build | Draft | R7.3; first ledger change |
-| [M7-02](./tickets/M7/M7-02-spend-refund-ledger.md) | Ledger spend and refund events | build | Draft | After M7-01 |
-| [M7-03](./tickets/M7/M7-03-collection-pity-schema.md) | Collection, pity, and Night-skin persistence | build | Draft | Parallel with M7-01/02 |
+| [M7-02](./tickets/M7/M7-02-spend-refund-ledger.md) | Ledger spend and refund events | build | Ready | After M7-01 |
+| [M7-03](./tickets/M7/M7-03-collection-pity-schema.md) | Collection, pity, and Night-skin persistence | build | Ready | Parallel with M7-01/02; Day/Night selection + frozen flavor ids |
 | [M7-04](./tickets/M7/M7-04-pull-refund-api.md) | Pull and refund APIs | build | Draft | After M7-01–03; refund only above 6 copies |
 | [M7-05](./tickets/M7/M7-05-rewards-shell-nav.md) | Rewards nav shell and Seeds chrome | build | Draft | Routes + Seeds label |
 | [M7-06](./tickets/M7/M7-06-banner-pull-ui.md) | Banner pull UI (one-by-one) | build | Draft | After M7-04, M7-05 |
@@ -102,10 +101,11 @@ No open tickets.
 | [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | build | Draft | After M7-04 |
 
 <details>
-<summary>Done (0)</summary>
+<summary>Done (1)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M7-01](./tickets/M7/M7-01-unclamp-balance.md) | Allow a negative Seed balance | (this commit) |
 
 </details>
 

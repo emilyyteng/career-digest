@@ -1,6 +1,6 @@
 import type { Pool, PoolClient } from "pg";
 import {
-  clampDeltaToBalance,
+  applyDeltaToBalance,
   type PointsBreakdownSlice,
   type PointsCategory,
 } from "./pointsFormulas.js";
@@ -279,9 +279,10 @@ export async function recordEarn(
 }
 
 /**
- * Reverse an earn (uncomplete, LC down, etc.). Emits a reverse event; clamps to ≥0.
- * Marks earn meta.superseded = true but keeps earn.amount, so category
- * SUM(amount) nets the earn and its reverse. Idempotent if already fully reversed.
+ * Reverse an earn (uncomplete, LC down, etc.). Emits a reverse event; balance
+ * may go negative (R7.3). Marks earn meta.superseded = true but keeps
+ * earn.amount, so category SUM(amount) nets the earn and its reverse.
+ * Idempotent if already fully reversed.
  */
 export async function reverseEarn(
   db: Queryable,
@@ -303,7 +304,7 @@ export async function reverseEarn(
   }
 
   const balance = await getPointsBalance(db);
-  const { appliedDelta, requestedDelta, balanceAfter } = clampDeltaToBalance(
+  const { appliedDelta, requestedDelta, balanceAfter } = applyDeltaToBalance(
     balance,
     -currentAmount,
   );
@@ -322,15 +323,12 @@ export async function reverseEarn(
       earn.category,
       appliedDelta,
       balanceAfter,
-      appliedDelta === requestedDelta
-        ? message
-        : `${message} · ${appliedDelta} available of ${requestedDelta}`,
+      message,
       sourceType,
       sourceId,
       JSON.stringify({
         requested_delta: requestedDelta,
         applied_delta: appliedDelta,
-        clamped: appliedDelta !== requestedDelta,
       }),
       earn.id,
     ],
@@ -359,9 +357,9 @@ export async function reverseEarn(
 /**
  * Bring a reversed earn back at `newAmount` (re-complete, LC count raised from 0).
  * Emits an adjust event for newAmount minus what the earn still holds after its
- * reverse (non-zero only if that reverse was clamped), clears `superseded`, and
- * sets meta.current_amount so later adjusts and reverses work from it.
- * Returns nulls if there's no earn or it isn't superseded.
+ * reverse (retained is non-zero only for legacy reverses that were clamped to ≥0),
+ * clears `superseded`, and sets meta.current_amount so later adjusts and reverses
+ * work from it. Returns nulls if there's no earn or it isn't superseded.
  */
 export async function reinstateEarn(
   db: Queryable,
@@ -390,8 +388,8 @@ export async function reinstateEarn(
   let appliedDelta = 0;
   if (requestedDelta !== 0) {
     const balance = await getPointsBalance(db);
-    const clamped = clampDeltaToBalance(balance, requestedDelta);
-    appliedDelta = clamped.appliedDelta;
+    const applied = applyDeltaToBalance(balance, requestedDelta);
+    appliedDelta = applied.appliedDelta;
     const base = message(appliedDelta);
     const { rows } = await db.query({
       text: `INSERT INTO points_events (
@@ -406,17 +404,14 @@ export async function reinstateEarn(
       values: [
         earn.category,
         appliedDelta,
-        clamped.balanceAfter,
-        appliedDelta === requestedDelta
-          ? base
-          : `${base} · ${appliedDelta} available of ${requestedDelta}`,
+        applied.balanceAfter,
+        base,
         sourceType,
         sourceId,
         JSON.stringify({
           reinstated: true,
           requested_delta: requestedDelta,
           applied_delta: appliedDelta,
-          clamped: appliedDelta !== requestedDelta,
           previous_amount: retained,
           new_amount: retained + appliedDelta,
         }),
@@ -482,13 +477,8 @@ export async function adjustEarnAmount(
   }
 
   const balance = await getPointsBalance(db);
-  const { appliedDelta, balanceAfter } = clampDeltaToBalance(balance, requestedDelta);
+  const { appliedDelta, balanceAfter } = applyDeltaToBalance(balance, requestedDelta);
   const finalAmount = current + appliedDelta;
-
-  const notice =
-    appliedDelta === requestedDelta
-      ? message
-      : `${message} · ${appliedDelta} available of ${requestedDelta}`;
 
   const { rows } = await db.query({
     text: `INSERT INTO points_events (
@@ -504,13 +494,12 @@ export async function adjustEarnAmount(
       earn.category,
       appliedDelta,
       balanceAfter,
-      notice,
+      message,
       sourceType,
       sourceId,
       JSON.stringify({
         requested_delta: requestedDelta,
         applied_delta: appliedDelta,
-        clamped: appliedDelta !== requestedDelta,
         previous_amount: current,
         new_amount: finalAmount,
       }),
