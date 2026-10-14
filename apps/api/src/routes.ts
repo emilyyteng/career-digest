@@ -106,7 +106,7 @@ import {
   parseAnchorDate,
   parseLocalDate,
   resolveTimezone,
-  setLeetcodeDaily,
+  changeLeetcode,
   updateReflectionLog,
   type ProgressLane,
 } from "./progress.js";
@@ -115,6 +115,7 @@ import {
   patchLcGoal,
   setAppTargetMembership,
 } from "./weeklyGoals.js";
+import { isLeetcodeTier } from "./pointsFormulas.js";
 import {
   adjustApplicationActual,
   adjustInterviewFinishActual,
@@ -1478,23 +1479,18 @@ api.patch("/weekly-goals/lc", async (req, res) => {
     return;
   }
   const body = req.body as { targetCount?: unknown; progressCount?: unknown };
-  const patch: { targetCount?: number; progressCount?: number } = {};
-  if (body.targetCount !== undefined) {
-    if (typeof body.targetCount !== "number") {
-      res.status(400).json({ error: "targetCount must be a number" });
-      return;
-    }
-    patch.targetCount = body.targetCount;
-  }
   if (body.progressCount !== undefined) {
-    if (typeof body.progressCount !== "number") {
-      res.status(400).json({ error: "progressCount must be a number" });
-      return;
-    }
-    patch.progressCount = body.progressCount;
+    res.status(400).json({
+      error: "Weekly LC progress moves only by logging solves (PATCH /api/progress/leetcode)",
+    });
+    return;
+  }
+  if (typeof body.targetCount !== "number") {
+    res.status(400).json({ error: "targetCount must be a number" });
+    return;
   }
   try {
-    const snapshot = await patchLcGoal(pool, tz, patch);
+    const snapshot = await patchLcGoal(pool, tz, { targetCount: body.targetCount });
     if (!snapshot) {
       res.status(400).json({ error: "Invalid timezone" });
       return;
@@ -1602,12 +1598,36 @@ api.patch("/progress/leetcode", async (req, res) => {
     res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
     return;
   }
-  const body = req.body as { count?: number; delta?: number; date?: string };
+  const body = req.body as { tier?: unknown; delta?: unknown; type?: unknown; date?: unknown };
+  if (!isLeetcodeTier(body.tier)) {
+    res.status(400).json({ error: "tier must be easy, medium or hard" });
+    return;
+  }
+  if (body.delta !== 1 && body.delta !== -1) {
+    res.status(400).json({ error: "delta must be 1 or -1" });
+    return;
+  }
+  if (body.type !== "weekly" && body.type !== "misc") {
+    res.status(400).json({ error: "type must be weekly or misc" });
+    return;
+  }
+  if (body.date !== undefined && typeof body.date !== "string") {
+    res.status(400).json({ error: "date must be YYYY-MM-DD" });
+    return;
+  }
   try {
-    res.json(await setLeetcodeDaily(pool, tz, body));
+    res.json(
+      await changeLeetcode(pool, tz, {
+        tier: body.tier,
+        delta: body.delta,
+        type: body.type,
+        date: body.date,
+      }),
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Bad request";
-    res.status(400).json({ error: message });
+    const status = (err as { status?: number }).status;
+    res.status(status === 409 ? 409 : 400).json({ error: message });
   }
 });
 

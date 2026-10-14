@@ -864,11 +864,17 @@ export type ProgressLane = "application" | "technical" | "other";
 export type ProgressHeatmapLane = "application" | "technical";
 export type ProgressPeriod = "day" | "week" | "month";
 
+export type LeetcodeTier = "easy" | "medium" | "hard";
+export type LeetcodeType = "weekly" | "misc";
+/** Untiered past solves count as medium. */
+export type LeetcodeTierCounts = Record<LeetcodeTier, number>;
+
 export type ProgressToday = {
   tz: string;
   localDate: string;
   applications: ActivityCredit;
   leetcode: ActivityCredit;
+  leetcodeTiers: LeetcodeTierCounts;
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -919,6 +925,7 @@ export type ProgressDayDetail = {
   date: string;
   applications: ActivityCredit;
   leetcode: ActivityCredit;
+  leetcodeTiers: LeetcodeTierCounts;
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -940,10 +947,7 @@ export const getProgressToday = (tz: string) =>
 export const getWeeklyGoals = (tz: string) =>
   parse<WeeklyGoalsSnapshot>(api(`/api/weekly-goals?${progressTz(tz)}`));
 
-export const patchWeeklyLcGoal = (
-  tz: string,
-  body: { targetCount?: number; progressCount?: number },
-) =>
+export const patchWeeklyLcGoal = (tz: string, body: { targetCount: number }) =>
   parse<WeeklyGoalsSnapshot>(
     api(`/api/weekly-goals/lc?${progressTz(tz)}`, {
       method: "PATCH",
@@ -1097,11 +1101,19 @@ export const getPointsEvents = (opts?: { limit?: number; offset?: number }) => {
   return parse<{ events: PointsEvent[] }>(api(`/api/points/events${q ? `?${q}` : ""}`));
 };
 
+export type LeetcodeChangeResult = {
+  localDate: string;
+  count: number;
+  tiers: LeetcodeTierCounts;
+  weeklyProgress: number | null;
+  points: PointsEarnInfo | null;
+};
+
 export const patchProgressLeetcode = (
   tz: string,
-  body: { count?: number; delta?: number; date?: string },
+  body: { tier: LeetcodeTier; delta: 1 | -1; type: LeetcodeType; date?: string },
 ) =>
-  parse<{ localDate: string; count: number }>(
+  parse<LeetcodeChangeResult>(
     api(`/api/progress/leetcode?${progressTz(tz)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

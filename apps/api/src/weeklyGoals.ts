@@ -563,75 +563,57 @@ export async function getWeeklyGoalsSnapshot(
   return { tz, weekStart, weekEnd, goals };
 }
 
+/** Sets this week's LC target. Progress moves only through LeetCode logging (R5.17). */
 export async function patchLcGoal(
   db: Queryable,
   tz: string,
-  patch: { targetCount?: number; progressCount?: number },
+  patch: { targetCount: number },
 ): Promise<WeeklyGoalsSnapshot | null> {
   if (!isValidTimezone(tz)) return null;
+  if (!Number.isInteger(patch.targetCount) || patch.targetCount < 1) {
+    throw Object.assign(new Error("targetCount must be a positive integer"), { status: 400 });
+  }
   await closeDueWeeks(db, tz);
   const weekStart = mondayOfLocalWeek(new Date(), tz);
   await ensurePair(db, weekStart);
+  await db.query(
+    `UPDATE weekly_goals SET target_count = $2, updated_at = now()
+     WHERE week_start = $1::date AND slot = 'lc'`,
+    [weekStart, patch.targetCount],
+  );
+  return getWeeklyGoalsSnapshot(db, tz);
+}
+
+/**
+ * Moves the current week's LC progress by `delta` (R5.17), with no cap at the target
+ * (R5.14). Call inside the LeetCode write transaction, after `closeDueWeeks`.
+ * Throws 409 if a −1 would take progress below 0.
+ */
+export async function stepLcWeeklyProgress(
+  db: Queryable,
+  tz: string,
+  delta: 1 | -1,
+  now = new Date(),
+): Promise<{ progress: number; target: number }> {
+  const weekStart = mondayOfLocalWeek(now, tz);
+  await ensurePair(db, weekStart);
   const { rows } = await db.query<{ id: string; target_count: number; progress_count: number }>(
     `SELECT id, target_count, progress_count FROM weekly_goals
-     WHERE week_start = $1::date AND slot = 'lc'`,
+     WHERE week_start = $1::date AND slot = 'lc'
+     FOR UPDATE`,
     [weekStart],
   );
   const row = rows[0];
-  if (!row) return null;
-
-  let target = row.target_count;
-  let progress = row.progress_count;
-  const prevProgress = progress;
-  if (patch.targetCount !== undefined) {
-    if (!Number.isInteger(patch.targetCount) || patch.targetCount < 1) {
-      throw Object.assign(new Error("targetCount must be a positive integer"), { status: 400 });
-    }
-    target = patch.targetCount;
+  if (!row) throw new Error("Weekly LC goal is missing");
+  if (delta < 0 && row.progress_count <= 0) {
+    throw Object.assign(new Error("No weekly solves to remove this week"), { status: 409 });
   }
-  if (patch.progressCount !== undefined) {
-    if (!Number.isInteger(patch.progressCount) || patch.progressCount < 0) {
-      throw Object.assign(new Error("progressCount must be a non-negative integer"), {
-        status: 400,
-      });
-    }
-    progress = patch.progressCount;
-  }
-
+  const progress = row.progress_count + delta;
   await db.query(
-    `UPDATE weekly_goals
-     SET target_count = $2, progress_count = $3, updated_at = now()
-     WHERE id = $1`,
-    [row.id, target, progress],
+    `UPDATE weekly_goals SET progress_count = $2, updated_at = now() WHERE id = $1`,
+    [row.id, progress],
   );
-
-  // Keep today's daily LC stepper in sync: weekly delta applies to today
-  // so daily stays a ceiling for what the week claims.
-  const delta = progress - prevProgress;
-  if (delta !== 0) {
-    const today = localDateInTimezone(new Date(), tz);
-    if (delta > 0) {
-      await db.query(
-        `INSERT INTO leetcode_daily (local_date, count, updated_at)
-         VALUES ($1::date, $2, now())
-         ON CONFLICT (local_date) DO UPDATE SET
-           count = leetcode_daily.count + EXCLUDED.count,
-           updated_at = now()`,
-        [today, delta],
-      );
-    } else {
-      await db.query(
-        `INSERT INTO leetcode_daily (local_date, count, updated_at)
-         VALUES ($1::date, 0, now())
-         ON CONFLICT (local_date) DO UPDATE SET
-           count = GREATEST(0, leetcode_daily.count + $2::int),
-           updated_at = now()`,
-        [today, delta],
-      );
-    }
-  }
-
-  return getWeeklyGoalsSnapshot(db, tz);
+  return { progress, target: row.target_count };
 }
 
 export async function setAppTargetMembership(

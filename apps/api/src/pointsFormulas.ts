@@ -8,7 +8,10 @@ export const POINTS = {
   applicationBase: 5,
   /** A reflection is a flat +20, whether written with the work or on its own. */
   reflectionBonus: 20,
+  /** Untiered solves (logged before tiers) count as medium. */
   leetcodePerUnit: 30,
+  /** R5.20, Q32. */
+  leetcodeByTier: { easy: 20, medium: 30, hard: 50 },
   /** Week close (R5.15): per completed tagged app or weekly LC solve, plus a flat bonus when met. */
   weeklyGoalPerUnit: 20,
   weeklyGoalBonus: 100,
@@ -125,6 +128,22 @@ export function interviewFinishBreakdown(input: {
 export function leetcodePointsForCount(count: number): number {
   const n = Math.max(0, Math.floor(count));
   return n * POINTS.leetcodePerUnit;
+}
+
+export type LeetcodeTier = "easy" | "medium" | "hard";
+export const LEETCODE_TIERS: readonly LeetcodeTier[] = ["easy", "medium", "hard"];
+export type LeetcodeTierCounts = Record<LeetcodeTier, number>;
+
+export function isLeetcodeTier(value: unknown): value is LeetcodeTier {
+  return value === "easy" || value === "medium" || value === "hard";
+}
+
+/** A day's LeetCode points at each tier's value (R5.20). */
+export function leetcodeDayPoints(counts: LeetcodeTierCounts): number {
+  return LEETCODE_TIERS.reduce(
+    (sum, tier) => sum + Math.max(0, Math.floor(counts[tier])) * POINTS.leetcodeByTier[tier],
+    0,
+  );
 }
 
 /**

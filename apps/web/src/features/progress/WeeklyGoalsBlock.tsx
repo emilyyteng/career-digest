@@ -5,7 +5,6 @@ import {
   type WeeklyGoalsSnapshot,
   type WeeklyPaceLabel,
 } from "../../api";
-import LeetcodeStepper from "./LeetcodeStepper";
 
 function paceClass(label: WeeklyPaceLabel): string {
   if (label === "behind") return "weekly-pace behind";
@@ -42,13 +41,11 @@ function GoalHead({ goal }: { goal: WeeklyGoalView }) {
 
 function GoalRow({
   goal,
-  onLcProgress,
   onLcTarget,
   onUnlink,
   onCompleteTask,
 }: {
   goal: WeeklyGoalView;
-  onLcProgress?: (n: number) => Promise<void>;
   onLcTarget?: (n: number) => Promise<void>;
   onUnlink?: (taskId: string) => Promise<void>;
   onCompleteTask?: (taskId: string) => Promise<void>;
@@ -57,13 +54,8 @@ function GoalRow({
     <div className="weekly-goal-row">
       <GoalHead goal={goal} />
       <GoalBar done={goal.done} total={goal.total} />
-      {goal.slot === "lc" && onLcProgress && onLcTarget && (
+      {goal.slot === "lc" && onLcTarget && (
         <div className="weekly-goal-lc-controls">
-          <LeetcodeStepper
-            value={goal.progressCount}
-            max={goal.targetCount ?? undefined}
-            onCommit={onLcProgress}
-          />
           <label className="weekly-goal-target-field">
             <span className="muted">Target</span>
             <input
@@ -136,8 +128,8 @@ export default function WeeklyGoalsBlock({
   if (!snapshot) return null;
   const tz = snapshot.tz;
 
-  async function patchLc(body: { targetCount?: number; progressCount?: number }) {
-    const next = await patchWeeklyLcGoal(tz, body);
+  async function patchLcTarget(targetCount: number) {
+    const next = await patchWeeklyLcGoal(tz, { targetCount });
     await onChange?.(next);
   }
 
@@ -190,8 +182,7 @@ export default function WeeklyGoalsBlock({
           <GoalRow
             key={goal.id}
             goal={goal}
-            onLcProgress={(n) => patchLc({ progressCount: n })}
-            onLcTarget={(n) => patchLc({ targetCount: n })}
+            onLcTarget={patchLcTarget}
             onUnlink={unlink}
             onCompleteTask={onCompleteTask}
           />

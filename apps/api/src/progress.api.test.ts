@@ -122,22 +122,6 @@ describe.skipIf(!integrationReady)("progress API", () => {
     expect(day).toMatchObject({ effort: true });
   });
 
-  it("PATCH /api/progress/leetcode sets and increments daily count", async () => {
-    await apiClient()
-      .patch("/api/progress/leetcode")
-      .query({ tz: TZ })
-      .send({ count: 3 })
-      .expect(200);
-
-    const bumped = await apiClient()
-      .patch("/api/progress/leetcode")
-      .query({ tz: TZ })
-      .send({ delta: 2 })
-      .expect(200);
-
-    expect(bumped.body.count).toBe(5);
-  });
-
   it("POST /api/progress/reflections creates effort entry", async () => {
     const res = await apiClient()
       .post("/api/progress/reflections")
@@ -322,22 +306,6 @@ describe.skipIf(!integrationReady)("progress API", () => {
       company: "Google",
       title: "Software Engineer Intern",
     });
-  });
-
-  it("PATCH /api/progress/leetcode accepts a past localDate for History backfill", async () => {
-    const res = await apiClient()
-      .patch("/api/progress/leetcode")
-      .query({ tz: TZ })
-      .send({ count: 4, date: "2025-08-05" })
-      .expect(200);
-
-    expect(res.body).toMatchObject({ localDate: "2025-08-05", count: 4 });
-
-    const day = await apiClient()
-      .get("/api/progress/day/2025-08-05")
-      .query({ tz: TZ })
-      .expect(200);
-    expect(day.body.leetcode).toMatchObject({ raw: 4, earned: 3 });
   });
 
   it("POST /api/progress/reflections accepts localDate for History backfill", async () => {

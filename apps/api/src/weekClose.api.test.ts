@@ -289,8 +289,10 @@ describe.skipIf(!integrationReady)("week close and records (M5-05)", () => {
       .send({ member: true })
       .expect(200);
     await apiClient().post(`/api/tasks/${taskId}/complete?tz=${tz}`).send({}).expect(200);
-    await apiClient().patch(`/api/weekly-goals/lc?tz=${tz}`).send({ targetCount: 2, progressCount: 2 }).expect(200);
-    await apiClient().patch(`/api/progress/leetcode?tz=${tz}`).send({ delta: 1 }).expect(200);
+    await apiClient().patch(`/api/weekly-goals/lc?tz=${tz}`).send({ targetCount: 2 }).expect(200);
+    for (const type of ["weekly", "weekly", "misc"]) {
+      await apiClient().patch(`/api/progress/leetcode?tz=${tz}`).send({ tier: "medium", delta: 1, type }).expect(200);
+    }
 
     expect(await weeklyEarns()).toEqual([]);
     const snap = await getWeeklyGoalsSnapshot(pool, tz);
@@ -301,10 +303,11 @@ describe.skipIf(!integrationReady)("week close and records (M5-05)", () => {
     await truncateAll();
     const tz = "UTC";
     await startAt(mondayOfLocalWeek(new Date(), tz));
-    const over = await apiClient()
-      .patch(`/api/weekly-goals/lc?tz=${tz}`)
-      .send({ targetCount: 10, progressCount: 12 })
-      .expect(200);
+    await apiClient().patch(`/api/weekly-goals/lc?tz=${tz}`).send({ targetCount: 10 }).expect(200);
+    for (let i = 0; i < 12; i += 1) {
+      await apiClient().patch(`/api/progress/leetcode?tz=${tz}`).send({ tier: "easy", delta: 1, type: "weekly" }).expect(200);
+    }
+    const over = await apiClient().get(`/api/weekly-goals?tz=${tz}`).expect(200);
     expect(over.body.goals.find((g: { slot: string }) => g.slot === "lc")).toMatchObject({
       targetCount: 10,
       progressCount: 12,
@@ -331,7 +334,8 @@ describe.skipIf(!integrationReady)("week close and records (M5-05)", () => {
     await lcWeek(last, 10, 4);
 
     await apiClient().get(`/api/weekly-goals?tz=${tz}`).expect(200);
-    const res = await apiClient().patch(`/api/weekly-goals/lc?tz=${tz}`).send({ progressCount: 1 }).expect(200);
+    await apiClient().patch(`/api/progress/leetcode?tz=${tz}`).send({ tier: "hard", delta: 1, type: "weekly" }).expect(200);
+    const res = await apiClient().get(`/api/weekly-goals?tz=${tz}`).expect(200);
 
     expect(res.body.weekStart).toBe(current);
     expect(res.body.goals.find((g: { slot: string }) => g.slot === "lc")).toMatchObject({ done: 1 });

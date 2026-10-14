@@ -1,4 +1,6 @@
 import type { Pool, PoolClient } from "pg";
+import type { LeetcodeTier, LeetcodeTierCounts } from "./pointsFormulas.js";
+import { serializePointsEarn, type PointsEarnInfo } from "./pointsLedger.js";
 
 export const PROGRESS_LANES = ["application", "technical", "other"] as const;
 export type ProgressLane = (typeof PROGRESS_LANES)[number];
@@ -25,6 +27,8 @@ export type ProgressToday = {
   localDate: string;
   applications: ActivityCredit;
   leetcode: ActivityCredit;
+  /** The day's solves per tier; untiered solves count as medium. Sums to `leetcode.raw`. */
+  leetcodeTiers: LeetcodeTierCounts;
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -82,6 +86,7 @@ export type ProgressDayDetail = {
   date: string;
   applications: ActivityCredit;
   leetcode: ActivityCredit;
+  leetcodeTiers: LeetcodeTierCounts;
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -331,11 +336,8 @@ async function shiftLocalDate(
 export async function getProgressToday(pool: Pool, tz: string): Promise<ProgressToday> {
   const localDate = localDateInTimezone(new Date(), tz);
   const appRaw = await countApplicationsInRange(pool, tz, localDate, localDate);
-  const lcRows = await pool.query<{ count: number }>(
-    `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
-    [localDate],
-  );
-  const lcRaw = lcRows.rows[0]?.count ?? 0;
+  const lcTiers = await readLeetcodeTiers(pool, localDate);
+  const lcRaw = lcTiers.easy + lcTiers.medium + lcTiers.hard;
   const effortApp = await effortDaysByLane(pool, tz, "application", localDate, localDate);
   const effortTech = await effortDaysByLane(pool, tz, "technical", localDate, localDate);
   const effortOther = await effortDaysByLane(pool, tz, "other", localDate, localDate);
@@ -345,6 +347,7 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
     localDate,
     applications: activityCredit(appRaw),
     leetcode: activityCredit(lcRaw),
+    leetcodeTiers: lcTiers,
     effortApplication: effortApp.size > 0,
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,
@@ -438,11 +441,8 @@ export async function getProgressDay(
   date: string,
 ): Promise<ProgressDayDetail> {
   const appRaw = await countApplicationsInRange(pool, tz, date, date);
-  const lcRows = await pool.query<{ count: number }>(
-    `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
-    [date],
-  );
-  const lcRaw = lcRows.rows[0]?.count ?? 0;
+  const lcTiers = await readLeetcodeTiers(pool, date);
+  const lcRaw = lcTiers.easy + lcTiers.medium + lcTiers.hard;
   const effortApp = await effortDaysByLane(pool, tz, "application", date, date);
   const effortTech = await effortDaysByLane(pool, tz, "technical", date, date);
   const effortOther = await effortDaysByLane(pool, tz, "other", date, date);
@@ -483,6 +483,7 @@ export async function getProgressDay(
     date,
     applications: activityCredit(appRaw),
     leetcode: activityCredit(lcRaw),
+    leetcodeTiers: lcTiers,
     effortApplication: effortApp.size > 0,
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,
@@ -491,58 +492,119 @@ export async function getProgressDay(
   };
 }
 
-export async function setLeetcodeDaily(
+async function readLeetcodeTiers(
+  db: Queryable,
+  date: string,
+  forUpdate = false,
+): Promise<LeetcodeTierCounts> {
+  const { rows } = await db.query<{ count: number; easy_count: number; hard_count: number }>(
+    `SELECT count, easy_count, hard_count FROM leetcode_daily WHERE local_date = $1::date
+     ${forUpdate ? "FOR UPDATE" : ""}`,
+    [date],
+  );
+  const row = rows[0];
+  if (!row) return { easy: 0, medium: 0, hard: 0 };
+  return { easy: row.easy_count, medium: row.count - row.easy_count - row.hard_count, hard: row.hard_count };
+}
+
+export type LeetcodeType = "weekly" | "misc";
+
+export type LeetcodeChange = {
+  tier: LeetcodeTier;
+  delta: 1 | -1;
+  type: LeetcodeType;
+  /** A past day (History). Weekly changes are today only. */
+  date?: string;
+};
+
+export type LeetcodeChangeResult = {
+  localDate: string;
+  count: number;
+  tiers: LeetcodeTierCounts;
+  /** This week's LC progress after a weekly change; null for misc. */
+  weeklyProgress: number | null;
+  /** The points change for the banner; null if points didn't move. */
+  points: PointsEarnInfo | null;
+};
+
+const TIER_NAME: Record<LeetcodeTier, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
+
+/**
+ * The single LeetCode write path (R5.17): one solve of one tier, weekly or misc, up
+ * or down. Updates the day's tier count, the week's LC progress for a weekly change,
+ * and the day's LeetCode points, in one transaction. Throws 409 when there's nothing
+ * to remove, 400 for a weekly change on another day.
+ */
+export async function changeLeetcode(
   pool: Pool,
   tz: string,
-  input: { count?: number; delta?: number; date?: string },
-): Promise<{ localDate: string; count: number }> {
+  input: LeetcodeChange,
+  now = new Date(),
+): Promise<LeetcodeChangeResult> {
   const { syncLeetcodeDailyPoints } = await import("./pointsAwards.js");
+  const { closeDueWeeks, stepLcWeeklyProgress } = await import("./weeklyGoals.js");
 
-  const localDate =
-    input.date != null
-      ? (() => {
-          const parsed = parseLocalDate(input.date);
-          if (!parsed) throw new Error("Invalid date");
-          return parsed;
-        })()
-      : localDateInTimezone(new Date(), tz);
-  let count: number;
-  if (input.count != null) {
-    if (!Number.isFinite(input.count) || input.count < 0) {
-      throw new Error("count must be a non-negative number");
-    }
-    count = Math.floor(input.count);
-    await pool.query(
-      `INSERT INTO leetcode_daily (local_date, count, updated_at)
-       VALUES ($1, $2, now())
-       ON CONFLICT (local_date) DO UPDATE SET
-         count = EXCLUDED.count,
-         updated_at = now()`,
-      [localDate, count],
-    );
-  } else if (input.delta != null) {
-    // Allow negative delta so LC −1 can reverse points.
-    if (!Number.isFinite(input.delta) || input.delta === 0) {
-      throw new Error("delta must be a non-zero number");
-    }
-    const delta = Math.floor(input.delta);
-    const { rows } = await pool.query<{ count: number }>(
-      `INSERT INTO leetcode_daily (local_date, count, updated_at)
-       VALUES ($1, GREATEST(0, $2), now())
-       ON CONFLICT (local_date) DO UPDATE SET
-         count = GREATEST(0, leetcode_daily.count + $2),
-         updated_at = now()
-       RETURNING count`,
-      [localDate, delta],
-    );
-    count = rows[0]?.count ?? Math.max(0, delta);
-  } else {
-    throw new Error("count or delta is required");
+  const today = localDateInTimezone(now, tz);
+  let localDate = today;
+  if (input.date != null) {
+    const parsed = parseLocalDate(input.date);
+    if (!parsed) throw Object.assign(new Error("Invalid date"), { status: 400 });
+    localDate = parsed;
   }
+  if (input.type === "weekly" && localDate !== today) {
+    throw Object.assign(new Error("Weekly solves can only be logged for today"), { status: 400 });
+  }
+  if (input.type === "weekly") await closeDueWeeks(pool, tz, now);
 
-  await syncLeetcodeDailyPoints(pool, localDate, count);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `INSERT INTO leetcode_daily (local_date, count) VALUES ($1::date, 0)
+       ON CONFLICT (local_date) DO NOTHING`,
+      [localDate],
+    );
+    const tiers = await readLeetcodeTiers(client, localDate, true);
+    if (input.delta < 0 && tiers[input.tier] <= 0) {
+      throw Object.assign(new Error(`No ${input.tier} solves to remove`), { status: 409 });
+    }
+    tiers[input.tier] += input.delta;
 
-  return { localDate, count };
+    let weeklyProgress: number | null = null;
+    let where: string = input.type;
+    if (input.type === "weekly") {
+      const week = await stepLcWeeklyProgress(client, tz, input.delta, now);
+      weeklyProgress = week.progress;
+      where = `weekly ${week.progress}/${week.target}`;
+    }
+
+    await client.query(
+      `UPDATE leetcode_daily
+       SET count = $2, easy_count = $3, hard_count = $4, updated_at = now()
+       WHERE local_date = $1::date`,
+      [localDate, tiers.easy + tiers.medium + tiers.hard, tiers.easy, tiers.hard],
+    );
+
+    const label =
+      input.delta > 0
+        ? `${TIER_NAME[input.tier]} LeetCode (${where})`
+        : `Removed one ${input.tier} LeetCode (${where})`;
+    const { change } = await syncLeetcodeDailyPoints(client, localDate, tiers, label);
+    await client.query("COMMIT");
+
+    return {
+      localDate,
+      count: tiers.easy + tiers.medium + tiers.hard,
+      tiers,
+      weeklyProgress,
+      points: serializePointsEarn(change),
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function assertTaskExists(pool: Queryable, taskId: string): Promise<void> {

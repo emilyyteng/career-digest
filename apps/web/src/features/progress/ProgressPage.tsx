@@ -12,6 +12,9 @@ import {
   getWeeklyGoals,
   patchProgressLeetcode,
   patchProgressReflection,
+  type LeetcodeTier,
+  type LeetcodeType,
+  type PointsEarnInfo,
   type ProgressDayDetail,
   type ProgressHeatmapDay,
   type ProgressLane,
@@ -22,7 +25,7 @@ import {
 import HistoryCalendar, { type CalendarDayMark } from "./HistoryCalendar";
 import LedgerCompletionsPanel from "./LedgerCompletionsPanel";
 import LedgerPointsPanel from "./LedgerPointsPanel";
-import LeetcodeStepper from "./LeetcodeStepper";
+import LeetcodeLogger from "./LeetcodeLogger";
 import ProgressHeatmap from "./ProgressHeatmap";
 import ReflectionAccordion, {
   ReflectionCompose,
@@ -30,6 +33,7 @@ import ReflectionAccordion, {
 } from "./ReflectionAccordion";
 import TodayStrip from "./TodayStrip";
 import WeeklyGoalsBlock from "./WeeklyGoalsBlock";
+import EarnFlash from "../completion/EarnFlash";
 import ModalLayer from "../../ModalLayer";
 import StepActionConfirm from "../../StepActionConfirm";
 import { useBeforeUnloadDraftGuard } from "../../useUnsavedDraftGuard";
@@ -122,6 +126,8 @@ export default function Progress() {
   const [composeDirty, setComposeDirty] = useState(false);
   const [pendingLeave, setPendingLeave] = useState<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [earn, setEarn] = useState<PointsEarnInfo | null>(null);
+  const dismissEarn = useCallback(() => setEarn(null), []);
   const [loaded, setLoaded] = useState(false);
 
   const selectedHistory = historyDate ?? today?.localDate ?? null;
@@ -281,9 +287,20 @@ export default function Progress() {
     }
   }
 
-  async function setLeetcode(count: number, date?: string) {
-    await patchProgressLeetcode(tz, { count, date });
-    await refreshAfterWrite(date ?? today!.localDate);
+  async function changeLeetcode(
+    tier: LeetcodeTier,
+    delta: 1 | -1,
+    type: LeetcodeType,
+    date?: string,
+  ) {
+    try {
+      const result = await patchProgressLeetcode(tz, { tier, delta, type, date });
+      setError(null);
+      if (result.points) setEarn(result.points);
+      await refreshAfterWrite(result.localDate);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "LeetCode update failed");
+    }
   }
 
   useEffect(() => {
@@ -393,7 +410,8 @@ export default function Progress() {
   const marks = buildMarks(appHeat, techHeat);
   const heatWindow = appHeat.slice(-HEATMAP_DAYS);
   const techWindow = techHeat.slice(-HEATMAP_DAYS);
-  const historyLc = historyDetail?.leetcode.raw ?? 0;
+  const weeklyLcProgress =
+    weeklyGoals?.goals.find((g) => g.slot === "lc")?.progressCount ?? 0;
 
   return (
     <section className="progress-page">
@@ -422,6 +440,7 @@ export default function Progress() {
       </div>
 
       {error && <p className="error">{error}</p>}
+      {tab !== "ledger" && <EarnFlash earn={earn} onDismiss={dismissEarn} />}
 
       {tab === "today" ? (
         <>
@@ -454,11 +473,7 @@ export default function Progress() {
           {weeklyGoals && (
             <WeeklyGoalsBlock
               snapshot={weeklyGoals}
-              onChange={async (next) => {
-                setWeeklyGoals(next);
-                // Weekly LC bumps daily LC server-side — refresh strip, stepper, outcomes.
-                await refreshAfterWrite(today.localDate);
-              }}
+              onChange={(next) => setWeeklyGoals(next)}
               onCompleteTask={async (taskId) => {
                 await completeTask(taskId);
                 const next = await getWeeklyGoals(tz);
@@ -485,9 +500,11 @@ export default function Progress() {
             <aside className="card progress-log-panel">
               <div className="card progress-lc-card">
                 <h4 className="progress-section-title">LeetCode</h4>
-                <LeetcodeStepper
-                  value={today.leetcode.raw}
-                  onCommit={(count) => setLeetcode(count)}
+                <LeetcodeLogger
+                  tiers={today.leetcodeTiers}
+                  weeklyProgress={weeklyLcProgress}
+                  dayLabel="Today"
+                  onChange={(tier, delta, type) => changeLeetcode(tier, delta, type)}
                 />
               </div>
               <h3 className="progress-section-title progress-daily-title">
@@ -587,9 +604,13 @@ export default function Progress() {
                   <div className="card progress-lc-card">
                     <h4 className="progress-section-title">LeetCode</h4>
                     {editingDay ? (
-                      <LeetcodeStepper
-                        value={historyLc}
-                        onCommit={(count) => setLeetcode(count, selectedHistory!)}
+                      <LeetcodeLogger
+                        tiers={historyDetail.leetcodeTiers}
+                        fixedType="misc"
+                        dayLabel="This day"
+                        onChange={(tier, delta, type) =>
+                          changeLeetcode(tier, delta, type, selectedHistory!)
+                        }
                       />
                     ) : (
                       <p className="progress-lc-readonly">

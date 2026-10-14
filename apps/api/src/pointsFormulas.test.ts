@@ -4,6 +4,7 @@ import {
   applicationAppliedBreakdown,
   clampDeltaToBalance,
   interviewFinishBreakdown,
+  leetcodeDayPoints,
   leetcodePointsForCount,
   miscTaskBreakdown,
   pointsForInterviewKind,
@@ -67,6 +68,12 @@ describe("pointsFormulas", () => {
     expect(leetcodePointsForCount(0)).toBe(0);
     expect(leetcodePointsForCount(3)).toBe(90);
     expect(leetcodePointsForCount(10)).toBe(300);
+  });
+
+  it("LC by tier is easy 20, medium 30, hard 50, uncapped", () => {
+    expect(leetcodeDayPoints({ easy: 0, medium: 0, hard: 0 })).toBe(0);
+    expect(leetcodeDayPoints({ easy: 1, medium: 1, hard: 1 })).toBe(100);
+    expect(leetcodeDayPoints({ easy: 5, medium: 0, hard: 4 })).toBe(300);
   });
 
   it("clampDeltaToBalance never goes negative", () => {

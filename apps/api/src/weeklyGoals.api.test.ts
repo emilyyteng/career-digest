@@ -10,7 +10,8 @@ import { mondayOfLocalWeek } from "./weeklyGoals.js";
 const TZ = "UTC";
 
 describe.skipIf(!integrationReady)("weekly goals API", () => {
-  it("ensures lc+apps pair and patches lc progress/target", async () => {
+  it("ensures lc+apps pair; lc patch sets the target and solves move progress", async () => {
+    await truncateAll();
     const getRes = await apiClient().get(`/api/weekly-goals?tz=${encodeURIComponent(TZ)}`).expect(200);
     expect(getRes.body.goals.map((g: { slot: string }) => g.slot).sort()).toEqual([
       "apps",
@@ -21,51 +22,46 @@ describe.skipIf(!integrationReady)("weekly goals API", () => {
 
     const patch = await apiClient()
       .patch(`/api/weekly-goals/lc?tz=${encodeURIComponent(TZ)}`)
-      .send({ targetCount: 12, progressCount: 3 })
+      .send({ targetCount: 12 })
       .expect(200);
     const lc2 = patch.body.goals.find((g: { slot: string }) => g.slot === "lc");
     expect(lc2.targetCount).toBe(12);
-    expect(lc2.progressCount).toBe(3);
-    expect(lc2.done).toBe(3);
+    expect(lc2.progressCount).toBe(0);
+
+    for (let i = 0; i < 3; i += 1) {
+      await apiClient()
+        .patch(`/api/progress/leetcode?tz=${encodeURIComponent(TZ)}`)
+        .send({ tier: "medium", delta: 1, type: "weekly" })
+        .expect(200);
+    }
+    const after = await apiClient().get(`/api/weekly-goals?tz=${encodeURIComponent(TZ)}`).expect(200);
+    const lc3 = after.body.goals.find((g: { slot: string }) => g.slot === "lc");
+    expect(lc3.progressCount).toBe(3);
+    expect(lc3.done).toBe(3);
   });
 
-  it("weekly LC progress delta bumps today's daily LC stepper", async () => {
+  it("a weekly +1 raises both the day's tier and the weekly progress", async () => {
+    await truncateAll();
     const today = localDateInTimezone(new Date(), TZ);
-    await pool.query(`DELETE FROM leetcode_daily WHERE local_date = $1::date`, [today]);
-
-    await apiClient()
-      .patch(`/api/weekly-goals/lc?tz=${encodeURIComponent(TZ)}`)
-      .send({ targetCount: 20, progressCount: 2 })
+    const res = await apiClient()
+      .patch(`/api/progress/leetcode?tz=${encodeURIComponent(TZ)}`)
+      .send({ tier: "easy", delta: 1, type: "weekly" })
       .expect(200);
+    expect(res.body.weeklyProgress).toBe(1);
+    expect(res.body.tiers).toEqual({ easy: 1, medium: 0, hard: 0 });
 
-    const afterSet = await pool.query<{ count: number }>(
-      `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
+    const row = await pool.query<{ count: number; easy_count: number }>(
+      `SELECT count, easy_count FROM leetcode_daily WHERE local_date = $1::date`,
       [today],
     );
-    // Absolute set from whatever prior weekly value — only assert the next delta.
-    const baseline = afterSet.rows[0]?.count ?? 0;
+    expect(row.rows[0]).toEqual({ count: 1, easy_count: 1 });
+  });
 
+  it("rejects progressCount on the weekly LC route", async () => {
     await apiClient()
       .patch(`/api/weekly-goals/lc?tz=${encodeURIComponent(TZ)}`)
-      .send({ progressCount: 5 })
-      .expect(200);
-
-    const bumped = await pool.query<{ count: number }>(
-      `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
-      [today],
-    );
-    expect(bumped.rows[0]?.count).toBe(baseline + 3);
-
-    await apiClient()
-      .patch(`/api/weekly-goals/lc?tz=${encodeURIComponent(TZ)}`)
-      .send({ progressCount: 4 })
-      .expect(200);
-
-    const reduced = await pool.query<{ count: number }>(
-      `SELECT count FROM leetcode_daily WHERE local_date = $1::date`,
-      [today],
-    );
-    expect(reduced.rows[0]?.count).toBe(baseline + 2);
+      .send({ targetCount: 10, progressCount: 3 })
+      .expect(400);
   });
 
   it("tags application tasks into apps set and carries open members at week close", async () => {

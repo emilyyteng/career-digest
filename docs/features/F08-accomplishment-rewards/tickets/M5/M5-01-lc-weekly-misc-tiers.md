@@ -1,6 +1,6 @@
 # M5-01: Log LeetCode as weekly or misc, by difficulty tier, through one write path
 
-**Status:** Ready
+**Status:** Built, awaiting R5.10 (2026-10-13)
 **Blocked by:** M5-05, done (build order, 2026-10-13: both change `setLeetcodeDaily`; M5-05 removes the instant weekly bonus and the cap first, so this ticket writes the single path once)
 **Implements:** R5.10, R5.14, R5.17, R5.20, R8.3 (function only; visual polish stays in M8) (from `../../spec.md`)
 **Type:** build
@@ -82,4 +82,12 @@ LeetCode solves come in two types, **weekly** (part of the week's planned proble
 
 ## Verification notes
 
-(Filled in when done.)
+2026-10-13, built; the R5.10 check is still open.
+
+- **Single path:** `PATCH /api/progress/leetcode` takes `{tier, delta: ±1, type: weekly|misc, date?}` and calls `changeLeetcode` (`progress.ts`), the only code that writes `leetcode_daily` or LeetCode points; `stepLcWeeklyProgress` (`weeklyGoals.ts`) is the only writer of LC weekly progress. The weekly LC route sets the target only and rejects `progressCount` (400). Checked by reading and by a search for writers.
+- **Storage:** migration 030 adds `easy_count` and `hard_count` beside `count`; medium is the rest, so untiered days read as medium and keep their points with no rewrite.
+- **Weekly is today only** (400 for another date); History edits per tier as misc, with no type switch.
+- **Banner:** Progress shows `EarnFlash` after every change that moves points, on Today and History.
+- **Tests (checked by running):** new `leetcode.api.test.ts` (14 tests) covers each tier's points and banner, weekly +1, misc +1 leaving weekly alone, −1 reversal and 409 at 0, misc −1 leaving weekly above the day, weekly −1 at 0 (409), no cap, past-date weekly 400 and History per-tier edits, 1 → 0 → 1 → 0, legacy days as medium, the day total across today, day detail and outcome, and input validation. `weeklyGoals.api.test.ts` replaces the R0.4 test; `pointsFormulas.test.ts` adds the tier formula.
+- **UI:** `LeetcodeLogger.tsx` replaces `LeetcodeStepper.tsx` (deleted) and the weekly block's stepper. Checked by reading and the build, not in a browser.
+- **Interim classes** (`ui-btn`, `ui-btn-primary`, `ui-btn-ghost`, `.is-active`, `ui-segmented`) are logged in the F09 Current behavior table.

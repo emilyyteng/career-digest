@@ -55,7 +55,7 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Ready | Q32 settled (easy 20, medium 30, hard 50); adds interim purple buttons; user tries R5.10 before close |
+| [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | build | Built, awaiting R5.10 | Built 2026-10-13; closes once the user has tried logging with points on Progress (R5.10) |
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | build | Draft | After M5-05, M5-07 (M5-06 design in); documents banner patterns in the design system |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | prototype | Ready | Mock numbers from R5.25–R5.26 |
 | [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Draft | After M5-05, M5-01, M5-07; owns the weekly-streak display (R5.28), criteria wait on M5-07 Q5 |

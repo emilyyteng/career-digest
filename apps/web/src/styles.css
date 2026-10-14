@@ -1691,6 +1691,59 @@ button.hide-board-remove:hover:not(:disabled) {
   box-shadow: none !important;
 }
 
+/* Interim buttons (design-system.md → Interim decisions, F08 M5). Built on .secondary so the
+   global button:not(...) chain doesn't apply; F09 may replace them. */
+button.secondary.ui-btn {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-soft-box);
+  box-shadow: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 0.3rem 0.7rem;
+}
+button.secondary.ui-btn:not(:disabled):hover {
+  background: var(--surface-2);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue-deep);
+}
+button.secondary.ui-btn-primary {
+  background: color-mix(in srgb, var(--accent-purple) 26%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent-purple) 55%, var(--surface));
+  color: var(--accent-purple-deep);
+}
+button.secondary.ui-btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--accent-purple) 38%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent-purple) 55%, var(--surface));
+  color: var(--accent-purple-deep);
+}
+button.secondary.ui-btn-ghost {
+  border-color: transparent;
+}
+button.secondary.ui-btn-ghost:not(:disabled):hover {
+  border-color: transparent;
+}
+button.secondary.ui-btn.is-active,
+button.secondary.ui-btn.is-active:not(:disabled):hover {
+  background: color-mix(in srgb, var(--accent-blue) 20%, var(--surface));
+  border-color: var(--accent-blue);
+  color: var(--accent-blue-deep);
+}
+button.secondary.ui-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ui-segmented {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-soft-box);
+  background: var(--surface);
+}
+
 .task-completed-meta {
   display: flex;
   flex-wrap: wrap;
@@ -3665,20 +3718,41 @@ textarea { min-height: 10rem; width: 100%; }
 .progress-notes-block > .progress-note-list {
   margin: 0;
 }
-.progress-lc-stepper {
+.lc-logger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.lc-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.lc-tier-stepper {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
 }
-.progress-lc-stepper input {
-  width: 3.5rem;
+.lc-tier-name {
+  min-width: 4.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.lc-tier-count {
+  min-width: 1.5rem;
   text-align: center;
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  padding: 0.35rem 0.4rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+button.secondary.ui-btn.lc-step-btn {
+  min-width: 2rem;
+  padding-left: 0.45rem;
+  padding-right: 0.45rem;
+}
+.lc-day-line {
+  margin: 0;
+  font-size: 0.8rem;
 }
 .progress-compose {
   display: flex;

@@ -3,8 +3,9 @@ import {
   POINTS,
   applicationAppliedBreakdown,
   interviewFinishBreakdown,
-  leetcodePointsForCount,
+  leetcodeDayPoints,
   miscTaskBreakdown,
+  type LeetcodeTierCounts,
 } from "./pointsFormulas.js";
 import {
   adjustEarnAmount,
@@ -218,72 +219,82 @@ export async function awardReflectionCreate(
 }
 
 /**
- * Sync leetcode daily earn to match `count` (aggregate event per day).
- * Increases adjust/earn up; decreases reverse via adjustEarnAmount / reverse.
+ * Sync a day's LeetCode earn (one aggregate earn per day) to its tier counts (R5.20).
+ * A plain number is an untiered count, worth medium. Returns the day's earn and the
+ * event that moved points (earn, adjust or reverse), or null if nothing changed.
+ * `label` names the change in that event's message, e.g. "Hard LeetCode (misc)".
  */
 export async function syncLeetcodeDailyPoints(
   db: Queryable,
   localDate: string,
-  count: number,
-): Promise<PointsEventRow | null> {
-  const target = leetcodePointsForCount(count);
+  counts: number | LeetcodeTierCounts,
+  label?: string,
+): Promise<{ earn: PointsEventRow | null; change: PointsEventRow | null }> {
+  const tiers = typeof counts === "number" ? { easy: 0, medium: Math.max(0, counts), hard: 0 } : counts;
+  const count = tiers.easy + tiers.medium + tiers.hard;
+  const target = leetcodeDayPoints(tiers);
+  const name = label ?? `LC ${count}`;
+  const meta = { count, easy: tiers.easy, medium: tiers.medium, hard: tiers.hard };
   const sourceType = "leetcode_daily";
   const sourceId = leetcodeDailySourceId(localDate);
   const existing = await findEarnEvent(db, sourceType, sourceId);
 
   if (!existing) {
-    if (target <= 0) return null;
+    if (target <= 0) return { earn: null, change: null };
     const { event } = await recordEarn(db, {
       category: "leetcode",
       amount: target,
-      message: `LC ${count} · +${target} points`,
+      message: `${name} · +${target} points`,
       sourceType,
       sourceId,
-      breakdown: [
-        { category: "leetcode", amount: target, label: "LC" },
-      ],
-      meta: { count },
+      breakdown: [{ category: "leetcode", amount: target, label: "LC" }],
+      meta,
     });
-    return event;
+    return { earn: event, change: event };
   }
 
   if (existing.meta.superseded === true) {
-    if (target <= 0) return existing;
-    const { earn } = await reinstateEarn(
+    if (target <= 0) return { earn: existing, change: null };
+    const { earn, adjust } = await reinstateEarn(
       db,
       sourceType,
       sourceId,
       target,
-      (delta) => `LC ${count} · ${signedPoints(delta)} points`,
-      { count },
+      (delta) => `${name} · ${signedPoints(delta)} points`,
+      meta,
     );
-    return earn;
+    return { earn, change: adjust };
   }
 
   const current = effectiveEarnAmount(existing);
-  if (target === current) return existing;
+  if (target === current) return { earn: existing, change: null };
 
   if (target === 0) {
-    await reverseEarn(db, sourceType, sourceId, `LC cleared · −${current} points`);
-    return findEarnEvent(db, sourceType, sourceId);
+    const { event } = await reverseEarn(
+      db,
+      sourceType,
+      sourceId,
+      label ? `${label} · −${current} points` : `LC cleared · −${current} points`,
+    );
+    return { earn: await findEarnEvent(db, sourceType, sourceId), change: event };
   }
 
-  const { earn } = await adjustEarnAmount(
+  const { earn, adjust } = await adjustEarnAmount(
     db,
     sourceType,
     sourceId,
     target,
     target > current
-      ? `LC ${count} · +${target - current} points`
-      : `LC ${count} · −${current - target} points`,
+      ? `${name} · +${target - current} points`
+      : `${name} · −${current - target} points`,
   );
   if (earn) {
-    await db.query(
-      `UPDATE points_events SET meta = meta || $2::jsonb WHERE id = $1`,
-      [earn.id, JSON.stringify({ count })],
-    );
+    await db.query(`UPDATE points_events SET meta = meta || $2::jsonb WHERE id = $1`, [
+      earn.id,
+      JSON.stringify(meta),
+    ]);
   }
-  return earn;
+  return { earn, change: adjust };
 }
 
 export async function reverseTaskComplete(
