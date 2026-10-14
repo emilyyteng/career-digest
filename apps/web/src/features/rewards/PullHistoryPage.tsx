@@ -103,14 +103,15 @@ function SessionCard({ session }: { session: PullHistorySession }) {
         </div>
         <div className="ledger-log-when">{formatWhen(session.createdAt)}</div>
         <ul className="rewards-pull-results">
-          {session.results.map((r, i) => {
+          {/* Newest-first within the batch, matching the page's overall chronology. */}
+          {[...session.results].reverse().map((r, i) => {
             const flavorId = r.flavorId as FlavorId;
             const ceColor =
               r.edition === "collector" && FLAVOR_BY_ID[flavorId]
                 ? friendshipColors(flavorId)[2]
                 : undefined;
             return (
-              <li key={`${session.id}-${i}`}>
+              <li key={`${session.id}-${r.pityAt}-${r.flavorId}-${r.edition}-${i}`}>
                 <span
                   className={ceColor ? "rewards-pull-ce" : undefined}
                   style={ceColor ? { color: ceColor } : undefined}
