@@ -71,6 +71,7 @@ export default function BannerPage() {
     !inReveal && !pulling && balance != null && bal >= cfg.costPerPull * 10;
   const nextPull = pity + 1;
   const nextRate = collectorRateAt(nextPull);
+  const stageInteractive = seqActive || batchPhase === "waiting" || batchPhase === "revealed";
   const showSkip = seqActive || batchPhase === "waiting";
   const stageHint = seqActive
     ? seqOpen
@@ -78,7 +79,9 @@ export default function BannerPage() {
       : "Tap to open"
     : batchPhase === "waiting"
       ? "Tap to open all"
-      : "";
+      : batchPhase === "revealed"
+        ? "Tap to dismiss"
+        : "";
 
   function resetReveal() {
     setBatchPhase("idle");
@@ -104,8 +107,9 @@ export default function BannerPage() {
       await refreshSeeds();
 
       if (prefersReducedMotion()) {
+        // Skip sequential; land on closed boxes (or revealed for a single pull).
         setSeqActive(false);
-        setBatchPhase("revealed");
+        setBatchPhase(out.results.length > 1 ? "waiting" : "revealed");
       } else {
         setSeqActive(true);
         setSeqIndex(0);
@@ -127,20 +131,34 @@ export default function BannerPage() {
       }
       const next = seqIndex + 1;
       if (next >= results.length) {
-        resetReveal();
+        // Finished one-by-one: show all results together; wait for dismiss.
+        setSeqActive(false);
+        setSeqOpen(false);
+        setBatchPhase("revealed");
         return;
       }
       setSeqIndex(next);
       setSeqOpen(false);
       return;
     }
-    if (batchPhase === "waiting") setBatchPhase("revealed");
+    if (batchPhase === "waiting") {
+      setBatchPhase("revealed");
+      return;
+    }
+    if (batchPhase === "revealed") {
+      resetReveal();
+    }
   }
 
   function handleSkip() {
-    if (seqActive || batchPhase === "waiting") {
+    if (seqActive) {
+      // Jump to all gift boxes still closed.
       setSeqActive(false);
       setSeqOpen(false);
+      setBatchPhase("waiting");
+      return;
+    }
+    if (batchPhase === "waiting") {
       setBatchPhase("revealed");
     }
   }
@@ -213,13 +231,14 @@ export default function BannerPage() {
           "rw-stage",
           batchPhase === "idle" && !seqActive ? "rw-stage--empty" : "",
           batchPhase === "waiting" || seqActive ? "rw-stage--waiting" : "",
+          batchPhase === "revealed" ? "rw-stage--waiting" : "",
           seqActive ? "rw-stage--sequential" : "",
         ].join(" ")}
-        role={showSkip ? "button" : undefined}
-        tabIndex={showSkip ? 0 : undefined}
-        onClick={showSkip ? handleStageClick : undefined}
+        role={stageInteractive ? "button" : undefined}
+        tabIndex={stageInteractive ? 0 : undefined}
+        onClick={stageInteractive ? handleStageClick : undefined}
         onKeyDown={(e) => {
-          if (!showSkip) return;
+          if (!stageInteractive) return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             handleStageClick();
@@ -255,7 +274,7 @@ export default function BannerPage() {
             />
           ))}
 
-        {showSkip && (
+        {stageInteractive && (
           <>
             {seqActive && (
               <span className="rw-seq-progress">
@@ -263,16 +282,18 @@ export default function BannerPage() {
               </span>
             )}
             {stageHint && <span className="rw-stage-hint">{stageHint}</span>}
-            <button
-              type="button"
-              className="secondary ui-btn ui-btn-ghost rw-stage-skip"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSkip();
-              }}
-            >
-              Skip
-            </button>
+            {showSkip && (
+              <button
+                type="button"
+                className="secondary ui-btn ui-btn-ghost rw-stage-skip"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSkip();
+                }}
+              >
+                Skip
+              </button>
+            )}
           </>
         )}
       </div>

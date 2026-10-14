@@ -80,7 +80,7 @@ function resultLabel(r: PullHistoryResult): string {
     if (ref > 0) bits.push(`${ref} refundable`);
   }
   if (r.viaHardPity) bits.push("hard pity");
-  bits.push(`${ordinal(r.timesPulled)} pull of this variant`);
+  bits.push(`${ordinal(r.timesPulled)} time pulled`);
   bits.push(`pity ${r.pityAt}`);
   return `${name} · ${bits.join(" · ")}`;
 }
