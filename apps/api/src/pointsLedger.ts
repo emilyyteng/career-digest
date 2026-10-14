@@ -104,13 +104,14 @@ function mapEvent(row: {
 }
 
 export async function getPointsBalance(db: Queryable): Promise<number> {
-  const { rows } = await db.query<{ balance_after: number | null }>(
-    `SELECT balance_after
-     FROM points_events
-     ORDER BY created_at DESC, id DESC
-     LIMIT 1`,
+  // Sum of amounts — not the latest balance_after. Two earns in one transaction can
+  // share a created_at, and UUID id order may not match insert order, so the
+  // balance_after chain can skip an earn (streak +2 then LC +30 left latest
+  // balance_after at 30). SUM stays correct.
+  const { rows } = await db.query<{ balance: string }>(
+    `SELECT COALESCE(SUM(amount), 0)::text AS balance FROM points_events`,
   );
-  return rows[0]?.balance_after ?? 0;
+  return Number(rows[0]?.balance ?? 0);
 }
 
 export async function getPointsSummary(db: Queryable): Promise<PointsSummary> {
