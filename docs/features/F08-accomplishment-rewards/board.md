@@ -62,7 +62,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | TBD |
+| [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | `18d06a7` |
 | [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | `9565150` |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | `ce85f4a` |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | `186f3f6` |
