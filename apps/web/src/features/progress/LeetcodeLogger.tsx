@@ -4,29 +4,25 @@ import type { LeetcodeTier, LeetcodeTierCounts, LeetcodeType } from "../../api";
 const TIERS: LeetcodeTier[] = ["easy", "medium", "hard"];
 const TIER_LABEL: Record<LeetcodeTier, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
 
-/**
- * The one LeetCode logging control. Today shows the weekly/misc switch; History passes
- * `type="misc"` and no switch, since past days are edited per tier only.
- */
-function countsLine(label: string, t: LeetcodeTierCounts): string {
+export function lcCountsLine(label: string, t: LeetcodeTierCounts): string {
   const total = t.easy + t.medium + t.hard;
   return `${label}: ${total} solved · ${t.easy} easy · ${t.medium} medium · ${t.hard} hard`;
 }
 
+/**
+ * The one LeetCode logging control. Today shows the weekly/misc switch; History passes
+ * `type="misc"` and no switch, since past days are edited per tier only. Day and week
+ * counts live outside this card (right-justified on the Progress panel).
+ */
 export default function LeetcodeLogger({
   tiers,
-  weekTiers,
   weeklyProgress,
-  dayLabel,
   fixedType,
   onChange,
 }: {
   tiers: LeetcodeTierCounts;
-  /** Shown as a second counts line when given (Today only). */
-  weekTiers?: LeetcodeTierCounts;
   /** This week's LC progress; weekly −1 is disabled at 0. */
   weeklyProgress?: number;
-  dayLabel: string;
   fixedType?: LeetcodeType;
   onChange: (tier: LeetcodeTier, delta: 1 | -1, type: LeetcodeType) => Promise<void>;
 }) {
@@ -90,10 +86,6 @@ export default function LeetcodeLogger({
             </div>
           );
         })}
-      </div>
-      <div>
-        <p className="muted lc-day-line">{countsLine(dayLabel, tiers)}</p>
-        {weekTiers && <p className="muted lc-day-line">{countsLine("This week", weekTiers)}</p>}
       </div>
     </div>
   );

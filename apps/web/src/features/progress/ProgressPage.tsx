@@ -27,7 +27,7 @@ import {
 import HistoryCalendar, { type CalendarDayMark } from "./HistoryCalendar";
 import LedgerCompletionsPanel from "./LedgerCompletionsPanel";
 import LedgerPointsPanel from "./LedgerPointsPanel";
-import LeetcodeLogger from "./LeetcodeLogger";
+import LeetcodeLogger, { lcCountsLine } from "./LeetcodeLogger";
 import ProgressHeatmap from "./ProgressHeatmap";
 import ReflectionAccordion, {
   ReflectionCompose,
@@ -539,11 +539,17 @@ export default function Progress() {
                 <h4 className="progress-section-title">LeetCode</h4>
                 <LeetcodeLogger
                   tiers={today.leetcodeTiers}
-                  weekTiers={today.leetcodeWeekTiers}
                   weeklyProgress={weeklyLcProgress}
-                  dayLabel="Today"
                   onChange={(tier, delta, type) => changeLeetcode(tier, delta, type)}
                 />
+              </div>
+              <div className="lc-counts-aside">
+                <p className="muted lc-day-line">
+                  {lcCountsLine("Today", today.leetcodeTiers)}
+                </p>
+                <p className="muted lc-day-line">
+                  {lcCountsLine("This week", today.leetcodeWeekTiers)}
+                </p>
               </div>
               <h3 className="progress-section-title progress-daily-title">
                 Daily progress
@@ -639,23 +645,31 @@ export default function Progress() {
             ) : (
               <>
                 <div className="progress-history-flow">
-                  <div className="card progress-lc-card">
-                    <h4 className="progress-section-title">LeetCode</h4>
+                  <div className="progress-lc-cluster">
                     {editingDay ? (
-                      <LeetcodeLogger
-                        tiers={historyDetail.leetcodeTiers}
-                        fixedType="misc"
-                        dayLabel="This day"
-                        onChange={(tier, delta, type) =>
-                          changeLeetcode(tier, delta, type, selectedHistory!)
-                        }
-                      />
+                      <div className="card progress-lc-card">
+                        <h4 className="progress-section-title">LeetCode</h4>
+                        <LeetcodeLogger
+                          tiers={historyDetail.leetcodeTiers}
+                          fixedType="misc"
+                          onChange={(tier, delta, type) =>
+                            changeLeetcode(tier, delta, type, selectedHistory!)
+                          }
+                        />
+                      </div>
                     ) : (
-                      <p className="progress-lc-readonly">
-                        {historyDetail.leetcode.raw} solved ·{" "}
-                        {historyDetail.leetcode.earned}/3
-                      </p>
+                      <h4 className="progress-section-title">LeetCode</h4>
                     )}
+                    <div className="lc-counts-aside">
+                      <p className="muted lc-day-line">
+                        {lcCountsLine("This day", historyDetail.leetcodeTiers)}
+                      </p>
+                      {!editingDay && (
+                        <p className="progress-lc-readonly">
+                          {historyDetail.leetcode.earned}/3 earned
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="progress-log-block">

@@ -12,7 +12,7 @@ The user wants to see how much LeetCode they've solved over time. Solves aren't 
 1. **A `leetcode` tab** in [`LedgerCompletionsPanel.tsx`](../../../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) `TYPE_TABS` (L11–18), treated as a special tab like weekly: its badge shows an all-time count, and selecting it lists LeetCode by date under the existing day headings.
    - **Count (Q52):** the badge is total solves, all time.
    - **Rows (Q54):** one row per day with at least one solve, titled `LC: 3 solved`, meta `1 easy · 1 medium · 1 hard`, and the day's LeetCode points in the aside when above 0.
-   - **`all` (Q53):** LeetCode day rows also show in `all`, like every other kind. The `all` count adds the `leetcode` count, so it stays the sum of the tabs (Proposed).
+   - **`all` (Q53):** LeetCode day rows also show in `all`, like every other kind. The `leetcode` tab counts total solves; `all` counts one per LeetCode day row (a day with N solves is N on `leetcode` and 1 on `all`).
    - Untiered days count as medium (R5.20).
 2. **API:** `GET /api/progress/completions` ([`completionsDiary.ts`](../../../../../apps/api/src/completionsDiary.ts)) gains a `leetcode` kind built from `leetcode_daily` (days with `count > 0`, newest first) and `stats.allTime.leetcode`. The points come from the day's `leetcode_daily` earn (`effectiveEarnAmount`), 0 when it's reversed or missing.
 3. **Rename:** the `weekly` tab label becomes `weekly goals` (R5.34). The kind value and the row's kind badge stay `weekly` (Q54).
@@ -23,7 +23,7 @@ The user wants to see how much LeetCode they've solved over time. Solves aren't 
 - [ ] The `leetcode` tab's badge shows total solves, all time.
 - [ ] Selecting it shows one row per day with solves, newest first: `LC: 3 solved`, meta `1 easy · 1 medium · 1 hard`, and the day's points; a pre-ledger day shows no points.
 - [ ] A day with no tiers recorded reads as medium; a day whose count was lowered to 0 shows no row.
-- [ ] `all` shows LeetCode day rows among the other kinds, and its count includes the `leetcode` count.
+- [ ] `all` shows LeetCode day rows among the other kinds, and its count adds one per LeetCode day (not the solve total).
 - [ ] The weekly tab reads `weekly goals`; its rows and count are unchanged.
 - [ ] Tests cover the diary's `leetcode` items and count, untiered days as medium, zero days excluded, and the points shown.
 

@@ -3557,6 +3557,7 @@ textarea { min-height: 10rem; width: 100%; }
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     "title lc"
+    "counts counts"
     "compose compose"
     "notes notes"
     "apps apps";
@@ -3567,6 +3568,9 @@ textarea { min-height: 10rem; width: 100%; }
 .progress-log-panel:not(.progress-history-detail) > .progress-lc-card {
   grid-area: lc;
   margin: 0;
+}
+.progress-log-panel:not(.progress-history-detail) > .lc-counts-aside {
+  grid-area: counts;
 }
 .progress-log-panel:not(.progress-history-detail) > .progress-daily-title {
   grid-area: title;
@@ -3654,9 +3658,18 @@ textarea { min-height: 10rem; width: 100%; }
   margin-top: 0.7rem;
   margin-bottom: 1.15rem;
 }
-.progress-history-flow .progress-lc-card {
+.progress-history-flow .progress-lc-cluster {
   float: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
   margin: 0 0 0.55rem 0.85rem;
+  max-width: 100%;
+}
+.progress-history-flow .progress-lc-cluster > .progress-section-title {
+  margin: 0;
+  font-size: 0.82rem;
 }
 .progress-history-detail > .progress-log-block {
   margin-bottom: 1.15rem;
@@ -3727,7 +3740,6 @@ textarea { min-height: 10rem; width: 100%; }
 .lc-tier-list {
   display: flex;
   flex-direction: column;
-  align-self: center;
   gap: 0.35rem;
 }
 .lc-tier-stepper {
@@ -3750,6 +3762,9 @@ button.secondary.ui-btn.lc-step-btn {
   min-width: 2rem;
   padding-left: 0.45rem;
   padding-right: 0.45rem;
+}
+.lc-counts-aside {
+  text-align: right;
 }
 .lc-day-line {
   margin: 0;
