@@ -66,7 +66,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | TBD |
+| [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | `eeac25b` |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | Won't do (Q7 drop) |
 | [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | `8bac4da` |
 | [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | `148420b` |

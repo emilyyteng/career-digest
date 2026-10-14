@@ -51,7 +51,7 @@ Prototype URL: `/prototype/f08/streaks`
 
 ## Verification notes
 
-Hub: `/prototype/f08/streaks`. Last prototype commit: see board.
+Hub: `/prototype/f08/streaks`. Last prototype commit: `eeac25b`.
 
 | Q | Verdict | Build ticket |
 |---|---------|--------------|
