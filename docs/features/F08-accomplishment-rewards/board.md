@@ -98,7 +98,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M7-08](./tickets/M7/M7-08-earnings-log.md) | Earnings log on Rewards | (this commit) |
+| [M7-08](./tickets/M7/M7-08-earnings-log.md) | Earnings log on Rewards | `80cbd81` |
 | [M7-07](./tickets/M7/M7-07-collection-album-ui.md) | Collection album UI | `5c2cdb3` |
 | [M7-06](./tickets/M7/M7-06-banner-pull-ui.md) | Banner pull UI (one-by-one) | `d8e228f` |
 | [M7-05](./tickets/M7/M7-05-rewards-shell-nav.md) | Rewards nav shell and Seeds chrome | `68fcf3c` |
