@@ -7,7 +7,7 @@ import {
 
 type Queryable = Pool | PoolClient;
 
-export type PointsEventKind = "earn" | "reverse" | "adjust";
+export type PointsEventKind = "earn" | "reverse" | "adjust" | "spend" | "refund";
 
 export type PointsEventRow = {
   id: string;
@@ -535,4 +535,78 @@ export async function adjustEarnAmount(
     appliedDelta,
     requestedDelta,
   };
+}
+
+export type RecordGachaLedgerInput = {
+  /** Positive Seeds moved (spend cost or refund credit). */
+  amount: number;
+  message: string;
+  sourceType: string;
+  sourceId: string;
+  meta?: Record<string, unknown>;
+};
+
+/**
+ * Record a gacha spend. `amount` is the positive cost; the ledger stores −amount.
+ * Does not enforce affordability (M7-04); may leave the balance negative (R7.3).
+ */
+export async function recordSpend(
+  db: Queryable,
+  input: RecordGachaLedgerInput,
+): Promise<PointsEventRow> {
+  const cost = Math.max(0, Math.floor(input.amount));
+  const balance = await getPointsBalance(db);
+  const { appliedDelta, balanceAfter } = applyDeltaToBalance(balance, -cost);
+  const { rows } = await db.query({
+    text: `INSERT INTO points_events (
+       kind, category, amount, balance_after, message,
+       source_type, source_id, breakdown, meta
+     ) VALUES (
+       'spend', 'gacha', $1, $2, $3, $4, $5, NULL, $6::jsonb
+     )
+     RETURNING
+       id, created_at, kind, category, amount, balance_after, message,
+       source_type, source_id, breakdown, meta, reverses_event_id`,
+    values: [
+      appliedDelta,
+      balanceAfter,
+      input.message,
+      input.sourceType,
+      input.sourceId,
+      JSON.stringify(input.meta ?? {}),
+    ],
+  });
+  return mapEvent(rows[0] as Parameters<typeof mapEvent>[0]);
+}
+
+/**
+ * Record a manual duplicate refund. `amount` is the positive credit.
+ */
+export async function recordRefund(
+  db: Queryable,
+  input: RecordGachaLedgerInput,
+): Promise<PointsEventRow> {
+  const credit = Math.max(0, Math.floor(input.amount));
+  const balance = await getPointsBalance(db);
+  const { appliedDelta, balanceAfter } = applyDeltaToBalance(balance, credit);
+  const { rows } = await db.query({
+    text: `INSERT INTO points_events (
+       kind, category, amount, balance_after, message,
+       source_type, source_id, breakdown, meta
+     ) VALUES (
+       'refund', 'gacha', $1, $2, $3, $4, $5, NULL, $6::jsonb
+     )
+     RETURNING
+       id, created_at, kind, category, amount, balance_after, message,
+       source_type, source_id, breakdown, meta, reverses_event_id`,
+    values: [
+      appliedDelta,
+      balanceAfter,
+      input.message,
+      input.sourceType,
+      input.sourceId,
+      JSON.stringify(input.meta ?? {}),
+    ],
+  });
+  return mapEvent(rows[0] as Parameters<typeof mapEvent>[0]);
 }

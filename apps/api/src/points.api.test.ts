@@ -7,6 +7,8 @@ import {
   getPointsSummary,
   listPointsEvents,
   recordEarn,
+  recordRefund,
+  recordSpend,
   reverseEarn,
 } from "./pointsLedger.js";
 import {
@@ -127,6 +129,79 @@ describe.skipIf(!integrationReady)("points ledger", () => {
     const events = await listPointsEvents(pool, { limit: 10 });
     expect(events.find((e) => e.kind === "earn")?.amount).toBe(30);
     expect(events.find((e) => e.kind === "reverse")?.amount).toBe(-30);
+  });
+
+  it("recordSpend and recordRefund move the gacha category and balance", async () => {
+    await truncateAll();
+    await recordEarn(pool, {
+      category: "task",
+      amount: 200,
+      message: "earn",
+      sourceType: "task_complete",
+      sourceId: "t-gacha",
+    });
+
+    const spend = await recordSpend(pool, {
+      amount: 180,
+      message: "Pull ×1",
+      sourceType: "gacha_pull",
+      sourceId: "pull-1",
+      meta: { pulls: 1 },
+    });
+    expect(spend.kind).toBe("spend");
+    expect(spend.category).toBe("gacha");
+    expect(spend.amount).toBe(-180);
+    expect(spend.balanceAfter).toBe(20);
+    expect(await getPointsBalance(pool)).toBe(20);
+
+    const refund = await recordRefund(pool, {
+      amount: 18,
+      message: "Refund classic dupe",
+      sourceType: "gacha_refund",
+      sourceId: "refund-1",
+      meta: { edition: "classic" },
+    });
+    expect(refund.kind).toBe("refund");
+    expect(refund.category).toBe("gacha");
+    expect(refund.amount).toBe(18);
+    expect(refund.balanceAfter).toBe(38);
+    expect(await getPointsBalance(pool)).toBe(38);
+
+    const summary = await getPointsSummary(pool);
+    expect(categoryPoints(summary, "task")).toBe(200);
+    expect(categoryPoints(summary, "gacha")).toBe(-162);
+    expect(summary.balance).toBe(38);
+
+    const events = await listPointsEvents(pool, { limit: 10 });
+    expect(events.some((e) => e.kind === "spend")).toBe(true);
+    expect(events.some((e) => e.kind === "refund")).toBe(true);
+  });
+
+  it("recordSpend works when the balance is already negative", async () => {
+    await truncateAll();
+    await recordEarn(pool, {
+      category: "task",
+      amount: 10,
+      message: "thin",
+      sourceType: "task_complete",
+      sourceId: "t-thin",
+    });
+    await recordSpend(pool, {
+      amount: 180,
+      message: "Pull ×1",
+      sourceType: "gacha_pull",
+      sourceId: "pull-neg",
+    });
+    expect(await getPointsBalance(pool)).toBe(-170);
+
+    const again = await recordSpend(pool, {
+      amount: 180,
+      message: "Pull ×1 again",
+      sourceType: "gacha_pull",
+      sourceId: "pull-neg-2",
+    });
+    expect(again.balanceAfter).toBe(-350);
+    expect(await getPointsBalance(pool)).toBe(-350);
   });
 
   it("a reverse that exceeds the remaining balance goes negative (R7.3)", async () => {

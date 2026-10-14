@@ -15,6 +15,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   weekly_goal: "Weekly goals",
   achievement: "Achievements",
   streak: "Streaks",
+  gacha: "Gacha",
 };
 
 function formatWhen(iso: string): string {

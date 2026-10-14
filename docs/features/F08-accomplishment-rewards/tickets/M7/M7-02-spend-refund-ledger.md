@@ -1,6 +1,6 @@
 # M7-02: Ledger spend and refund events
 
-**Status:** Draft
+**Status:** Done
 **Blocked by:** M7-01
 **Implements:** R7.2, R4.2 (from `../../spec.md`)
 **Type:** build
@@ -13,24 +13,24 @@ This ticket is API/schema only: recording helpers and tests. The pull/refund pro
 
 ## Acceptance criteria
 
-- [ ] Migration(s) allow spend and refund events (update `kind` check; add category for gacha/spend as needed). Do not edit applied migration files.
-- [ ] Helpers can insert a spend that decreases `balance_after` by the cost and a refund that increases it, with source metadata suitable for pull history (flavor, edition, pity, etc. can be stubbed until M7-04).
-- [ ] Category totals and the balance stay consistent with earn / reverse / adjust / spend / refund.
-- [ ] Spends and refunds appear in the points/Seeds event API shape used by Progress today (so M7-08/M7-09 can filter them).
-- [ ] Tests cover spend, refund, and a mix with earns; a spend that would leave the balance below the remaining cost is not this ticket’s job (M7-04), but recording a spend when balance is already negative after M7-01 must work.
+- [x] Migration(s) allow spend and refund events (update `kind` check; add category for gacha/spend as needed). Do not edit applied migration files.
+- [x] Helpers can insert a spend that decreases `balance_after` by the cost and a refund that increases it, with source metadata suitable for pull history (flavor, edition, pity, etc. can be stubbed until M7-04).
+- [x] Category totals and the balance stay consistent with earn / reverse / adjust / spend / refund.
+- [x] Spends and refunds appear in the points/Seeds event API shape used by Progress today (so M7-08/M7-09 can filter them).
+- [x] Tests cover spend, refund, and a mix with earns; a spend that would leave the balance below the remaining cost is not this ticket’s job (M7-04), but recording a spend when balance is already negative after M7-01 must work.
 
 ## Reuse notes
 
-[`pointsLedger.ts`](../../../../../apps/api/src/pointsLedger.ts), [`pointsFormulas.ts`](../../../../../apps/api/src/pointsFormulas.ts) `PointsCategory`, [`025_points_ledger.sql`](../../../../../apps/api/src/sql/025_points_ledger.sql) and later category migrations (e.g. streak).
+[`pointsLedger.ts`](../../../../../apps/api/src/pointsLedger.ts) `recordSpend` / `recordRefund`; [`039_gacha_spend_refund.sql`](../../../../../apps/api/src/sql/039_gacha_spend_refund.sql); category `gacha`.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Reuse check done
-- [ ] Committed as `F08 M7-02: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Reuse check done
+- [x] Committed as `F08 M7-02: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(filled when done)
+Kinds `spend`/`refund`, category `gacha`. Helpers accept positive amounts and store signed ledger deltas. Web `PointsCategory` / event `kind` and Progress gacha bar label updated so the existing events API typechecks.

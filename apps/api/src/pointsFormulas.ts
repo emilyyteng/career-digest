@@ -43,7 +43,8 @@ export type PointsCategory =
   | "reflection"
   | "weekly_goal"
   | "achievement"
-  | "streak";
+  | "streak"
+  | "gacha";
 
 export type PointsBreakdownSlice = {
   category: PointsCategory;
