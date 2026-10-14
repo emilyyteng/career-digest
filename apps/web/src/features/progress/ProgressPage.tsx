@@ -24,8 +24,8 @@ import {
   type WeeklyGoalsSnapshot,
 } from "../../api";
 import HistoryCalendar, { type CalendarDayMark } from "./HistoryCalendar";
+import { CURRENCY_DISPLAY } from "../../currencyDisplay";
 import LedgerCompletionsPanel from "./LedgerCompletionsPanel";
-import LedgerPointsPanel from "./LedgerPointsPanel";
 import LeetcodeLogger, { lcCountsLine } from "./LeetcodeLogger";
 import ProgressHeatmap from "./ProgressHeatmap";
 import ReflectionAccordion, {
@@ -765,7 +765,15 @@ export default function Progress() {
           {ledgerView === "completions" ? (
             <LedgerCompletionsPanel tz={tz} todayYmd={today.localDate} />
           ) : (
-            <LedgerPointsPanel />
+            <div className="ledger-points-moved">
+              <p className="muted" style={{ margin: "0 0 0.75rem" }}>
+                {CURRENCY_DISPLAY.plural} earnings moved to Rewards. Completions
+                stay here.
+              </p>
+              <p style={{ margin: 0 }}>
+                <Link to="/rewards/earnings">Open Earnings →</Link>
+              </p>
+            </div>
           )}
         </section>
       )}

@@ -1351,3 +1351,40 @@ export const postRewardsLook = (body: {
       body: JSON.stringify(body),
     }),
   );
+
+export type EarningsRange =
+  | "today"
+  | "this_week"
+  | "last_7_days"
+  | "this_month"
+  | "all";
+
+export type EarningsEvent = PointsEvent & { lifetimeAfter: number };
+
+export type EarningsSnapshot = {
+  range: EarningsRange;
+  from: string | null;
+  to: string | null;
+  lifetimeEarned: number;
+  rangeEarned: number;
+  categories: Array<{ category: PointsCategory; points: number }>;
+  taskCategories: Array<{
+    taskCategoryId: string | null;
+    name: string;
+    points: number;
+  }>;
+  events: EarningsEvent[];
+};
+
+export const getRewardsEarnings = (opts: {
+  range: EarningsRange;
+  tz: string;
+  limit?: number;
+}) => {
+  const params = new URLSearchParams({
+    range: opts.range,
+    tz: opts.tz,
+  });
+  if (opts.limit != null) params.set("limit", String(opts.limit));
+  return parse<EarningsSnapshot>(api(`/api/rewards/earnings?${params}`));
+};

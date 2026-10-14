@@ -223,6 +223,169 @@ export async function listPointsEvents(
   return rows.map((r) => mapEvent(r as Parameters<typeof mapEvent>[0]));
 }
 
+/** Earn-side ledger only: work + Cake refunds; excludes pull spends (R7.8 / M7-08). */
+export type EarningsRange =
+  | "today"
+  | "this_week"
+  | "last_7_days"
+  | "this_month"
+  | "all";
+
+export type EarningsEventRow = PointsEventRow & {
+  /** Running sum of all non-spend amounts through this event (lifetime total). */
+  lifetimeAfter: number;
+};
+
+export type EarningsSnapshot = {
+  range: EarningsRange;
+  from: string | null;
+  to: string | null;
+  /** Global lifetime earned (all non-spend amounts, any time). */
+  lifetimeEarned: number;
+  /** Earn-side sum inside the selected range. */
+  rangeEarned: number;
+  categories: Array<{ category: PointsCategory; points: number }>;
+  taskCategories: TaskCategoryPoints[];
+  events: EarningsEventRow[];
+};
+
+export function isEarningsRange(value: string): value is EarningsRange {
+  return (
+    value === "today" ||
+    value === "this_week" ||
+    value === "last_7_days" ||
+    value === "this_month" ||
+    value === "all"
+  );
+}
+
+async function getEarnSideTaskCategoryPoints(
+  db: Queryable,
+  from: Date | null,
+  to: Date | null,
+): Promise<TaskCategoryPoints[]> {
+  const { rows } = await db.query<{
+    category_id: string | null;
+    name: string | null;
+    points: string;
+  }>(
+    `WITH per_task AS (
+       SELECT source_type, source_id, SUM(amount) AS points
+       FROM points_events
+       WHERE category = 'task'
+         AND kind <> 'spend'
+         AND ($1::timestamptz IS NULL OR created_at >= $1)
+         AND ($2::timestamptz IS NULL OR created_at < $2)
+       GROUP BY source_type, source_id
+     ),
+     attributed AS (
+       SELECT
+         pt.points,
+         CASE WHEN t.id IS NULL THEN NULL
+              ELSE COALESCE(e.meta->>'task_category_id', t.category_id::text)
+         END AS category_id,
+         CASE WHEN t.id IS NULL THEN NULL ELSE e.meta->>'task_category_name' END AS recorded_name
+       FROM per_task pt
+       LEFT JOIN points_events e
+         ON e.kind = 'earn' AND e.source_type = pt.source_type AND e.source_id = pt.source_id
+       LEFT JOIN tasks t ON t.id::text = pt.source_id
+     )
+     SELECT
+       a.category_id,
+       COALESCE(c.name, MAX(a.recorded_name)) AS name,
+       SUM(a.points)::text AS points
+     FROM attributed a
+     LEFT JOIN task_categories c ON c.id::text = a.category_id
+     GROUP BY a.category_id, c.name
+     ORDER BY SUM(a.points) DESC, COALESCE(c.name, MAX(a.recorded_name))`,
+    [from, to],
+  );
+  return rows
+    .map((r) => ({
+      taskCategoryId: r.category_id,
+      name: r.category_id === null ? "Deleted tasks" : (r.name ?? "Uncategorized"),
+      points: Number(r.points),
+    }))
+    .filter((r) => r.points !== 0);
+}
+
+export async function getEarningsSnapshot(
+  db: Queryable,
+  opts: {
+    range: EarningsRange;
+    from: Date | null;
+    to: Date | null;
+    limit?: number;
+  },
+): Promise<EarningsSnapshot> {
+  const limit = Math.min(Math.max(opts.limit ?? 100, 1), 300);
+  const { from, to } = opts;
+  const lifetimeEarned = await getLifetimeEarned(db);
+
+  const { rows: rangeRow } = await db.query<{ total: string }>(
+    `SELECT COALESCE(SUM(amount), 0)::text AS total
+     FROM points_events
+     WHERE kind <> 'spend'
+       AND ($1::timestamptz IS NULL OR created_at >= $1)
+       AND ($2::timestamptz IS NULL OR created_at < $2)`,
+    [from, to],
+  );
+  const rangeEarned = Number(rangeRow[0]?.total ?? 0);
+
+  const { rows: catRows } = await db.query<{
+    category: PointsCategory;
+    points: string;
+  }>(
+    `SELECT category, COALESCE(SUM(amount), 0)::text AS points
+     FROM points_events
+     WHERE kind <> 'spend'
+       AND ($1::timestamptz IS NULL OR created_at >= $1)
+       AND ($2::timestamptz IS NULL OR created_at < $2)
+     GROUP BY category
+     ORDER BY SUM(amount) DESC`,
+    [from, to],
+  );
+
+  const { rows: eventRows } = await db.query({
+    text: `WITH earn_side AS (
+       SELECT
+         id, created_at, kind, category, amount, balance_after, message,
+         source_type, source_id, breakdown, meta, reverses_event_id,
+         SUM(amount) OVER (ORDER BY created_at ASC, id ASC)::float8 AS lifetime_after
+       FROM points_events
+       WHERE kind <> 'spend'
+     )
+     SELECT *
+     FROM earn_side
+     WHERE ($1::timestamptz IS NULL OR created_at >= $1)
+       AND ($2::timestamptz IS NULL OR created_at < $2)
+     ORDER BY created_at DESC, id DESC
+     LIMIT $3`,
+    values: [from, to, limit],
+  });
+
+  const events: EarningsEventRow[] = eventRows.map((r) => {
+    const row = r as Parameters<typeof mapEvent>[0] & { lifetime_after: number | string };
+    return {
+      ...mapEvent(row),
+      lifetimeAfter: Number(row.lifetime_after),
+    };
+  });
+
+  return {
+    range: opts.range,
+    from: from ? from.toISOString() : null,
+    to: to ? to.toISOString() : null,
+    lifetimeEarned,
+    rangeEarned,
+    categories: catRows
+      .map((r) => ({ category: r.category, points: Number(r.points) }))
+      .filter((r) => r.points !== 0),
+    taskCategories: await getEarnSideTaskCategoryPoints(db, from, to),
+    events,
+  };
+}
+
 export async function findEarnEvent(
   db: Queryable,
   sourceType: string,

@@ -5605,6 +5605,25 @@ button.progress-cal-cell.effort::after {
   margin-left: 0.45rem;
   font-size: 0.85rem;
 }
+.rewards-range {
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+}
+.rewards-earn-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+}
+.rewards-earn-day-heading {
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.ledger-points-moved {
+  padding: 0.35rem 0 0.5rem;
+}
 .rewards-subnav {
   display: flex;
   flex-wrap: wrap;
