@@ -476,6 +476,8 @@ Nothing that depends on an open question may be implemented.
 | Q17 | Departures log retention | 14 days, per-day sections, today expanded (2026-10-13) | R6.7 |
 | Q18 | Rewards scope | M7 is Cat Cake Collection v1; later updates go to a future feature (2026-10-13) | R7.5 |
 | Q19 | Self-care shop | Dropped; gacha only (2026-10-13) | R7.1 |
+| Q20 | Currency name | **Seeds** in the UI; storage may stay `points_*` (2026-10-13) | R7.10 |
+| Q21 | Gacha numbers | 180 Seeds/pull; ×10 = 1,800; prototype CE rate and pity; manual refunds 18/90 only for copies above 6 (friendship maxed); no new-CE protection; no full backfill; priced against ~middle weekly earn (2026-10-13; refund floor clarified same day) | R7.7 |
 | Q22 | Which streaks and achievements exist? | Daily LC and apps streaks with small growing daily points plus milestone rewards; count-based achievements for applications, LC and interview steps per kind (higher reward); no "first of a kind". Numbers in Q42; weekly-goal streak in Q43 (2026-10-13) | R5.25–R5.27 |
 | Q23 | Weekly goal scoring | +20 per completed tagged app or weekly LC solve, +100 flat when met; LC past the target keeps +20 each with no second flat (2026-10-13) | R5.15 |
 | Q24 | Should daily clicks count toward weekly progress? | Replace daily/weekly with weekly-set vs other types through one write path (2026-10-13) | R5.17, M5-01 |
@@ -484,15 +486,13 @@ Nothing that depends on an open question may be implemented.
 | Q27 | Milestone structure | M5 covers weekly goals, streaks, achievements and points rules; M8 covers the Progress redesign, after M7 (2026-10-13) | Milestones |
 | Q28 | Reflection edge cases | Confirmed (2026-10-13) | R2.14–R2.20 |
 | Q29 | Block status edits on to-do-backed applications? | Yes; the API rejects them and the page redirects to the task (2026-10-13) | R2.21 |
-| Q20 | Currency name | **Seeds** in the UI; storage may stay `points_*` (2026-10-13) | R7.10 |
-| Q21 | Gacha numbers | 180 Seeds/pull; ×10 = 1,800; prototype CE rate and pity; manual refunds 18/90 only for copies above 6 (friendship maxed); no new-CE protection; no full backfill; priced against ~middle weekly earn (2026-10-13; refund floor clarified same day) | R7.7 |
 | Q30 | Which logs move to Rewards | Earnings and Pull history as **separate** Rewards routes (not one earn/pull/both filter); completions stay on Progress (2026-10-13; refined same day) | R7.8, R8.2 |
-| Q35 | When does the earn log leave Progress? | In M7, onto Rewards Earnings; Pull history is separate; range + day-grouped earn log + category bars for the selected range (2026-10-13) | R7.8, R8.2 |
 | Q31 | Prototype deletion vs milestone close | The feature, not the milestone, waits on deletion; `AGENTS.md` updated (2026-10-13) | RX.3 |
 | Q32 (part) | Migrate existing LC counts to tiers? | No (2026-10-13). Point values stay open | R5.20 |
 | Q32 | LeetCode tier point values | Easy +20, medium +30 (today's value, so past solves counted as medium are unchanged), hard +50 (2026-10-13) | R5.20, M5-01 |
 | Q33 | Re-completing a reopened misc task | Earns by the change in actual time, like an actual-time edit; the same time nets 0 (2026-10-13) | R4.13, M4-03 |
 | Q34 | Difficulty tiers in M5 or M8? | Built in M5, since they change points going forward; polish in M8 (2026-10-13) | R5.20, R8.3, M5-01 |
+| Q35 | When does the earn log leave Progress? | In M7, onto Rewards Earnings; Pull history is separate; range + day-grouped earn log + category bars for the selected range (2026-10-13) | R7.8, R8.2 |
 | Q36 | Name for the non-weekly LeetCode type | "misc": weekly + misc (2026-10-13) | R5.17 |
 | Q37 | LeetCode types and existing data | Past solves count as medium if shown by tier. No per-type edits in History. Days store only their aggregate count (per tier, see Q40), not per type; weekly progress lives on the week and its record (2026-10-13) | R5.17, R5.20 |
 | Q38 | Congrats banner persistence | Shows once; × closes early; seen per week in `localStorage`. Standardize the pattern in `docs/design-system.md` when M5-02 ships. The Jobs ranking banner should behave the same, owned by F09 (2026-10-13) | R5.18, M5-02, F09 R.6 |

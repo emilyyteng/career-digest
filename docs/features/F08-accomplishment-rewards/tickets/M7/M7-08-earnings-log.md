@@ -1,0 +1,43 @@
+# M7-08: Earnings log on Rewards
+
+**Status:** Draft
+**Blocked by:** M7-05; M7-02 for spend kinds existing so Earnings can exclude them cleanly
+**Implements:** R7.8, R7.10, R8.2 (from `../../spec.md`)
+**Type:** build
+
+## What to build
+
+Move **earned** Seed history from Progress → Ledger → Points onto `/rewards/earnings`.
+
+- Range control: **Today / This week / Last 7 days / This month / All time**.
+- **Category bars** for the **selected range** (not only lifetime).
+- Event list of **earns** (and earn-side reverse/adjust as today), **grouped by day** even when the range spans many days.
+- Remove or stub the Points panel on Progress so Seed accounting is not duplicated (completions stay). User-facing label **Seeds**.
+
+Pull spends belong on Pull history (M7-09), not here.
+
+## Acceptance criteria
+
+- [ ] `/rewards/earnings` shows only earning-side activity for the selected range.
+- [ ] Changing the range updates both the category bars and the day-grouped log.
+- [ ] Days with no events are omitted or clearly empty; order is newest day first (unless documented otherwise).
+- [ ] Progress no longer hosts the full points ledger UI (link to Rewards Earnings is OK).
+- [ ] Copy says Seeds where the user sees the currency name.
+- [ ] Follows design-system variants; reuse existing summary/event API where possible (extend with `from`/`to` or range if needed).
+
+## Reuse notes
+
+[`LedgerPointsPanel.tsx`](../../../../../apps/web/src/features/progress/) (path may vary), [`pointsLedger.ts`](../../../../../apps/api/src/pointsLedger.ts) `getPointsSummary` / events list. Extend rather than duplicate.
+
+## Definition of done
+
+- [ ] Acceptance criteria met and checked
+- [ ] `npm run check` passes
+- [ ] Follows `docs/design-system.md`
+- [ ] Reuse check done
+- [ ] Committed as `F08 M7-08: …`
+- [ ] End-of-task report given, including tests added and **Issues found**
+
+## Verification notes
+
+(filled when done)
