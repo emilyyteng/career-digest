@@ -134,9 +134,10 @@ async function countInterviewKind(
   db: Queryable,
   kind: Exclude<InterviewStepKind, "custom">,
 ): Promise<number> {
+  // awaiting_employer means you finished your part (same as completions diary).
   const { rows } = await db.query<{ n: string }>(
     `SELECT COUNT(*)::text AS n FROM application_steps
-     WHERE status = 'completed' AND kind = $1`,
+     WHERE status IN ('completed', 'awaiting_employer') AND kind = $1`,
     [kind],
   );
   return Number(rows[0]?.n ?? 0);

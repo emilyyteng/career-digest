@@ -29,6 +29,8 @@ export type ProgressToday = {
   leetcode: ActivityCredit;
   /** The day's solves per tier; untiered solves count as medium. Sums to `leetcode.raw`. */
   leetcodeTiers: LeetcodeTierCounts;
+  /** Today's solves logged as weekly (per tier). Misc = `leetcodeTiers` − this. */
+  leetcodeWeeklyTiers: LeetcodeTierCounts;
   /** This week's solves per tier, Monday to today (the weekly goals' week). */
   leetcodeWeekTiers: LeetcodeTierCounts;
   /** Daily LC and apps streaks (R5.25); display on the today strip is M5-12. */
@@ -344,7 +346,7 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
   const { getStreaks } = await import("./streaks.js");
   const localDate = localDateInTimezone(new Date(), tz);
   const appRaw = await countApplicationsInRange(pool, tz, localDate, localDate);
-  const lcTiers = await readLeetcodeTiers(pool, localDate);
+  const { tiers: lcTiers, weeklyTiers: lcWeeklyTiers } = await readLeetcodeDay(pool, localDate);
   const lcRaw = lcTiers.easy + lcTiers.medium + lcTiers.hard;
   const lcWeekTiers = await readLeetcodeWeekTiers(pool, localDate);
   const streaks = await getStreaks(pool, tz);
@@ -358,6 +360,7 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
     applications: activityCredit(appRaw),
     leetcode: activityCredit(lcRaw),
     leetcodeTiers: lcTiers,
+    leetcodeWeeklyTiers: lcWeeklyTiers,
     leetcodeWeekTiers: lcWeekTiers,
     streaks: { lc: streaks.lc, apps: streaks.apps },
     effortApplication: effortApp.size > 0,
@@ -453,7 +456,7 @@ export async function getProgressDay(
   date: string,
 ): Promise<ProgressDayDetail> {
   const appRaw = await countApplicationsInRange(pool, tz, date, date);
-  const lcTiers = await readLeetcodeTiers(pool, date);
+  const { tiers: lcTiers } = await readLeetcodeDay(pool, date);
   const lcRaw = lcTiers.easy + lcTiers.medium + lcTiers.hard;
   const effortApp = await effortDaysByLane(pool, tz, "application", date, date);
   const effortTech = await effortDaysByLane(pool, tz, "technical", date, date);
@@ -504,19 +507,45 @@ export async function getProgressDay(
   };
 }
 
-async function readLeetcodeTiers(
+type LeetcodeDayCounts = {
+  tiers: LeetcodeTierCounts;
+  weeklyTiers: LeetcodeTierCounts;
+};
+
+async function readLeetcodeDay(
   db: Queryable,
   date: string,
   forUpdate = false,
-): Promise<LeetcodeTierCounts> {
-  const { rows } = await db.query<{ count: number; easy_count: number; hard_count: number }>(
-    `SELECT count, easy_count, hard_count FROM leetcode_daily WHERE local_date = $1::date
+): Promise<LeetcodeDayCounts> {
+  const empty = { easy: 0, medium: 0, hard: 0 };
+  const { rows } = await db.query<{
+    count: number;
+    easy_count: number;
+    hard_count: number;
+    weekly_count: number;
+    weekly_easy_count: number;
+    weekly_hard_count: number;
+  }>(
+    `SELECT count, easy_count, hard_count,
+            weekly_count, weekly_easy_count, weekly_hard_count
+     FROM leetcode_daily WHERE local_date = $1::date
      ${forUpdate ? "FOR UPDATE" : ""}`,
     [date],
   );
   const row = rows[0];
-  if (!row) return { easy: 0, medium: 0, hard: 0 };
-  return { easy: row.easy_count, medium: row.count - row.easy_count - row.hard_count, hard: row.hard_count };
+  if (!row) return { tiers: empty, weeklyTiers: empty };
+  return {
+    tiers: {
+      easy: row.easy_count,
+      medium: row.count - row.easy_count - row.hard_count,
+      hard: row.hard_count,
+    },
+    weeklyTiers: {
+      easy: row.weekly_easy_count,
+      medium: row.weekly_count - row.weekly_easy_count - row.weekly_hard_count,
+      hard: row.weekly_hard_count,
+    },
+  };
 }
 
 /** Monday of the week containing `today` through `today`, matching the weekly goals' week. */
@@ -549,6 +578,8 @@ export type LeetcodeChangeResult = {
   localDate: string;
   count: number;
   tiers: LeetcodeTierCounts;
+  /** Today's weekly-typed solves per tier after the change. */
+  weeklyTiers: LeetcodeTierCounts;
   /** This week's solves per tier after the change (see `ProgressToday.leetcodeWeekTiers`). */
   weekTiers: LeetcodeTierCounts;
   /** This week's LC progress after a weekly change; null for misc. */
@@ -601,11 +632,19 @@ export async function changeLeetcode(
        ON CONFLICT (local_date) DO NOTHING`,
       [localDate],
     );
-    const tiers = await readLeetcodeTiers(client, localDate, true);
-    if (input.delta < 0 && tiers[input.tier] <= 0) {
-      throw Object.assign(new Error(`No ${input.tier} solves to remove`), { status: 409 });
+    const { tiers, weeklyTiers } = await readLeetcodeDay(client, localDate, true);
+    if (input.type === "weekly") {
+      if (input.delta < 0 && weeklyTiers[input.tier] <= 0) {
+        throw Object.assign(new Error(`No weekly ${input.tier} solves to remove`), { status: 409 });
+      }
+    } else {
+      const misc = tiers[input.tier] - weeklyTiers[input.tier];
+      if (input.delta < 0 && misc <= 0) {
+        throw Object.assign(new Error(`No misc ${input.tier} solves to remove`), { status: 409 });
+      }
     }
     tiers[input.tier] += input.delta;
+    if (input.type === "weekly") weeklyTiers[input.tier] += input.delta;
 
     let weeklyProgress: number | null = null;
     let where: string = input.type;
@@ -617,9 +656,19 @@ export async function changeLeetcode(
 
     await client.query(
       `UPDATE leetcode_daily
-       SET count = $2, easy_count = $3, hard_count = $4, updated_at = now()
+       SET count = $2, easy_count = $3, hard_count = $4,
+           weekly_count = $5, weekly_easy_count = $6, weekly_hard_count = $7,
+           updated_at = now()
        WHERE local_date = $1::date`,
-      [localDate, tiers.easy + tiers.medium + tiers.hard, tiers.easy, tiers.hard],
+      [
+        localDate,
+        tiers.easy + tiers.medium + tiers.hard,
+        tiers.easy,
+        tiers.hard,
+        weeklyTiers.easy + weeklyTiers.medium + weeklyTiers.hard,
+        weeklyTiers.easy,
+        weeklyTiers.hard,
+      ],
     );
 
     const label =
@@ -645,6 +694,7 @@ export async function changeLeetcode(
       localDate,
       count: tiers.easy + tiers.medium + tiers.hard,
       tiers,
+      weeklyTiers,
       weekTiers,
       weeklyProgress,
       points: serializePointsEarn(change),

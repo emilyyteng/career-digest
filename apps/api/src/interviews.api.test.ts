@@ -235,6 +235,39 @@ describe.skipIf(!integrationReady)("interviews API", () => {
     const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
     expect(detail.body.status).toBe("resolved");
     expect(detail.body.resolution).toBe("declined");
+    expect(detail.body.steps.every((s: { status: string }) => s.status === "completed")).toBe(
+      true,
+    );
+  });
+
+  it("resolving via application outcome completes awaiting_employer steps", async () => {
+    const application = await seedManualApplication({ status: "interviewing" });
+    const createRes = await apiClient()
+      .post("/api/interviews")
+      .send({
+        applicationIds: [application.id],
+        step: { title: "Technical", kind: "technical" },
+      })
+      .expect(201);
+    const threadId = createRes.body.id as string;
+    const before = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    const stepId = before.body.steps[0].id as string;
+
+    await apiClient()
+      .patch(`/api/interviews/${threadId}/steps/${stepId}`)
+      .send({ status: "awaiting_employer" })
+      .expect(200);
+
+    await apiClient()
+      .patch(`/api/applications/${application.id}`)
+      .send({ status: "declined" })
+      .expect(200);
+
+    const detail = await apiClient().get(`/api/interviews/${threadId}`).expect(200);
+    expect(detail.body.status).toBe("resolved");
+    const step = detail.body.steps.find((s: { id: string }) => s.id === stepId);
+    expect(step?.status).toBe("completed");
+    expect(step?.completedAt).toBeTruthy();
   });
 
   it("PATCH /api/interviews/:threadId can reopen a resolved thread", async () => {

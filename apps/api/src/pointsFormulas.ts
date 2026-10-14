@@ -158,6 +158,19 @@ export function streakDailyPoints(length: number): number {
   return Math.min(POINTS.streakDailyCap, POINTS.streakDailyPerLength * length);
 }
 
+/**
+ * Strip display: points earned for extending the streak today (usually +2) vs the
+ * streak's current day-rate (`2 × length`, capped) shown as total.
+ */
+export function streakPointsBreakdown(
+  length: number,
+  todayCounts: boolean,
+): { today: number; total: number } {
+  const total = streakDailyPoints(length);
+  if (!todayCounts || length <= 0) return { today: 0, total };
+  return { today: total - streakDailyPoints(length - 1), total };
+}
+
 /** Milestone payout for hitting this length, or null if it isn't a milestone. */
 export function streakMilestonePoints(length: number): number | null {
   if (!(POINTS.streakMilestones as readonly number[]).includes(length)) return null;

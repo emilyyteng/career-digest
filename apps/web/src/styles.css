@@ -2832,7 +2832,8 @@ textarea { min-height: 10rem; width: 100%; }
   display: flex;
   flex-direction: column;
   gap: 0.08rem;
-  min-width: 7.25rem;
+  width: max-content;
+  max-width: 100%;
   padding: 0.4rem 0.65rem;
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
@@ -2866,6 +2867,7 @@ textarea { min-height: 10rem; width: 100%; }
 .today-streak-pts {
   font-size: 0.75rem;
   color: var(--text-subtle);
+  white-space: nowrap;
 }
 .today-streak-pill.is-done .today-streak-pts {
   color: var(--accent-mint-deep);
@@ -4477,6 +4479,9 @@ button.progress-cal-cell.effort::after {
 }
 .weekly-goal-apps-plain li.is-done > a {
   color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--text-muted) 70%, transparent);
 }
 .weekly-goal-apps-plain a {
   color: inherit;
@@ -4485,6 +4490,10 @@ button.progress-cal-cell.effort::after {
 }
 .weekly-goal-apps-plain a:hover {
   text-decoration: underline;
+}
+.weekly-goal-apps-plain li.is-done > a:hover {
+  text-decoration: underline line-through;
+  text-decoration-thickness: 1px;
 }
 .weekly-goal-applied-tag {
   font-size: 0.7rem;

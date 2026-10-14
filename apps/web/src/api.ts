@@ -889,6 +889,8 @@ export type ProgressToday = {
   applications: ActivityCredit;
   leetcode: ActivityCredit;
   leetcodeTiers: LeetcodeTierCounts;
+  /** Today's solves logged as weekly (per tier). Misc = tiers − weekly. */
+  leetcodeWeeklyTiers: LeetcodeTierCounts;
   /** Monday through today, the weekly goals' week. */
   leetcodeWeekTiers: LeetcodeTierCounts;
   streaks: {
@@ -1154,6 +1156,7 @@ export type LeetcodeChangeResult = {
   localDate: string;
   count: number;
   tiers: LeetcodeTierCounts;
+  weeklyTiers: LeetcodeTierCounts;
   weekTiers: LeetcodeTierCounts;
   weeklyProgress: number | null;
   points: PointsEarnInfo | null;

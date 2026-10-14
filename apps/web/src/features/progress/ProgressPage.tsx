@@ -301,7 +301,11 @@ export default function Progress() {
         ...prev,
         leetcodeWeekTiers: result.weekTiers,
         ...(prev.localDate === result.localDate
-          ? { leetcodeTiers: result.tiers, leetcode: creditFor(result.count, prev.leetcode.cap) }
+          ? {
+              leetcodeTiers: result.tiers,
+              leetcodeWeeklyTiers: result.weeklyTiers,
+              leetcode: creditFor(result.count, prev.leetcode.cap),
+            }
           : {}),
       },
     );
@@ -545,6 +549,7 @@ export default function Progress() {
                 <h4 className="progress-section-title">LeetCode</h4>
                 <LeetcodeLogger
                   tiers={today.leetcodeTiers}
+                  weeklyTiers={today.leetcodeWeeklyTiers}
                   weeklyProgress={weeklyLcProgress}
                   onChange={(tier, delta, type) => changeLeetcode(tier, delta, type)}
                 />

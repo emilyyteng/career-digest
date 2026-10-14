@@ -9,18 +9,30 @@ export function lcCountsLine(label: string, t: LeetcodeTierCounts): string {
   return `${label}: ${total} solved · ${t.easy} easy · ${t.medium} medium · ${t.hard} hard`;
 }
 
+function subtractTiers(total: LeetcodeTierCounts, weekly: LeetcodeTierCounts): LeetcodeTierCounts {
+  return {
+    easy: Math.max(0, total.easy - weekly.easy),
+    medium: Math.max(0, total.medium - weekly.medium),
+    hard: Math.max(0, total.hard - weekly.hard),
+  };
+}
+
 /**
  * The one LeetCode logging control. Today shows the weekly/misc switch; History passes
  * `type="misc"` and no switch, since past days are edited per tier only. Day and week
- * counts live outside this card (right-justified on the Progress panel).
+ * totals live outside this card. The stepper counts follow the selected type.
  */
 export default function LeetcodeLogger({
   tiers,
+  weeklyTiers,
   weeklyProgress,
   fixedType,
   onChange,
 }: {
+  /** Day totals per tier (all types). */
   tiers: LeetcodeTierCounts;
+  /** Today's weekly-typed solves per tier. Misc = tiers − weekly. Defaults to zeros. */
+  weeklyTiers?: LeetcodeTierCounts;
   /** This week's LC progress; weekly −1 is disabled at 0. */
   weeklyProgress?: number;
   fixedType?: LeetcodeType;
@@ -29,6 +41,8 @@ export default function LeetcodeLogger({
   const [chosenType, setChosenType] = useState<LeetcodeType>("weekly");
   const [busy, setBusy] = useState(false);
   const type = fixedType ?? chosenType;
+  const weekly = weeklyTiers ?? { easy: 0, medium: 0, hard: 0 };
+  const display = type === "weekly" ? weekly : subtractTiers(tiers, weekly);
 
   async function step(tier: LeetcodeTier, delta: 1 | -1) {
     setBusy(true);
@@ -60,7 +74,9 @@ export default function LeetcodeLogger({
       <div className="lc-tier-list">
         {TIERS.map((tier) => {
           const removeDisabled =
-            busy || tiers[tier] <= 0 || (type === "weekly" && (weeklyProgress ?? 0) <= 0);
+            busy ||
+            display[tier] <= 0 ||
+            (type === "weekly" && (weeklyProgress ?? 0) <= 0);
           return (
             <div key={tier} className="lc-tier-stepper">
               <span className="lc-tier-name">{TIER_LABEL[tier]}</span>
@@ -73,7 +89,7 @@ export default function LeetcodeLogger({
               >
                 −
               </button>
-              <span className="lc-tier-count">{tiers[tier]}</span>
+              <span className="lc-tier-count">{display[tier]}</span>
               <button
                 type="button"
                 className="secondary ui-btn lc-step-btn"

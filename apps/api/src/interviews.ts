@@ -343,6 +343,14 @@ export async function resolveThreadsForApplication(
 
     if (inProcess.rows.length === 0) {
       await db.query(
+        `UPDATE application_steps
+         SET status = 'completed',
+             completed_at = CASE WHEN completed_at IS NULL THEN now() ELSE completed_at END,
+             updated_at = now()
+         WHERE thread_id = $1 AND status IN ('pending', 'scheduled', 'awaiting_employer')`,
+        [thread.id],
+      );
+      await db.query(
         `UPDATE interview_threads
          SET status = 'resolved',
              resolution = $2,

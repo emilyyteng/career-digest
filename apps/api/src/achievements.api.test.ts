@@ -166,4 +166,28 @@ describe.skipIf(!integrationReady)("achievements API (M5-11)", () => {
     );
     expect(rows[0]?.n).toBe(1);
   });
+
+  it("awaiting_employer counts toward interview achievements", async () => {
+    await syncAchievements(pool);
+    const app = await seedManualApplication({ status: "interviewing", company: "Offer Wait Co" });
+    const { threadId, stepId } = await seedInterviewThread({
+      primaryApplicationId: app.id,
+      stepTitle: "Offer",
+    });
+    await pool.query(`UPDATE application_steps SET kind = 'offer' WHERE id = $1`, [stepId]);
+
+    const res = await apiClient()
+      .patch(`/api/interviews/${threadId}/steps/${stepId}`)
+      .send({ status: "awaiting_employer", actualMinutes: 15 })
+      .expect(200);
+    expect(res.body.achievementUnlocks).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "offer:1", points: 200 })]),
+    );
+
+    const listed = await listAchievements(pool);
+    expect(listed.achievements.find((a) => a.id === "offer:1")).toMatchObject({
+      current: 1,
+      unlocked: true,
+    });
+  });
 });

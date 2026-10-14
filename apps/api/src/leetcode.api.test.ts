@@ -58,6 +58,7 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
   it("weekly +1 raises the tier, weekly progress and points", async () => {
     const res = await log("hard", 1, "weekly").expect(200);
     expect(res.body.tiers).toEqual({ easy: 0, medium: 0, hard: 1 });
+    expect(res.body.weeklyTiers).toEqual({ easy: 0, medium: 0, hard: 1 });
     expect(res.body.weeklyProgress).toBe(1);
     expect(res.body.points.amount).toBe(50);
     expect(res.body.points.message).toMatch(/Hard LeetCode \(weekly 1\/\d+\)/);
@@ -66,8 +67,10 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
 
   it("misc +1 leaves weekly progress alone", async () => {
     await log("easy", 1, "weekly").expect(200);
-    await log("medium", 1, "misc").expect(200);
+    const res = await log("medium", 1, "misc").expect(200);
     expect(await weeklyLc()).toBe(1);
+    expect(res.body.weeklyTiers).toEqual({ easy: 1, medium: 0, hard: 0 });
+    expect(res.body.tiers).toEqual({ easy: 1, medium: 1, hard: 0 });
   });
 
   it("−1 reverses that tier's points; 409 at 0", async () => {
@@ -81,12 +84,20 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
     await log("medium", -1, "misc").expect(409);
   });
 
-  it("misc −1 never touches weekly, even when the day ends below weekly", async () => {
+  it("misc −1 only removes misc solves; weekly −1 only removes weekly", async () => {
     await log("easy", 1, "weekly").expect(200);
     await log("easy", 1, "weekly").expect(200);
-    await log("easy", -1, "misc").expect(200);
-    await log("easy", -1, "misc").expect(200);
+    await log("easy", -1, "misc").expect(409);
+    await log("easy", 1, "misc").expect(200);
+    const afterMisc = await log("easy", -1, "misc").expect(200);
+    expect(afterMisc.body.tiers.easy).toBe(2);
+    expect(afterMisc.body.weeklyTiers.easy).toBe(2);
     expect(await weeklyLc()).toBe(2);
+
+    const afterWeekly = await log("easy", -1, "weekly").expect(200);
+    expect(afterWeekly.body.tiers.easy).toBe(1);
+    expect(afterWeekly.body.weeklyTiers.easy).toBe(1);
+    expect(await weeklyLc()).toBe(1);
   });
 
   it("weekly −1 lowers weekly progress; 409 at progress 0", async () => {
@@ -96,6 +107,16 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
     const res = await log("medium", -1, "weekly").expect(200);
     expect(res.body.weeklyProgress).toBe(0);
     expect(res.body.tiers.medium).toBe(1);
+    expect(res.body.weeklyTiers.medium).toBe(0);
+  });
+
+  it("GET /progress/today exposes weekly tiers separately from day totals", async () => {
+    await log("easy", 1, "weekly").expect(200);
+    await log("easy", 1, "misc").expect(200);
+    await log("hard", 1, "misc").expect(200);
+    const t = await apiClient().get(`/api/progress/today${q}`).expect(200);
+    expect(t.body.leetcodeTiers).toEqual({ easy: 2, medium: 0, hard: 1 });
+    expect(t.body.leetcodeWeeklyTiers).toEqual({ easy: 1, medium: 0, hard: 0 });
   });
 
   it("weekly progress has no cap", async () => {
@@ -155,6 +176,7 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
 
     const t = await apiClient().get(`/api/progress/today${q}`).expect(200);
     expect(t.body.leetcodeTiers).toEqual({ easy: 1, medium: 1, hard: 2 });
+    expect(t.body.leetcodeWeeklyTiers).toEqual({ easy: 1, medium: 0, hard: 1 });
     expect(t.body.leetcode.raw).toBe(4);
 
     const day = await apiClient().get(`/api/progress/day/${today}${q}`).expect(200);
