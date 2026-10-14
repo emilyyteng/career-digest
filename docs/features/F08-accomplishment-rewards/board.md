@@ -105,7 +105,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M7-01](./tickets/M7/M7-01-unclamp-balance.md) | Allow a negative Seed balance | (this commit) |
+| [M7-01](./tickets/M7/M7-01-unclamp-balance.md) | Allow a negative Seed balance | `9ff21d2` |
 
 </details>
 
