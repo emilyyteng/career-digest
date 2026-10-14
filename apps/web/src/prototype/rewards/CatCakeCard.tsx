@@ -23,7 +23,7 @@ export function MedalIcon({ size = 18 }: { size?: number }) {
 export default function CatCakeCard({
   flavor,
   edition,
-  collectorStyle = "mix",
+  collectorStyle = "day",
   size = 96,
   animated = true,
   silhouette = false,

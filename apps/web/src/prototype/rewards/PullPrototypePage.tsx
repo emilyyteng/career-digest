@@ -1,7 +1,7 @@
 /**
  * Mock banner: soft + hard pity, batch vs one-by-one reveal (variant C).
  */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PrototypeSwitcher from "../PrototypeSwitcher";
 import CatCake from "./CatCake";
@@ -19,6 +19,7 @@ import {
   simulate,
   type GachaState,
   type PullResult,
+  type SimulationStats,
 } from "./gacha";
 import { UNDO_TASK_POINTS, WEEKLY_EARN_ESTIMATE, freshPullState } from "./fixtures";
 import "../m4/prototype-m4.css";
@@ -31,6 +32,8 @@ const VARIANTS = [
 ];
 
 const STAGGER_MS = 90;
+
+let cachedStats: SimulationStats | null = null;
 
 type BatchPhase = "idle" | "waiting" | "revealed";
 
@@ -55,9 +58,17 @@ export default function PullPrototypePage() {
   const [seqActive, setSeqActive] = useState(false);
   const [seqIndex, setSeqIndex] = useState(0);
   const [seqOpen, setSeqOpen] = useState(false);
-  const [ceStyle, setCeStyle] = useState<CollectorStyle>("mix");
+  const [ceStyle, setCeStyle] = useState<CollectorStyle>("day");
   const rngRef = useRef(seededRng(20261012));
-  const stats = useMemo(() => simulate(10_000), []);
+  const [stats, setStats] = useState<SimulationStats | null>(cachedStats);
+  useEffect(() => {
+    if (cachedStats) return;
+    const timer = window.setTimeout(() => {
+      cachedStats = simulate(10_000);
+      setStats(cachedStats);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const inReveal = batchPhase !== "idle" || seqActive;
   const cfg = GACHA_CONFIG;
@@ -157,7 +168,8 @@ export default function PullPrototypePage() {
           <PityMeter pity={state.pity} />
           <div className="muted" style={{ fontSize: "0.8rem" }}>
             Pity {state.pity} / {cfg.hardPity} · next pull's Collector's Edition chance{" "}
-            <strong className="rw-stat">{pct(nextRate)}</strong> · {ownedCollectors} / 6 Collector's Editions owned
+            <strong className="rw-stat">{pct(nextRate)}</strong> · {ownedCollectors} / {FLAVORS.length} Collector's
+            Editions owned
           </div>
           <div className="rw-pull-actions">
             <button type="button" onClick={() => doPull(1)} disabled={!canPull1}>
@@ -314,41 +326,45 @@ export default function PullPrototypePage() {
           return {refundValue("classic")} (classic) / {refundValue("collector")} (Collector's Edition).
         </p>
         <RateLadder />
-        <table>
-          <tbody>
-            <tr>
-              <th>Avg pulls per Collector's Edition</th>
-              <td>
-                {stats.avgPullsPerCollector.toFixed(1)} (median {stats.p50PullsPerCollector}, 90th pct{" "}
-                {stats.p90PullsPerCollector}) ≈{" "}
-                {((stats.avgPullsPerCollector * cfg.costPerPull) / WEEKLY_EARN_ESTIMATE).toFixed(1)} weeks
-              </td>
-            </tr>
-            <tr>
-              <th>Consolidated Collector's Edition rate</th>
-              <td>{pct(stats.consolidatedCollectorRate)} (HSR: 6.85%)</td>
-            </tr>
-            <tr>
-              <th>Collector's Editions that needed hard pity</th>
-              <td>{pct(stats.hardPityShare)}</td>
-            </tr>
-            <tr>
-              <th>Avg pulls to own all 6 classics</th>
-              <td>{stats.avgPullsAllClassics.toFixed(1)}</td>
-            </tr>
-            <tr>
-              <th>Avg pulls to complete all 12</th>
-              <td>{stats.avgPullsFullSet.toFixed(0)}</td>
-            </tr>
-            <tr>
-              <th>Avg net points for full set (after refundable dupe refunds)</th>
-              <td>
-                {Math.round(stats.avgNetPointsFullSet).toLocaleString()} ≈{" "}
-                {(stats.avgNetPointsFullSet / WEEKLY_EARN_ESTIMATE).toFixed(1)} weeks
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {!stats ? (
+          <p className="muted">Simulating 10,000 collections…</p>
+        ) : (
+          <table>
+            <tbody>
+              <tr>
+                <th>Avg pulls per Collector's Edition</th>
+                <td>
+                  {stats.avgPullsPerCollector.toFixed(1)} (median {stats.p50PullsPerCollector}, 90th pct{" "}
+                  {stats.p90PullsPerCollector}) ≈{" "}
+                  {((stats.avgPullsPerCollector * cfg.costPerPull) / WEEKLY_EARN_ESTIMATE).toFixed(1)} weeks
+                </td>
+              </tr>
+              <tr>
+                <th>Consolidated Collector's Edition rate</th>
+                <td>{pct(stats.consolidatedCollectorRate)} (HSR: 6.85%)</td>
+              </tr>
+              <tr>
+                <th>Collector's Editions that needed hard pity</th>
+                <td>{pct(stats.hardPityShare)}</td>
+              </tr>
+              <tr>
+                <th>Avg pulls to own all {FLAVORS.length} classics</th>
+                <td>{stats.avgPullsAllClassics.toFixed(1)}</td>
+              </tr>
+              <tr>
+                <th>Avg pulls to complete all {FLAVORS.length * 2}</th>
+                <td>{stats.avgPullsFullSet.toFixed(0)}</td>
+              </tr>
+              <tr>
+                <th>Avg net points for full set (after refundable dupe refunds)</th>
+                <td>
+                  {Math.round(stats.avgNetPointsFullSet).toLocaleString()} ≈{" "}
+                  {(stats.avgNetPointsFullSet / WEEKLY_EARN_ESTIMATE).toFixed(1)} weeks
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        )}
       </div>
 
       <PrototypeSwitcher variants={VARIANTS} surfaceLabel="Bakery Banner" />

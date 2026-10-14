@@ -1,6 +1,6 @@
 /**
- * Feasibility lab: every variant at hero / card / thumbnail size, with the
- * Collector's Edition treatment selected by the prototype switcher.
+ * Feasibility lab: every variant at hero / card / thumbnail size. The hero row
+ * shows Classic, Day and Night together; the switcher flips the rows below.
  */
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -13,18 +13,13 @@ import "../m4/prototype-m4.css";
 import "./prototype-rewards.css";
 
 const VARIANTS = [
-  { key: "A", name: "CE: Foil", style: "foil" },
-  { key: "B", name: "CE: Night Bakery", style: "night" },
-  { key: "C", name: "CE: Dressed Up", style: "dressed" },
-  { key: "D", name: "CE: Mix (recommended)", style: "mix" },
+  { key: "A", name: "CE: Day", style: "day" },
+  { key: "B", name: "CE: Night", style: "night" },
 ] as const satisfies ReadonlyArray<{ key: string; name: string; style: CollectorStyle }>;
 
 const STYLE_NOTES: Record<CollectorStyle, string> = {
-  foil: "Same palette as classic. Gold rim on cake + icing, sweeping shine, gold card border. Elegant but subtle at 48px.",
-  night: "Inverted jewel-tone palette, star sprinkles, colored glow, starry dark card. Unmistakable at any size; reads as a different cat.",
-  dressed:
-    "Classic palette plus crown, star eyes, a second mini garnish on the cake and a gold star badge. Most character, but busy.",
-  mix: "Richer 'deluxe' palette, crown, gold rim + shine, glowing gold card. Aims for 'same cat, fancier' and still separable at 48px.",
+  day: "Richer palette, crown, gold rim + shine, glowing gold card, and a per-flavor charm pinned to the chest.",
+  night: "Dark jewel-tone palette, glowing garnish, charm and star tiara, star sprinkles, starry dark card.",
 };
 
 type Tile = { flavor: FlavorId; edition: Edition };
@@ -54,10 +49,15 @@ export default function CatCakeLabPage() {
     return copy;
   }, [blindSeed]);
 
+  const heroFlavor = FLAVOR_BY_ID[hero];
+  const card = (edition: Edition, look: CollectorStyle, size: number, flavor: FlavorId = hero) => (
+    <CatCakeCard flavor={flavor} edition={edition} collectorStyle={look} size={size} animated={animated} />
+  );
+
   return (
     <section className="rw-page">
       <p className="prototype-banner">
-        Rewards throwaway prototype · SVG feasibility lab. ← / → flips Collector's Edition treatment.{" "}
+        Rewards throwaway prototype · SVG feasibility lab. ← / → flips Day / Night.{" "}
         <Link to="/prototype/rewards">Rewards hub</Link>
       </p>
       <div>
@@ -76,7 +76,7 @@ export default function CatCakeLabPage() {
 
       <div className="rw-section">
         <h3>Hero · 200px (pull reveal, detail view)</h3>
-        <p className="muted">Classic on the left, Collector's Edition on the right.</p>
+        <p className="muted">Classic, Day and Night side by side.</p>
         <div className="rw-chip-row" style={{ marginBottom: "0.85rem" }}>
           {FLAVORS.map((f) => (
             <button
@@ -90,11 +90,12 @@ export default function CatCakeLabPage() {
             </button>
           ))}
         </div>
-        <div className="rw-hero-pair">
-          <CatCakeCard flavor={hero} edition="classic" size={200} animated={animated} />
-          <CatCakeCard flavor={hero} edition="collector" collectorStyle={style} size={200} animated={animated} />
+        <div className="rw-hero-pair" style={{ marginTop: "0.6rem" }}>
+          {card("classic", "day", 200)}
+          {card("collector", "day", 200)}
+          {card("collector", "night", 200)}
           <p className="muted" style={{ maxWidth: "16rem", fontSize: "0.85rem" }}>
-            {FLAVOR_BY_ID[hero].blurb}
+            {heroFlavor.blurb}
           </p>
         </div>
       </div>
@@ -160,7 +161,7 @@ export default function CatCakeLabPage() {
       <div className="rw-section">
         <h3>Blind check (no frames, no labels)</h3>
         <p className="muted">
-          Shuffle the 12 bare 48px SVGs and try to spot the six Collector's Editions without the card frame
+          Shuffle the {allTiles.length} bare 48px SVGs and try to spot the {FLAVORS.length} Collector's Editions without the card frame
           helping. If you can't, the treatment relies too much on the frame.
         </p>
         <div className="rw-toolbar" style={{ marginBottom: "0.6rem" }}>

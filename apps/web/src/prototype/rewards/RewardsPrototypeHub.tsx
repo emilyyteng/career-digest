@@ -12,7 +12,7 @@ const SURFACES = [
     to: "/prototype/rewards/lab?variant=D",
     title: "Cat Cake Lab · SVG feasibility",
     blurb:
-      "All 12 variants as pure inline SVG at 200 / 96 / 48 / 32px, silhouettes, and a blind check. A Foil · B Night Bakery · C Dressed Up · D Mix (recommended) Collector's Edition treatments.",
+      "All 24 variants as pure inline SVG at 200 / 96 / 48 / 32px, silhouettes, and a blind check. A Day · B Night Collector's Edition looks.",
   },
   {
     to: "/prototype/rewards/pull?variant=C",

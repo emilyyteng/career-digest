@@ -1,27 +1,9 @@
-import {
-  FLAVOR_BY_ID,
-  friendshipColors,
-  paletteFor,
-  type CollectorStyle,
-  type Edition,
-  type FlavorId,
-} from "./flavors";
+import { friendshipColors, type FlavorId } from "./flavors";
 import { FRIENDSHIP_MAX, friendshipLevel } from "./gacha";
 
-export default function FriendshipDots({
-  flavor,
-  edition,
-  count,
-  collectorStyle = "mix",
-}: {
-  flavor: FlavorId;
-  edition: Edition;
-  count: number;
-  collectorStyle?: CollectorStyle;
-}) {
-  const f = FLAVOR_BY_ID[flavor];
-  const palette = paletteFor(f, edition, collectorStyle);
-  const colors = friendshipColors(palette);
+/** Classic and Collector's Edition share a flavor's dot gradient. */
+export default function FriendshipDots({ flavor, count }: { flavor: FlavorId; count: number }) {
+  const colors = friendshipColors(flavor);
   const level = friendshipLevel(count);
   if (count === 0) return null;
 
@@ -35,7 +17,7 @@ export default function FriendshipDots({
             className={`rw-friendship-dot ${i < level ? "rw-friendship-dot--on" : ""}`}
             style={
               i < level
-                ? { background: color, borderColor: palette.furShade }
+                ? { background: color, borderColor: color }
                 : { borderColor: color, background: "transparent" }
             }
           />

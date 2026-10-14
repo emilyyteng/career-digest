@@ -16,7 +16,10 @@ export const freshPullState = (): GachaState => ({
   },
 });
 
-/** Several weeks in: all classics with dupes, a few CEs. */
+/**
+ * Several months in: every classic, two-thirds of the CEs, friendship levels
+ * from 0 to max, and a few refundable extras (copies beyond 6).
+ */
 export const midCollectionState = (): GachaState => ({
   balance: 512,
   pity: 6,
@@ -28,8 +31,19 @@ export const midCollectionState = (): GachaState => ({
     "sesame:classic": 6,
     "peach:classic": 1,
     "lemon:classic": 4,
+    "cherry:classic": 8,
+    "redbean:classic": 4,
+    "chocobanana:classic": 6,
+    "raspberry:classic": 2,
+    "caramel:classic": 9,
+    "ube:classic": 3,
     "strawberry:collector": 1,
     "matcha:collector": 1,
     "sesame:collector": 2,
+    "peach:collector": 3,
+    "cherry:collector": 4,
+    "chocobanana:collector": 1,
+    "caramel:collector": 7,
+    "ube:collector": 2,
   },
 });

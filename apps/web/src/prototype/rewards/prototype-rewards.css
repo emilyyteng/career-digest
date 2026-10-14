@@ -127,28 +127,21 @@
   color: var(--text-subtle);
 }
 
-/* Foil + Mix: animated gold gradient border */
-.cc-card--foil,
-.cc-card--mix {
+/* Day: glowing gold gradient border */
+.cc-card--day {
   border: 2px solid transparent;
-  background:
-    linear-gradient(var(--surface), var(--surface)) padding-box,
-    linear-gradient(135deg, #fff3b0, #e6b422 30%, #fff7d1 50%, #c9971a 70%, #ffe48a) border-box;
-}
-.cc-card--mix {
   background:
     radial-gradient(circle at 50% 35%, #fff8e6 0%, var(--surface) 70%) padding-box,
     linear-gradient(135deg, #fff3b0, #e6b422 30%, #fff7d1 50%, #c9971a 70%, #ffe48a) border-box;
   box-shadow: 0 0 0 3px rgba(230, 180, 34, 0.14), var(--shadow-soft);
 }
-.cc-card--mix.cc-card--locked,
-.cc-card--foil.cc-card--locked {
+.cc-card--day.cc-card--locked {
   background: var(--surface-2, #f6eef3);
   border: 1px dashed var(--border);
   box-shadow: none;
 }
 
-/* Night Bakery: dark starry card */
+/* Night: dark starry card */
 .cc-card--night {
   border-color: #3b2f6b;
   background:
@@ -163,14 +156,6 @@
   background: #2a2340;
 }
 
-/* Dressed Up: ribbon banner, otherwise classic frame */
-.cc-card--dressed {
-  border-color: #e6b422;
-}
-.cc-card--dressed .cc-card-name::before {
-  content: "★ ";
-  color: #c9971a;
-}
 
 /* ---------- Shared page bits ---------- */
 .rw-page {
@@ -227,6 +212,13 @@
   background: color-mix(in srgb, var(--accent-purple) 18%, var(--surface));
   font-weight: 600;
 }
+.rw-look {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-width: 15rem;
+  font-size: 0.8rem;
+}
 .rw-hero-pair {
   display: flex;
   flex-wrap: wrap;
@@ -251,15 +243,11 @@
   padding: 2px;
   border-radius: 10px;
 }
-.rw-thumb-strip .rw-thumb--ce-foil,
-.rw-thumb-strip .rw-thumb--ce-mix {
+.rw-thumb-strip .rw-thumb--ce-day {
   background: linear-gradient(135deg, #fff3b0, #e6b422 40%, #fff7d1 55%, #c9971a);
 }
 .rw-thumb-strip .rw-thumb--ce-night {
   background: #241c45;
-}
-.rw-thumb-strip .rw-thumb--ce-dressed {
-  box-shadow: inset 0 0 0 1.5px #e6b422;
 }
 .rw-thumb-inner {
   border-radius: 8px;

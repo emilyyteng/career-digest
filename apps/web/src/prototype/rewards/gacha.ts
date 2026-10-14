@@ -204,49 +204,90 @@ export type SimulationStats = {
   avgNetPointsFullSet: number;
 };
 
-/** Monte Carlo over the real roll function; also the basis for the future unit test. */
+/**
+ * Monte Carlo of the same roll rules as `rollOnce`, drawing from the RNG in
+ * the same order, but on flat counters: copying `GachaState` and scanning every
+ * flavor per pull made 10k runs take seconds on the pull page.
+ */
 export function simulate(runs = 10_000, seed = 42, cfg: GachaConfig = GACHA_CONFIG): SimulationStats {
   const rng = seededRng(seed);
-  const gaps: number[] = [];
+  const n = FLAVORS.length;
+  const classic = new Int32Array(n);
+  const collector = new Int32Array(n);
+  const unowned = new Int32Array(n);
+  const gapCounts = new Float64Array(cfg.hardPity + 1);
+  let gapTotal = 0;
+  let gapSum = 0;
   let hardHits = 0;
   let sumClassics = 0;
   let sumFull = 0;
   let sumNet = 0;
 
   for (let run = 0; run < runs; run++) {
-    let state: GachaState = { balance: Infinity, pity: 0, collectorDupeStreak: 0, owned: {} };
+    classic.fill(0);
+    collector.fill(0);
+    let classicsOwned = 0;
+    let collectorsOwned = 0;
+    let pity = 0;
+    let dupeStreak = 0;
     let pulls = 0;
     let classicsDoneAt = 0;
     let refunded = 0;
-    for (;;) {
-      const { state: next, result } = rollOnce(state, rng, cfg);
-      state = next;
+    while (classicsOwned < n || collectorsOwned < n) {
+      const pityAt = pity + 1;
+      const rate = collectorRateAt(pityAt, cfg);
+      const hit = rate >= 1 || rng() < rate;
+      let idx: number;
+      if (
+        hit &&
+        cfg.newCollectorAfterDupes != null &&
+        dupeStreak >= cfg.newCollectorAfterDupes &&
+        collectorsOwned < n
+      ) {
+        let m = 0;
+        for (let i = 0; i < n; i++) if (collector[i] === 0) unowned[m++] = i;
+        idx = unowned[Math.floor(rng() * m)]!;
+      } else {
+        idx = Math.floor(rng() * n);
+      }
       pulls++;
-      if (refundableCount(result.copiesAfter) > refundableCount(result.copiesAfter - 1)) {
-        refunded += refundValue(result.edition, cfg);
+      const copies = hit ? ++collector[idx]! : ++classic[idx]!;
+      if (copies > KEPT_COPIES) refunded += cfg.refund[hit ? "collector" : "classic"];
+      if (hit) {
+        if (copies === 1) collectorsOwned++;
+        dupeStreak = copies > 1 ? dupeStreak + 1 : 0;
+        pity = 0;
+        gapCounts[pityAt]!++;
+        gapTotal++;
+        gapSum += pityAt;
+        if (rate >= 1) hardHits++;
+      } else {
+        if (copies === 1 && ++classicsOwned === n) classicsDoneAt = pulls;
+        pity = pityAt;
       }
-      if (result.edition === "collector") {
-        gaps.push(result.pityAt);
-        if (result.viaHardPity) hardHits++;
-      }
-      const classics = FLAVORS.every((f) => state.owned[variantKey(f.id, "classic")]);
-      if (classics && !classicsDoneAt) classicsDoneAt = pulls;
-      if (classics && FLAVORS.every((f) => state.owned[variantKey(f.id, "collector")])) break;
     }
     sumClassics += classicsDoneAt;
     sumFull += pulls;
     sumNet += pulls * cfg.costPerPull - refunded;
   }
 
-  gaps.sort((a, b) => a - b);
-  const avg = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+  const percentile = (q: number) => {
+    const target = Math.floor(gapTotal * q);
+    let seen = 0;
+    for (let g = 1; g < gapCounts.length; g++) {
+      seen += gapCounts[g]!;
+      if (seen > target) return g;
+    }
+    return cfg.hardPity;
+  };
+  const avg = gapSum / gapTotal;
   return {
     runs,
     avgPullsPerCollector: avg,
-    p50PullsPerCollector: gaps[Math.floor(gaps.length * 0.5)]!,
-    p90PullsPerCollector: gaps[Math.floor(gaps.length * 0.9)]!,
+    p50PullsPerCollector: percentile(0.5),
+    p90PullsPerCollector: percentile(0.9),
     consolidatedCollectorRate: 1 / avg,
-    hardPityShare: hardHits / gaps.length,
+    hardPityShare: hardHits / gapTotal,
     avgPullsAllClassics: sumClassics / runs,
     avgPullsFullSet: sumFull / runs,
     avgNetPointsFullSet: sumNet / runs,

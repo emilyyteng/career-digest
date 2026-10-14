@@ -11,6 +11,7 @@ import {
   COLLECTOR_STYLES,
   FLAVORS,
   FLAVOR_BY_ID,
+  variantDescription,
   variantName,
   type CollectorStyle,
   type Edition,
@@ -37,12 +38,17 @@ const VARIANTS = [
 ];
 
 const EDITIONS: Edition[] = ["classic", "collector"];
+const TOTAL_VARIANTS = FLAVORS.length * EDITIONS.length;
+const SHELF_WIDTH = 6;
+const SHELVES = Array.from({ length: Math.ceil(FLAVORS.length / SHELF_WIDTH) }, (_, i) =>
+  FLAVORS.slice(i * SHELF_WIDTH, (i + 1) * SHELF_WIDTH),
+);
 
 export default function CollectionPrototypePage() {
   const [params] = useSearchParams();
   const variant = params.get("variant") === "B" ? "B" : "A";
   const [state, setState] = useState<GachaState>(midCollectionState);
-  const [ceStyle, setCeStyle] = useState<CollectorStyle>("mix");
+  const [ceStyle, setCeStyle] = useState<CollectorStyle>("day");
   const [selected, setSelected] = useState<{ flavor: FlavorId; edition: Edition } | null>({
     flavor: "sesame",
     edition: "classic",
@@ -80,11 +86,11 @@ export default function CollectionPrototypePage() {
           be refunded for points.
         </p>
         <div className="rw-progress-bar" style={{ maxWidth: "22rem" }}>
-          <span style={{ width: `${(ownedCount / 12) * 100}%` }} />
+          <span style={{ width: `${(ownedCount / TOTAL_VARIANTS) * 100}%` }} />
         </div>
         <div className="rw-toolbar">
           <span className="rw-stat">
-            <strong>{ownedCount}</strong> / 12 discovered
+            <strong>{ownedCount}</strong> / {TOTAL_VARIANTS} discovered
           </span>
           <span className="rw-balance">{state.balance} pts</span>
           <button
@@ -128,35 +134,40 @@ export default function CollectionPrototypePage() {
         </div>
       ) : (
         <div className="rw-shelf">
-          {EDITIONS.map((edition) => (
-            <div key={edition} className={`rw-shelf-row ${edition === "collector" ? "rw-shelf-row--ce" : ""}`}>
-              {FLAVORS.map((f) => {
-                const n = count(f.id, edition);
-                const ref = refundableCount(n);
-                return (
-                  <div
-                    key={f.id}
-                    role="button"
-                    tabIndex={0}
-                    className="rw-shelf-item"
-                    onClick={() => setSelected({ flavor: f.id, edition })}
-                    onKeyDown={(e) => e.key === "Enter" && setSelected({ flavor: f.id, edition })}
-                    title={n ? variantName(f, edition) : "Undiscovered"}
-                  >
-                    {ref > 0 && <span className="cc-card-count">×{ref}</span>}
-                    <CatCake
-                      flavor={f.id}
-                      edition={edition}
-                      collectorStyle={ceStyle}
-                      size={edition === "collector" ? 96 : 86}
-                      animated={edition === "collector" && n > 0}
-                      silhouette={n === 0}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+          {EDITIONS.flatMap((edition) =>
+            SHELVES.map((shelf, i) => (
+              <div
+                key={`${edition}-${i}`}
+                className={`rw-shelf-row ${edition === "collector" ? "rw-shelf-row--ce" : ""}`}
+              >
+                {shelf.map((f) => {
+                  const n = count(f.id, edition);
+                  const ref = refundableCount(n);
+                  return (
+                    <div
+                      key={f.id}
+                      role="button"
+                      tabIndex={0}
+                      className="rw-shelf-item"
+                      onClick={() => setSelected({ flavor: f.id, edition })}
+                      onKeyDown={(e) => e.key === "Enter" && setSelected({ flavor: f.id, edition })}
+                      title={n ? variantName(f, edition) : "Undiscovered"}
+                    >
+                      {ref > 0 && <span className="cc-card-count">×{ref}</span>}
+                      <CatCake
+                        flavor={f.id}
+                        edition={edition}
+                        collectorStyle={ceStyle}
+                        size={edition === "collector" ? 96 : 86}
+                        animated={edition === "collector" && n > 0}
+                        silhouette={n === 0}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )),
+          )}
         </div>
       )}
 
@@ -175,14 +186,14 @@ export default function CollectionPrototypePage() {
             <h3>{sel.n ? variantName(FLAVOR_BY_ID[sel.flavor], sel.edition) : "Undiscovered"}</h3>
             <p className="muted" style={{ margin: "0 0 0.5rem", fontSize: "0.85rem" }}>
               {sel.n
-                ? FLAVOR_BY_ID[sel.flavor].blurb
+                ? variantDescription(FLAVOR_BY_ID[sel.flavor], sel.edition)
                 : sel.edition === "collector"
                   ? "A rare Collector's Edition. Any banner pull can bake it; pity guarantees some Collector's Edition by pull 20."
                   : "Classics drop at random from any pull."}
             </p>
             {sel.n > 0 && (
               <>
-                <FriendshipDots flavor={sel.flavor} edition={sel.edition} count={sel.n} collectorStyle={ceStyle} />
+                <FriendshipDots flavor={sel.flavor} count={sel.n} />
                 <p style={{ margin: "0 0 0.5rem", fontSize: "0.85rem" }}>
                   Owned ×{sel.n}
                   {friendshipLevel(sel.n) < FRIENDSHIP_MAX && sel.n > 1 && (
