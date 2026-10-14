@@ -87,15 +87,14 @@ No open tickets.
 
 **Milestone status:** Design
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
-| [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | build | Ready | After M7-04 |
+_(no open tickets)_
 
 <details>
-<summary>Done (10)</summary>
+<summary>Done (11)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | (this commit) |
 | [M7-10](./tickets/M7/M7-10-rules-reference.md) | Rewards Rules reference | `3768f93` |
 | [M7-09](./tickets/M7/M7-09-pull-history.md) | Pull history | `3addc8d` |
 | [M7-08](./tickets/M7/M7-08-earnings-log.md) | Earnings log on Rewards | `80cbd81` |
