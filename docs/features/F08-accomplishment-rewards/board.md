@@ -94,7 +94,7 @@ _(no open tickets)_
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | (this commit) |
+| [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | `87e6ac6` |
 | [M7-10](./tickets/M7/M7-10-rules-reference.md) | Rewards Rules reference | `3768f93` |
 | [M7-09](./tickets/M7/M7-09-pull-history.md) | Pull history | `3addc8d` |
 | [M7-08](./tickets/M7/M7-08-earnings-log.md) | Earnings log on Rewards | `80cbd81` |
