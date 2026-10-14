@@ -60,7 +60,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | TBD |
+| [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | `bc0eeb1` |
 | [M5-02](./tickets/M5/M5-02-weekly-congrats-banner.md) | Weekly targets congrats banner on Home | `18d06a7` |
 | [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | `9565150` |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | `ce85f4a` |
