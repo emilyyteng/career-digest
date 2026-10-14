@@ -11,6 +11,7 @@ import {
 } from "../api";
 import DeadlineUrgency, { DeadlineUrgencyPiesOnly } from "../DeadlineUrgency";
 import { endOfLocalCivilDayIso } from "../formatDate";
+import WeeklyCongratsBanner from "../features/home/WeeklyCongratsBanner";
 import TodayStrip from "../features/progress/TodayStrip";
 import WeeklyGoalsBlock from "../features/progress/WeeklyGoalsBlock";
 import PriorityBadge from "../PriorityBadge";
@@ -239,6 +240,9 @@ export default function Home() {
             <Link to="/status" className="home-section-link">Pipeline status →</Link>
           </div>
         </div>
+        {data.weeklyCongrats && data.weeklyCongrats.goals.length > 0 && (
+          <WeeklyCongratsBanner congrats={data.weeklyCongrats} />
+        )}
         {progress && (
           <div className="home-progress-stack">
             <div className="home-progress-row">

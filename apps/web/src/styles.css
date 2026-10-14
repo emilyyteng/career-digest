@@ -1691,6 +1691,78 @@ button.hide-board-remove:hover:not(:disabled) {
   box-shadow: none !important;
 }
 
+
+/* One-time notice (design-system.md): persists seen in localStorage; × hides for this view. */
+.one-time-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--accent-mint) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-mint) 14%, var(--surface));
+  color: var(--text);
+}
+.one-time-notice-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.one-time-notice-dismiss {
+  flex-shrink: 0;
+  margin-top: -0.1rem;
+}
+.weekly-congrats-title {
+  display: block;
+  font-size: 0.95rem;
+}
+.weekly-congrats-week {
+  display: block;
+  margin: 0.15rem 0 0.4rem;
+  font-size: 0.82rem;
+}
+.weekly-congrats-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.88rem;
+}
+.weekly-congrats-lines li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.weekly-congrats-line-main {
+  min-width: 0;
+}
+.weekly-congrats-streak {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  margin-left: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-purple-deep);
+  white-space: nowrap;
+}
+.weekly-congrats-pts {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-mint-deep);
+  white-space: nowrap;
+}
+.weekly-congrats-total {
+  margin-top: 0.15rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid color-mix(in srgb, var(--accent-mint) 35%, var(--border));
+  font-weight: 600;
+}
+
 /* Interim buttons (design-system.md → Interim decisions, F08 M5). Built on .secondary so the
    global button:not(...) chain doesn't apply; F09 may replace them. */
 button.secondary.ui-btn {

@@ -1,6 +1,6 @@
 # M5-02: Weekly targets congrats banner on Home
 
-**Status:** Draft (waits on M5-05; M5-06/M5-07 design in)
+**Status:** Done
 **Blocked by:** M5-05 (week records and streak count). M5-06 and M5-07 (Q5 streak) done
 **Implements:** R5.18 (from `../../spec.md`)
 **Type:** build
@@ -18,18 +18,16 @@ After the week resets, the first time the user opens Home they see one congratul
 
 ## Acceptance criteria
 
-(Draft. Finalize after M5-06.)
-
-- [ ] Both met: one banner naming apps and LC, with both counts and the combined target points.
-- [ ] One met: the banner names only that target, its count, and its points.
-- [ ] Neither met: no banner.
-- [ ] A 0/0 apps week never counts as met (R5.12).
-- [ ] The banner reads from the week-close record (R5.8), not recomputed live, so it matches the completion logs.
-- [ ] The banner shows on the first Home visit after the reset, even if that's days into the new week.
-- [ ] Leaving Home and coming back, or reloading, doesn't show it again, whether or not × was pressed.
-- [ ] × hides it immediately.
-- [ ] The next week's banner (if earned) shows normally; the seen mark is per week.
-- [ ] `docs/design-system.md` describes both banner patterns (transient flash and one-time notice): when to use each, dismissal, and persistence.
+- [x] Both met: one banner naming apps and LC, with both counts and the combined target points.
+- [x] One met: the banner names only that target, its count, and its points.
+- [x] Neither met: no banner.
+- [x] A 0/0 apps week never counts as met (R5.12).
+- [x] The banner reads from the week-close record (R5.8), not recomputed live, so it matches the completion logs.
+- [x] The banner shows on the first Home visit after the reset, even if that's days into the new week.
+- [x] Leaving Home and coming back, or reloading, doesn't show it again, whether or not × was pressed.
+- [x] × hides it immediately.
+- [x] The next week's banner (if earned) shows normally; the seen mark is per week.
+- [x] `docs/design-system.md` describes both banner patterns (transient flash and one-time notice): when to use each, dismissal, and persistence.
 
 ## Design questions (prototype tickets only)
 
@@ -46,15 +44,15 @@ Build the one-time notice as a reusable design-system variant (not one-off CSS),
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Banner patterns written into `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M5-02: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Banner patterns written into `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M5-02: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+Commit: see board. `GET /api/home` → `weeklyCongrats` from `weekly_goal_records` for last week (met only) + `metWeeksStreaks`. UI: `OneTimeNotice` + `WeeklyCongratsBanner` in the hero (M5-06 Q4 B); flame streak from 2 weeks inline. Seen key `weekly-congrats-seen:{weekStart}`.

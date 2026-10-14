@@ -6,6 +6,7 @@ import {
   type UpcomingWindowDays,
   UPCOMING_WINDOW_DAYS_DEFAULT,
 } from "./homeUpcoming.js";
+import { getWeeklyCongrats, type WeeklyCongrats } from "./weeklyCongrats.js";
 import { getWeeklyGoalsSnapshot, type WeeklyGoalsSnapshot } from "./weeklyGoals.js";
 
 const JOBS_LIST_BASE = `
@@ -43,6 +44,8 @@ export type HomeDashboard = {
   };
   upcomingThisWeek: HomeUpcomingThisWeek;
   weeklyGoals: WeeklyGoalsSnapshot | null;
+  /** Last week's met goals for the one-time congrats banner (R5.18); null if none. */
+  weeklyCongrats: WeeklyCongrats | null;
 };
 
 type JobRow = {
@@ -124,6 +127,7 @@ export async function getHomeDashboard(
   /** Null without a valid browser time zone: upcoming falls back to UTC, weekly goals are omitted (B2). */
   tz: string | null,
   upcomingDays: UpcomingWindowDays = UPCOMING_WINDOW_DAYS_DEFAULT,
+  now = new Date(),
 ): Promise<HomeDashboard> {
   const board = await getBoardRefresh();
 
@@ -149,8 +153,9 @@ export async function getHomeDashboard(
     excludeNew,
   );
 
-  const upcomingThisWeek = await getUpcomingThisWeek(pool, tz ?? "UTC", new Date(), upcomingDays);
-  const weeklyGoals = tz ? await getWeeklyGoalsSnapshot(pool, tz) : null;
+  const upcomingThisWeek = await getUpcomingThisWeek(pool, tz ?? "UTC", now, upcomingDays);
+  const weeklyGoals = tz ? await getWeeklyGoalsSnapshot(pool, tz, now) : null;
+  const weeklyCongrats = tz ? await getWeeklyCongrats(pool, tz, now) : null;
 
   const greetingName = process.env.DIGEST_GREETING_NAME?.trim() ?? "";
 
@@ -169,5 +174,6 @@ export async function getHomeDashboard(
     },
     upcomingThisWeek,
     weeklyGoals,
+    weeklyCongrats,
   };
 }

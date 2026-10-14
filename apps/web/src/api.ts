@@ -292,6 +292,21 @@ export type HomeUpcomingItem =
 
 export type WeeklyPaceLabel = "on_track" | "ahead" | "behind";
 
+export type WeeklyCongratsGoal = {
+  slot: "lc" | "apps";
+  done: number;
+  target: number;
+  points: number;
+  metWeeksStreak: number;
+};
+
+export type WeeklyCongrats = {
+  weekStart: string;
+  weekLabel: string;
+  goals: WeeklyCongratsGoal[];
+};
+
+
 export type WeeklyGoalMember = {
   taskId: string;
   title: string;
@@ -363,7 +378,10 @@ export type HomeDashboard = {
     }>;
   };
   weeklyGoals: WeeklyGoalsSnapshot | null;
+  /** Last week's met goals for the one-time congrats banner (R5.18). */
+  weeklyCongrats: WeeklyCongrats | null;
 };
+
 
 export const getHomeDashboard = (tz?: string, upcomingDays?: 7 | 14) => {
   const params = new URLSearchParams();

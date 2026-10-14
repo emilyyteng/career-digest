@@ -46,9 +46,20 @@ Each entry will list allowed variants, sizes, and when to use them.
 | Form fields | Global `input` / `textarea` / `select` rules | **Pending** | |
 | Badge / chip | Several feature-specific classes | **Pending** | |
 | Card | `.card` | **Pending** | |
-| Banner | `EarnFlash` (mint status banner) | **Pending** | |
+| Banner | `EarnFlash` (transient flash); `OneTimeNotice` (one-time notice) | See Banner patterns below | Documented M5-02 |
 | Deadline urgency | `DeadlineUrgency` (pie circles + countdown) | n/a | Existing shared component |
 | Priority | `PriorityBadge` | n/a | Existing shared component |
+
+## Banner patterns
+
+Two mint status banners. Pick one; don't invent a third.
+
+| Pattern | Component | When to use | Dismissal | Persistence |
+|---------|-----------|-------------|-----------|-------------|
+| **Transient flash** | [`EarnFlash`](../apps/web/src/features/completion/EarnFlash.tsx) | Immediate feedback after a points-earning action (complete a task, log LC, finish a step) | Auto-hides after ~4s; × also dismisses | None — gone when the parent clears `earn` |
+| **One-time notice** | [`OneTimeNotice`](../apps/web/src/features/notices/OneTimeNotice.tsx) | A result the user should see once per event (e.g. last week's met weekly goals on Home, R5.18) | × hides for the current view | Marked seen in `localStorage` under a caller-supplied key **as soon as it is shown**, so a reload or return visit stays hidden. Key must be per event (e.g. `weekly-congrats-seen:{weekStart}`) |
+
+Visual base: mint border/background (`.earn-flash` / `.one-time-notice`). One-time notices may carry richer body content (rows, totals); the flash stays a single line plus balance. Moving the Jobs ranking banner onto `OneTimeNotice` is F09 R.6, not F08.
 
 ## Interim decisions (F08 M5, until F09 M0)
 
