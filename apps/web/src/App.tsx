@@ -12,6 +12,7 @@ import Tasks from "./pages/Tasks";
 import TaskDetailPage from "./pages/TaskDetailPage";
 import Progress from "./features/progress/ProgressPage";
 import BannerPage from "./features/rewards/BannerPage";
+import CollectionPage from "./features/rewards/CollectionPage";
 import RewardsLayout from "./features/rewards/RewardsLayout";
 import RewardsPlaceholderPage from "./features/rewards/RewardsPlaceholderPage";
 import ThemeEmoji from "./ThemeEmoji";
@@ -115,10 +116,7 @@ export default function App() {
             <Route path="/rewards" element={<RewardsLayout />}>
               <Route index element={<Navigate to="banner" replace />} />
               <Route path="banner" element={<BannerPage />} />
-              <Route
-                path="collection"
-                element={<RewardsPlaceholderPage title="Collection" />}
-              />
+              <Route path="collection" element={<CollectionPage />} />
               <Route
                 path="earnings"
                 element={<RewardsPlaceholderPage title="Earnings" />}
