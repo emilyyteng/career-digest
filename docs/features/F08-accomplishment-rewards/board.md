@@ -104,7 +104,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M7-02](./tickets/M7/M7-02-spend-refund-ledger.md) | Ledger spend and refund events | (this commit) |
+| [M7-02](./tickets/M7/M7-02-spend-refund-ledger.md) | Ledger spend and refund events | `21126f9` |
 | [M7-01](./tickets/M7/M7-01-unclamp-balance.md) | Allow a negative Seed balance | `9ff21d2` |
 
 </details>
