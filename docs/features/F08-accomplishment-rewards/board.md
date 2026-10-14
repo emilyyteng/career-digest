@@ -69,7 +69,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | `(pending)` |
+| [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | `148420b` |
 | [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | `4cd75bb` |
 | [M5-15](./tickets/M5/M5-15-weekly-records-in-completion-log.md) | Weekly records in the completion log | `712afa7` |
 | [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | `e4ca71e` |
