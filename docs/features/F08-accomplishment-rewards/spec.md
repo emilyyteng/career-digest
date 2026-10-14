@@ -426,7 +426,9 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 |----------|-------|--------|-------|
 | A gacha prototype exists (lab, pull, collection) with 12 + 12 designs, Day/Night CE skins, friendship (6 kept), manual refunds above 6, 180/pull, prototype rates | `apps/web/src/prototype/rewards/` | Unspecified vs product routes; rates align with R7.7 | Not under RX.2 path; nothing writes to the ledger |
 | Prototype refunds only copies beyond `KEPT_COPIES` (6) | [`gacha.ts` `refundableCount`](../../../apps/web/src/prototype/rewards/gacha.ts) | Conforms R7.7 refund rule | |
-| No Rewards nav, spend/refund ledger kinds, or product collection in the app | none | Conflicts R7.1–R7.3, R7.8–R7.10 | Planned in M7 tickets |
+| Product collection persistence: pity, owned counts, CE Day/Night selection; Night unlock derived at ≥2 CE copies; `GET /api/rewards/collection` | [`040_cat_cake_collection.sql`](../../../apps/api/src/sql/040_cat_cake_collection.sql), [`catCakeCollection.ts`](../../../apps/api/src/catCakeCollection.ts) | Conforms R7.4, R7.7 (inventory) | Done by M7-03; pull/refund writes still M7-04 |
+| Ledger spend/refund kinds and `gacha` category | [`039_gacha_spend_refund.sql`](../../../apps/api/src/sql/039_gacha_spend_refund.sql) | Conforms R7.2 (ledger half) | Done by M7-02; pull API M7-04 |
+| No Rewards nav shell or product banner UI yet | none | Conflicts R7.1, R7.8–R7.10 UI | Planned M7-05+ |
 
 ### Cross-cutting
 

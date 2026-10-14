@@ -136,6 +136,7 @@ import {
   type CompletionKind,
 } from "./completionsDiary.js";
 import { listAchievements, syncAchievements } from "./achievements.js";
+import { getCatCakeCollection } from "./catCakeCollection.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -1266,6 +1267,10 @@ api.post("/tasks/:id/reopen", async (req, res) => {
 
 api.get("/points", async (_req, res) => {
   res.json(await getPointsSummary(pool));
+});
+
+api.get("/rewards/collection", async (_req, res) => {
+  res.json(await getCatCakeCollection(pool));
 });
 
 api.get("/points/events", async (req, res) => {
