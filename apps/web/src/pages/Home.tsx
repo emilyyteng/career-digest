@@ -122,11 +122,18 @@ function UpcomingRow({
       <li className="home-job-row home-interview-row home-weekly-goal-row">
         <Link to="/progress" className="home-job-main">
           <span className="home-job-title home-upcoming-title task-title-line home-upcoming-title-oneline">
+            <span className="ledger-kind ledger-kind-goal">Goal</span>
             <span className="task-title-text">{item.title}</span>
           </span>
           <span className="muted home-job-meta home-weekly-goal-meta">
             <span className="home-weekly-goal-mini-bar" aria-hidden="true">
-              <span className="weekly-goal-bar">
+              <span
+                className="weekly-goal-bar"
+                role="progressbar"
+                aria-valuenow={item.done}
+                aria-valuemin={0}
+                aria-valuemax={item.total}
+              >
                 <span style={{ width: `${pct}%` }} />
               </span>
             </span>
@@ -147,18 +154,22 @@ function UpcomingRow({
   }
 
   if (item.kind === "interview") {
-    const secondary = ["Interview", item.stepTitle].filter(Boolean).join(" · ");
+    const title = item.company
+      ? `${item.company}${item.primaryTitle ? ` · ${item.primaryTitle}` : ""}`
+      : (item.primaryTitle ?? "Interview");
     return (
       <li className="home-job-row home-interview-row">
         <Link to={`/interviews/${item.threadId}`} className="home-job-main">
-          <TitleLine
-            text={
-              item.company
-                ? `${item.company}${item.primaryTitle ? ` · ${item.primaryTitle}` : ""}`
-                : (item.primaryTitle ?? "Interview")
-            }
-          />
-          <span className="muted home-job-meta">{secondary}</span>
+          <span
+            className={`home-job-title home-upcoming-title task-title-line${
+              showSchedule ? "" : " home-upcoming-title-oneline"
+            }`}
+          >
+            <span className="ledger-kind ledger-kind-interview">Interview</span>
+            <span className="task-title-text">{title}</span>
+            {estimate && <span className="task-estimate-inline">{estimate}</span>}
+          </span>
+          {item.stepTitle && <span className="muted home-job-meta">{item.stepTitle}</span>}
         </Link>
         {showSchedule && (
           <div className="home-interview-deadline">

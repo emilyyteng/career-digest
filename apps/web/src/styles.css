@@ -1767,11 +1767,19 @@ button.hide-board-remove:hover:not(:disabled) {
   align-items: center;
   gap: 0.4rem;
 }
+/* Targets day meta truncates to one line; weekly goals need a flex mini-bar. */
+.home-target-day .home-job-meta.home-weekly-goal-meta {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+}
 .home-weekly-goal-mini-bar {
+  display: block;
   width: 5rem;
   flex-shrink: 0;
 }
 .home-weekly-goal-mini-bar .weekly-goal-bar {
+  display: block;
   width: 100%;
 }
 .home-weekly-goal-reset {
@@ -5368,6 +5376,7 @@ button.progress-cal-cell.effort::after {
 .ledger-kind {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   padding: 0.05rem 0.35rem;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -5377,6 +5386,17 @@ button.progress-cal-cell.effort::after {
   letter-spacing: 0.03em;
   margin-right: 0.35rem;
   color: var(--text-subtle);
+}
+/* Home Upcoming kind chips (M5-09 polish): warm amber for weekly goals, blue for interviews. */
+.ledger-kind.ledger-kind-goal {
+  color: var(--accent-yellow-deep);
+  border-color: color-mix(in srgb, var(--accent-yellow-deep) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-yellow) 32%, var(--surface));
+}
+.ledger-kind.ledger-kind-interview {
+  color: var(--accent-blue-deep);
+  border-color: color-mix(in srgb, var(--accent-blue) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-blue) 20%, var(--surface));
 }
 .ledger-disparity.over {
   color: var(--accent-pink-deep);
