@@ -59,16 +59,16 @@ No open tickets.
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | prototype | Ready | Mock numbers from R5.25–R5.26 |
 | [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | build | Draft | After M5-05, M5-01, M5-07; owns the weekly-streak display (R5.28), criteria wait on M5-07 Q5 |
 | [M5-09](./tickets/M5/M5-09-home-weekly-target-rows.md) | Weekly goal rows under Home Targets | build | Draft | After M5-08 (LC label API); M5-06 design in; finalize acceptance criteria |
-| [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | build | Ready | M5-01 done; hooks go in `changeLeetcode`; includes the `streak` category migration |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Draft | After M5-07, M5-01 |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Draft | After M5-07, M5-10 (M5-14 done) |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | build | Draft | Only if Q7 keeps it after M5-07 |
 
 <details>
-<summary>Done (8)</summary>
+<summary>Done (9)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M5-10](./tickets/M5/M5-10-daily-streaks.md) | Daily LC and apps streaks | `(pending)` |
 | [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | `148420b` |
 | [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | `4cd75bb` |
 | [M5-15](./tickets/M5/M5-15-weekly-records-in-completion-log.md) | Weekly records in the completion log | `712afa7` |

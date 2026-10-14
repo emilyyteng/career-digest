@@ -29,6 +29,13 @@ async function balance(): Promise<number> {
   return res.body.balance;
 }
 
+async function categoryPoints(category: string): Promise<number> {
+  const res = await apiClient().get("/api/points").expect(200);
+  return (
+    res.body.categories.find((c: { category: string }) => c.category === category)?.points ?? 0
+  );
+}
+
 describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
   beforeEach(async () => {
     await truncateAll();
@@ -69,7 +76,7 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
     const res = await log("hard", -1, "misc").expect(200);
     expect(res.body.points.amount).toBe(-50);
     expect(res.body.tiers).toEqual({ easy: 1, medium: 0, hard: 0 });
-    expect(await balance()).toBe(20);
+    expect(await categoryPoints("leetcode")).toBe(20);
     await log("hard", -1, "misc").expect(409);
     await log("medium", -1, "misc").expect(409);
   });
@@ -122,7 +129,7 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
       amounts.push(res.body.points.amount);
     }
     expect(amounts).toEqual([30, -30, 30, -30]);
-    expect(await balance()).toBe(0);
+    expect(await categoryPoints("leetcode")).toBe(0);
   });
 
   it("legacy untiered days read as medium and keep their points", async () => {
@@ -157,7 +164,7 @@ describe.skipIf(!integrationReady)("LeetCode logging API (M5-01)", () => {
       .get(`/api/progress/outcome${q}&period=day&date=${today}`)
       .expect(200);
     expect(outcome.body.leetcodeSolves).toBe(4);
-    expect(await balance()).toBe(20 + 30 + 50 + 50);
+    expect(await categoryPoints("leetcode")).toBe(20 + 30 + 50 + 50);
   });
 
   it("week tiers sum Monday through today, with untiered days as medium", async () => {

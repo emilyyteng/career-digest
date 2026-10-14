@@ -1,6 +1,6 @@
 # M5-10: Daily LC and apps streaks
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** M5-01, done (the LC streak's first-solve and back-to-0 hooks go in its single LeetCode write path, reading per-tier day counts; decided 2026-10-13). M4-03 done
 **Implements:** R5.16, R5.25 (from `../../spec.md`)
 **Type:** build
@@ -26,14 +26,14 @@ The API exposes the current length of each streak and whether today already coun
 
 ## Acceptance criteria
 
-- [ ] Streak lengths are correct across gaps, today-not-yet-done, and a time-zone boundary.
-- [ ] Daily points: day 1 = 2, day 5 = 10, day 10 = 20, day 15 = 20.
-- [ ] Milestones: day 5 pays +25 once; a new streak reaching 5 pays again.
-- [ ] Same-day undo (LC back to 0) reverses that day's streak points; logging again re-awards them (relies on M4-03).
-- [ ] A History edit to a past day changes the displayed streak but no points.
-- [ ] A streak running at launch shows its full length; no points are paid for days before launch.
-- [ ] The migration adds `streak`; streak events appear in the points log and breakdown under it.
-- [ ] Tests cover all of the above.
+- [x] Streak lengths are correct across gaps, today-not-yet-done, and a time-zone boundary.
+- [x] Daily points: day 1 = 2, day 5 = 10, day 10 = 20, day 15 = 20.
+- [x] Milestones: day 5 pays +25 once; a new streak reaching 5 pays again.
+- [x] Same-day undo (LC back to 0) reverses that day's streak points; logging again re-awards them (relies on M4-03).
+- [x] A History edit to a past day changes the displayed streak but no points.
+- [x] A streak running at launch shows its full length; no points are paid for days before launch.
+- [x] The migration adds `streak`; streak events appear in the points log and breakdown under it.
+- [x] Tests cover all of the above.
 
 ## Reuse notes
 
@@ -41,12 +41,18 @@ The API exposes the current length of each streak and whether today already coun
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Reuse check done
-- [ ] Committed as `F08 M5-10: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Reuse check done
+- [x] Committed as `F08 M5-10: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+**Done 2026-10-13** (commit hash on the board).
+
+- Migration `031_streak_category.sql`: adds ledger category `streak` and `streak_state.launch_date` (Q46).
+- Formulas in `pointsFormulas.ts`: daily `min(20, 2×length)`, milestones at 5/10/20/30/50/100 for `5×length`.
+- `streaks.ts`: `currentStreak` (today doesn't break until the day ends), `syncStreakForDay` (award/reverse only for today; History is display-only), hooked from `changeLeetcode` and `markApplied` (with tz).
+- `GET /progress/today` returns `streaks.lc` / `streaks.apps` (`length`, `todayCounts`). Points log/breakdown use category `streak`.
+- Tests: `streaks.test.ts` (4), `streaks.api.test.ts` (7), formula cases; checked by running. UI strip is M5-12.

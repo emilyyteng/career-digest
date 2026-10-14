@@ -31,6 +31,11 @@ export type ProgressToday = {
   leetcodeTiers: LeetcodeTierCounts;
   /** This week's solves per tier, Monday to today (the weekly goals' week). */
   leetcodeWeekTiers: LeetcodeTierCounts;
+  /** Daily LC and apps streaks (R5.25); display on the today strip is M5-12. */
+  streaks: {
+    lc: { length: number; todayCounts: boolean };
+    apps: { length: number; todayCounts: boolean };
+  };
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -336,11 +341,13 @@ async function shiftLocalDate(
 }
 
 export async function getProgressToday(pool: Pool, tz: string): Promise<ProgressToday> {
+  const { getStreaks } = await import("./streaks.js");
   const localDate = localDateInTimezone(new Date(), tz);
   const appRaw = await countApplicationsInRange(pool, tz, localDate, localDate);
   const lcTiers = await readLeetcodeTiers(pool, localDate);
   const lcRaw = lcTiers.easy + lcTiers.medium + lcTiers.hard;
   const lcWeekTiers = await readLeetcodeWeekTiers(pool, localDate);
+  const streaks = await getStreaks(pool, tz);
   const effortApp = await effortDaysByLane(pool, tz, "application", localDate, localDate);
   const effortTech = await effortDaysByLane(pool, tz, "technical", localDate, localDate);
   const effortOther = await effortDaysByLane(pool, tz, "other", localDate, localDate);
@@ -352,6 +359,7 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
     leetcode: activityCredit(lcRaw),
     leetcodeTiers: lcTiers,
     leetcodeWeekTiers: lcWeekTiers,
+    streaks: { lc: streaks.lc, apps: streaks.apps },
     effortApplication: effortApp.size > 0,
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,
@@ -612,6 +620,15 @@ export async function changeLeetcode(
         ? `${TIER_NAME[input.tier]} LeetCode (${where})`
         : `Removed one ${input.tier} LeetCode (${where})`;
     const { change } = await syncLeetcodeDailyPoints(client, localDate, tiers, label);
+    const { syncStreakForDay } = await import("./streaks.js");
+    await syncStreakForDay(
+      client,
+      "lc",
+      tz,
+      localDate,
+      tiers.easy + tiers.medium + tiers.hard > 0,
+      now,
+    );
     const weekTiers = await readLeetcodeWeekTiers(client, today);
     await client.query("COMMIT");
 

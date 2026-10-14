@@ -42,7 +42,13 @@ async function adjusts(sourceType: string, sourceId: string): Promise<number[]> 
 async function manualApplied(body: Record<string, unknown>) {
   return apiClient()
     .post(`/api/applications?tz=${TZ}`)
-    .send({ company: "Time Co", title: "SWE Intern", ...body })
+    .send({
+      company: "Time Co",
+      title: "SWE Intern",
+      // Past date so M5-10 apps streak points don't land in these work-time totals.
+      appliedAt: "2025-01-15",
+      ...body,
+    })
     .expect(201);
 }
 
@@ -73,7 +79,7 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
     const app = await seedManualApplication({ status: "todo" });
     const task = await seedTask({ category: "application", applicationId: app.id });
     const res = await apiClient()
-      .post(`/api/tasks/${task.id}/complete?tz=${TZ}`)
+      .post(`/api/tasks/${task.id}/complete`)
       .send({ actualMinutes: 40, reflection: REFLECTION })
       .expect(200);
     expect(res.body.points.amount).toBe(5 + 40 + 20);
@@ -129,7 +135,7 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
     const app = await seedManualApplication({ status: "todo" });
     const task = await seedTask({ category: "application", applicationId: app.id });
     await apiClient()
-      .post(`/api/tasks/${task.id}/complete?tz=${TZ}`)
+      .post(`/api/tasks/${task.id}/complete`)
       .send({ actualMinutes: 20 })
       .expect(200);
 

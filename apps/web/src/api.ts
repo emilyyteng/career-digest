@@ -877,6 +877,10 @@ export type ProgressToday = {
   leetcodeTiers: LeetcodeTierCounts;
   /** Monday through today, the weekly goals' week. */
   leetcodeWeekTiers: LeetcodeTierCounts;
+  streaks: {
+    lc: { length: number; todayCounts: boolean };
+    apps: { length: number; todayCounts: boolean };
+  };
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -1079,7 +1083,8 @@ export type PointsCategory =
   | "interview"
   | "reflection"
   | "weekly_goal"
-  | "achievement";
+  | "achievement"
+  | "streak";
 
 export type PointsSummary = {
   balance: number;

@@ -145,5 +145,14 @@ async function markAppliedInTransaction(
     actualMinutes: minutes,
   });
 
+  if (input.tz) {
+    const { localDateInTimezone } = await import("./progress.js");
+    const { syncStreakForDay } = await import("./streaks.js");
+    const appliedAt = input.appliedAt ?? new Date();
+    const localDate = localDateInTimezone(appliedAt, input.tz);
+    // `now` is wall-clock today so a backdated applied_at doesn't award streak points.
+    await syncStreakForDay(client, "apps", input.tz, localDate, true, new Date());
+  }
+
   return { applicationId, completedTaskIds, points: created ? event : null };
 }

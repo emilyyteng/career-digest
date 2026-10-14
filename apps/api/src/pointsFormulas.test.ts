@@ -6,6 +6,8 @@ import {
   interviewFinishBreakdown,
   leetcodeDayPoints,
   leetcodePointsForCount,
+  streakDailyPoints,
+  streakMilestonePoints,
   miscTaskBreakdown,
   pointsForInterviewKind,
   pointsForMinutes,
@@ -74,6 +76,16 @@ describe("pointsFormulas", () => {
     expect(leetcodeDayPoints({ easy: 0, medium: 0, hard: 0 })).toBe(0);
     expect(leetcodeDayPoints({ easy: 1, medium: 1, hard: 1 })).toBe(100);
     expect(leetcodeDayPoints({ easy: 5, medium: 0, hard: 4 })).toBe(300);
+  });
+
+  it("streak daily is 2 × length capped at 20; milestones are 5 × length", () => {
+    expect(streakDailyPoints(1)).toBe(2);
+    expect(streakDailyPoints(5)).toBe(10);
+    expect(streakDailyPoints(10)).toBe(20);
+    expect(streakDailyPoints(15)).toBe(20);
+    expect(streakMilestonePoints(4)).toBeNull();
+    expect(streakMilestonePoints(5)).toBe(25);
+    expect(streakMilestonePoints(10)).toBe(50);
   });
 
   it("clampDeltaToBalance never goes negative", () => {

@@ -50,6 +50,7 @@ export async function truncateAll(client?: PoolClient): Promise<void> {
       weekly_goal_records,
       weekly_close_state,
       weekly_goals,
+      streak_state,
       points_events,
       reflection_logs,
       leetcode_daily,

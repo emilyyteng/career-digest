@@ -23,6 +23,11 @@ export const POINTS = {
     offer: 200,
     custom: 40,
   },
+  /** Daily streaks (R5.25): 2 × length per day, capped; milestones 5 × length. */
+  streakDailyPerLength: 2,
+  streakDailyCap: 20,
+  streakMilestonePerLength: 5,
+  streakMilestones: [5, 10, 20, 30, 50, 100] as readonly number[],
 } as const;
 
 /** R5.15: a week's worth per goal. 0/0 is never met, so it earns nothing (R5.12). */
@@ -37,7 +42,8 @@ export type PointsCategory =
   | "interview"
   | "reflection"
   | "weekly_goal"
-  | "achievement";
+  | "achievement"
+  | "streak";
 
 export type PointsBreakdownSlice = {
   category: PointsCategory;
@@ -144,6 +150,18 @@ export function leetcodeDayPoints(counts: LeetcodeTierCounts): number {
     (sum, tier) => sum + Math.max(0, Math.floor(counts[tier])) * POINTS.leetcodeByTier[tier],
     0,
   );
+}
+
+/** Daily streak points for a day that continues a streak of this length (R5.25). */
+export function streakDailyPoints(length: number): number {
+  if (length <= 0) return 0;
+  return Math.min(POINTS.streakDailyCap, POINTS.streakDailyPerLength * length);
+}
+
+/** Milestone payout for hitting this length, or null if it isn't a milestone. */
+export function streakMilestonePoints(length: number): number | null {
+  if (!(POINTS.streakMilestones as readonly number[]).includes(length)) return null;
+  return POINTS.streakMilestonePerLength * length;
 }
 
 /**
