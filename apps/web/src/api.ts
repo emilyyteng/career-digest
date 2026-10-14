@@ -1132,7 +1132,8 @@ export type PointsCategory =
   | "reflection"
   | "weekly_goal"
   | "achievement"
-  | "streak";
+  | "streak"
+  | "gacha";
 
 export type PointsSummary = {
   balance: number;
@@ -1144,7 +1145,7 @@ export type PointsSummary = {
 export type PointsEvent = {
   id: string;
   createdAt: string;
-  kind: "earn" | "reverse" | "adjust";
+  kind: "earn" | "reverse" | "adjust" | "spend" | "refund";
   category: PointsCategory;
   amount: number;
   balanceAfter: number;

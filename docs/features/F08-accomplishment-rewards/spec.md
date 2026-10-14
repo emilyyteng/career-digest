@@ -308,7 +308,7 @@ M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*
   - A **10,000-run** simulation test of the rates
 - **R7.8** (Established 2026-10-13; Q35) **Earnings** and **Pull history** are separate Rewards routes (not one filterable log). Earnings: range control (Today / This week / Last 7 days / This month / All time), **category bars for the selected range**, and the earn log **grouped by day** even for multi-day ranges. Pull history: spends and refunds from the banner. The earn log **leaves Progress** in M7; completions stay on Progress.
 - **R7.9** (Established 2026-10-13) Rewards hosts a readable **Rules** reference: earning (Seed formula including bases, work time and reflections per R5.31, weekly scoring, streaks including that the weekly-goal streak earns nothing, achievements) and spending (gacha rates, friendship, refunds, Day/Night). It reads the same values the code uses so it can't drift.
-- **R7.10** (Established 2026-10-13; Q20) The currency is named **Seeds** in the UI. Internal/API/storage names may remain `points` / `points_*`.
+- **R7.10** (Established 2026-10-13; Q20) The currency display name is **Seeds** for now, but it must stay easy to rename: one shared constant (or small config module) supplies the user-facing singular/plural labels used by Rewards, Rules, banners, and other copy. UI code must not hard-code `"Seeds"` / `"Seed"` in many places. Internal/API/storage names may remain `points` / `points_*` and need not match the display name.
 
 ### M8: Progress redesign, LeetCode tier polish, information architecture (Not started)
 
@@ -393,7 +393,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | The points breakdown has one row for all tasks; task earns don't record the task's category | [`pointsLedger.ts` L107–121](../../../apps/api/src/pointsLedger.ts), [`pointsAwards.ts` L45–71](../../../apps/api/src/pointsAwards.ts) | Conflicts R5.21 | Ticket M5-03 |
 | Lowering a day's LeetCode count adjusts or reverses its earn | [`pointsAwards.ts` `syncLeetcodeDailyPoints`](../../../apps/api/src/pointsAwards.ts) | Conforms R4.12 | Since M5-01 a −1 removes one solve of a chosen tier and reverses that tier's value |
 | Every LeetCode change goes through one server function: one solve of one tier (easy +20, medium +30, hard +50), weekly or misc, ±1. It updates the day's per-tier counts, moves the week's LC progress for weekly changes (no cap; misc never touches it), syncs the day's one LeetCode earn and returns the points change. Weekly changes are today only; History edits per tier as misc. Untiered past days read as medium and keep their points; the day total is easy + medium + hard | [`progress.ts` `changeLeetcode`](../../../apps/api/src/progress.ts), [`weeklyGoals.ts` `stepLcWeeklyProgress`](../../../apps/api/src/weeklyGoals.ts), [`030_leetcode_tiers.sql`](../../../apps/api/src/sql/030_leetcode_tiers.sql), [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conforms R5.14, R5.17, R5.20 | Done by M5-01 (2026-10-13); the API is checked by running `leetcode.api.test.ts`, the UI by reading and the build, not in a browser. Tiers are stored as `easy_count` and `hard_count` beside the total; medium is the rest, which is how legacy days read as medium without a rewrite |
-| Balance clamped at 0 (`clampDeltaToBalance`; database check `balance_after >= 0`) | [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts), [`025_points_ledger.sql` L20](../../../apps/api/src/sql/025_points_ledger.sql) | Conforms R4.5; conflicts R7.3 once M7 lands | Removing it needs a migration |
+| Balance may go negative (`applyDeltaToBalance`; no `balance_after >= 0` check) | [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts), [`038_unclamp_points_balance.sql`](../../../apps/api/src/sql/038_unclamp_points_balance.sql) | Conforms R7.3 (supersedes R4.5) | Done by M7-01 |
 | Weekly goal points are awarded only at week close, from the stored record: +20 per unit, +100 when met, nothing for 0/0. No path pays a bonus when a target is hit | [`weeklyGoals.ts` `closeWeek`](../../../apps/api/src/weeklyGoals.ts), [`pointsFormulas.ts` `weeklyRecordPoints`](../../../apps/api/src/pointsFormulas.ts) | Conforms R5.9, R5.12, R5.15 | Fixed by M5-05 |
 | Applications, interview steps and weekly bonuses are never reversed; misc reopen reverses | [`routes.ts` L1110–1121](../../../apps/api/src/routes.ts) | Conforms R4.10, R4.11 | |
 | Progress Ledger tab: a Completions diary and a Points view | `LedgerCompletionsPanel.tsx`, `LedgerPointsPanel.tsx` | Conforms R4.1, R4.2, R4.8 | |
@@ -426,7 +426,10 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 |----------|-------|--------|-------|
 | A gacha prototype exists (lab, pull, collection) with 12 + 12 designs, Day/Night CE skins, friendship (6 kept), manual refunds above 6, 180/pull, prototype rates | `apps/web/src/prototype/rewards/` | Unspecified vs product routes; rates align with R7.7 | Not under RX.2 path; nothing writes to the ledger |
 | Prototype refunds only copies beyond `KEPT_COPIES` (6) | [`gacha.ts` `refundableCount`](../../../apps/web/src/prototype/rewards/gacha.ts) | Conforms R7.7 refund rule | |
-| No Rewards nav, spend/refund ledger kinds, or product collection in the app | none | Conflicts R7.1–R7.3, R7.8–R7.10 | Planned in M7 tickets |
+| Product collection persistence: pity, owned counts, CE Day/Night selection; Night unlock derived at ≥2 CE copies; `GET /api/rewards/collection` | [`040_cat_cake_collection.sql`](../../../apps/api/src/sql/040_cat_cake_collection.sql), [`catCakeCollection.ts`](../../../apps/api/src/catCakeCollection.ts) | Conforms R7.4, R7.7 (inventory) | Done by M7-03 |
+| Ledger spend/refund kinds and `gacha` category | [`039_gacha_spend_refund.sql`](../../../apps/api/src/sql/039_gacha_spend_refund.sql) | Conforms R7.2 (ledger) | Done by M7-02 |
+| Pull ×1/×10, refund above 6, CE look selection (`POST /api/rewards/pull|refund|look`); CSPRNG | [`catCakeGacha.ts`](../../../apps/api/src/catCakeGacha.ts) | Conforms R7.2, R7.4, R7.7 (API) | Done by M7-04 |
+| No Rewards nav shell or product banner UI yet | none | Conflicts R7.1, R7.8–R7.10 UI | Planned M7-05+ |
 
 ### Cross-cutting
 
@@ -476,7 +479,7 @@ Nothing that depends on an open question may be implemented.
 | Q17 | Departures log retention | 14 days, per-day sections, today expanded (2026-10-13) | R6.7 |
 | Q18 | Rewards scope | M7 is Cat Cake Collection v1; later updates go to a future feature (2026-10-13) | R7.5 |
 | Q19 | Self-care shop | Dropped; gacha only (2026-10-13) | R7.1 |
-| Q20 | Currency name | **Seeds** in the UI; storage may stay `points_*` (2026-10-13) | R7.10 |
+| Q20 | Currency name | **Seeds** in the UI for now; one shared display-name constant so it can be renamed later without a copy hunt; storage may stay `points_*` (2026-10-13) | R7.10 |
 | Q21 | Gacha numbers | 180 Seeds/pull; ×10 = 1,800; prototype CE rate and pity; manual refunds 18/90 only for copies above 6 (friendship maxed); no new-CE protection; no full backfill; priced against ~middle weekly earn (2026-10-13; refund floor clarified same day) | R7.7 |
 | Q22 | Which streaks and achievements exist? | Daily LC and apps streaks with small growing daily points plus milestone rewards; count-based achievements for applications, LC and interview steps per kind (higher reward); no "first of a kind". Numbers in Q42; weekly-goal streak in Q43 (2026-10-13) | R5.25–R5.27 |
 | Q23 | Weekly goal scoring | +20 per completed tagged app or weekly LC solve, +100 flat when met; LC past the target keeps +20 each with no second flat (2026-10-13) | R5.15 |
@@ -524,7 +527,8 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Weekly goals: open app tasks carry over after the result is recorded. A full apps week starts empty. 0/0 earns nothing. The LC target carries forward. LC may exceed the target. Points are awarded at week close, and scoring will weigh partial progress and goal size (formula open). Met targets get a congrats banner on the next Home visit.
 - **2026-10-13:** LeetCode logging becomes weekly-set vs other, through one server write path. This replaces the one-way weekly-to-daily copy and fixes the weekly-stepper points bug.
 - **2026-10-13:** Rewards is a gacha only. M7 ships Cat Cake Collection v1 with 12 classic and 12 CE designs. Later updates go to a future feature, created when needed. The balance may go negative. Rewards hosts Earnings and Pull history as separate routes (not one filter).
-- **2026-10-13:** M7 design lock: currency **Seeds**; Day/Night as CE skins (unlock on 2nd CE copy, free toggle); gacha at 180 / ×10 1,800 with prototype rates and pity; manual refunds only for copies **above 6** (friendship maxed first); no full backfill; one-by-one reveal; album grid; Rules on Rewards; server CSPRNG; tickets M7-01–M7-11 drafted.
+- **2026-10-13:** M7 design lock: currency **Seeds** (display name via one shared constant so it stays easy to rename; storage may stay `points_*`); Day/Night as CE skins (unlock on 2nd CE copy, free toggle); gacha at 180 / ×10 1,800 with prototype rates and pity; manual refunds only for copies **above 6** (friendship maxed first); no full backfill; one-by-one reveal; album grid; Rules on Rewards; server CSPRNG; tickets M7-01–M7-11 drafted.
+- **2026-10-13:** M7-03 stores per-CE Day/Night selection (default Day). V1 flavor ids are frozen to the twelve prototype ids (`strawberry` … `ube`).
 - **2026-10-13:** Settled as already satisfied:
   - the countdown with 12-hour circles is the time visualization
   - reflections have one link, with interview steps as sub-links of an application

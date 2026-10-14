@@ -12,7 +12,7 @@ Move **earned** Seed history from Progress → Ledger → Points onto `/rewards/
 - Range control: **Today / This week / Last 7 days / This month / All time**.
 - **Category bars** for the **selected range** (not only lifetime).
 - Event list of **earns** (and earn-side reverse/adjust as today), **grouped by day** even when the range spans many days.
-- Remove or stub the Points panel on Progress so Seed accounting is not duplicated (completions stay). User-facing label **Seeds**.
+- Remove or stub the Points panel on Progress so currency accounting is not duplicated (completions stay). User-facing label from the shared display-name constant (R7.10; currently Seeds).
 
 Pull spends belong on Pull history (M7-09), not here.
 
@@ -22,7 +22,7 @@ Pull spends belong on Pull history (M7-09), not here.
 - [ ] Changing the range updates both the category bars and the day-grouped log.
 - [ ] Days with no events are omitted or clearly empty; order is newest day first (unless documented otherwise).
 - [ ] Progress no longer hosts the full points ledger UI (link to Rewards Earnings is OK).
-- [ ] Copy says Seeds where the user sees the currency name.
+- [ ] Currency copy uses the shared display-name constant (no scattered `"Seeds"` / `"points"` literals for the product name).
 - [ ] Follows design-system variants; reuse existing summary/event API where possible (extend with `from`/`to` or range if needed).
 
 ## Reuse notes

@@ -43,7 +43,8 @@ export type PointsCategory =
   | "reflection"
   | "weekly_goal"
   | "achievement"
-  | "streak";
+  | "streak"
+  | "gacha";
 
 export type PointsBreakdownSlice = {
   category: PointsCategory;
@@ -165,25 +166,16 @@ export function streakMilestonePoints(length: number): number | null {
 }
 
 /**
- * Clamp a proposed balance change so balance never goes below 0.
- * Returns applied delta and how much was requested vs applied.
+ * Apply a balance change with no floor (R7.3). Applied delta always matches
+ * the request; balanceAfter may be negative.
  */
-export function clampDeltaToBalance(
+export function applyDeltaToBalance(
   currentBalance: number,
   requestedDelta: number,
 ): { appliedDelta: number; requestedDelta: number; balanceAfter: number } {
-  const next = currentBalance + requestedDelta;
-  if (next >= 0) {
-    return {
-      appliedDelta: requestedDelta,
-      requestedDelta,
-      balanceAfter: next,
-    };
-  }
-  const appliedDelta = -currentBalance;
   return {
-    appliedDelta,
+    appliedDelta: requestedDelta,
     requestedDelta,
-    balanceAfter: 0,
+    balanceAfter: currentBalance + requestedDelta,
   };
 }
