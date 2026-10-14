@@ -52,6 +52,18 @@ export async function setPity(db: Queryable, pity: number): Promise<void> {
   ]);
 }
 
+export async function getOwnedCopies(
+  db: Queryable,
+  flavorId: CatCakeFlavorId,
+  edition: CatCakeEdition,
+): Promise<number> {
+  const { rows } = await db.query<{ copies: number }>(
+    `SELECT copies FROM cat_cake_owned WHERE flavor_id = $1 AND edition = $2`,
+    [flavorId, edition],
+  );
+  return rows[0]?.copies ?? 0;
+}
+
 /** Test / pull-API helper: set absolute owned count for a variant. */
 export async function setOwnedCopies(
   db: Queryable,
@@ -73,6 +85,22 @@ export async function setOwnedCopies(
      ON CONFLICT (flavor_id, edition) DO UPDATE SET copies = EXCLUDED.copies`,
     [flavorId, edition, n],
   );
+}
+
+export async function incrementOwned(
+  db: Queryable,
+  flavorId: CatCakeFlavorId,
+  edition: CatCakeEdition,
+): Promise<number> {
+  const { rows } = await db.query<{ copies: number }>(
+    `INSERT INTO cat_cake_owned (flavor_id, edition, copies)
+     VALUES ($1, $2, 1)
+     ON CONFLICT (flavor_id, edition) DO UPDATE
+       SET copies = cat_cake_owned.copies + 1
+     RETURNING copies`,
+    [flavorId, edition],
+  );
+  return rows[0]!.copies;
 }
 
 export async function setSelectedLook(

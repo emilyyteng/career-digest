@@ -137,6 +137,11 @@ import {
 } from "./completionsDiary.js";
 import { listAchievements, syncAchievements } from "./achievements.js";
 import { getCatCakeCollection } from "./catCakeCollection.js";
+import {
+  pullCatCakes,
+  refundOneDuplicate,
+  selectCeLook,
+} from "./catCakeGacha.js";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const uploadDir = path.join(root, "data/uploads");
@@ -1271,6 +1276,45 @@ api.get("/points", async (_req, res) => {
 
 api.get("/rewards/collection", async (_req, res) => {
   res.json(await getCatCakeCollection(pool));
+});
+
+api.post("/rewards/pull", async (req, res) => {
+  const raw = (req.body as { count?: unknown })?.count;
+  const count = raw === 10 || raw === "10" ? 10 : raw === 1 || raw === "1" ? 1 : null;
+  if (count == null) {
+    res.status(400).json({ error: "count must be 1 or 10" });
+    return;
+  }
+  const result = await pullCatCakes(pool, count);
+  if ("error" in result) {
+    res.status(409).json(result);
+    return;
+  }
+  res.json(result);
+});
+
+api.post("/rewards/refund", async (req, res) => {
+  const body = req.body as { flavorId?: unknown; edition?: unknown };
+  const flavorId = typeof body.flavorId === "string" ? body.flavorId : "";
+  const edition = typeof body.edition === "string" ? body.edition : "";
+  const result = await refundOneDuplicate(pool, flavorId, edition);
+  if ("error" in result) {
+    res.status(result.code === "unknown_variant" ? 400 : 409).json(result);
+    return;
+  }
+  res.json(result);
+});
+
+api.post("/rewards/look", async (req, res) => {
+  const body = req.body as { flavorId?: unknown; look?: unknown };
+  const flavorId = typeof body.flavorId === "string" ? body.flavorId : "";
+  const look = typeof body.look === "string" ? body.look : "";
+  const result = await selectCeLook(pool, flavorId, look);
+  if ("error" in result) {
+    res.status(result.code === "night_locked" ? 409 : 400).json(result);
+    return;
+  }
+  res.json(result);
 });
 
 api.get("/points/events", async (req, res) => {
