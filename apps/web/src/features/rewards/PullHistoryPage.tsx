@@ -117,10 +117,6 @@ function SessionCard({ session }: { session: PullHistorySession }) {
                 >
                   {resultLabel(r)}
                 </span>
-                <span className="muted">
-                  {" "}
-                  (−{r.seedsSpent} {unit})
-                </span>
               </li>
             );
           })}
