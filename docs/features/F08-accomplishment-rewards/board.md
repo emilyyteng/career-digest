@@ -63,7 +63,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | TBD |
+| [M5-08](./tickets/M5/M5-08-progress-weekly-block.md) | Progress weekly goals block | `9565150` |
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | `ce85f4a` |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | `186f3f6` |
 | [M5-07](./tickets/M5/M5-07-prototype-streaks-and-celebration.md) | Prototype streaks, achievements and the completion flourish | `eeac25b` |
