@@ -1,7 +1,7 @@
 # M5-16: LeetCode tab in the completion log; rename weekly to weekly goals
 
 **Status:** Ready (Q52–Q54 answered 2026-10-13)
-**Blocked by:** M5-01 (per-tier day storage, built 2026-10-13)
+**Blocked by:** M5-01, done (per-tier day storage)
 **Implements:** R5.33, R5.34 (from `../../spec.md`)
 **Type:** build
 

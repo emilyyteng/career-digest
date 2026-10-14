@@ -326,7 +326,7 @@ M8 follows M7, so Progress is redesigned knowing what Rewards covers.
 
 - **RX.1** (Established) Remove the Prototype nav tab (`App.tsx`). Prototypes are reached by URL only.
 - **RX.2** (Established) New F08 prototypes live under `apps/web/src/prototype/f08-<topic>/`, at routes `/prototype/f08/<topic>`, per `AGENTS.md`.
-- **RX.3** (Established; clarified 2026-10-13) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it: `f08-weekly` stays until M5-01, M5-02, M5-05, M5-08, M5-09 and M5-15 are Done. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
+- **RX.3** (Established; clarified 2026-10-13) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it: `f08-weekly` stays until M5-02, M5-08 and M5-09 are Done (M5-01, M5-05 and M5-15 are Done). F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
 
 ## Behavior rules
 

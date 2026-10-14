@@ -1,6 +1,6 @@
 # M5-01: Log LeetCode as weekly or misc, by difficulty tier, through one write path
 
-**Status:** Built, awaiting R5.10 (2026-10-13)
+**Status:** Done
 **Blocked by:** M5-05, done (build order, 2026-10-13: both change `setLeetcodeDaily`; M5-05 removes the instant weekly bonus and the cap first, so this ticket writes the single path once)
 **Implements:** R5.10, R5.14, R5.17, R5.20, R8.3 (function only; visual polish stays in M8) (from `../../spec.md`)
 **Type:** build
@@ -45,22 +45,22 @@ LeetCode solves come in two types, **weekly** (part of the week's planned proble
 
 ## Acceptance criteria
 
-- [ ] +1 and −1 on either type each call the same server function; there's no other code path that writes LeetCode counts or LeetCode points.
-- [ ] +1 weekly raises today's count for the tier, weekly progress and points by one solve at its tier's value; +1 misc raises today's count for the tier and points only.
-- [ ] Tier values: easy +20, medium +30, hard +50. The banner shows that amount, and −1 reverses the same amount.
-- [ ] −1 removes one solve of the chosen tier and reverses that tier's points; no tier's count goes below 0.
-- [ ] Misc −1 never changes weekly progress, even when it leaves the day's count below that day's weekly solves.
-- [ ] Weekly progress can exceed the target.
-- [ ] The points banner shows after every LeetCode change that moves points, from the Progress LeetCode card and from History.
-- [ ] LeetCode 1 → 0 → 1 → 0 on one day: the banner shows each of the four changes (moved here from M4-03, 2026-10-13).
-- [ ] History edits a day's count per tier, without a per-type control.
-- [ ] Past days keep their existing points; no migration rewrites them.
-- [ ] Progress has exactly one LeetCode logging control, in the LeetCode card: a weekly/misc switch and easy, medium and hard steppers showing today's per-tier counts. The weekly block has no stepper; its LC row still shows the count, bar, pace and target field, and updates without a reload after each change.
-- [ ] A tier's − is disabled at 0. With weekly selected, − is also disabled when weekly progress is 0.
-- [ ] The switch's active option uses the interim blue toggle; buttons use the interim classes, which are logged in the F09 spec.
-- [ ] The day total (strip, heatmaps, Home) equals easy + medium + hard.
-- [ ] R5.10: the user has tried logging with points on Progress and confirmed it feels right (or the changes they asked for are made).
-- [ ] Tests cover both types, each tier, decrements, the day total, and that misc changes don't touch weekly progress.
+- [x] +1 and −1 on either type each call the same server function; there's no other code path that writes LeetCode counts or LeetCode points.
+- [x] +1 weekly raises today's count for the tier, weekly progress and points by one solve at its tier's value; +1 misc raises today's count for the tier and points only.
+- [x] Tier values: easy +20, medium +30, hard +50. The banner shows that amount, and −1 reverses the same amount.
+- [x] −1 removes one solve of the chosen tier and reverses that tier's points; no tier's count goes below 0.
+- [x] Misc −1 never changes weekly progress, even when it leaves the day's count below that day's weekly solves.
+- [x] Weekly progress can exceed the target.
+- [x] The points banner shows after every LeetCode change that moves points, from the Progress LeetCode card and from History.
+- [x] LeetCode 1 → 0 → 1 → 0 on one day: the banner shows each of the four changes (moved here from M4-03, 2026-10-13).
+- [x] History edits a day's count per tier, without a per-type control.
+- [x] Past days keep their existing points; no migration rewrites them.
+- [x] Progress has exactly one LeetCode logging control, in the LeetCode card: a weekly/misc switch and easy, medium and hard steppers showing today's per-tier counts. The weekly block has no stepper; its LC row still shows the count, bar, pace and target field, and updates without a reload after each change.
+- [x] A tier's − is disabled at 0. With weekly selected, − is also disabled when weekly progress is 0.
+- [x] The switch's active option uses the interim blue toggle; buttons use the interim classes, which are logged in the F09 spec.
+- [x] The day total (strip, heatmaps, Home) equals easy + medium + hard.
+- [x] R5.10: the user has tried logging with points on Progress and confirmed it feels right (or the changes they asked for are made).
+- [x] Tests cover both types, each tier, decrements, the day total, and that misc changes don't touch weekly progress.
 
 ## Reuse notes
 
@@ -72,17 +72,17 @@ LeetCode solves come in two types, **weekly** (part of the week's planned proble
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M5-01: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M5-01: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-2026-10-13, built; the R5.10 check is still open.
+**Done 2026-10-13** (commit `4cd75bb`; follow-ups `1cc0b06`, `7567142`, `cb08838`, `9ade8fc`). R5.10 confirmed by the user.
 
 - **Single path:** `PATCH /api/progress/leetcode` takes `{tier, delta: ±1, type: weekly|misc, date?}` and calls `changeLeetcode` (`progress.ts`), the only code that writes `leetcode_daily` or LeetCode points; `stepLcWeeklyProgress` (`weeklyGoals.ts`) is the only writer of LC weekly progress. The weekly LC route sets the target only and rejects `progressCount` (400). Checked by reading and by a search for writers.
 - **Storage:** migration 030 adds `easy_count` and `hard_count` beside `count`; medium is the rest, so untiered days read as medium and keep their points with no rewrite.
