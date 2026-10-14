@@ -33,6 +33,11 @@ export type TaskCategoryPoints = {
 
 export type PointsSummary = {
   balance: number;
+  /**
+   * Lifetime seeds earned from any non-spend source (work earns, reverses/adjusts,
+   * gacha refunds). Balance = lifetimeEarned − pull spends (R7.2).
+   */
+  lifetimeEarned: number;
   categories: Array<{ category: PointsCategory; points: number }>;
   /** The `task` category split by task category (R5.21); sums to its `task` row. */
   taskCategories: TaskCategoryPoints[];
@@ -114,8 +119,19 @@ export async function getPointsBalance(db: Queryable): Promise<number> {
   return Number(rows[0]?.balance ?? 0);
 }
 
+export async function getLifetimeEarned(db: Queryable): Promise<number> {
+  // Everything except spends: work earns (and their reverses/adjusts) plus gacha refunds.
+  const { rows } = await db.query<{ lifetime: string }>(
+    `SELECT COALESCE(SUM(amount), 0)::text AS lifetime
+     FROM points_events
+     WHERE kind <> 'spend'`,
+  );
+  return Number(rows[0]?.lifetime ?? 0);
+}
+
 export async function getPointsSummary(db: Queryable): Promise<PointsSummary> {
   const balance = await getPointsBalance(db);
+  const lifetimeEarned = await getLifetimeEarned(db);
   const { rows } = await db.query<{ category: PointsCategory; points: string }>(
     `SELECT category, COALESCE(SUM(amount), 0)::text AS points
      FROM points_events
@@ -124,6 +140,7 @@ export async function getPointsSummary(db: Queryable): Promise<PointsSummary> {
   );
   return {
     balance,
+    lifetimeEarned,
     categories: rows
       .map((r) => ({ category: r.category, points: Number(r.points) }))
       .filter((r) => r.points !== 0),

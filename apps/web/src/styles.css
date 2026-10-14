@@ -5601,6 +5601,10 @@ button.progress-cal-cell.effort::after {
 .rewards-balance {
   margin-bottom: 0;
 }
+.rewards-lifetime {
+  margin-left: 0.45rem;
+  font-size: 0.85rem;
+}
 .rewards-subnav {
   display: flex;
   flex-wrap: wrap;

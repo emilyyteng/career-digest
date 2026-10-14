@@ -1,8 +1,8 @@
 # M7-06: Banner pull UI (one-by-one)
 
-**Status:** Draft
-**Blocked by:** M7-04, M7-05; cat modules from M7-07 (or land art in this ticket if M7-07 is folded)
-**Implements:** R7.2, R7.6, R7.7 (from `../../spec.md`)
+**Status:** Done
+**Blocked by:** M7-04, M7-05
+**Implements:** R7.1 (tab order/redirect), R7.2 (lifetime chrome), R7.6, R7.7, R7.10 (from `../../spec.md`)
 **Type:** build
 
 ## What to build
@@ -17,30 +17,37 @@ Product Banner page at `/rewards/banner`, following prototype variant **C** (one
 
 Promote CatCake SVG modules into production (e.g. `apps/web/src/features/rewards/`) in this ticket or M7-07 — **no imports from `prototype/`**.
 
+Also in this ticket (2026-10-14): Rewards chrome — lowercase **seeds**, `{balance} seeds ({lifetimeEarned} lifetime)`, tab order Banner-first, `/rewards` → Banner; API `lifetimeEarned` on `/api/points`.
+
 ## Acceptance criteria
 
-- [ ] ×1 and ×10 call the real API; UI balance and pity update from the response.
-- [ ] Buttons disabled when unaffordable (including negative balance).
-- [ ] Reveal is one-by-one; Skip works; no auto-advance.
-- [ ] Reduced motion: no disorienting animation requirement.
-- [ ] Cats readable at card sizes used on the page; CE Day look for new CE (Night toggle is Collection).
-- [ ] Page stays responsive on load (no 3s+ sync work on mount).
-- [ ] Production code does not import `apps/web/src/prototype/**`.
+- [x] ×1 and ×10 call the real API; UI balance and pity update from the response.
+- [x] Buttons disabled when unaffordable (including negative balance).
+- [x] Reveal is one-by-one; Skip works; no auto-advance.
+- [x] Reduced motion: no disorienting animation requirement.
+- [x] Cats readable at card sizes used on the page; CE Day look for new CE (Night toggle is Collection).
+- [x] Page stays responsive on load (no 3s+ sync work on mount).
+- [x] Production code does not import `apps/web/src/prototype/**`.
+- [x] Chrome shows lowercase seeds + lifetime; tabs Banner → Collection → …; redirect to Banner.
 
 ## Reuse notes
 
-Prototype [`PullPrototypePage.tsx`](../../../../../apps/web/src/prototype/rewards/PullPrototypePage.tsx), [`CatCake.tsx`](../../../../../apps/web/src/prototype/rewards/CatCake.tsx), [`gacha.ts`](../../../../../apps/web/src/prototype/rewards/gacha.ts) as reference only. Shared `ModalLayer` if any modal is needed.
+Prototype Pull/CatCake as reference only. Shared `ui-btn` / design-system patterns. Promoted modules under `features/rewards/` (+ `catCake.css`). `CURRENCY_DISPLAY` for labels. Outlet context refreshes balance after pulls.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M7-06: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M7-06: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(filled when done)
+- `/rewards` → `/rewards/banner`.
+- Lifetime = `SUM(amount) WHERE kind <> 'spend'`; balance = lifetime − pull spends.
+- Gacha refunds remain category `gacha` (Cake label on Earnings in M7-08).
+- Reduced motion: pull results land in full revealed grid (no sequential boxes).
+- Skip from sequential/waiting jumps straight to revealed results.

@@ -1137,6 +1137,8 @@ export type PointsCategory =
 
 export type PointsSummary = {
   balance: number;
+  /** Non-spend ledger sum (work + refunds); balance = lifetimeEarned − pull spends. */
+  lifetimeEarned: number;
   categories: Array<{ category: PointsCategory; points: number }>;
   /** The `task` row split by task category; `taskCategoryId` null is "Deleted tasks". */
   taskCategories: Array<{ taskCategoryId: string | null; name: string; points: number }>;
@@ -1262,4 +1264,90 @@ export const getApplicationReflections = (applicationId: string) =>
 export const getApplicationInterviewSteps = (applicationId: string) =>
   parse<{ steps: ApplicationInterviewStepOption[] }>(
     api(`/api/applications/${applicationId}/interview-steps`),
+  );
+
+/* --- Rewards / Cat Cake (F08 M7) --- */
+
+export type CatCakeEdition = "classic" | "collector";
+export type CatCakeLook = "day" | "night";
+
+export type CatCakeVariantView = {
+  flavorId: string;
+  edition: CatCakeEdition;
+  copies: number;
+  friendshipLevel: number;
+  refundable: number;
+  nightUnlocked: boolean | null;
+  selectedLook: CatCakeLook | null;
+};
+
+export type CatCakeCollection = {
+  pity: number;
+  variants: CatCakeVariantView[];
+};
+
+export type GachaPullResult = {
+  flavorId: string;
+  edition: CatCakeEdition;
+  isNew: boolean;
+  copiesAfter: number;
+  pityAt: number;
+  viaHardPity: boolean;
+  nightUnlocked: boolean | null;
+};
+
+export type GachaPullOk = {
+  count: 1 | 10;
+  cost: number;
+  balanceAfter: number;
+  pity: number;
+  results: GachaPullResult[];
+  spendEventId: string;
+};
+
+export const getRewardsCollection = () =>
+  parse<CatCakeCollection>(api("/api/rewards/collection"));
+
+export const postRewardsPull = (count: 1 | 10) =>
+  parse<GachaPullOk>(
+    api("/api/rewards/pull", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count }),
+    }),
+  );
+
+export const postRewardsRefund = (body: {
+  flavorId: string;
+  edition: CatCakeEdition;
+}) =>
+  parse<{
+    flavorId: string;
+    edition: CatCakeEdition;
+    credited: number;
+    copiesAfter: number;
+    balanceAfter: number;
+    refundEventId: string;
+  }>(
+    api("/api/rewards/refund", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const postRewardsLook = (body: {
+  flavorId: string;
+  look: CatCakeLook;
+}) =>
+  parse<{
+    flavorId: string;
+    selectedLook: CatCakeLook;
+    nightUnlocked: boolean;
+  }>(
+    api("/api/rewards/look", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
   );

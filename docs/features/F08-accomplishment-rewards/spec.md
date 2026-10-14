@@ -289,10 +289,10 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 
 ### M7: Cat Cake Collection v1 (Design)
 
-M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*` names; the user-facing currency is **Seeds**.
+M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*` names; the user-facing currency is **seeds** (lowercase in chrome).
 
-- **R7.1** (Established) Rewards is its own nav item and is a gacha only: the Cat Cake Collection. There is no self-care shop. Child routes: **Collection**, **Banner**, **Earnings**, **Pull history**, **Rules** (`/rewards` redirects to Collection).
-- **R7.2** (Established) Pulls spend Seeds. Each spend is recorded in the ledger, and Rewards shows the balance. The Pull button is disabled whenever the balance is below the pull cost, which also covers a negative balance.
+- **R7.1** (Established; tab order updated 2026-10-14) Rewards is its own nav item and is a gacha only: the Cat Cake Collection. There is no self-care shop. Child routes in order: **Banner**, **Collection**, **Earnings**, **Pull history**, **Rules** (`/rewards` redirects to **Banner**).
+- **R7.2** (Established; chrome refined 2026-10-14) Pulls spend seeds. Each spend is recorded in the ledger. Rewards chrome shows **`{balance} seeds ({lifetimeEarned} lifetime)`**, where lifetime is all non-spend ledger amounts (work earns, reverses/adjusts, and gacha **refunds**). Current balance equals lifetime minus pull spends. The Pull button is disabled whenever the balance is below the pull cost, which also covers a negative balance. Gacha refunds stay in ledger category `gacha` (user-facing **Cake** on Earnings category bars in M7-08).
 - **R7.3** (Established) The balance may go negative; clamping at 0 is removed. This replaces R4.5.
 - **R7.4** (Established 2026-10-13) v1 launches with 12 classic and 12 Collector's Edition (CE) designs (existing 6+6 with minor edits, plus a new 6+6). Day and Night are **skins of the same CE**, not separate pool entries: the second owned copy of that CE unlocks the Night skin; a free Day/Night toggle appears per CE once unlocked (no Seed or friendship cost). There is one CE pity pool.
 - **R7.5** (Established) v1 is the working product. Ongoing design updates go to a separate feature, created only when needed.
@@ -308,7 +308,7 @@ M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*
   - A **10,000-run** simulation test of the rates
 - **R7.8** (Established 2026-10-13; Q35) **Earnings** and **Pull history** are separate Rewards routes (not one filterable log). Earnings: range control (Today / This week / Last 7 days / This month / All time), **category bars for the selected range**, and the earn log **grouped by day** even for multi-day ranges. Pull history: spends and refunds from the banner. The earn log **leaves Progress** in M7; completions stay on Progress.
 - **R7.9** (Established 2026-10-13) Rewards hosts a readable **Rules** reference: earning (Seed formula including bases, work time and reflections per R5.31, weekly scoring, streaks including that the weekly-goal streak earns nothing, achievements) and spending (gacha rates, friendship, refunds, Day/Night). It reads the same values the code uses so it can't drift.
-- **R7.10** (Established 2026-10-13; Q20) The currency display name is **Seeds** for now, but it must stay easy to rename: one shared constant (or small config module) supplies the user-facing singular/plural labels used by Rewards, Rules, banners, and other copy. UI code must not hard-code `"Seeds"` / `"Seed"` in many places. Internal/API/storage names may remain `points` / `points_*` and need not match the display name.
+- **R7.10** (Established 2026-10-13; Q20; casing 2026-10-14) The currency display name is **seeds** / **seed** (lowercase) for now, but it must stay easy to rename: one shared constant (or small config module) supplies the user-facing singular/plural labels used by Rewards, Rules, banners, and other copy. UI code must not hard-code those strings in many places. Internal/API/storage names may remain `points` / `points_*` and need not match the display name.
 
 ### M8: Progress redesign, LeetCode tier polish, information architecture (Not started)
 
@@ -429,7 +429,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Product collection persistence: pity, owned counts, CE Day/Night selection; Night unlock derived at ≥2 CE copies; `GET /api/rewards/collection` | [`040_cat_cake_collection.sql`](../../../apps/api/src/sql/040_cat_cake_collection.sql), [`catCakeCollection.ts`](../../../apps/api/src/catCakeCollection.ts) | Conforms R7.4, R7.7 (inventory) | Done by M7-03 |
 | Ledger spend/refund kinds and `gacha` category | [`039_gacha_spend_refund.sql`](../../../apps/api/src/sql/039_gacha_spend_refund.sql) | Conforms R7.2 (ledger) | Done by M7-02 |
 | Pull ×1/×10, refund above 6, CE look selection (`POST /api/rewards/pull|refund|look`); CSPRNG | [`catCakeGacha.ts`](../../../apps/api/src/catCakeGacha.ts) | Conforms R7.2, R7.4, R7.7 (API) | Done by M7-04 |
-| Rewards nav + five child routes + Seeds balance chrome; placeholder bodies | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`currencyDisplay.ts`](../../../apps/web/src/currencyDisplay.ts) | Conforms R7.1, R7.10 (shell); banner/album/logs still open | Done by M7-05; UIs M7-06–M7-10 |
+| Rewards nav + Banner-first tabs; `{balance} seeds ({lifetime} lifetime)` chrome; Banner pull UI; Collection album | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`BannerPage.tsx`](../../../apps/web/src/features/rewards/BannerPage.tsx), [`CollectionPage.tsx`](../../../apps/web/src/features/rewards/CollectionPage.tsx), [`pointsLedger.ts`](../../../apps/api/src/pointsLedger.ts) `lifetimeEarned` | Conforms R7.1, R7.2, R7.4, R7.6, R7.7 (UI), R7.10 | M7-05–M7-07; Earnings/history/rules open |
 
 ### Cross-cutting
 
@@ -479,7 +479,7 @@ Nothing that depends on an open question may be implemented.
 | Q17 | Departures log retention | 14 days, per-day sections, today expanded (2026-10-13) | R6.7 |
 | Q18 | Rewards scope | M7 is Cat Cake Collection v1; later updates go to a future feature (2026-10-13) | R7.5 |
 | Q19 | Self-care shop | Dropped; gacha only (2026-10-13) | R7.1 |
-| Q20 | Currency name | **Seeds** in the UI for now; one shared display-name constant so it can be renamed later without a copy hunt; storage may stay `points_*` (2026-10-13) | R7.10 |
+| Q20 | Currency name | **seeds** / **seed** (lowercase) in the UI; one shared display-name constant so it can be renamed later without a copy hunt; storage may stay `points_*` (2026-10-13; casing 2026-10-14) | R7.10 |
 | Q21 | Gacha numbers | 180 Seeds/pull; ×10 = 1,800; prototype CE rate and pity; manual refunds 18/90 only for copies above 6 (friendship maxed); no new-CE protection; no full backfill; priced against ~middle weekly earn (2026-10-13; refund floor clarified same day) | R7.7 |
 | Q22 | Which streaks and achievements exist? | Daily LC and apps streaks with small growing daily points plus milestone rewards; count-based achievements for applications, LC and interview steps per kind (higher reward); no "first of a kind". Numbers in Q42; weekly-goal streak in Q43 (2026-10-13) | R5.25–R5.27 |
 | Q23 | Weekly goal scoring | +20 per completed tagged app or weekly LC solve, +100 flat when met; LC past the target keeps +20 each with no second flat (2026-10-13) | R5.15 |
@@ -528,6 +528,7 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** LeetCode logging becomes weekly-set vs other, through one server write path. This replaces the one-way weekly-to-daily copy and fixes the weekly-stepper points bug.
 - **2026-10-13:** Rewards is a gacha only. M7 ships Cat Cake Collection v1 with 12 classic and 12 CE designs. Later updates go to a future feature, created when needed. The balance may go negative. Rewards hosts Earnings and Pull history as separate routes (not one filter).
 - **2026-10-13:** M7 design lock: currency **Seeds** (display name via one shared constant so it stays easy to rename; storage may stay `points_*`); Day/Night as CE skins (unlock on 2nd CE copy, free toggle); gacha at 180 / ×10 1,800 with prototype rates and pity; manual refunds only for copies **above 6** (friendship maxed first); no full backfill; one-by-one reveal; album grid; Rules on Rewards; server CSPRNG; tickets M7-01–M7-11 drafted.
+- **2026-10-14:** Rewards chrome: lowercase **seeds**; show `{balance} seeds ({lifetimeEarned} lifetime)` where lifetime is all non-spend ledger amounts (work + gacha refunds); balance = lifetime − pull spends. Tab order Banner → Collection → Earnings → Pull history → Rules; `/rewards` redirects to Banner. Gacha refunds remain category `gacha` in storage; Earnings (M7-08) labels that category **Cake** on bars (earn/refund side only).
 - **2026-10-13:** M7-03 stores per-CE Day/Night selection (default Day). V1 flavor ids are frozen to the twelve prototype ids (`strawberry` … `ube`).
 - **2026-10-13:** Settled as already satisfied:
   - the countdown with 12-hour circles is the time visualization

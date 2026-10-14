@@ -171,6 +171,9 @@ describe.skipIf(!integrationReady)("points ledger", () => {
     expect(categoryPoints(summary, "task")).toBe(200);
     expect(categoryPoints(summary, "gacha")).toBe(-162);
     expect(summary.balance).toBe(38);
+    // Lifetime ignores spends: 200 earn + 18 refund; balance = lifetime − 180 spend.
+    expect(summary.lifetimeEarned).toBe(218);
+    expect(summary.balance).toBe(summary.lifetimeEarned - 180);
 
     const events = await listPointsEvents(pool, { limit: 10 });
     expect(events.some((e) => e.kind === "spend")).toBe(true);

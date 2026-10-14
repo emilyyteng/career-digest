@@ -1,41 +1,46 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { getPointsSummary } from "../../api";
 import { CURRENCY_DISPLAY } from "../../currencyDisplay";
+import "./catCake.css";
 
 const SUBNAV = [
-  { to: "/rewards/collection", label: "Collection" },
   { to: "/rewards/banner", label: "Banner" },
+  { to: "/rewards/collection", label: "Collection" },
   { to: "/rewards/earnings", label: "Earnings" },
   { to: "/rewards/history", label: "Pull history" },
   { to: "/rewards/rules", label: "Rules" },
 ] as const;
 
+export type RewardsOutletContext = {
+  balance: number | null;
+  lifetimeEarned: number | null;
+  refreshSeeds: () => Promise<void>;
+};
+
 export default function RewardsLayout() {
   const [balance, setBalance] = useState<number | null>(null);
+  const [lifetimeEarned, setLifetimeEarned] = useState<number | null>(null);
   const [balanceError, setBalanceError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    void getPointsSummary()
-      .then((summary) => {
-        if (!cancelled) {
-          setBalance(summary.balance);
-          setBalanceError(null);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setBalance(null);
-          setBalanceError(
-            err instanceof Error ? err.message : "Failed to load balance",
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
+  const refreshSeeds = useCallback(async () => {
+    try {
+      const summary = await getPointsSummary();
+      setBalance(summary.balance);
+      setLifetimeEarned(summary.lifetimeEarned);
+      setBalanceError(null);
+    } catch (err) {
+      setBalance(null);
+      setLifetimeEarned(null);
+      setBalanceError(
+        err instanceof Error ? err.message : "Failed to load balance",
+      );
+    }
   }, []);
+
+  useEffect(() => {
+    void refreshSeeds();
+  }, [refreshSeeds]);
 
   return (
     <section className="rewards-page">
@@ -44,13 +49,16 @@ export default function RewardsLayout() {
           <div>
             {balanceError ? (
               <span className="error">{balanceError}</span>
-            ) : balance == null ? (
+            ) : balance == null || lifetimeEarned == null ? (
               <span className="muted">Loading…</span>
             ) : (
               <>
                 <span className="ledger-balance-value">{balance}</span>
                 <span className="ledger-balance-label">
                   {CURRENCY_DISPLAY.plural}
+                </span>
+                <span className="rewards-lifetime muted">
+                  ({lifetimeEarned} lifetime)
                 </span>
               </>
             )}
@@ -73,7 +81,7 @@ export default function RewardsLayout() {
         </div>
       </header>
       <div className="rewards-outlet">
-        <Outlet />
+        <Outlet context={{ balance, lifetimeEarned, refreshSeeds } satisfies RewardsOutletContext} />
       </div>
     </section>
   );

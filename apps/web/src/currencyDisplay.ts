@@ -1,11 +1,11 @@
 /**
  * User-facing currency labels (F08 R7.10).
- * Change these two strings to rename Seeds everywhere Rewards (and later Rules) imports this module.
+ * Change these two strings to rename seeds everywhere Rewards (and later Rules) imports this module.
  * API / storage may still say `points` / `points_*`.
  */
 export const CURRENCY_DISPLAY = {
-  singular: "Seed",
-  plural: "Seeds",
+  singular: "seed",
+  plural: "seeds",
 } as const;
 
 /** Plural when |n| !== 1; otherwise singular. */
