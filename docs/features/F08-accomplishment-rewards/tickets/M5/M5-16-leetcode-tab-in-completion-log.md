@@ -1,6 +1,6 @@
 # M5-16: LeetCode tab in the completion log; rename weekly to weekly goals
 
-**Status:** Ready (Q52–Q54 answered 2026-10-13)
+**Status:** Done
 **Blocked by:** M5-01, done (per-tier day storage)
 **Implements:** R5.33, R5.34 (from `../../spec.md`)
 **Type:** build
@@ -20,12 +20,12 @@ The user wants to see how much LeetCode they've solved over time. Solves aren't 
 
 ## Acceptance criteria
 
-- [ ] The `leetcode` tab's badge shows total solves, all time.
-- [ ] Selecting it shows one row per day with solves, newest first: `LC: 3 solved`, meta `1 easy · 1 medium · 1 hard`, and the day's points; a pre-ledger day shows no points.
-- [ ] A day with no tiers recorded reads as medium; a day whose count was lowered to 0 shows no row.
-- [ ] `all` shows LeetCode day rows among the other kinds, and its count adds one per LeetCode day (not the solve total).
-- [ ] The weekly tab reads `weekly goals`; its rows and count are unchanged.
-- [ ] Tests cover the diary's `leetcode` items and count, untiered days as medium, zero days excluded, and the points shown.
+- [x] The `leetcode` tab's badge shows total solves, all time.
+- [x] Selecting it shows one row per day with solves, newest first: `LC: 3 solved`, meta `1 easy · 1 medium · 1 hard`, and the day's points; a pre-ledger day shows no points.
+- [x] A day with no tiers recorded reads as medium; a day whose count was lowered to 0 shows no row.
+- [x] `all` shows LeetCode day rows among the other kinds, and its count adds one per LeetCode day (not the solve total).
+- [x] The weekly tab reads `weekly goals`; its rows and count are unchanged.
+- [x] Tests cover the diary's `leetcode` items and count, untiered days as medium, zero days excluded, and the points shown.
 
 ## Reuse notes
 
@@ -35,14 +35,18 @@ The user wants to see how much LeetCode they've solved over time. Solves aren't 
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M5-16: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M5-16: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+**Done 2026-10-13** (commit hash on the board).
+
+- API: `GET /api/progress/completions` accepts `kind=leetcode`. Days with `count > 0` become items titled `LC: N solved`, meta `e easy · m medium · h hard` (untiered → medium), `localDate` = the day, points from the day's `leetcode_daily` earn (0 when missing or reversed). `stats.allTime.leetcode` is total solves; `leetcodeDays` is the day count for `all`.
+- UI: [`LedgerCompletionsPanel.tsx`](../../../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) tab order all → … → weekly goals → leetcode; weekly label only; `all` badge adds `leetcodeDays`. Rows reuse `CompletionRow` with no new variant class (default style).
+- Tests: `completionsDiary.api.test.ts` (3) — untiered medium, zero days omitted, points when earned, `all` includes days, badge vs `all` counts. Checked by running; UI by reading and the build, not in a browser.

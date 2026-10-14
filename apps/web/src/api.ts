@@ -995,7 +995,13 @@ export const getProgressOutcome = (
 export const getProgressDay = (tz: string, date: string) =>
   parse<ProgressDayDetail>(api(`/api/progress/day/${date}?${progressTz(tz)}`));
 
-export type CompletionKind = "task" | "application" | "interview" | "reflection" | "weekly";
+export type CompletionKind =
+  | "task"
+  | "application"
+  | "interview"
+  | "reflection"
+  | "weekly"
+  | "leetcode";
 
 export type CompletionDiaryItem = {
   id: string;
@@ -1047,6 +1053,10 @@ export type CompletionsDiary = {
       interview: number;
       reflections: number;
       weekly: number;
+      /** Total solves; the `leetcode` tab badge. */
+      leetcode: number;
+      /** Days with solves; what `all` adds. */
+      leetcodeDays: number;
     };
   };
   items: CompletionDiaryItem[];

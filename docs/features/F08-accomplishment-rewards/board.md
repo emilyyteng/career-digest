@@ -63,13 +63,13 @@ No open tickets.
 | [M5-11](./tickets/M5/M5-11-achievements.md) | Count-based achievements | build | Draft | After M5-07, M5-01 |
 | [M5-12](./tickets/M5/M5-12-today-strip-streaks.md) | Today strip shows streaks | build | Draft | After M5-07, M5-10 (M5-14 done) |
 | [M5-13](./tickets/M5/M5-13-completion-flourish.md) | Completion flourish | build | Draft | Only if Q7 keeps it after M5-07 |
-| [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | build | Ready | Q52–Q54 answered 2026-10-13; after M5-01 |
 
 <details>
-<summary>Done (7)</summary>
+<summary>Done (8)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M5-16](./tickets/M5/M5-16-leetcode-tab-in-completion-log.md) | LeetCode tab in the completion log; rename weekly to weekly goals | `(pending)` |
 | [M5-01](./tickets/M5/M5-01-lc-weekly-misc-tiers.md) | Log LeetCode as weekly or misc, by difficulty tier, through one write path | `4cd75bb` |
 | [M5-15](./tickets/M5/M5-15-weekly-records-in-completion-log.md) | Weekly records in the completion log | `712afa7` |
 | [M5-05](./tickets/M5/M5-05-week-close-and-records.md) | Week close and weekly records | `e4ca71e` |

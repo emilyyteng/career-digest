@@ -1445,6 +1445,7 @@ api.get("/progress/completions", async (req, res) => {
     "interview",
     "reflection",
     "weekly",
+    "leetcode",
   ];
   const kind = (allowed.includes(rawKind as CompletionKind | "all")
     ? rawKind

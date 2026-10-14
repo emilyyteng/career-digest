@@ -14,7 +14,8 @@ const TYPE_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
   { key: "application", label: "apps" },
   { key: "interview", label: "interviews" },
   { key: "reflection", label: "reflections" },
-  { key: "weekly", label: "weekly" },
+  { key: "weekly", label: "weekly goals" },
+  { key: "leetcode", label: "leetcode" },
 ];
 
 function allTimeCount(
@@ -22,12 +23,20 @@ function allTimeCount(
   key: CompletionKind | "all",
 ): number {
   if (key === "all") {
-    return stats.tasks + stats.apps + stats.interview + stats.reflections + stats.weekly;
+    return (
+      stats.tasks +
+      stats.apps +
+      stats.interview +
+      stats.reflections +
+      stats.weekly +
+      stats.leetcodeDays
+    );
   }
   if (key === "task") return stats.tasks;
   if (key === "application") return stats.apps;
   if (key === "interview") return stats.interview;
   if (key === "weekly") return stats.weekly;
+  if (key === "leetcode") return stats.leetcode;
   return stats.reflections;
 }
 

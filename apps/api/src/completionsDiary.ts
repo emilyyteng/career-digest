@@ -1,8 +1,9 @@
 import type { Pool } from "pg";
 import { addCivilDays } from "./homeUpcoming.js";
-import { localDateInTimezone } from "./progress.js";
-import { effectiveEarnAmount, findEarnEvent } from "./pointsLedger.js";
+import { leetcodeDailySourceId } from "./pointsAwards.js";
 import { POINTS } from "./pointsFormulas.js";
+import { effectiveEarnAmount, findEarnEvent } from "./pointsLedger.js";
+import { localDateInTimezone } from "./progress.js";
 import {
   closeDueWeeks,
   listWeeklyGoalRecords,
@@ -11,7 +12,13 @@ import {
   type WeeklyGoalSlot,
 } from "./weeklyGoals.js";
 
-export type CompletionKind = "task" | "application" | "interview" | "reflection" | "weekly";
+export type CompletionKind =
+  | "task"
+  | "application"
+  | "interview"
+  | "reflection"
+  | "weekly"
+  | "leetcode";
 
 /** A closed week's record for one goal (R5.8); only on `weekly` items. */
 export type CompletionWeekly = {
@@ -56,7 +63,13 @@ export type CompletionsDiary = {
   stats: {
     week: CompletionCounts & { minutes: number };
     month: CompletionCounts & { minutes: number };
-    allTime: CompletionCounts & { weekly: number };
+    allTime: CompletionCounts & {
+      weekly: number;
+      /** Total solves (Q52); the `leetcode` tab badge. */
+      leetcode: number;
+      /** Days with at least one solve (Q53); what `all` adds. */
+      leetcodeDays: number;
+    };
   };
   items: CompletionDiaryItem[];
 };
@@ -334,6 +347,42 @@ export async function getCompletionsDiary(
     }
   }
 
+  // LeetCode days with at least one solve (R5.33)
+  if (!kindFilter || kindFilter === "leetcode") {
+    const { rows } = await pool.query<{
+      local_date: string;
+      count: number;
+      easy_count: number;
+      hard_count: number;
+      updated_at: Date;
+    }>(
+      `SELECT local_date::text AS local_date, count, easy_count, hard_count, updated_at
+       FROM leetcode_daily
+       WHERE count > 0
+       ORDER BY local_date DESC
+       LIMIT $1`,
+      [limit],
+    );
+    for (const row of rows) {
+      const medium = row.count - row.easy_count - row.hard_count;
+      const earn = await findEarnEvent(pool, "leetcode_daily", leetcodeDailySourceId(row.local_date));
+      const points = earn ? effectiveEarnAmount(earn) : 0;
+      items.push({
+        id: `leetcode:${row.local_date}`,
+        kind: "leetcode",
+        title: `LC: ${row.count} solved`,
+        subtitle: `${row.easy_count} easy · ${medium} medium · ${row.hard_count} hard`,
+        at: row.updated_at.toISOString(),
+        localDate: row.local_date,
+        estimateMinutes: null,
+        actualMinutes: null,
+        points,
+        href: null,
+        reflections: [],
+      });
+    }
+  }
+
   // Standalone reflections (no task/app link) — and all reflections when filter=reflection
   if (!kindFilter || kindFilter === "reflection") {
     const { rows } = await pool.query<{
@@ -423,28 +472,36 @@ export async function getCompletionsDiary(
   items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   const trimmed = items.slice(0, limit);
 
-  const allTime = { ...emptyCounts(), weekly: 0 };
+  const allTime = { ...emptyCounts(), weekly: 0, leetcode: 0, leetcodeDays: 0 };
 
   // All-time counts from DB (not limited feed)
-  const [taskCount, appCount, interviewCount, reflectionCount, weeklyCount] = await Promise.all([
-    pool.query<{ n: string }>(
-      `SELECT COUNT(*)::text AS n FROM tasks WHERE status = 'completed' AND category = 'misc'`,
-    ),
-    pool.query<{ n: string }>(
-      `SELECT COUNT(*)::text AS n FROM applications WHERE status <> 'todo' AND applied_at IS NOT NULL`,
-    ),
-    pool.query<{ n: string }>(
-      `SELECT COUNT(*)::text AS n FROM application_steps
-       WHERE status IN ('completed', 'awaiting_employer') AND completed_at IS NOT NULL`,
-    ),
-    pool.query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM reflection_logs`),
-    pool.query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM weekly_goal_records`),
-  ]);
+  const [taskCount, appCount, interviewCount, reflectionCount, weeklyCount, lcStats] =
+    await Promise.all([
+      pool.query<{ n: string }>(
+        `SELECT COUNT(*)::text AS n FROM tasks WHERE status = 'completed' AND category = 'misc'`,
+      ),
+      pool.query<{ n: string }>(
+        `SELECT COUNT(*)::text AS n FROM applications WHERE status <> 'todo' AND applied_at IS NOT NULL`,
+      ),
+      pool.query<{ n: string }>(
+        `SELECT COUNT(*)::text AS n FROM application_steps
+         WHERE status IN ('completed', 'awaiting_employer') AND completed_at IS NOT NULL`,
+      ),
+      pool.query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM reflection_logs`),
+      pool.query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM weekly_goal_records`),
+      pool.query<{ days: string; solves: string }>(
+        `SELECT COUNT(*)::text AS days, COALESCE(SUM(count), 0)::text AS solves
+         FROM leetcode_daily
+         WHERE count > 0`,
+      ),
+    ]);
   allTime.tasks = Number(taskCount.rows[0]?.n ?? 0);
   allTime.apps = Number(appCount.rows[0]?.n ?? 0);
   allTime.interview = Number(interviewCount.rows[0]?.n ?? 0);
   allTime.reflections = Number(reflectionCount.rows[0]?.n ?? 0);
   allTime.weekly = Number(weeklyCount.rows[0]?.n ?? 0);
+  allTime.leetcodeDays = Number(lcStats.rows[0]?.days ?? 0);
+  allTime.leetcode = Number(lcStats.rows[0]?.solves ?? 0);
 
   // Accurate week/month from DB dates (timestamptz → local civil date in tz)
   async function rangeCounts(start: string, end: string) {
