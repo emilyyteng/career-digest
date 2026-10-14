@@ -49,10 +49,6 @@ const proto = import.meta.env.DEV
       F08TodayStripStreak: lazy(() => import("./prototype/f08-streaks/TodayStripStreakPrototypePage")),
       F08Achievements: lazy(() => import("./prototype/f08-streaks/AchievementsPrototypePage")),
       F08Flourish: lazy(() => import("./prototype/f08-streaks/FlourishPrototypePage")),
-      RewardsHub: lazy(() => import("./prototype/rewards/RewardsPrototypeHub")),
-      RewardsLab: lazy(() => import("./prototype/rewards/CatCakeLabPage")),
-      RewardsPull: lazy(() => import("./prototype/rewards/PullPrototypePage")),
-      RewardsCollection: lazy(() => import("./prototype/rewards/CollectionPrototypePage")),
     }
   : null;
 
@@ -200,13 +196,6 @@ export default function App() {
                 <Route
                   path="/prototype/f08/streaks/flourish"
                   element={<ProtoPage page={proto.F08Flourish} />}
-                />
-                <Route path="/prototype/rewards" element={<ProtoPage page={proto.RewardsHub} />} />
-                <Route path="/prototype/rewards/lab" element={<ProtoPage page={proto.RewardsLab} />} />
-                <Route path="/prototype/rewards/pull" element={<ProtoPage page={proto.RewardsPull} />} />
-                <Route
-                  path="/prototype/rewards/collection"
-                  element={<ProtoPage page={proto.RewardsCollection} />}
                 />
               </>
             ) : (

@@ -288,6 +288,28 @@ Weekly goals become a closed loop: Progress edits the week, week close writes fi
 
 **Outcome:** Hitting a weekly target pays at week close, shows up on Home once, and leaves a durable record. Daily streaks and achievements add lighter celebration without inventing a third banner pattern.
 
+### M7: Cat Cake Collection v1 (Rewards)
+
+Seeds become spendable on a dedicated Rewards area: a bakery gacha with collection, earnings, pull history and an in-app rules reference. The old Progress points ledger moves to Rewards Earnings; completions stay on Progress.
+
+**Currency and ledger.**
+
+- The user-facing name is **seeds** (one shared display constant so it can be renamed later). Storage may still say `points_*`.
+- The balance may go negative. Pulls are blocked whenever the purse is below the cost.
+- Chrome shows `{balance} seeds ({lifetime} lifetime)`, where lifetime is all non-spend ledger amounts (work earns plus Cake refunds). Pull spends reduce the balance only.
+- Ledger kinds `spend` and `refund` with category `gacha` record banner activity. Earnings labels refunds as **Cake** and never nets spends into those bars.
+
+**Gacha.**
+
+- Twelve classic flavors and twelve Collector's Editions. Day/Night are skins of the same CE: Night unlocks on the second CE copy; toggling is free.
+- **180 seeds** per pull; ×10 costs 1,800. Base CE rate 1.5%, soft pity from pull 13, hard pity at 20. Server CSPRNG; a 10,000-run Monte Carlo guards the rates in CI.
+- Friendship keeps six copies; manual refunds only for copies above six (+18 classic / +90 CE).
+- Banner reveal is one-by-one (Skip jumps to closed boxes, then open-all, then a full revealed grid until dismiss). Collection is an album grid with Day/Night controls.
+
+**Rewards routes.** Banner (default), Collection, Earnings (ranged earn-side bars and day-grouped log), Pull history (lifetime spend and n-th time each variant was pulled), and Rules (numbers read from the same modules the API uses).
+
+**Outcome:** Effort on Progress earns seeds; Rewards is where they are spent and accounted for, with collection and history that survive duplicate refunds.
+
 ---
 
 ## Documentation & development process (F10)

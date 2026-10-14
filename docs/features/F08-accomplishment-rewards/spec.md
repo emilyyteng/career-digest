@@ -38,7 +38,7 @@ Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and
 | M4 | Global points ledger | Done; M4-01, M4-02 and M4-03 done |
 | M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | Done |
 | M6 | Board departures log | Not started |
-| M7 | Cat Cake Collection v1: spending Seeds, the Rewards page | Design. Prototype under `apps/web/src/prototype/rewards/`; product tickets drafted |
+| M7 | Cat Cake Collection v1: spending seeds, the Rewards page | Done |
 | M8 | Progress redesign, LeetCode tier polish, information architecture | Not started |
 
 ## Requirements
@@ -287,7 +287,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R6.6** (Established) The log shows every departed posting except those already applied to. The subset that had an open application task is easy to pick out, by filter or highlight.
 - **R6.7** (Established 2026-10-13) Entries are kept for 14 days, in per-day sections, with today expanded by default.
 
-### M7: Cat Cake Collection v1 (Design)
+### M7: Cat Cake Collection v1 (Done)
 
 M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*` names; the user-facing currency is **seeds** (lowercase in chrome).
 
@@ -424,8 +424,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| A gacha prototype exists (lab, pull, collection) with 12 + 12 designs, Day/Night CE skins, friendship (6 kept), manual refunds above 6, 180/pull, prototype rates | `apps/web/src/prototype/rewards/` | Unspecified vs product routes; rates align with R7.7 | Not under RX.2 path; nothing writes to the ledger |
-| Prototype refunds only copies beyond `KEPT_COPIES` (6) | [`gacha.ts` `refundableCount`](../../../apps/web/src/prototype/rewards/gacha.ts) | Conforms R7.7 refund rule | |
+| Rewards gacha prototype deleted after M7 product routes shipped | (removed) | Conforms RX.2 cleanup | Done with M7 close-out |
 | Product collection persistence: pity, owned counts, CE Day/Night selection; Night unlock derived at ≥2 CE copies; `GET /api/rewards/collection` | [`040_cat_cake_collection.sql`](../../../apps/api/src/sql/040_cat_cake_collection.sql), [`catCakeCollection.ts`](../../../apps/api/src/catCakeCollection.ts) | Conforms R7.4, R7.7 (inventory) | Done by M7-03 |
 | Ledger spend/refund kinds and `gacha` category | [`039_gacha_spend_refund.sql`](../../../apps/api/src/sql/039_gacha_spend_refund.sql) | Conforms R7.2 (ledger) | Done by M7-02 |
 | Pull ×1/×10, refund above 6, CE look selection (`POST /api/rewards/pull|refund|look`); CSPRNG | [`catCakeGacha.ts`](../../../apps/api/src/catCakeGacha.ts) | Conforms R7.2, R7.4, R7.7 (API) | Done by M7-04 |
@@ -441,7 +440,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 |----------|-------|--------|-------|
 | No Prototype nav link; prototypes are reached by URL only | [`App.tsx`](../../../apps/web/src/App.tsx) | Conforms RX.1 | Removed in M5-06 |
 | No production code imports from `prototype/` | `apps/web/src` | Conforms | Deleting prototype folders is safe |
-| The M1, M2 and M4 prototypes are still routed; the F08 weekly and rewards prototypes import `prototype/m4/prototype-m4.css` | `apps/web/src/prototype/`, [`App.tsx` L18–160](../../../apps/web/src/App.tsx) | Conforms RX.3 | Deferred cleanup |
+| The M1, M2, M4, and F08 weekly/streaks prototypes are still routed; rewards prototype removed | `apps/web/src/prototype/`, [`App.tsx`](../../../apps/web/src/App.tsx) | Conforms RX.3 (remaining) | Rewards cleaned with M7; others deferred |
 
 ## Out of scope
 
