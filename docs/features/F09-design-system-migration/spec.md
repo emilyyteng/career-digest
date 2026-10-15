@@ -2,7 +2,7 @@
 
 **ID:** F09
 **Status:** Planned
-**Last updated:** 2026-10-14
+**Last updated:** 2026-10-15
 
 ## Problem
 
@@ -34,6 +34,8 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 - **R.6** (Established 2026-10-13) Banners behave consistently across the app. F08 M5-02 introduces the "one-time notice" (shown once, × closes it early, marked seen per item in `localStorage`) and documents it in `docs/design-system.md` next to the transient flash (`EarnFlash`). F09 then moves the Jobs ranking banner onto the one-time notice: it has no reason to be more persistent than the weekly congrats banner. Scheduled in the broader migration (M2+), not done in F08.
 - **R.7** (Proposed 2026-10-14; from F08 M8) **Long lists are paginated by default.** Infinite or very long unpaginated result lists should not be the default pattern. Page size and controls belong in the design system (or a documented list convention). F08 M8 Past work is exploring a **calendar-driven 7-day window** instead of classic page controls (F08 R8.4); F09 still owns the general rule for other lists.
 - **R.8** (Proposed 2026-10-14; from F08 M8) **Feature shell / subnav convention.** Nested feature routes with a shared shell and subnav (Rewards today; Progress in F08 M8) vs peer in-page tabs should be one documented app pattern. May belong in the design system or in a small app-shell / IA note if it is not "visual design." F08 M8 uses the Rewards nested pattern for Progress without settling the app-wide rule.
+- **R.9** (Established 2026-10-15) **`EarnFlash` must appear in the user's current viewport**, near the control they used (or otherwise where they are looking), not only at the top of a long page they have scrolled away from. Placement belongs in the banner / flash pattern in `docs/design-system.md` once settled (Q10).
+- **R.10** (Established 2026-10-15) **Long scroll-heavy pages should be made more compact** where the user must scroll to reach common actions. Priority surface: the **Tasks** page. Compaction tactics (density, collapsible sections, sticky actions, etc.) are open (Q11); the design system should document the chosen approach so other lists can follow it.
 
 ### M1
 
@@ -55,6 +57,8 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | The Jobs ranking banner stays until dismissed with ×, remembering dismissals per batch in `sessionStorage` (per tab); a successful batch hides on its own after 30 minutes | [`JobsPage.tsx` L114–175](../../../apps/web/src/features/jobs/JobsPage.tsx) | Conflicts R.6 | Checked by reading, 2026-10-13. Moves to the one-time notice once F08 M5-02 defines it |
 | Completions diary and similar logs are long unpaginated day-grouped lists | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R.7 (Proposed) | F08 M8 paginates Past work only; F09 owns the default |
 | Rewards uses nested routes + subnav shell; Progress (pre-M8) uses peer `?tab=` tabs on one page; other pages vary | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`ProgressPage.tsx`](../../../apps/web/src/features/progress/ProgressPage.tsx) | Conflicts R.8 (Proposed) | F08 M8 aligns Progress with Rewards; app-wide rule stays F09 |
+| `EarnFlash` is rendered near the top of the host page/section (e.g. Tasks list, Progress surfaces), not anchored to the control that earned | [`EarnFlash.tsx`](../../../apps/web/src/features/completion/EarnFlash.tsx), [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx), Progress week/past pages | Conflicts R.9 | Easy to miss after scrolling to complete a lower row |
+| Tasks is a long, dense scroll surface; common actions often sit below the first viewport | [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx) | Conflicts R.10 | Compaction is F09 work (Q11); not fixed ad hoc in other features |
 
 ## Out of scope (for now)
 
@@ -74,6 +78,8 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | Q7 | Should `styles.css` be split (per component or per feature), and when? | M1 | (open) |
 | Q8 | Long-list pagination: default page sizes, control placement, and whether day-based windows (1 / 7) are a Progress-only idea or a reusable pattern? | M0 / M2+ | (open) Noted 2026-10-14 from F08 M8; F08 implements Past work only |
 | Q9 | Nested feature shell + subnav vs in-page tabs: one app rule? Does it live in `docs/design-system.md` or a separate app-shell / IA doc? | M0 | (open) Noted 2026-10-14 from F08 M8 |
+| Q10 | How should `EarnFlash` stay in view: portal near the clicked control, sticky/toast in the viewport, scroll-into-view of a top flash, or something else? Does the same rule apply to `OneTimeNotice`? | M0 / banners | (open) Noted 2026-10-15 with R.9 |
+| Q11 | What makes Tasks (and similar long pages) compact enough: tighter row density, collapsible sections, sticky compose/actions, pagination/virtualization, or a redesign of the list chrome? | M0 / M2+ | (open) Noted 2026-10-15 with R.10; Tasks is the priority surface |
 
 ## Decisions log
 
@@ -84,3 +90,4 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 - **2026-10-13 (later):** The F08 M5-06 review didn't settle Q1–Q5; they stay in F09. F08 M5 uses interim working decisions (flat, tinted purple primary buttons, blue toggles, pace text never bold), recorded in `docs/design-system.md`. The `:not(...)` chain and the missing raised-surface shadow token stay in F09's scope. The M5-06 prototypes' direction page (`/prototype/f08/weekly/visual-direction`) and its conflicting-patterns audit remain the test case.
 - **2026-10-13:** Banner behavior is standardized. F08 M5-02 defines the one-time notice; F09 owns moving the Jobs ranking banner onto it (R.6).
 - **2026-10-14:** From F08 M8 IA lock: Proposed R.7 (paginate long lists by default) and R.8 (feature shell / subnav convention); open Q8–Q9. F08 M8 implements Past work pagination and Progress nested routes only.
+- **2026-10-15:** From post–F08 M8 feedback: Established R.9 (`EarnFlash` must be visible near the user's action, not only at a scrolled-away page top) and R.10 (compact long pages, especially Tasks); open Q10–Q11 for placement and compaction tactics.
