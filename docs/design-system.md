@@ -90,9 +90,10 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | Component | Implementation | Variants / sizes | Policy |
 |-----------|----------------|------------------|--------|
 | **Button** | `Button` — classes `secondary ui-button` (+ `-primary` / `-ghost` / `-sm`) | `primary` · `secondary` · `ghost` × `sm` / `md` | Flat ink primary. Global filled-blue `button` + `:not(...)` chain removed (M1-04). Legacy `button.secondary` / `modal-confirm-btn` restyled to ink |
-| **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = **soft ink wash** (ink text; not solid ink fill) | Distinct from track (`--surface-2`); M1-15 |
-| **Fields** | `TextField` · `SelectField` · `TextAreaField` — `.ui-field` (+ `.ui-field-num`) | `md` · `num` (compact number) | Border-only hover; wash on focus |
-| **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = **underline ink** | App nav, feature subnav, page tabs. Matches lab Completions shortened-label underline. Flat; display font |
+| **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = **soft ink wash** (ink text; not solid ink fill) | Compact in-content modes (e.g. Home 1w/2w). **Not** the page L2 filter under tabs (use filter chips) |
+| **Filter chips** | Squared chip row (shared helper when first surface migrates) | Active = ink border + light wash; inactive = muted | Page L2 filters (Jobs location, Past work ledger type, …). Horizontal, wrap OK; **below tabs, left-aligned** (M1-06) |
+| **Fields** | `TextField` · `SelectField` · `TextAreaField` — `.ui-field` (+ `.ui-field-num`) | `md` · `num` (compact number) | Border-only hover; wash on focus. Select is not the default L2 filter |
+| **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = **underline ink**; hover = ink text only | App nav (`nav`), feature subnav (`subnav`), page tabs (`page`). Same language, quieter at smaller sizes |
 | **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview` (apps) / `goal` (**domain tech**), `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak`, `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Kind labels rendered **INTERVIEW** / **GOAL** uppercase; role tokens only |
 | **Card** | `.card` | Soft shadow OK | All-carded |
 | **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
@@ -106,21 +107,43 @@ Interim F08 `ui-btn*`, old `.tab.on` blue active, legacy `.badge.*`, and bare `i
 
 ## Patterns
 
-Interaction / IA / layout patterns are **Pending M1** tickets (see F09 board):
+### Page chrome / nesting (F09 M1-06 · R.8 / Q9 / Q15)
+
+Locked via `/prototype/f09/nesting` (verdict 2026-10-15). Lives in this file (not a separate IA doc).
+
+**Containerized anatomy** — inside one `.card` (nothing on the pink desk):
+
+1. **Page title** (display / ink)
+2. **Subnav or page tabs** — `ChromeTab` underline
+3. **Optional L2 filter** — **squared chip row**, horizontal, **below tabs, left-aligned** (wraps when needed)
+4. **Content**
+
+| Role | When | Control |
+|------|------|---------|
+| **Feature shell + subnav** | Peer destinations with different jobs | Nested routes + `ChromeTab` `size="subnav"` — **Progress**, **Rewards** |
+| **Page tabs** | Same resource, peer partitions | `ChromeTab` `size="page"` — Jobs ranked/unranked, Tasks open/completed, … |
+| **Filter chips** | Narrow within a partition | Squared chip row — never ChromeTab clothes, not rounded `Segmented` |
+
+**Chrome budget:** app nav (L0) → **one of** {feature subnav, page-tab row} → at most one L2 chip row → content. Never two ChromeTab rows stacked. Calendar/day selection is **content chrome**, not a nav level. Keep **top nav** (no side nav in M1). Primary writes stay **modals** unless they need a deep-linkable destination (unchanged).
+
+**Conforming targets:** Progress and Rewards already use route shells + subnav; bring them (and Jobs location / Past work ledger type) onto title→tabs→chips anatomy in surface waves. Past work Completions/Points/Reflections demote from nested tabs to L2 chips.
+
+**Still open (not this pattern):** wrap/scroll/width details → M1-08; paired panel heights → M1-07; modal anatomy → M1-12.
+
+### Other M1 patterns (pending)
 
 | Topic | Ticket | Notes |
 |-------|--------|-------|
-| Feature shell / nested tabs / filter placement | F09 M1-06 | Q9 / Q15 · prototype `/prototype/f09/nesting` |
-| **Paired panel height + in-panel overflow** | F09 M1-07 | Q16 — sibling columns share height; scroll inside panels (user lean 2026-10-15) |
+| **Paired panel height + in-panel overflow** | F09 M1-07 | Q16 — sibling columns share height; scroll inside panels |
 | Chrome budget / width | F09 M1-08 | Q16 remainder (shell width already 1100px) |
 | List pagination | F09 M1-09 | Q8 / R.7 |
 | EarnFlash placement | F09 M1-10 | Q10 / R.9 |
 | Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks migrate in M2 |
 | In-content link hover (app-wide) | F09 M1-16 | M1-15 lock exists; Home only — globals still blue/purple |
 
-Pilot surface for primitives: **Home** (F09 M1-05 + M1-15) — Ink desk titles, underline link hover, background-less last-digest, soft-ink `Segmented`, underline chrome-tabs; app shell uses flora.exe + 1100px.
+Pilot surface for primitives: **Home** (F09 M1-05 + M1-15). App shell: flora.exe + underline chrome-tabs + 1100px.
 
-**Migration debt (do not invent new dialects):** Tasks / Progress / Rewards use `ChromeTab`. **Jobs, Applications, Interviews** still use legacy `.tabs` / `.tab.on` blue — migrate to `ChromeTab` + containerized title→tabs→content in the **M2** surface wave after M1-06 locks nesting/filter placement.
+**Migration debt (do not invent new dialects):** Tasks / Progress / Rewards use `ChromeTab`. **Jobs, Applications, Interviews** still use legacy `.tabs` / `.tab.on` blue — migrate to `ChromeTab` + **containerized title → tabs → filter chips → content** in the **M2** surface wave.
 
 ## Banner patterns
 
@@ -153,6 +176,7 @@ The 2026-10-13 F08 M5 interim choices (tinted purple primary, blue toggles, flat
 | Priority | Mixed | **RYG traffic** |
 | Countdown | Proportional sans, space-separated, conic pies | **Mono + padded `:` units**; SVG pies; gap after circles |
 | Link hover (Home) | Purple-deep / invisible ink-only | **Underline** (text may stay dark) |
+| Nesting / filters | Route shells vs query tabs; location chips as fake tabs; rounded Segmented as L2 | **Containerized title → ChromeTab → squared chips (below, left)**; shells for Progress/Rewards (M1-06) |
 | Heatmap | Navy peak | **Vivid rose soft peak** |
 | Shell | 960px | **1100px** |
 | Fonts | JetBrains + DM Sans | **IBM Plex Mono + Sans** (roles) |
@@ -163,6 +187,7 @@ Run before marking any UI ticket done:
 
 - [ ] No new bare-element CSS; no global filled `button` default; no `:not(...)` opt-out chain
 - [ ] Every button, tab and field uses a named variant (`Button` / `TextField` / ChromeTab / …)
+- [ ] Page chrome follows title → tabs/subnav → optional squared filter chips (left, below) → content inside a card; no stacked ChromeTab rows
 - [ ] Only tokens / documented roles for color, radius and shadow
 - [ ] Dialogs use `ModalLayer`
 - [ ] Reused existing components where they fit (listed in the ticket)

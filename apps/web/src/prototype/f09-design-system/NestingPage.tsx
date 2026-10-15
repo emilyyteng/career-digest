@@ -1,14 +1,9 @@
 /**
- * F09 M1-06 · Nesting / information-depth rule (proposed).
+ * F09 M1-06 · Nesting / information-depth (LOCKED 2026-10-15).
  *
- * Design questions:
- * 1. Does underline ChromeTab at subnav scale read quieter than app nav?
- * 2. Is one L2 control enough under Past work (vs nested type tabs)?
- * 3. Does the chrome budget feel right: app nav → one of {shell, page tabs} → ≤1 L2 → content?
- * 4. Filter control look: rounded Segmented vs squared chip row vs single select
- *    (must scale to Jobs location list)?
- * 5. Where should L2 sit relative to tabs?
- * 6. Confirm title → tabs → (filter) → content all inside one card.
+ * Verdict: containerized title → ChromeTab → squared filter chips (below,
+ * left-aligned) → content. Kept as reference; axes still switchable for history.
+ * See docs/design-system.md → Page chrome / nesting.
  *
  * Surfaces via ?variant= · filter placement via ?filter= · control via ?control=
  */
@@ -572,8 +567,8 @@ export default function NestingPage() {
       <div className="f09n-banner" role="status">
         <strong>Experimental prototype</strong>
         {" · "}
-        F09 M1-06 · nesting. Sidebar: filter <em>control</em> (chips / select /
-        Segmented) and placement. Defaults to Jobs (C) + squared chips.
+        F09 M1-06 · <em>verdicts locked</em> (chips below tabs, left-aligned).
+        Axes remain for reference. Defaults to Jobs (C) + squared chips.
       </div>
       <div className="f09n-layout">
         <RuleCard />

@@ -37,7 +37,7 @@ F08 M7 and M8 are Done (2026-10-15), so the earlier gate that M0 wait on those l
 - **R.5** (Established) The design-system reference must be something agents consult proactively. It is referenced from `AGENTS.md` and auto-attached for web UI files via `.cursor/rules/design-system.mdc`.
 - **R.6** (Established 2026-10-13) Banners behave consistently across the app. F08 M5-02 introduces the "one-time notice" (shown once, × closes it early, marked seen per item in `localStorage`) and documents it in `docs/design-system.md` next to the transient flash (`EarnFlash`). F09 then moves the Jobs ranking banner onto the one-time notice: it has no reason to be more persistent than the weekly congrats banner. Scheduled in M2, not done in F08.
 - **R.7** (Proposed 2026-10-14; from F08 M8) **Long lists are paginated by default.** Infinite or very long unpaginated result lists should not be the default pattern. Page size and controls belong in the design system (or a documented list convention). F08 M8 Past work uses a **calendar-driven 7-day window** instead of classic page controls (F08 R8.4); F09 still owns the general rule for other lists. **Settled in M1** (pattern ticket), not M0.
-- **R.8** (Proposed 2026-10-14; from F08 M8) **Feature shell / subnav convention.** Nested feature routes with a shared shell and subnav (Rewards; Progress after F08 M8) vs peer in-page tabs should be one documented app pattern. May belong in the design system or in a small app-shell / IA note if it is not "visual design." **Settled in M1** (pattern ticket), not M0.
+- **R.8** (Established 2026-10-15; proposed 2026-10-14 from F08 M8) **Feature shell / subnav + page chrome.** Containerized anatomy: title → `ChromeTab` subnav or page tabs → optional **squared filter chips** (below tabs, left-aligned) → content, all inside one card. Shells for peer destinations (Progress, Rewards); page tabs for list partitions; chips for filters (never ChromeTab clothes, not rounded Segmented as page L2). Chrome budget: app nav → one of {shell, page tabs} → ≤1 chip row. Documented in `docs/design-system.md` (M1-06).
 - **R.9** (Established 2026-10-15) **`EarnFlash` must appear in the user's current viewport**, near the control they used (or otherwise where they are looking), not only at the top of a long page they have scrolled away from. Placement belongs in the banner / flash pattern in `docs/design-system.md` once settled (Q10). **Settled in M1**, not M0.
 - **R.10** (Established 2026-10-15) **Long scroll-heavy pages should be made more compact** where the user must scroll to reach common actions. Priority surface: the **Tasks** page. Compaction tactics (density, collapsible sections, sticky actions, etc.) are open (Q11); the design system should document the chosen approach so other lists can follow it. **Tactics in M1; Tasks migration in M2.**
 - **R.11** (Established 2026-10-15) **Comprehensive system, phased migration.** M0–M1 make the design system authoritative for all new UI. Existing screens migrate in later milestones by surface. Do not block new features on a full-app restyle.
@@ -84,8 +84,8 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 
 | The Jobs ranking banner stays until dismissed with ×, remembering dismissals per batch in `sessionStorage` (per tab); a successful batch hides on its own after 30 minutes | [`JobsPage.tsx`](../../../apps/web/src/features/jobs/JobsPage.tsx) | Conflicts R.6 | Moves to the one-time notice in M2 |
 | Completions diary and similar logs are long unpaginated day-grouped lists | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R.7 (Proposed) | F08 M8 paginates Past work only; F09 owns the default (M1) |
-| Rewards and Progress use nested routes + subnav shells; other pages vary | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`ProgressLayout.tsx`](../../../apps/web/src/features/progress/ProgressLayout.tsx) | Conflicts R.8 (Proposed) | App-wide rule in M1-06 |
-| Jobs / Applications / Interviews still use legacy `.tab.on` blue page tabs; Tasks/Progress/Rewards use `ChromeTab` underline | Jobs/Apps/Interviews pages; [`ui/ChromeTab.tsx`](../../../apps/web/src/ui/ChromeTab.tsx) | Unspecified vs M1-15 ChromeTab lock | Migrate in M2 after M1-06 |
+| Rewards and Progress use nested routes + subnav shells; full title→tabs→chips anatomy still migrating | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`ProgressLayout.tsx`](../../../apps/web/src/features/progress/ProgressLayout.tsx) | Partial vs R.8 | Shell model conforms; chips + containerized title land in surface waves |
+| Jobs / Applications / Interviews still use legacy `.tab.on` blue page tabs; Tasks/Progress/Rewards use `ChromeTab` underline | Jobs/Apps/Interviews pages; [`ui/ChromeTab.tsx`](../../../apps/web/src/ui/ChromeTab.tsx) | Conflicts R.8 / M1-15 | Migrate in M2 to ChromeTab + containerized chrome + filter chips |
 | Global `a` is blue with purple hover; Home uses ink + underline; other pages mix | [`styles.css`](../../../apps/web/src/styles.css) ~L103–104; Home link rules | Conflicts M1-15 link lock | [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) |
 | `EarnFlash` is rendered near the top of the host page/section, not anchored to the control that earned | [`EarnFlash.tsx`](../../../apps/web/src/features/completion/EarnFlash.tsx), [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx), Progress week/past pages | Conflicts R.9 | Placement in M1 |
 | Tasks is a long, dense scroll surface; common actions often sit below the first viewport | [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx) | Conflicts R.10 | Tactics M1; migrate M2 |
@@ -104,16 +104,14 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | Q6 | How will UI rules be enforced mechanically (e.g. a lint rule against variant-less `<button>`)? A single `npm run check` command comes from maintenance ticket MT-01 and can host it. | M1 | (open) |
 | Q7 | Should `styles.css` be split (per component or per feature), and when? | M1 / M3 | (open) Prefer after primitives exist |
 | Q8 | Long-list pagination: default page sizes, control placement, and whether day-based windows (1 / 7) are a Progress-only idea or a reusable pattern? | M1 | (open) Deferred from M0 (2026-10-15); R.7 |
-| Q9 | Nested feature shell + subnav vs in-page tabs: one app rule? Does it live in `docs/design-system.md` or a separate app-shell / IA doc? | M1 | (open) Deferred from M0 (2026-10-15); R.8. Expanded by M0-01 inventory into Q15 |
 | Q10 | How should `EarnFlash` stay in view: portal near the clicked control, sticky/toast in the viewport, scroll-into-view of a top flash, or something else? Does the same rule apply to `OneTimeNotice`? | M1 | (open) Deferred from M0 (2026-10-15); R.9 |
 | Q11 | What makes Tasks (and similar long pages) compact enough: tighter row density, collapsible sections, sticky compose/actions, pagination/virtualization, or a redesign of the list chrome? | M1 (tactics) / M2 (Tasks migrate) | (open) Deferred from M0 (2026-10-15); R.10 |
-| Q15 | **Information depth:** Max chrome rows before content; route vs tab vs filter; which features get a shell; calendar/day as a nav level; modal vs route for writes; top nav vs side nav vs hybrid? | M1 (expands Q9) | (open) M0 stress samples only; nested-tab representation not solved by carded containment |
-| Q16 | **Layout / chrome budget** (remaining): wrap vs scroll vs truncate vs shortened labels; two-column mins; stack gap scale; breakpoint scale; paired panel heights? | M1 | (open) Shell width locked at 1100px in M0; rest deferred |
+| Q16 | **Layout / chrome budget** (remaining): wrap vs scroll vs truncate vs shortened labels; two-column mins; stack gap scale; breakpoint scale; paired panel heights? | M1 | (open) Shell width locked at 1100px in M0; nesting chrome rows locked in M1-06; rest deferred |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (14)</summary>
+<summary>Resolved questions (16)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -125,10 +123,12 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | Q3 | Button sizes | `sm` / `md` | `design-system.md` |
 | Q4 | Pastel token set | Keep blush atmosphere; remap accent *roles* (ink action, domain hues, RYG severity) | `design-system.md` |
 | Q5 | Conflicting patterns | See conflicting-patterns table (ink desk shortlist) | `design-system.md` |
+| Q9 | Nested feature shell + subnav vs in-page tabs | One rule in `design-system.md`: shells for Progress/Rewards; page tabs for list partitions; squared filter chips as L2 (M1-06) | R.8, `design-system.md` |
 | Q12 | Theme / vibe | **Ink desk (V1×V4)** — sakura canvas + ink chrome/actions; all carded | `design-system.md` |
 | Q13 | Heatmap | Shared **vivid rose soft peak** (5 stops; peak = former step-3) | `design-system.md` |
 | Q14 | Typography | **IBM Plex** Mono display / Sans body; size ladder documented | `design-system.md` |
-| Q16† | Shell width | **1100px** (chrome budget remains open as Q16 above) | `design-system.md` |
+| Q15 | Information depth | Containerized title→ChromeTab→squared chips (below, left)→content; max one tab row + one chip row; calendar = content; top nav kept; writes stay modals. Width/wrap/panel height remain Q16 / M1-07–08 | R.8, `design-system.md` |
+| Q16† | Shell width | **1100px** (remaining layout chrome budget open as Q16 above) | `design-system.md` |
 | Q17 | Brand | **flora.exe** (mark/voice); full string rename not required in M0 | `design-system.md` |
 | Q18 | Color meaning | Identity (apps/tech/reward) ≠ severity RYG ≠ urgency Severity-4; purple = domain tech only | `design-system.md` |
 
@@ -151,3 +151,4 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 - **2026-10-15 (M1 plan):** M1 tickets created. Pilot surface = **Home** (straightforward container placement). Q16 paired-panel height is its own pattern ticket: sibling columns share a defined height; overflow scrolls inside panels (Progress Past work is the stress case). Tokens/primitives → neutralize globals → Home pilot → IA/pattern tickets → enforcement.
 - **2026-10-15 (urgency / kind badges):** Urgency revised to **Severity-4**: overdue=P0 · soon=pink (under 24h; merges former urgent+soon) · ahead=amber · ok=mint — drop gray ahead. Kind badges `interview` / `goal` render **INTERVIEW** / **GOAL** (uppercase). Recorded in `design-system.md`.
 - **2026-10-15 (M1-15):** Post–Home-pilot refinements locked via `/prototype/f09/refinements`: Segmented active = soft ink wash; ChromeTab active = underline ink; urgency ahead = P1 gold (soon keeps pink); countdown = mono + zero-padded units joined by `:`, larger gap after pies; pies = SVG; GOAL badge = domain tech; Home link hover = underline (text may stay dark). Last-digest stays background-less.
+- **2026-10-15 (M1-06):** Nesting / page chrome locked via `/prototype/f09/nesting`: containerized title → ChromeTab subnav/page tabs → squared filter chips (below tabs, left-aligned) → content. R.8 Established; Q9/Q15 resolved (width/panel height remain M1-07/08).

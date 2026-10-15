@@ -1,70 +1,62 @@
 # M1-06: Pattern — feature shell vs nested tabs (Q9 / Q15)
 
-**Status:** In progress
-**Blocked by:** (none) — lock before deep Progress/Rewards waves
+**Status:** Done
+**Blocked by:** (none)
 **Implements:** R.8, R1.2, Q9, Q15
 **Type:** docs
-**Scheduled with:** narrow prototype to judge the proposed nesting rule + filter placement
+**Scheduled with:** prototype `/prototype/f09/nesting`
 
 ## What to build
 
-Lock one app rule for **feature shells + subnav** vs **in-page tabs** vs filters: how nested levels (e.g. Progress This week / Past work / Lifetime) are represented once containment is already “all carded.” Record the rule in `docs/design-system.md` (or a short app-shell note if IA-only). M0 stress samples do not decide this.
-
-**Proposed approach (for prototype judgment):**
-
-| Role | When | Control |
-|------|------|---------|
-| Feature shell + subnav | Peer destinations (Progress; Rewards) | Nested routes + `ChromeTab` `subnav` |
-| Page tabs | Same resource, peer partitions (Jobs, Tasks, …) | `ChromeTab` `page` |
-| Filters / modes | Narrow within a partition | `Segmented` / quiet chips — never ChromeTab |
-
-**Page chrome anatomy (liked in prototype):** inside one card — **title → tabs/subnav → (optional L2 filter) → content**. Nothing on the pink desk outside the card. Filter placement relative to tabs is still open (prototype `?filter=`).
-
-Chrome budget: app nav → **one of** {shell subnav, page-tab row} → ≤1 L2 filter → content. Never two ChromeTab rows stacked. Calendar/day = content chrome. Top nav kept (no side nav in M1). Progress + Rewards are conforming targets for later waves (Past work ledger type tabs demote to Segmented).
-
-**Deferred migrations (do not do in this ticket):**
-
-- Jobs / Applications / Interviews still use legacy `.tab` / `.tab.on` blue — migrate to `ChromeTab` **after** this nesting + filter rule locks (M2 wave; noted on board + design-system).
-- In-content link hover app-wide → [M1-16](./M1-16-in-content-link-hover.md) (Home already matches; globals still blue/purple).
+Lock one app rule for **feature shells + subnav** vs **in-page tabs** vs filters. Record the rule in `docs/design-system.md`.
 
 ## Acceptance criteria
 
-- [ ] Spec Q9 and Q15 answered (or Q15 narrowed with explicit remaining open bits)
-- [ ] Documented standard: when to use nested routes + subnav, peer tabs, and filters; how subnav relates visually to app nav; filter placement; containerized page chrome
-- [ ] Progress and Rewards called out as conforming targets for later waves
-- [ ] Legacy Jobs/Applications/Interviews tab chrome noted for M2 migration
-- [ ] Prototype design questions answered (or narrowed); URL + verdict recorded
-- [ ] `npm run check` passes (docs-only OK)
+- [x] Spec Q9 and Q15 answered (Q15 remaining: width/wrap → M1-08; paired heights → M1-07)
+- [x] Documented standard in `docs/design-system.md` (Page chrome / nesting)
+- [x] Progress and Rewards called out as conforming targets for later waves
+- [x] Legacy Jobs/Applications/Interviews tab chrome noted for M2 migration
+- [x] Prototype design questions answered; URL + verdict recorded
+- [x] `npm run check` passes (docs-only OK)
 
 ## Design questions (prototype tickets only)
 
-1. Does underline `ChromeTab` at **subnav** scale read quieter than app nav (same language, smaller)?
-2. Is one L2 **Segmented** row enough under Past work (Completions / Points / Reflections) vs nested type tabs?
-3. Does the chrome budget feel right in practice: app nav → one of {shell, page tabs} → ≤1 L2 → content?
-4. **Filter control look** (not ChromeTab): rounded `Segmented` vs **squared chip row** (sidebar-chip language, horizontal) vs **single `<select>`** — must scale to Jobs’ many location options.
-5. **Filter placement** relative to tabs: below full-width · below right-aligned · same row · toolbar · recessed · header.
-6. Confirm **title → tabs → filter → content** all inside one card (full containment).
+1. Subnav scale vs app nav — same underline ChromeTab language, quieter size: **accepted**
+2. L2 under Past work — chips not nested tabs: **accepted** (squared chip row)
+3. Chrome budget — app nav → one tab row → ≤1 chip row: **accepted**
+4. Filter control — **squared chip row** (not rounded Segmented; not select)
+5. Filter placement — **below tabs, left-aligned**
+6. Containerized title → tabs → chips → content: **accepted**
 
-Prototype URL: `/prototype/f09/nesting` (defaults to Jobs / chips)
-
-Surfaces (← / →): A Progress week · B Past work · C Jobs (many locs) · D Rewards · E anti-pattern. Sidebar: `?control=` + `?filter=` (A–C).
+Prototype URL: `/prototype/f09/nesting` — keep as reference until no open ticket needs it.
 
 ## Reuse notes
 
-- M0-01 findings §§12–13 (nav depth); lab Completions underline
-- Production `ChromeTab` / `Segmented` / `Badge` (Ink desk, M1-15)
-- Existing `ProgressLayout` / `RewardsLayout` as conforming targets
+- Production `ChromeTab` / `Segmented` / `Badge`; ProgressLayout / RewardsLayout as shell targets
+- Shared FilterChips helper deferred until first surface migrate (M2 Jobs or Progress Past work)
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F09 M1-06: …`
-- [ ] End-of-task report given
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F09 M1-06: …`
+- [x] End-of-task report given
 
 ## Verification notes
 
-(filled when done)
+**2026-10-15 verdicts:**
+
+| Axis | Lock |
+|------|------|
+| Page chrome | Containerized: title → ChromeTab → optional chips → content inside one card |
+| Shell vs page tabs | Progress/Rewards = shell+subnav; list partitions = page tabs |
+| Filters | Squared chip row, below tabs, left-aligned; never ChromeTab; not Segmented as page L2 |
+| Budget | L0 + one tab row + ≤1 chip row; no stacked ChromeTabs; calendar = content; top nav kept |
+
+R.8 → Established. Spec Q9/Q15 → Resolved. Prototype last commit before lock: `7d26feb` (control exploration); lock docs commit below.
+
+`npm run check` pass (docs).
+Commit: (filled on commit)
