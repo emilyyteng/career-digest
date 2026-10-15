@@ -128,7 +128,7 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
       const ids = await seedTaggedApplicationTask();
       const res = await markAppliedVia(path, ids);
       expect(res.status, `${path}: ${JSON.stringify(res.body)}`).toBeLessThan(300);
-      expect(res.body.points?.amount).toBe(5 + MODAL_MINUTES + 20);
+      expect(res.body.points?.amount).toBe(10 + MODAL_MINUTES + 20);
       results[path] = await outcome(ids);
     }
 
@@ -147,7 +147,7 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
         { body: "Tailored the resume to the team", on_application: true, on_task: false, actual_minutes: null },
       ],
       events: [
-        { kind: "earn", category: "application", amount: 70, source_type: "application_applied" },
+        { kind: "earn", category: "application", amount: 75, source_type: "application_applied" },
         { kind: "earn", category: "streak", amount: 2, source_type: "streak_daily" },
       ],
     });
@@ -189,7 +189,7 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
     }
   });
 
-  it("a posting with no task, marked applied from Jobs, creates the application and earns +5", async () => {
+  it("a posting with no task, marked applied from Jobs, creates the application and earns +10", async () => {
     const company = await seedCompany();
     const posting = await seedPosting({
       source: "greenhouse",
@@ -202,7 +202,7 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
       .post(`/api/applications?tz=${TZ}`)
       .send({ postingId: posting.id, status: "applied", notes: "Submitted" })
       .expect(201);
-    expect(res.body.points.amount).toBe(5);
+    expect(res.body.points.amount).toBe(10);
 
     const detail = await apiClient().get(`/api/applications/${res.body.id}`).expect(200);
     expect(detail.body).toMatchObject({ status: "applied", notes: "Submitted", openTaskId: null });
@@ -268,12 +268,12 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
     expect(earns.rows).toHaveLength(1);
   });
 
-  it("a manual applied application still earns +5 and has no task", async () => {
+  it("a manual applied application still earns +10 and has no task", async () => {
     const res = await apiClient()
       .post(`/api/applications?tz=${TZ}`)
       .send({ company: "Manual Co", title: "Analyst Intern", appliedAt: "2025-08-01" })
       .expect(201);
-    expect(res.body.points.amount).toBe(5);
+    expect(res.body.points.amount).toBe(10);
     const detail = await apiClient().get(`/api/applications/${res.body.id}`).expect(200);
     expect(detail.body.appliedAt).toMatch(/^2025-08-01/);
   });
@@ -288,7 +288,7 @@ describe.skipIf(!integrationReady)("mark applied (M4-01)", () => {
       .send({ actualMinutes: null })
       .expect(200);
     expect(res.body).toMatchObject({ status: "completed", actualMinutes: 20 });
-    expect(res.body.points.amount).toBe(5 + 20);
+    expect(res.body.points.amount).toBe(10 + 20);
     const detail = await apiClient().get(`/api/applications/${app.id}`).expect(200);
     expect(detail.body.actualMinutes).toBe(20);
   });

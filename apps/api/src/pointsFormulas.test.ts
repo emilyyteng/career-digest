@@ -36,12 +36,12 @@ describe("pointsFormulas", () => {
     ]);
   });
 
-  it("application is +5 base + minutes, +20 with a reflection", () => {
-    expect(applicationAppliedBreakdown({}).total).toBe(5);
-    expect(applicationAppliedBreakdown({ actualMinutes: 60 }).total).toBe(65);
+  it("application is +10 base + minutes, +20 with a reflection", () => {
+    expect(applicationAppliedBreakdown({}).total).toBe(10);
+    expect(applicationAppliedBreakdown({ actualMinutes: 60 }).total).toBe(70);
     expect(
       applicationAppliedBreakdown({ actualMinutes: 60, withReflection: true }).total,
-    ).toBe(85);
+    ).toBe(90);
   });
 
   it("interview is kind points + minutes, +20 with a reflection", () => {
@@ -61,7 +61,7 @@ describe("pointsFormulas", () => {
 
   it("each kind of work's base is a named constant", () => {
     expect(POINTS.miscTaskBase).toBe(10);
-    expect(POINTS.applicationBase).toBe(5);
+    expect(POINTS.applicationBase).toBe(10);
     expect(POINTS.reflectionBonus).toBe(20);
     expect(POINTS).not.toHaveProperty("miscTaskDefaultMinutes");
   });

@@ -65,11 +65,11 @@ async function technicalStep() {
 }
 
 describe.skipIf(!integrationReady)("work time (M5-04)", () => {
-  it("mark applied scores +5 + minutes, +20 with a reflection", async () => {
-    expect((await manualApplied({ actualMinutes: 60, reflection: REFLECTION })).body.points.amount).toBe(85);
-    expect((await manualApplied({ actualMinutes: 60 })).body.points.amount).toBe(65);
+  it("mark applied scores +10 + minutes, +20 with a reflection", async () => {
+    expect((await manualApplied({ actualMinutes: 60, reflection: REFLECTION })).body.points.amount).toBe(90);
+    expect((await manualApplied({ actualMinutes: 60 })).body.points.amount).toBe(70);
     const blank = await manualApplied({});
-    expect(blank.body.points.amount).toBe(5);
+    expect(blank.body.points.amount).toBe(10);
 
     const detail = await apiClient().get(`/api/applications/${blank.body.id}`).expect(200);
     expect(detail.body.actualMinutes).toBeNull();
@@ -82,7 +82,7 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
       .post(`/api/tasks/${task.id}/complete`)
       .send({ actualMinutes: 40, reflection: REFLECTION })
       .expect(200);
-    expect(res.body.points.amount).toBe(5 + 40 + 20);
+    expect(res.body.points.amount).toBe(10 + 40 + 20);
     expect(res.body.actualMinutes).toBe(40);
 
     const detail = await apiClient().get(`/api/applications/${app.id}`).expect(200);
@@ -109,18 +109,18 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
   it("editing an application's time adjusts its earn and never reverses it", async () => {
     const created = await manualApplied({ actualMinutes: 60 });
     const id = created.body.id as string;
-    expect(await balance()).toBe(65);
+    expect(await balance()).toBe(70);
 
     const up = await apiClient().patch(`/api/applications/${id}`).send({ actualMinutes: 90 }).expect(200);
     expect(up.body.actualMinutes).toBe(90);
-    expect(up.body.points).toMatchObject({ amount: 30, balanceAfter: 95 });
+    expect(up.body.points).toMatchObject({ amount: 30, balanceAfter: 100 });
     expect(up.body.points.message).toContain("+30 points");
 
     const cleared = await apiClient()
       .patch(`/api/applications/${id}`)
       .send({ actualMinutes: null })
       .expect(200);
-    expect(cleared.body.points).toMatchObject({ amount: -90, balanceAfter: 5 });
+    expect(cleared.body.points).toMatchObject({ amount: -90, balanceAfter: 10 });
     expect(await adjusts("application_applied", id)).toEqual([30, -90]);
 
     const row = await earn("application_applied", id);
@@ -146,7 +146,7 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
 
     await apiClient().patch(`/api/applications/${app.id}`).send({ actualMinutes: 35 }).expect(200);
     expect((await apiClient().get(`/api/tasks/${task.id}`)).body.actualMinutes).toBe(35);
-    expect(await balance()).toBe(5 + 35);
+    expect(await balance()).toBe(10 + 35);
   });
 
   it("a to-do application's time can't be set; it comes from mark applied", async () => {
@@ -312,8 +312,8 @@ describe.skipIf(!integrationReady)("work time (M5-04)", () => {
     expect((await earn("application_applied", app.id))?.amount).toBe(35);
 
     const res = await apiClient().patch(`/api/applications/${app.id}`).send({ actualMinutes: 40 }).expect(200);
-    expect(res.body.points.amount).toBe(5 + 40 + 20 - 35);
-    expect(await balance()).toBe(65);
+    expect(res.body.points.amount).toBe(10 + 40 + 20 - 35);
+    expect(await balance()).toBe(70);
   });
 });
 

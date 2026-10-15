@@ -222,13 +222,13 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
     | Action | Points |
     |--------|--------|
     | Misc task complete | Flat +10, plus 1 × actual minutes (was 1 × minutes, or 15 if blank) |
-    | Application mark-applied | Flat +5, plus 1 × actual minutes |
+    | Application mark-applied | Flat +10, plus 1 × actual minutes (was +5) |
     | Interview step finish | Flat by kind (unchanged values), plus 1 × actual minutes |
     | Reflection | Flat +20 wherever it's written: in a completion modal, from Progress, or from a detail page. Linking an existing reflection to work later earns nothing more. |
 
-    Time counts whether or not there's a reflection. For example, an application with 60 minutes and a reflection earns 5 + 60 + 20 = 85 (65 before). A misc task with 30 minutes earns 10 + 30 = 40 (30 before).
+    Time counts whether or not there's a reflection. For example, an application with 60 minutes and a reflection earns 10 + 60 + 20 = 90 (85 when the base was +5). A misc task with 30 minutes earns 10 + 30 = 40 (30 before).
 
-    **Every kind of work has a flat base, and blank time adds 0** (2026-10-13), so the rules have no hidden time defaults. The bases are: misc +10, application +5, interview step by kind. So a misc task completed with no time and no reflection earns 10 (15 before).
+    **Every kind of work has a flat base, and blank time adds 0** (2026-10-13), so the rules have no hidden time defaults. The bases are: misc +10, application +10 (raised from +5 on 2026-10-14), interview step by kind. So a misc task or application completed with no time and no reflection earns 10.
   - **Applications store their time on the application,** since some have no task (2026-10-13). An application task's actual time shows the application's.
   - **Existing data:** minutes on reflections written with an application or interview step are copied onto that work if it has no time yet. All other reflection minutes stay in the database, unused, so no history is lost. Past earns keep their points, including misc earns that got 15 for blank time. An earn is re-scored under the current formula only when its work's time is next edited, or when a reopened misc task is re-completed (2026-10-13). For example, a task that earned 15 for blank time and is re-completed blank goes to 10; edited to 30 minutes, it goes to 40.
   - Applications never reverse (R4.10): a lower time is an adjust down, not a reverse. Re-finishing an interview step still earns nothing again (R4.11).
@@ -557,6 +557,7 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Reflections in general replace deep work on Progress: marks count any reflection, and the summary shows reflection minutes. The reflection minutes model (R5.30) is confirmed and belongs to the points rules, in-app too.
 - **2026-10-13:** Time belongs to the work, not the reflection (R5.31). Applications and interview steps get their own editable time, which counts with or without a reflection; every reflection is a flat +20 note. The Progress summary counts reflections. This replaces R5.19 and R5.30 and raises application and interview earns.
 - **2026-10-13:** Blank time adds 0 for every kind of work; the misc 15-minute default is removed so there's one consistent baseline. Misc tasks get a flat +10 base, like applications' +5. Application time is stored on the application. Old earns are re-scored only when their time is next edited or a reopened misc task is re-completed. Study time without a task is logged as a misc task.
+- **2026-10-14:** Application mark-applied base raised from +5 to +10 so misc tasks and applications share the same flat base (R5.31). Past earns keep their points until the application's time is next edited.
 - **2026-10-13:** Application merges keep everything from the removed application on the survivor, including its time and its earn when the survivor has none; points never change at a merge (R2.22, M2-02, which also covers M2-01).
 - **2026-10-13:** F09's visual-direction decisions (M0) are made during the M5 design pass, using the M5 prototypes as the test case. F09 M1 builds only the components M5 needs. (Superseded later the same day: F09 M0 waits until after M7 and M8; M5 uses interim decisions in `docs/design-system.md`.)
 - **2026-10-13:** LeetCode tiers are worth easy +20, medium +30, hard +50 (Q32). M5 build order: M5-03, M5-05, M5-15, M5-01, M5-16, M5-10, M5-07, M5-08, M5-09, M5-02, M5-12, M5-11, M5-13 (M5-16 added 2026-10-13 after M5-01; Proposed placement before streaks). Data and API come before the UI that depends on them, and each surface is built once. M5-05 is split: week close stays backend-only, and the completion-log entries move to M5-15. M5-08 owns the Progress weekly-streak display (R5.28), designed in M5-07.

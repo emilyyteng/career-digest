@@ -123,13 +123,13 @@ describe.skipIf(!integrationReady)("application merges (M2-02)", () => {
     const removed = await seedApplication({ postingId: simplify.id, status: "applied" });
     await setTime(removed.id, 40);
     await awardApplicationApplied(pool, { applicationId: removed.id, label: "Removed", actualMinutes: 40 });
-    expect(await balance()).toBe(45);
+    expect(await balance()).toBe(50);
 
     await runMergeDuplicatePostings();
 
-    expect(await balance()).toBe(45);
+    expect(await balance()).toBe(50);
     expect(await applicationEvents(removed.id)).toEqual([]);
-    expect(await applicationEvents(survivor.id)).toEqual([{ kind: "earn", amount: 45 }]);
+    expect(await applicationEvents(survivor.id)).toEqual([{ kind: "earn", amount: 50 }]);
     const merged = await app(survivor.id);
     expect(merged).toMatchObject({ status: "applied", actual_minutes: 40 });
     expect(merged?.applied_at).not.toBeNull();
@@ -139,7 +139,7 @@ describe.skipIf(!integrationReady)("application merges (M2-02)", () => {
       .send({ actualMinutes: 50 })
       .expect(200);
     expect(edited.body.points.amount).toBe(10);
-    expect(await balance()).toBe(55);
+    expect(await balance()).toBe(60);
     const earns = await pool.query(
       `SELECT 1 FROM points_events WHERE kind = 'earn' AND source_type = 'application_applied'`,
     );
@@ -152,13 +152,13 @@ describe.skipIf(!integrationReady)("application merges (M2-02)", () => {
     const removed = await seedApplication({ postingId: simplify.id, status: "applied" });
     await awardApplicationApplied(pool, { applicationId: survivor.id, label: "Kept", actualMinutes: 10 });
     await awardApplicationApplied(pool, { applicationId: removed.id, label: "Removed", actualMinutes: 20 });
-    expect(await balance()).toBe(15 + 25);
+    expect(await balance()).toBe(20 + 30);
 
     await runMergeDuplicatePostings();
 
-    expect(await balance()).toBe(40);
-    expect(await applicationEvents(survivor.id)).toEqual([{ kind: "earn", amount: 15 }]);
-    expect(await applicationEvents(removed.id)).toEqual([{ kind: "earn", amount: 25 }]);
+    expect(await balance()).toBe(50);
+    expect(await applicationEvents(survivor.id)).toEqual([{ kind: "earn", amount: 20 }]);
+    expect(await applicationEvents(removed.id)).toEqual([{ kind: "earn", amount: 30 }]);
   });
 
   it("moves tasks; an open task closes once the merge lands past to-do, and its reflections follow", async () => {
@@ -247,7 +247,7 @@ describe.skipIf(!integrationReady)("application merges (M2-02)", () => {
     expect(merged).toMatchObject({ status: "interviewing", actual_minutes: 30 });
     expect(merged?.notes).toContain("Mine");
     expect(merged?.notes).toContain("Theirs");
-    expect(await applicationEvents(manualId)).toEqual([{ kind: "earn", amount: 35 }]);
+    expect(await applicationEvents(manualId)).toEqual([{ kind: "earn", amount: 40 }]);
     expect((await getApplicationByPosting(posting.id))?.id).toBe(manualId);
   });
 
@@ -278,6 +278,6 @@ describe.skipIf(!integrationReady)("application merges (M2-02)", () => {
     expect(merged?.status).toBe("applied");
     expect(await interviewThreadExists(threadId)).toBe(true);
     expect(await balance()).toBe(before);
-    expect(await applicationEvents(todoApp.id)).toEqual([{ kind: "earn", amount: 30 }]);
+    expect(await applicationEvents(todoApp.id)).toEqual([{ kind: "earn", amount: 35 }]);
   });
 });

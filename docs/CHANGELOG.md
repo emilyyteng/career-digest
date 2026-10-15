@@ -283,7 +283,7 @@ Weekly goals become a closed loop: Progress edits the week, week close writes fi
 
 **Points rule adjustments.**
 
-- Ledger totals split tasks by task category. Work time belongs to the work; reflections are flat +20 notes; misc tasks get a +10 base. Deep work is retired.
+- Ledger totals split tasks by task category. Work time belongs to the work; reflections are flat +20 notes; misc tasks and applications both get a +10 base. Deep work is retired.
 - Weekly records and LeetCode day rows appear in the completion log; the weekly tab is labeled weekly goals.
 
 **Outcome:** Hitting a weekly target pays at week close, shows up on Home once, and leaves a durable record. Daily streaks and achievements add lighter celebration without inventing a third banner pattern.

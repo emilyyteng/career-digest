@@ -5,7 +5,7 @@
 export const POINTS = {
   /** Every kind of work has a flat base; time adds 1 point a minute on top (R5.31). */
   miscTaskBase: 10,
-  applicationBase: 5,
+  applicationBase: 10,
   /** A reflection is a flat +20, whether written with the work or on its own. */
   reflectionBonus: 20,
   /** Untiered solves (logged before tiers) count as medium. */
