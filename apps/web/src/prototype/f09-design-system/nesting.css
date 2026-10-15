@@ -1,0 +1,236 @@
+/* F09 M1-06 · nesting / information-depth prototype */
+
+.f09n-page {
+  padding-bottom: 5rem;
+}
+
+.f09n-banner {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font-size: 0.85rem;
+}
+
+.f09n-layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .f09n-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.f09n-rule {
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.65rem;
+  position: sticky;
+  top: 0.75rem;
+}
+
+.f09n-rule-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.f09n-rule-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.55rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.f09n-rule-list code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.f09n-budget {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-control);
+}
+
+.f09n-note {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.f09n-preview {
+  min-width: 0;
+}
+
+.f09n-surface {
+  padding: 1rem 1.1rem 1.15rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.f09n-surface.f09n-anti {
+  border-color: color-mix(in srgb, var(--severity-p0) 35%, var(--border));
+}
+
+.f09n-surface-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.f09n-kicker {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-subtle);
+}
+
+.f09n-surface-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.f09n-subnav,
+.f09n-page-tabs {
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.f09n-l2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.f09n-body {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.f09n-fake-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.f09n-caption {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.f09n-past-grid {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.9fr) minmax(0, 1.2fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .f09n-past-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.f09n-cal,
+.f09n-ledger {
+  padding: 0.7rem 0.8rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.f09n-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.f09n-cal-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.f09n-cal-cell.is-on {
+  background: color-mix(in srgb, var(--domain-tech) 35%, var(--surface));
+  border-color: color-mix(in srgb, var(--domain-tech) 50%, var(--border));
+}
+
+.f09n-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.f09n-balance-value {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.f09n-page .prototype-switcher {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--ink);
+  color: var(--on-primary);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  box-shadow: 0 4px 18px var(--shadow-strong);
+}
+
+.f09n-page .prototype-switcher-surface {
+  opacity: 0.7;
+  padding-right: 0.35rem;
+  border-right: 1px solid color-mix(in srgb, var(--on-primary) 30%, transparent);
+}
+
+.f09n-page .prototype-switcher-label {
+  min-width: 14rem;
+  text-align: center;
+}
+
+.f09n-page .prototype-switcher-btn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.f09n-page .prototype-switcher-btn:hover {
+  color: var(--brand);
+}
