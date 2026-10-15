@@ -1,6 +1,6 @@
 # F09 M0-01 — Production UI inventory (draft findings)
 
-**Status:** Draft for user review (ticket remains open)  
+**Status:** Closed with user review (2026-10-15) — inventory + §15–16 approach feed M0-02  
 **Date:** 2026-10-15  
 **Method:** Read-only audit of production `apps/web` (CSS + TSX). Prototypes excluded. Not verified in a running browser unless noted.
 
@@ -42,14 +42,23 @@ A third structural problem is **layout and information depth**: a fixed 960px sh
 - **B.** Flat feature subnav (Progress / Rewards)
 - **C.** Soft branded Home hero (purple greeting) sitting on raised `.card`s
 
+### Surface containment (cards vs open canvas) — vibe split
+
+Most list/workflow pages put content in **raised `.card` containers** on the pastel gradient: white/cream surface, border (often reading pink via `--border` / hover `--accent-pink`), soft shadow ([`styles.css` L416–440](../../../../../apps/web/src/styles.css)). That is the “panel on a terminal desk” feel.
+
+**Rewards** is the clear counterexample: the feature shell and many surfaces sit **directly on the page background** with flat subnav and less universal card wrapping ([`RewardsLayout.tsx`](../../../../../apps/web/src/features/rewards/RewardsLayout.tsx), rewards CSS). Collection art then adds its own elevated cards — so Rewards is “open canvas + selective art elevation,” not “everything in a pink-bordered box.”
+
+**Progress is hybrid:** subnav matches Rewards’ flat link chrome ([`styles.css` L5825–5858](../../../../../apps/web/src/styles.css)), but This week / Past work / Lifetime content largely returns to **carded panels** like Jobs/Tasks. Same feature family, two containment languages.
+
+This containment split is as much a Sakura-vs-flat signal as button shadows or mono titles. M0 prototypes should treat **contained vs open canvas** as an explicit axis, not an accident of which page you open.
+
 ### Q12 vibe tension — concrete examples
 
 1. Same Progress page: panels use raised `.card` ([`styles.css` L416–424](../../../../../apps/web/src/styles.css)) while LC / range controls use flat `secondary ui-btn*` ([`LeetcodeLogger.tsx`](../../../../../apps/web/src/features/progress/LeetcodeLogger.tsx), [`ThisWeekPage.tsx`](../../../../../apps/web/src/features/progress/ThisWeekPage.tsx)).
 2. App nav (pink lift) vs list-page `.tabs` (raised blue fill) vs Progress/Rewards subnav (flat) — three navigation languages.
-3. Rewards collection cards still hover-lift and glow ([`catCake.css`](../../../../../apps/web/src/features/rewards/catCake.css)) against flat Rewards subnav.
+3. Rewards collection cards still hover-lift and glow ([`catCake.css`](../../../../../apps/web/src/features/rewards/catCake.css)) against flat Rewards subnav / open canvas.
 4. Global primary = filled blue + `--shadow-button` ([`styles.css` L359–374](../../../../../apps/web/src/styles.css)) vs interim primary = flat tinted purple (`ui-btn-primary`, ~L1807).
-
-**Assessment for M0-02:** Prototypes should lead with **full-page vibe samples** (shell + nav + card + actions + one data viz), not a button strip alone. Axes worth exploring: pure raised Sakura, pure flat, hybrid (flat controls + soft cards / modal-only elevation), and “ink primary” as a separate action dialect on either elevation story.
+5. Contained card pages (Jobs/Tasks/Home sections) vs open-canvas Rewards vs hybrid Progress (flat tabs + carded body).
 
 ---
 
@@ -466,28 +475,92 @@ Paired Progress columns (week split, past columns, lifetime heats) **grow indepe
 
 ---
 
-## 15. Recommendations for M0-02 (agent opinion — not locked)
+## 15. User review (2026-10-15) — decisions process
 
-1. **Start prototypes at vibe (Q12)** with type + elevation as co-equal axes — e.g. Raised Sakura + mono chrome, Flat Pastel + sans-led titles, Hybrid, Ink variants; optional “softer Sakura” (mono brand/nav only, sans titles).  
-2. On each direction, show: shell+nav, card, primary/secondary/ghost, segmented, modal chrome, **heatmap sample**, one priority + urgency pair, and a **type specimen** (brand / nav / section title / body / badge / counter).  
-3. Treat **accent roles** and **type roles** as first-class deliverables.  
-4. Decide early whether Rewards art (CatCake / friendship) is inside the system or a documented exception zone.  
-5. Include one **width-stress** frame (tabs + chips + dual column) so layout pain informs shell-width discussion.  
-6. Keep Q8–Q11 / Q15 nesting rules / full layout policy for M1, but don’t hide depth/width problems from M0 visuals.  
-7. Plan a **later font exploration** beyond DM Sans + JetBrains Mono once roles are locked — do not freeze the pair as permanent in M0.
+Feedback on the review prompts (not yet locking visual winners):
+
+1. **Decide from prototypes, not from inventory alone.** Ad hoc choices each looked fine in the moment; they look disjoint together. Strong preferences need side-by-side options that show a whole composition.
+2. **M0 must explore other font families**, primarily via a **font switcher** on the prototype (orthogonal to vibe packs), not by rebuilding every screen per family. Major axis today is **style vs readability** (mono vs sans); more axes may appear while choosing. Type is tied to overall vibe/brand.
+3. **Brand / product identity is in F09 scope.** The app grew from a personal job board into a hub (tasks, motivation/rewards, etc.). Whether that deserves a rebrand that names what the site really is belongs in M0 alongside vibe — not only “which pastel button.”
+4. **Priority traffic lights:** do not decide keep/drop yet. First iterate a **common color-meaning scheme** that unloads today’s overloads; then place priority (red/yellow/green remains useful if intentional).
+5. **Vibe directions: exploratory / broad by default.** Not limited to Sakura Terminal vs flat pastel sans. Keep what is loved (especially **baby pink**) and what feels refreshing about **clean** flat UI, but proactively explore other designs, eliminate, or remix. Readability and at-a-glance color meaning matter as much as liking pastels.
+6. **Containers** called out as a first-class clash (carded pink-border panels vs Rewards open canvas vs Progress hybrid) — see §1.
+7. **Elevation, nav depth, layout:** same process — develop approaches in prototypes; pick/mix or find gaps. Avoid locking opinions from the audit alone.
 
 ---
 
-## Review prompts for you
+## 16. Proposed M0 prototype approach (for M0-02)
 
-Please mark up or reply with:
+Inventory stays the **problem map**. M0-02 is the **option lab**. Prefer independent controls over a tiny fixed set of named packs.
 
-1. Which vibe directions you want built (agree / cut / add) — including how **mono vs sans** should show up in those directions.  
-2. Whether Rewards/CatCake art should follow the same elevation rules.  
-3. Whether priority traffic lights should stay outside the pastel system.  
-4. Typography: keep JetBrains Mono for which roles (brand only / nav+tabs / numbers+badges / drop entirely from content chrome)? Interest in exploring other font families in M0 vs a later pass?  
-5. Nav depth: max chrome rows you’re willing to live with; gut feel on side nav vs refined top nav; should Jobs location stop looking like tabs?  
-6. Layout: is 960px still the right shell, or should dual-column Progress force a wider well / earlier stack?  
-7. Any surfaces this inventory still missed; corrections if runtime differs from CSS/TSX.
+### Lab structure
 
-Once you respond, M0-01 can be closed with your feedback folded into Verification notes / this file.
+| Layer | What you switch | Purpose |
+|-------|-----------------|--------|
+| **A. Brand framing** | Short identity theses (name + one-line promise) | Does the chrome feel like a job board, a prep OS, a motivation hub, …? |
+| **B. Vibe compositions** | Broad visual directions (packs) | Full sample page: shell, nav, containment, actions, heatmap, priority+urgency |
+| **C. Font switcher** | Family pairs / stacks (orthogonal) | Style ↔ readability without rebuilding each pack |
+| **D. Color-meaning schemes** | Semantic maps (orthogonal or paired with a pack) | Unload blue/purple/pink; then seat priority + urgency + heat + success |
+| **E. Containment / elevation** | Contained cards vs open canvas vs hybrid; shadow policy | Explicit container axis |
+| **F. Nav + width stress** | Chrome stack samples; shell width | See depth/width together; full IA rules still M1 |
+
+Hard rules in `docs/design-system.md` still apply to how prototypes are *built* (no new production globals). Prototype-local tokens/CSS under `prototype/f09-design-system/` may explore palettes and fonts not yet in production `:root`.
+
+### Brand theses to put on the table (draft — rename/kill freely)
+
+| ID | Working thesis | Implication for vibe |
+|----|----------------|----------------------|
+| B1 | **Job board & tracker** (original) | Dense lists, status, urgency; lighter on rewards play |
+| B2 | **Career prep OS** | Hub for jobs + tasks + progress; calm system chrome |
+| B3 | **Motivation desk** | Rewards/streaks/Seeds are first-class; playful OK if readable |
+| B4 | **Personal command center** | Everything-in-one-place; strong brand mark; flexible modules |
+
+Brand can change **name/voice** later; M0 only needs enough identity to judge whether “Sakura terminal,” “clean blush hub,” etc. fit what the site *is*.
+
+### Vibe compositions to start with (broad pool — cut after seeing them)
+
+Not limited to current dialects; baby pink and “clean” are preferences to *try to keep*, not constraints that forbid other packs.
+
+| ID | Direction | Keeps / explores | Why it’s in the pool |
+|----|-----------|------------------|----------------------|
+| V1 | **Sakura Terminal (baseline)** | Raised cards, mono chrome, pastels, pink desk | Current raised dialect; control sample |
+| V2 | **Soft Sakura Clean** | Baby pink canvas, **flat/clean**, readable sans, mono only for brand or numbers | Remix: loved pink + refreshing clean |
+| V3 | **Blush Studio** | Soft pink brand, airy open or lightly contained, less “hacker” | Hub/planner energy without terminal |
+| V4 | **Ink & Blush** | High-contrast ink type/actions, blush accents only | Max readability; pink as accent not wash |
+| V5 | **Seed Garden** | Motivation/rewards-forward; playful but tokenized | Tests B3 identity; CatCake-adjacent |
+| V6 | **Cool Focus** | Shift primary wash away from pink (mint/blue-gray) | Elimination sample — is pink load-bearing? |
+| V7 | **Editorial Hub** | Slightly literary / portfolio-calm | Alternate personality if rebrand leans narrative |
+
+Packs are starting points; after review we eliminate, merge, or steal pieces (e.g. V2 containment + V4 type + V1 pink).
+
+### Font switcher (M0, orthogonal)
+
+Suggest 5–6 stacks along **style ↔ readability** (adjust when implementing):
+
+1. JetBrains Mono + DM Sans (**current**)  
+2. IBM Plex Mono + IBM Plex Sans (systemy, still technical, more readable)  
+3. Space Grotesk + Source Sans 3 (modern product, less “hacker”)  
+4. Atkinson Hyperlegible + a simple mono for numbers only (max readability)  
+5. Fraunces or Newsreader + DM Sans (soft editorial — pairs with V7)  
+6. Optional: keep one expressive display only for brand wordmark
+
+Switcher changes CSS variables on the prototype root; packs should not hard-code families.
+
+### Color-meaning schemes (brainstorm before seating priority)
+
+| ID | Idea | Priority traffic lights |
+|----|------|-------------------------|
+| C1 | **Pastel accents stay decorative**; severity is a separate traffic set (R/Y/G) with documented roles | Keep R/Y/G as the severity language |
+| C2 | **One semantic stack** (danger / warn / ok / info / neutral) shared by priority, urgency, banners; pastels only for brand/data | Priority maps onto semantic, may be less “pure” R/Y/G |
+| C3 | **Domain hue + severity lightness** (apps/tech/rewards families; worse = darker/hotter) | Priority may become shape/label + shared severity step |
+| C4 | **Ink semantics + blush brand** (near-neutral UI, pink brand, clear danger red) | Traffic OK if red is true danger, not pastel pink |
+
+Iterate schemes in the lab *with* heatmap + urgency + priority + success banner on one board — then decide priority’s seat.
+
+### Containment / elevation / nav / layout
+
+Show at least three containment modes on the same content: **all carded**, **open canvas**, **hybrid** (flat feature chrome + carded body — today’s Progress). Elevation (flat / soft cards / overlay-only) switches beside that. Nav and width: sample top-nav + secondary chrome stacks and one dual-column stress frame at 960 vs wider — pick later from what reads clearly, not from the audit’s opinions.
+
+### What M0-02 should not lock yet
+
+Final product name, production font shipping set, final shell width, side vs top nav IA rules, and “delete traffic lights” — those fall out of lab review (and M1 for IA).

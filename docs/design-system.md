@@ -4,7 +4,7 @@ The source of truth for visual and interaction conventions in `apps/web`. **Read
 
 **Status:** Skeleton. Rules marked **Pending** are not decided yet; they're being settled in the design-system migration (`docs/features/F09-design-system-migration/spec.md`). Until a rule is decided, don't invent one: follow the closest existing pattern, and flag the gap to the user.
 
-**Migration approach (2026-10-15):** comprehensive system + phased migration. F09 M0 locks **visual** foundations (theme/vibe through component looks and data-viz color). F09 M1 adds primitives, interaction/IA patterns, enforcement, and a pilot migrate. Later milestones restyle remaining surfaces in waves. New feature UI must follow what is already decided here and extend this doc when something new is needed—do not wait for full-app migration.
+**Migration approach (2026-10-15):** comprehensive system + phased migration. F09 M0 explores **broadly in prototypes** (vibe packs, font switcher, color-meaning schemes, containment, brand framing), then locks visual foundations here. Do not invent a locked look from the inventory alone. F09 M1 adds primitives, interaction/IA patterns, enforcement, and a pilot migrate. Later milestones restyle remaining surfaces in waves. New feature UI must follow what is already decided here and extend this doc when something new is needed—do not wait for full-app migration.
 
 ## Hard rules (in effect now)
 
@@ -19,7 +19,7 @@ The source of truth for visual and interaction conventions in `apps/web`. **Read
 
 ## Principles
 
-**Pending** (F09 M0). Theme/vibe is open: raised "Sakura Terminal" vs recent clean/flat (and whether they can coexist) is F09 Q12. Direction work happens in **F09 prototypes** (`/prototype/f09/…`), not under F08.
+**Pending** (F09 M0). Theme/vibe/brand are open (Q12, Q17). Direction work is an exploratory lab in **F09 prototypes** (`/prototype/f09/…`), not under F08. Inventory findings are a problem map, not pre-chosen winners.
 
 ## Tokens
 

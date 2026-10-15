@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Blocked by:** M0-02
-**Implements:** R.2, R.3, R0.2, R0.3, R.14, Q1–Q5, Q12–Q13
+**Implements:** R.2, R.3, R.16, R0.2, R0.3, R0.4, R0.5, R.14, Q1–Q5, Q12–Q14, Q17–Q18 (and Q16 tokens if locked)
 **Type:** docs
 
 ## What to build
@@ -16,8 +16,8 @@ After the M0-02 prototype verdict, write the locked **visual** foundations into 
 - [ ] Components catalogue: allowed visual variants and sizes for Button, fields, tabs/segmented, badge/chip, card, modal chrome (appearance); Status column updated
 - [ ] "Conflicting patterns → chosen standard" table filled for visual areas from M0-01 / M0-02
 - [ ] Interim F08 M5 decisions section updated: either promoted into the standard or marked superseded with a pointer to the new rules
-- [ ] F09 spec: Q1–Q5, Q12, Q13 moved to Resolved questions with answers; Current behavior rows updated where a decision changes their status notes
-- [ ] Explicit note that Q8–Q11 remain open for M1 pattern tickets (R.14)
+- [ ] F09 spec: Q1–Q5, Q12–Q14, Q17–Q18 (and any M0-locked parts of Q16) moved to Resolved questions with answers; Current behavior rows updated where a decision changes their status notes
+- [ ] Explicit note that Q8–Q11 / Q15 (and remaining Q16 policy) stay open for M1 pattern tickets (R.14)
 - [ ] Board: M0 milestone status → Done when this ticket and M0-01 / M0-02 are Done
 - [ ] No requirement to migrate production call sites here (that is M1+)
 

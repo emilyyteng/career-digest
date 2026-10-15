@@ -1,59 +1,70 @@
-# M0-02: F09 visual-direction prototypes (vibe → components)
+# M0-02: F09 visual-direction prototypes (exploratory lab)
 
 **Status:** Ready
-**Blocked by:** (none) — use M0-01 findings when available; shell/routes may start in parallel
-**Implements:** R.3, R.13, R.14, R0.1, R0.3, Q1–Q5, Q12–Q13
+**Blocked by:** (none) — M0-01 findings are the problem map; this ticket is the option lab
+**Implements:** R.3, R.13, R.14, R.16, R0.1, R0.3, R0.4, R0.5, Q1–Q5, Q12–Q14, Q16 (samples), Q17–Q18
 **Type:** prototype
 
 ## What to build
 
-F09-owned visual-direction prototypes under `apps/web/src/prototype/f09-design-system/` with DEV routes under `/prototype/f09/…`. These replace `/prototype/f08/weekly/visual-direction` as the place where direction is explored and locked.
+F09-owned **exploratory design lab** under `apps/web/src/prototype/f09-design-system/` with DEV routes under `/prototype/f09/…`. This replaces `/prototype/f08/weekly/visual-direction` as the home for direction work.
 
-Start from **theme / vibe** (Q12), then show how that vibe lands on tokens and components. Explore **more variants than F08 W/A/B/C**. Direction W (tinted purple primary, flat, blue toggles) was preferred in that round and may appear as one candidate; it is not the default winner and must not be the whole option set.
+**Process:** inventory alone is not enough to decide. Build a wide option pool; review side-by-side; eliminate, merge, or remix. Do not treat F08 W/A/B/C or “Sakura vs flat” as the full set. Loved inputs to *try to keep*: **baby pink**, **clean/readable** UI — not hard constraints against other explorations.
 
-Include representative surfaces so the vibe can be judged in context (not a button strip alone), e.g. a compact page chrome sample, primary/secondary/ghost actions, a card or two, a modal shell, a segmented control, and a **heatmap / intensity** sample (Q13 / R0.3).
+### Lab layers (see findings §16)
 
-Every variant must still respect locked hard rules in `docs/design-system.md` (tokens only, no new global element CSS).
+1. **Brand framing** — short identity theses (Q17); enough to judge vibe fit (rename ship optional).
+2. **Vibe compositions** — broad packs (V1–V7 starting pool in findings §16); each shows a full sample, not a button strip.
+3. **Font switcher** — orthogonal control (R0.4); multiple family stacks along style ↔ readability; packs must not hard-code families.
+4. **Color-meaning schemes** — brainstorm boards (Q18 / R0.5) with heatmap + urgency + priority + success together; seat traffic lights only after a scheme exists.
+5. **Containment / elevation** — carded vs open canvas vs hybrid; shadow policy switches.
+6. **Nav + width stress samples** — chrome stacks and dual-column / tab-row pressure; full IA rules remain M1 (Q15).
+
+Representative surfaces on each vibe pack: shell + nav, brand mark, contained and/or open regions, primary/secondary/ghost, segmented control, modal chrome, heatmap sample, priority + urgency pair, type specimen strip (brand / nav / title / body / badge / number).
+
+Prototype-local CSS/tokens under the F09 prototype folder may explore fonts and palettes not yet in production `:root`. Do not write exploratory tokens into production `styles.css` from this ticket. Production hard rules still apply to any shared production code touched (ideally none).
 
 ## Acceptance criteria
 
 - [ ] Prototype lives only under `apps/web/src/prototype/f09-design-system/`; routes wired behind `import.meta.env.DEV` under `/prototype/f09/…`
 - [ ] Visible "Experimental prototype" banner; file headers name this ticket and the design questions
-- [ ] Uses shared `PrototypeSwitcher` (or F09 equivalent built on it)—no one-off switcher copy from F08 beyond what's needed
-- [ ] Does **not** depend on `/prototype/f08/weekly/visual-direction` remaining; F08 page may be read once as historical input
-- [ ] Variants differ on the design questions below; more than the four F08 directions
-- [ ] At least one variant (or axis) explores coexistence vs choice between raised Sakura Terminal and clean/flat (Q12)
-- [ ] Heatmap / intensity treatment is shown and varies only where Q13 is open
-- [ ] Ticket links the prototype URL(s) for review
+- [ ] Uses shared `PrototypeSwitcher` and/or clear lab controls (vibe pack, font stack, color scheme, containment) — no fragile one-off switcher copied from F08 beyond reuse of `PrototypeSwitcher`
+- [ ] Does **not** depend on `/prototype/f08/weekly/visual-direction` remaining
+- [ ] More directions than F08 W/A/B/C; pool starts from findings §16 (may trim for implementation cost but must stay exploratory/broad)
+- [ ] Font switcher present with ≥4 stacks including current Mono+DM Sans and at least two more-readable alternatives (R0.4)
+- [ ] Brand theses shown or selectable enough to discuss Q17
+- [ ] Color-meaning scheme board includes priority + urgency + heatmap + success (Q18); does not decide priority in isolation
+- [ ] Containment axis explicit: carded / open canvas / hybrid (Progress-like)
+- [ ] At least one width-stress frame (tabs + secondary chrome + dual column)
+- [ ] Ticket links all prototype URL(s) for review
+- [ ] Findings §16 updated if the implemented pool diverges (what shipped vs deferred)
 
 ## Design questions (prototype tickets only)
 
-The only axes prototype variants may differ on. Every variant must satisfy every locked requirement.
+Axes the lab may vary. Locked requirements still apply.
 
-1. **Q12 — Theme / vibe:** What does the app communicate? Raised Sakura Terminal, clean/flat, a deliberate hybrid, or something else? Treat **typography** (mono vs sans roles) as co-equal with elevation.
-2. **Q14 — Type roles / scale:** Where JetBrains Mono vs DM Sans (or interim stand-ins) appear — brand, nav, tabs, section titles, body, badges, numbers — and a small size scale. Full alternate-family exploration may be a later pass.
-3. **Q4 — Palette:** Keep the pastel token set as the base, revise roles only, or revise the set?
-4. **Q2 — Elevation:** Where (if anywhere) do shadows / raised surfaces appear?
-5. **Q1 — Primary action & accent roles:** Primary button look; which accent is action vs selection vs brand vs data?
-6. **Q3 — Control sizes:** How many button (and related control) sizes, and when?
-7. **Q5 — Pattern winners (visual):** Which existing competing looks win for tabs/segmented, chips, cards, modal chrome (appearance only)?
-8. **Q13 — Data viz:** Heatmap / intensity gradient family and empty/future/peak reading
-9. **Q16 (visual sample):** Include at least one width-stress frame (tab row + secondary chrome + dual column) so shell width can be judged; full layout policy stays M1
+1. **Q17 — Brand / identity:** Which thesis fits what the site is now?
+2. **Q12 — Vibe composition:** Which pack (or remix) feels cohesive and like “me”?
+3. **Q14 — Type:** Which font stack + role split wins for style vs readability (and any new axes noticed)?
+4. **Q18 / Q4 / Q1 / Q13 — Color meaning + palette:** Which semantic map; keep/revise pastels; where baby pink lives; heatmap + priority seating
+5. **Q2 + containment:** Elevation and carded vs open canvas vs hybrid
+6. **Q3 / Q5 — Controls (visual):** Sizes and winning looks for tabs/segmented/chips/modal chrome
+7. **Q16 samples — Layout:** Shell width / stress readability (policy detail may wait for M1)
 
-Prototype URL: `/prototype/f09/visual-direction` (adjust if split across pages; list all URLs in Verification notes)
+Prototype URL (planned): `/prototype/f09/lab` (hub) with subroutes as needed — list finals in Verification notes.
 
 ## Reuse notes
 
 - `apps/web/src/prototype/PrototypeSwitcher.tsx`
-- Existing `:root` tokens in `styles.css` unless a variant explicitly proposes new token names (document them; don't silently add production tokens)
-- F08 `VisualDirectionPrototypePage` conflict list and directions as historical input only
-- M0-01 inventory findings
+- M0-01 findings (especially §§1 containment, 12 type, 13–14 depth/layout, **§16 proposed approach**)
+- F08 visual-direction page as historical input only
+- Google fonts already loaded in `index.html` may be extended for the prototype only (document added families in the prototype header)
 
 ## Definition of done
 
 - [ ] Acceptance criteria met and checked
 - [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [ ] Follows `docs/design-system.md` for any production touch; prototype stays under `prototype/`
 - [ ] Reuse check done
 - [ ] No production imports of prototype code
 - [ ] Committed as `F09 M0-02: …`
@@ -61,4 +72,4 @@ Prototype URL: `/prototype/f09/visual-direction` (adjust if split across pages; 
 
 ## Verification notes
 
-(filled when done: verdict, chosen variant(s), last commit hash of the prototype before any later deletion)
+(filled when done: what was shown, user verdict / shortlist, remix notes, last commit hash of the prototype before any later deletion)

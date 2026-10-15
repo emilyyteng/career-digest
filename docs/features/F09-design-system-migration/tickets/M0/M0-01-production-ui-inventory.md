@@ -1,8 +1,8 @@
 # M0-01: Production UI visual inventory (spike)
 
-**Status:** In progress
+**Status:** Done
 **Blocked by:** (none)
-**Implements:** R.12, R0.1 (input), R0.3 (scope), Q5 / Q12 / Q13 (findings)
+**Implements:** R.12, R0.1 (input), R0.3 (scope), Q5 / Q12–Q18 (findings)
 **Type:** spike
 
 ## What to build
@@ -34,7 +34,7 @@ Prototype-only stylesheets are out of scope except as optional historical notes.
 - [x] Heatmap / intensity coloring described (current scale behavior, hues, empty/future/peak) for Q13
 - [x] Gaps called out that are **not** already in the F09 Current behavior table (proves R.12)
 - [x] No production code changes required; if a blocking bug is found, report it per Issues found—do not fix in this spike
-- [ ] **User review:** fold feedback into findings; then mark Done
+- [x] **User review:** feedback folded into findings §15–16 and F09 spec (R.16, R0.4–R0.5, Q17–Q18); exploratory lab approach handed to M0-02
 
 ## Design questions (prototype tickets only)
 
@@ -48,20 +48,20 @@ n/a
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked (including user review)
-- [ ] `npm run check` passes (no code changes expected; still run if anything was touched)
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F09 M0-01: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked (including user review)
+- [x] `npm run check` passes (no code changes; docs-only — not re-run for this close-out)
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F09 M0-01: …` (findings commits `e872617`, `9297b9d`, plus review close-out)
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-**2026-10-15 — agent draft (awaiting user review):**
+**2026-10-15 — closed after user review:**
 
-- Findings: [M0-01-findings.md](./M0-01-findings.md)
-- Method: read-only production CSS/TSX audit (chrome/elevation/actions; forms/nav/feedback; heatmap/domain color; then addendum on typography, information depth, shell/layout). Not browser-verified.
-- Headline: two dialects (raised Sakura vs flat interim) share one pastel palette; **typography (mono vs sans) is a primary vibe driver**; accent roles overloaded; heatmaps use an ad-hoc pink→navy JS scale; deepest IA is Progress Past work; shell width pressure shows in Past work / Jobs chrome.
-- Addendum sections: findings §§12–14 (type Q14, depth Q15, layout Q16); open questions added to F09 spec.
-- Issues found while inventorying (not fixed): Achievement unlock modal bypasses `ModalLayer` ([`AchievementUnlockModal.tsx`](../../../../../apps/web/src/features/achievements/AchievementUnlockModal.tsx)); Past work grid comment vs column weights disagree ([`styles.css` L4416–4417](../../../../../apps/web/src/styles.css)); see findings.
+- Findings: [M0-01-findings.md](./M0-01-findings.md) (inventory §§1–14; user review §15; proposed M0-02 lab §16)
+- Method: read-only production CSS/TSX audit; not browser-verified
+- User direction: decide from exploratory prototypes; font switcher + other families in M0; brand/identity in F09; color-meaning before priority seating; broad vibe pool; containment axis; avoid locking elevation/nav/layout from inventory alone
+- Follow-on: [M0-02](./M0-02-prototype-visual-direction.md) implements the lab
+- Issues found (not fixed): Achievement unlock bypasses `ModalLayer`; Past work grid comment vs `1fr | 1.25fr` column weights — report in end-of-task / triage as user decides

@@ -8,15 +8,15 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M0-01](./tickets/M0/M0-01-production-ui-inventory.md) | Production UI visual inventory (spike) | spike | In progress | Findings + type/depth/layout addendum in [M0-01-findings.md](./tickets/M0/M0-01-findings.md); awaiting user review |
-| [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (vibe → components) | prototype | Ready | Blocked in practice on M0-01 findings; may start shell in parallel |
-| [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | docs | Draft | After M0-02 verdict; closes Q1–Q5, Q12–Q13 |
+| [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (exploratory lab) | prototype | Ready | Font switcher, brand theses, vibe packs, color-meaning, containment |
+| [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | docs | Draft | After M0-02 verdict |
 
 <details>
-<summary>Done (0)</summary>
+<summary>Done (1)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M0-01](./tickets/M0/M0-01-production-ui-inventory.md) | Production UI visual inventory (spike) | `e872617` / `9297b9d` + review close-out |
 
 </details>
 
