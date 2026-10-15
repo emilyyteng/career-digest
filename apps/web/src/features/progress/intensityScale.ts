@@ -1,18 +1,19 @@
 /**
- * R8.13 work-intensity colors for Past work calendar and Lifetime heatmaps.
+ * Work-intensity colors for Past work calendar and Lifetime heatmaps (R8.13 / F09 R0.3).
  * Gradient is proportional to raw apps / LC counts (not seeds, not clamped to 3).
  * Points math still uses the 0–3 activity-credit cap elsewhere.
  *
- * Stops stay pastel through the light end (baby pink), then light → deeper
- * purple, then navy. Empty cells use --surface-2 separately.
+ * Filled stops mirror `:root` `--heat-0` … `--heat-4` (vivid-rose soft peak, F09 M0).
+ * Empty cells use `--surface-2` separately.
  */
 
-/** Soft RGB stops from lightest work → hottest (sakura → purple → navy). */
+/** Soft RGB stops matching `--heat-0` … `--heat-4` (lightest work → peak). */
 const STOPS: Array<[number, number, number]> = [
-  [250, 214, 228], // baby pink
-  [216, 186, 230], // light purple
-  [132, 118, 176], // deeper purple
-  [40, 68, 112], // navy
+  [255, 248, 250], // #fff8fa — heat-0
+  [252, 228, 238], // #fce4ee — heat-1
+  [245, 192, 212], // #f5c0d4 — heat-2
+  [235, 160, 188], // #eba0bc — heat-3
+  [224, 120, 160], // #e078a0 — heat-4
 ];
 
 function lerp(a: number, b: number, t: number): number {
@@ -47,8 +48,17 @@ export function peakRaw(values: Iterable<number>): number {
   return Math.max(max, 1);
 }
 
-/** Legend swatches for continuous scale (empty → hot). */
+/** Legend swatches for continuous scale (empty → hot). Prefer CSS heat tokens when count is 5. */
 export function workIntensityLegendStops(count = 5): string[] {
+  if (count === 5) {
+    return [
+      "var(--heat-0)",
+      "var(--heat-1)",
+      "var(--heat-2)",
+      "var(--heat-3)",
+      "var(--heat-4)",
+    ];
+  }
   return Array.from({ length: count }, (_, i) =>
     i === 0 ? "var(--surface-2)" : mixStop(i / (count - 1)),
   );

@@ -1136,7 +1136,7 @@ a.external .ext-icon { font-size: 0.75rem; }
   margin: 0;
 }
 .complete-optional-panel {
-  border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, var(--border));
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   background: var(--surface);
@@ -1152,8 +1152,8 @@ a.external .ext-icon { font-size: 0.75rem; }
   border: none;
   border-radius: 0;
   box-shadow: none;
-  background: color-mix(in srgb, var(--accent-purple) 14%, var(--surface-2));
-  color: var(--accent-purple-deep);
+  background: var(--surface-2);
+  color: var(--ink);
   font-weight: 600;
   font-size: 0.88rem;
   text-align: left;
@@ -1161,9 +1161,9 @@ a.external .ext-icon { font-size: 0.75rem; }
 }
 button.complete-optional-bar:not(:disabled):hover {
   box-shadow: none;
-  background: color-mix(in srgb, var(--accent-purple) 22%, var(--surface-2));
+  background: var(--hover);
   border-color: transparent;
-  color: var(--accent-purple-deep);
+  color: var(--ink);
 }
 .complete-optional-toggle {
   position: relative;
@@ -1175,8 +1175,8 @@ button.complete-optional-bar:not(:disabled):hover {
   background: var(--surface);
 }
 .complete-optional-toggle.is-on {
-  background: color-mix(in srgb, var(--accent-purple) 45%, var(--surface));
-  border-color: var(--accent-purple);
+  background: var(--ink);
+  border-color: var(--ink);
 }
 .complete-optional-toggle-knob {
   position: absolute;
@@ -1191,13 +1191,13 @@ button.complete-optional-bar:not(:disabled):hover {
 }
 .complete-optional-toggle.is-on .complete-optional-toggle-knob {
   transform: translateX(1rem);
-  border-color: var(--accent-purple-deep);
+  border-color: var(--ink);
 }
 .complete-optional-body {
   display: grid;
   gap: 0.5rem;
   padding: 0.65rem 0.75rem 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--accent-purple) 22%, var(--border));
+  border-top: 1px solid var(--border);
   background: var(--surface);
 }
 .complete-optional-body textarea,
@@ -1459,9 +1459,11 @@ button.hide-board-remove:hover:not(:disabled) {
 }
 
 .description {
-  border-top: 1px solid var(--border);
   margin-top: 1rem;
-  padding-top: 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-soft-box);
+  background: var(--surface-2);
   overflow-wrap: anywhere;
 }
 .description-scroll .description-body {
@@ -2828,9 +2830,9 @@ textarea { min-height: 10rem; width: 100%; }
   color: var(--accent-mint-deep);
 }
 .ops-status-badge.ops-status-active {
-  background: #f5f0fc;
-  border-color: var(--accent-purple);
-  color: var(--accent-purple-deep);
+  background: color-mix(in srgb, var(--domain-tech) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--domain-tech) 40%, var(--border));
+  color: var(--domain-tech-deep);
 }
 .ops-status-badge.ops-status-error {
   background: #fdf2f4;
@@ -3925,7 +3927,7 @@ textarea { min-height: 10rem; width: 100%; }
   justify-content: center;
   font-size: clamp(7px, 55%, 11px);
   line-height: 1;
-  color: #d489a8;
+  color: var(--heat-3);
   font-weight: 700;
   pointer-events: none;
 }
@@ -4997,28 +4999,29 @@ button.progress-cal-cell.effort::after {
 }
 .deadline-pie {
   --deadline-pie-empty: var(--surface-2);
-  --deadline-pie-fill: var(--accent-mint-deep);
+  --deadline-pie-fill: var(--urgency-ok);
   width: 0.72rem;
   height: 0.72rem;
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--deadline-pie-fill) 35%, var(--border));
   flex: 0 0 auto;
 }
-.deadline-pie-urgent { --deadline-pie-fill: var(--accent-pink-deep); }
-.deadline-pie-soon { --deadline-pie-fill: var(--accent-purple); }
-.deadline-pie-ahead { --deadline-pie-fill: var(--accent-blue-deep); }
-.deadline-pie-ok { --deadline-pie-fill: var(--accent-mint-deep); }
-.deadline-pie-overdue { --deadline-pie-fill: var(--accent-pink-deep); }
+/* Severity-5 urgency (F09): overdue=P0 · urgent=rose · soon=amber · ahead=muted · ok=mint — no purple/blue */
+.deadline-pie-overdue { --deadline-pie-fill: var(--urgency-overdue); }
+.deadline-pie-urgent { --deadline-pie-fill: var(--urgency-urgent); }
+.deadline-pie-soon { --deadline-pie-fill: var(--urgency-soon); }
+.deadline-pie-ahead { --deadline-pie-fill: var(--urgency-ahead); }
+.deadline-pie-ok { --deadline-pie-fill: var(--urgency-ok); }
 .deadline-countdown {
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   font-size: 0.88rem;
 }
-.deadline-tone-urgent,
-.deadline-tone-overdue { color: var(--accent-pink-deep); }
-.deadline-tone-soon { color: var(--accent-purple-deep); }
-.deadline-tone-ahead { color: var(--accent-blue-deep); }
-.deadline-tone-ok { color: var(--accent-mint-deep); }
+.deadline-tone-overdue { color: var(--urgency-overdue); }
+.deadline-tone-urgent { color: var(--urgency-urgent); }
+.deadline-tone-soon { color: var(--urgency-soon); }
+.deadline-tone-ahead { color: var(--urgency-ahead); }
+.deadline-tone-ok { color: var(--urgency-ok); }
 .deadline-urgency-prominent:not(.deadline-urgency-compact) .deadline-pie {
   width: 0.82rem;
   height: 0.82rem;
@@ -5516,9 +5519,9 @@ button.progress-cal-cell.effort::after {
   display: grid;
   gap: 0.4rem;
   padding: 0.55rem 0.6rem;
-  border: 1px dashed var(--accent-purple);
+  border: 1px dashed var(--border-strong);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--accent-purple) 6%, var(--surface));
+  background: var(--surface-2);
 }
 .reflections-draft-textarea {
   width: 100%;

@@ -2,7 +2,7 @@
 
 The source of truth for visual and interaction conventions in `apps/web`. **Read this before changing any `.tsx` or `.css` in the web app.** It overrides tickets and prototypes on anything visual (see `AGENTS.md` → Precedence). If a feature requirement conflicts with or is ambiguous against this file, surface that to the user before implementing (`AGENTS.md` → Feature requirements vs design system).
 
-**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02) and **ChromeTab / Badge** (M1-03) live in `apps/web/src/ui/`; patterns and page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
+**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02), **ChromeTab / Badge** (M1-03), and **heat / Severity-5 urgency / surface-2 description washes** (M1-14) are live; patterns and remaining page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
 
 **Migration approach:** comprehensive system + phased migration (F09). M1 builds primitives and interaction/IA patterns; M2–M3 restyle surfaces. Extend this doc when something new is needed—do not fork a feature-local look.
 
@@ -97,8 +97,8 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | **Card** | `.card` | Soft shadow OK | All-carded |
 | **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
 | **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | Placement M1-10 |
-| **Heatmap** | `ProgressHeatmap` + tokens | 5-stop rose | Apply stops in M1-14 |
-| **Deadline urgency** | `DeadlineUrgency` | Severity-5 tokens | M1-14 |
+| **Heatmap** | `ProgressHeatmap` / `HistoryCalendar` via [`intensityScale.ts`](../apps/web/src/features/progress/intensityScale.ts) | `--heat-0`…`--heat-4` (vivid rose soft peak); empty = `--surface-2` | RGB lerp mirrors tokens; legend uses CSS vars |
+| **Deadline urgency** | `DeadlineUrgency` + `.deadline-pie-*` / `.deadline-tone-*` in `styles.css` | `--urgency-overdue`…`--urgency-ok` (Severity-5) | No purple/blue mid steps |
 | **Priority** | `PriorityBadge` → `Badge` `p0`–`p2` compact | P0–P2 RYG | |
 
 Interim F08 `ui-btn*`, old `.tab.on` blue active, and legacy `.badge.*` hex classes remain in `styles.css` for unmigrated call sites. New UI must use `apps/web/src/ui`.

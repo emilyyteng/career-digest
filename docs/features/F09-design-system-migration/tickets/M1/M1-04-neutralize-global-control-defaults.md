@@ -1,7 +1,7 @@
 # M1-04: Neutralize global button and field defaults
 
-**Status:** Draft
-**Blocked by:** M1-02
+**Status:** Ready
+**Blocked by:** (none) — M1-02 Done
 **Implements:** R.1, R1.1
 **Type:** refactor
 
