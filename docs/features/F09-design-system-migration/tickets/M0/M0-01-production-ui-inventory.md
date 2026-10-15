@@ -19,7 +19,10 @@ Cover at least:
 - Feedback: banners, flashes, errors, empty states
 - Data viz: Progress heatmaps and any other intensity / gradient scales
 - Domain chrome that carries color meaning: priority, urgency, lanes, streaks, rewards/collection accents
-- Typography and density outliers on major pages (Home, Tasks, Progress, Rewards, Jobs, Applications, Interviews)
+- Typography: font families (mono vs sans), roles (brand/nav/title/body/badge/number), size landscape, vibe impact
+- Information depth: app nav → feature shell/tabs → secondary filters → leaf; nested tabs; Jobs location chips; top vs side nav tradeoffs
+- Layout fit: shell width, container nesting, width pressure (tab labels, button rows, Past work), vertical rhythm / height, breakpoints
+- Density outliers on major pages (Home, Tasks, Progress, Rewards, Jobs, Applications, Interviews)
 
 Prototype-only stylesheets are out of scope except as optional historical notes.
 
@@ -58,6 +61,7 @@ n/a
 **2026-10-15 — agent draft (awaiting user review):**
 
 - Findings: [M0-01-findings.md](./M0-01-findings.md)
-- Method: read-only production CSS/TSX audit (three parallel inventory passes: chrome/elevation/actions; forms/nav/feedback; heatmap/domain color). Not browser-verified.
-- Headline: two dialects (raised Sakura vs flat interim) share one pastel palette; accent roles are overloaded; heatmaps use an ad-hoc pink→navy JS scale.
-- Issues found while inventorying (not fixed): Achievement unlock modal bypasses `ModalLayer` ([`AchievementUnlockModal.tsx`](../../../../../apps/web/src/features/achievements/AchievementUnlockModal.tsx)); see findings §6 and end-of-task report.
+- Method: read-only production CSS/TSX audit (chrome/elevation/actions; forms/nav/feedback; heatmap/domain color; then addendum on typography, information depth, shell/layout). Not browser-verified.
+- Headline: two dialects (raised Sakura vs flat interim) share one pastel palette; **typography (mono vs sans) is a primary vibe driver**; accent roles overloaded; heatmaps use an ad-hoc pink→navy JS scale; deepest IA is Progress Past work; shell width pressure shows in Past work / Jobs chrome.
+- Addendum sections: findings §§12–14 (type Q14, depth Q15, layout Q16); open questions added to F09 spec.
+- Issues found while inventorying (not fixed): Achievement unlock modal bypasses `ModalLayer` ([`AchievementUnlockModal.tsx`](../../../../../apps/web/src/features/achievements/AchievementUnlockModal.tsx)); Past work grid comment vs column weights disagree ([`styles.css` L4416–4417](../../../../../apps/web/src/styles.css)); see findings.

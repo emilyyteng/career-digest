@@ -15,9 +15,11 @@ The app currently runs **two visual dialects at once**:
 1. **Raised Sakura Terminal** — pastel page gradient, soft card shadows, filled-blue shadowed primaries, pill nav with a pink lift, raised in-page tabs.
 2. **Clean / flat interim (F08 M5+)** — border-only controls (`ui-btn*`), flat Progress/Rewards subnav, no button shadows, tinted-purple primary.
 
-They share one pastel token set, so the clash is mostly **elevation, chrome, and accent roles**, not an entirely different palette. M0 should decide the vibe (Q12) before locking button looks (Q1) or elevation (Q2).
+They share one pastel token set, so the clash is not mainly a different palette. The strongest vibe drivers are **typography (JetBrains Mono vs DM Sans)**, **elevation**, **chrome**, and **accent roles**. M0 should decide the vibe (Q12) with type in the room, before locking button looks (Q1) or elevation (Q2).
 
 A second structural problem sits under the dialects: **meaning is overloaded on the same accents** (blue = primary button *and* progress bars *and* selection *and* “ahead”; purple = streaks *and* chips *and* next *and* interim primary). Data viz (heatmaps) and domain chrome (priority traffic lights, friendship flavors) add further color languages that the parked-issue list barely mentions.
+
+A third structural problem is **layout and information depth**: a fixed 960px shell, stacked horizontal chrome (tabs + chips + filters), and inconsistent nesting models (route shells vs query tabs vs tab-like filters) produce crammed rows and “tabs within tabs” on the deepest pages.
 
 ---
 
@@ -251,6 +253,9 @@ No type scale tokens beyond base 16px + ad-hoc rem sizes. Spacing scale absent (
 | Feedback | Mint flash/notice / Jobs/demo/refresh banners / 3 error tracks / ad-hoc empties | Banner tones + empty primitive (visual) |
 | Data viz | JS pink→navy heat / calendar dim / friendship OKLab / CE gold | Tokenized sequential + art exceptions |
 | Domain color | Priority traffic lights / urgency tones / status badges / ledger-kind | Role map + named exceptions |
+| Typography | Mono chrome/labels vs sans body/hero; no type scale | Role map + size scale; later font-family exploration |
+| Nav depth | Route shells vs query tabs vs tab-like filters vs calendar∥ledger | Max chrome depth; route vs tab vs filter rule |
+| Layout | 960 shell; nowrap chrome; dual-col squeeze; ad-hoc gaps/breakpoints | Shell width + wrap rules + stack rhythm |
 
 ---
 
@@ -280,17 +285,196 @@ Parked table already covers: global button chain, global fields, secondary, toke
 18. EarnFlash vs OneTimeNotice radius mismatch.  
 19. Raw radii (`8px` / `10px`) alongside tokens.  
 20. Home Upcoming range as a third toggle pattern (purple).  
-21. Type/spacing scales absent; Progress title sizes drift.
+21. Type/spacing scales absent; Progress title sizes drift.  
+22. **Typography role drift:** JetBrains Mono used for brand, nav, tabs, badges, counters, many section labels — but Home greeting / card titles / Progress section titles / feature subnav are DM Sans (or inherit sans). Mono is inconsistent as a “title” signal.  
+23. **~35 distinct `font-size` values** in `styles.css` with no scale tokens (0.5rem–1.75rem cluster).  
+24. **Two nav nesting models:** Progress/Rewards route shells vs Jobs/Tasks/Apps/Interviews query tabs; Jobs location chips are a third “tab-like filter” unique to ranked Jobs.  
+25. **Past work depth:** feature subnav + calendar + ledger type `tablist` (+ optional nested reflection edit) — deepest stack (~4–5 levels to a write).  
+26. **Fixed 960px shell** with no page overrides; Past work dual-column + nowrap compose/chips + shortened ledger labels are concrete width-pressure evidence.  
+27. **Breakpoint soup:** 520 / 560 / 640 / 820 / 860 / 900 / `40rem` with Past work column stack (900) ≠ compose wrap (860).  
+28. **Vertical gap drift:** Progress shell 1rem vs This week 0.85 vs Past work 0.75; paired columns have no shared height rule.  
+29. Jobs search row: fixed select min-widths, **no wrap / no breakpoint**.  
+30. Explicit label shortening under width pressure: Past work ledger `notes` / `LC` ([`LedgerCompletionsPanel.tsx` L22–29](../../../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx)).
 
 ---
 
-## 12. Recommendations for M0-02 (agent opinion — not locked)
+## 12. Typography — fonts, roles, sizes (Q14)
 
-1. **Start prototypes at vibe (Q12)** with 4–6 directions that are not just F08 W/A/B/C remakes — e.g. Raised Sakura, Flat Pastel, Hybrid (flat controls + soft cards), Ink+Flat, Ink+Raised, optional “softer Sakura” (keep gradient/chrome, flatten buttons only).  
-2. On each direction, show: shell+nav, card, primary/secondary/ghost, segmented, modal chrome, **heatmap sample**, one priority + urgency pair.  
-3. Treat **accent roles** as a first-class deliverable, not a side effect of picking a primary button.  
+Loaded in [`apps/web/index.html`](../../../../../apps/web/index.html): **DM Sans** (opsz 9–40, weights 400–700) and **JetBrains Mono** (500–700). Tokens: `--font-sans`, `--font-mono` ([`styles.css` L29–30](../../../../../apps/web/src/styles.css)). Root defaults to sans at **16px** (L38–43).
+
+### Role map (what each face currently means)
+
+| Role | Face | Typical sizes | Meaning conveyed today |
+|------|------|---------------|------------------------|
+| App brand (`career-digest`) | **Mono** | 1.15rem | “Terminal / technical product” |
+| Top nav links | **Mono** | 0.8rem | Chrome is technical; pairs with pink-lift pills |
+| In-page `.tab` / tabs-row actions | **Mono** | 0.84 / 0.8125rem | List partitions are chrome, not prose |
+| Jobs location chips + label | **Mono** | chip-sized | Filter chrome mimics tabs |
+| Badges, external-link chips, pager | **Mono** | ~0.7–0.8rem | Metadata / machine-readable |
+| Counters / balance / bar “over” | **Mono** | ~0.72–0.8rem | Numeric / ledger feel |
+| Status / ops headings & meta | **Mono** | mixed | Ops console aesthetic (strongest remaining “hacker terminal”) |
+| Interview section labels/headings | **Mono** | 0.85–1.05rem | Section chrome |
+| Home section titles / subheads / see-more | **Mono** | 0.9 / smaller | Section labels — but **not** the Home hero |
+| Progress kickers, lane labels/tags, LC readonly, weekly counters | **Mono** | ~0.72–0.8rem | Labels + numbers |
+| **Body / forms / buttons** | **Sans** (default) | inherit / 0.78–0.9rem | Readable content; “clean” default |
+| **Home greeting** | **Sans** | **1.35rem** semibold purple | Soft human welcome — opposite of mono brand |
+| **Card titles** (`.card h2`) | **Sans** (inherit) | 1.05rem | Content titles, not chrome |
+| Progress section titles, feature subnav | **Sans** (inherit / 0.88rem) | ~0.88–0.9rem | Flat/clean feature chrome — **not** mono like app tabs |
+| Modal titles | Mixed | ~0.95–1rem | Often mono for document preview; forms lean sans |
+
+Explicit `font-family: var(--font-mono)` appears **~39** times in `styles.css`; explicit `--font-sans` resets **~11** times (mostly where a parent might have been mono, or date inputs / buttons). Everything else inherits sans.
+
+### Size landscape (no scale)
+
+Rough frequency in `styles.css` (unique declarations): **0.85rem** (~47), **0.8** (~34), **0.9** (~30), **0.78** (~21), **0.75** (~18), then a long tail including **0.68 / 0.72 / 0.82 / 0.88 / 0.92**, heroes at **1.35**, brand **1.15**, and outliers down to **0.5–0.65** (tiny UI chrome). There is **no** `--text-sm` / `--text-md` token set.
+
+### Vibe clash (typography as driver)
+
+This matches the user’s read: mono was central to the original **pink hacker terminal** look (brand + nav + tabs + badges). Readability pushed **content** onto DM Sans. Over time, “title” stopped meaning mono:
+
+- **Still mono “title-ish”:** top brand, Home *section* titles, interview/ops headings, tab labels.  
+- **Sans “title-ish”:** Home *hero* greeting, card `h2`, Progress panel titles, Progress/Rewards subnav.  
+- **Sans body** everywhere people actually read (tasks, reflections, job text, forms).
+
+So the flat/clean dialect is not only low elevation — it is **sans-led content + sans feature chrome**, while Sakura terminal survives as **mono app chrome** (and Status/ops). On one Home screen you get mono brand in the header, sans hero greeting, then mono section titles — three type signals in one viewport.
+
+### Competing patterns
+
+1. Mono = all chrome (nav, tabs, labels, badges, numbers)  
+2. Mono = only brand + app nav; feature chrome and titles = sans  
+3. Mono = numbers/badges only; titles = sans (closest to “readable product”)  
+4. Status keeps a heavier mono “console” exception  
+
+### Assessment / M0–M1 split
+
+- **M0 (visual):** Lock type **roles** and a small **size scale**; show mono-heavy vs sans-led directions in vibe prototypes (as important as elevation). Note that later work should **explore fonts beyond these two** — do not treat DM Sans + JetBrains Mono as permanent.  
+- **Later (still design-system):** Type specimen pass with alternate families once vibe/roles are clear.
+
+---
+
+## 13. Pages, tabs, and information depth (Q15)
+
+Depth scale used below: **0** app nav → **1** feature entry (shell subnav or list tabs) → **2** secondary chrome (chips, segmented, calendar, category board) → **3** tertiary (panel subtabs, day groups, accordion) → **4+** leaf (detail route, modal write).
+
+### Two nesting models
+
+| Model | Where | How “views” work |
+|-------|-------|------------------|
+| **Route feature shell** | Progress (3), Rewards (5) | Second horizontal subnav; children are URLs |
+| **Query list tabs** | Jobs, Tasks, Applications, Interviews | `?view=` / status tabs in `.tabs-row` |
+| **Tab-like filter (unique)** | Jobs ranked only | Location chips under view tabs ([`JobsPage.tsx`](../../../../../apps/web/src/features/jobs/JobsPage.tsx) + [`LocationFilterChips.tsx`](../../../../../apps/web/src/features/jobs/LocationFilterChips.tsx)) |
+
+### Depth comparison (common paths)
+
+| Family | Levels to main content | Levels to common write | Nested / tab-like rows |
+|--------|----------------------:|-----------------------:|------------------------|
+| Home | 1 | ~3 (open upcoming item) | Upcoming range segmented |
+| Jobs | 2–3 (tabs + loc chips) | ~4 | Tabs + location chips + search/sort/source |
+| Applications | 2 | 3–4 | Status tabs only |
+| Tasks | 2–3 | 3–4 | Open/completed + category sections |
+| Interviews | 2–3 | 3–4 | Active/past + in-page sections |
+| Progress / week | 2 | 3–4 | Subnav + LC segmented + lane chips |
+| Progress / past | **3–4** | **4–5** | Subnav + calendar + ledger type tabs |
+| Progress / lifetime | 2 | 3 | Subnav + chart range |
+| Rewards / banner | 2 | 2 | Subnav (5 items) |
+| Rewards / earnings·history | 3 | 3 | Subnav + range segmented |
+| Status | 1 | 1–2 | None (but sits in L0 with 8 peers) |
+
+### Fragile depth patterns
+
+1. **Tabs within tabs (effective):** Past work = Progress subnav + Completions `role="tablist"` ([`LedgerCompletionsPanel.tsx` L318+](../../../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx)).  
+2. **Filters wearing tab clothes:** Jobs location chips — only on ranked; compete with view tabs for “which slice am I in?”  
+3. **Same job, different depth language:** Progress week/past are routes; Jobs ranked/unranked are query tabs.  
+4. **Unique-to-one-page partitions:** Jobs loc chips; Tasks category board; Past work calendar∥ledger dual column; Collection Day/Night; Home upcoming range.  
+5. **Segmented controls as L2–3 modes:** Home range, LC Weekly/Misc, Lifetime chart, Rewards ranges, lane chips — many modes outside the nav model.  
+6. **Modals as write destinations:** CompleteWork, FinishInterviewStep, Add task/application — no URL.  
+7. **Top nav fan-out:** 8 L0 items; wrapping already possible ([`styles.css` L95](../../../../../apps/web/src/styles.css)). Side nav is an open idea — see tradeoffs below.
+
+### Top nav vs side nav (tradeoffs from current layout — not a prescription)
+
+- **Keep / refine top nav:** Matches current mental model; content width stays wide (helps Past work dual column, heatmaps, Jobs cards). Cost: feature shells add a **second horizontal** band, so deepest pages stack horizontal chrome; 8 items already wrap.  
+- **Side nav:** Could absorb Progress/Rewards children (and maybe Status) and shrink L0. Cost: persistent rail **steals width** from the pages that already feel cramped; nested side→subside can recreate depth vertically; hesitancy toward side nav is reasonable given Past work / Lifetime width needs.  
+- **Hybrid options worth prototyping later (M1):** top L0 + local **vertical** subnav inside the shell only for Progress/Rewards; or promote fewer L0 items (Status under a menu); or demote Jobs location from chip-tabs to a select/filter control so it stops looking like a second tab row.
+
+### What a depth standard should decide (feeds Q9 / Q15)
+
+1. Max **chrome rows before content** (Jobs can show 3; Past work shows subnav + calendar chrome + ledger tabs).  
+2. **Route vs tab vs filter** mapping (bookmarkable destination vs list partition vs narrow-within-partition) — and filters must not reuse tab chrome.  
+3. Which features earn a **shell**.  
+4. Whether **day/calendar selection** counts as a nav level beside type tabs.  
+5. Modal vs route for primary writes.  
+6. Whether type filters may nest under an existing subnav (Past work ledger) or must promote/demote.
+
+**M0 vs M1:** Visual look of tabs/subnav/chips stays M0 (Q5). **Nesting rules and top vs side** are M1 pattern work (expand Q9) — but M0 vibe prototypes should still show a realistic chrome stack so depth pain is visible.
+
+---
+
+## 14. Shell width, containers, and viewport fit (Q16)
+
+### Shell
+
+- Single content well: [`.shell { max-width: 960px; margin: 0 auto; padding: 1.5rem; }`](../../../../../apps/web/src/styles.css) L52, applied once in [`App.tsx`](../../../../../apps/web/src/App.tsx).  
+- No page-level max-width overrides found.  
+- Effective content ≈ **912px** at full shell (`960 − 2×1.5rem`); below 960px viewport → `100vw − 3rem`.  
+- Top nav wraps inside that width (8 links).
+
+### How containers share space
+
+- **List pages:** `.tabs-row` (space-between, wrap) → optional second chrome → list.  
+- **Jobs:** tabs-row → location chips (wrap) → search row (**no wrap**; sort `min-width: 9rem`, source `11.5rem`) ([`styles.css` L2170–2200](../../../../../apps/web/src/styles.css)).  
+- **Progress:** shell gap 1rem → subnav → outlet. This week / Past work / Lifetime use different internal grids and gaps.  
+- **Past work:** `grid-template-columns: minmax(280px, 1fr) minmax(0, 1.25fr)` ([L4414–4418](../../../../../apps/web/src/styles.css)) — comment says “slightly wider left” but **left is `1fr` and right is `1.25fr`** (comment/CSS contradiction). At ~912px content, left ≈ 405px, right ≈ 507px before card padding.
+
+### Concrete width pressure
+
+1. **Past work compose row:** `.progress-compose-meta` and `.progress-lane-chips` use `flex-wrap: nowrap`; chips and “Add reflection” are `flex-shrink: 0` with full words `application | technical | other`. Wrap unlocks at **860px** viewport, but columns only stack at **900px** — squeeze window in between; panel `overflow: auto` is the escape.  
+2. **Past work Completions tabs:** Labels already shortened to `notes` / `LC` for Past work ([`LedgerCompletionsPanel.tsx` L22–29](../../../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx)); CSS forces `flex-wrap: nowrap` + `overflow-x: auto` + `white-space: nowrap` on those subtabs ([L4434–4444](../../../../../apps/web/src/styles.css)). Default ledger tabs elsewhere **wrap** — Past work opted into horizontal scroll instead.  
+3. **Jobs tabs:** long label `"needs description"` wraps via `.tabs` flex-wrap rather than truncating — multi-line chrome.  
+4. **Jobs search:** no breakpoint; fixed select mins fight the input.  
+5. **Button / action rows:** tabs-row trailing CTAs + nowrap toolbars elsewhere; card action clusters rely on wrap or ellipsis (`.card h2` always ellipsizes).  
+6. **Heatmap legend:** nowrap; calendar variant scrolls horizontally.
+
+### Vertical rhythm / height
+
+| Stack | Gap |
+|-------|-----|
+| Progress shell | 1rem |
+| This week page | 0.85rem |
+| Past work page | 0.75rem |
+| Lifetime | 0.85rem |
+| Tasks board | 0.85rem (+ section `max-height: 28rem` clamp) |
+| Default `.card` | `margin-bottom: 0.6rem` (zeroed inside some progress stacks) |
+
+Paired Progress columns (week split, past columns, lifetime heats) **grow independently** — no shared panel height. Past work left stack (calendar + day panel blocks) vs Completions list is the sharp height mismatch example. Tasks uses sticky section headers + optional 28rem body clamp — a different height strategy again.
+
+### Breakpoints (no shared tokens)
+
+`40rem` / `520` / `560` / `640` / `820` / `860` / `900` px appear for different collapses. Notable mismatch: Past work columns @ **900**; compose chip wrap @ **860**; week split @ **860**; lifetime heats @ **820**. Jobs search: **none**.
+
+### What a layout standard should decide (Q16)
+
+1. Shell max-width (keep 960, widen for dual-column Progress, or tokenize `--shell-max` / pad).  
+2. Content vs chrome budget (max horizontal chrome rows).  
+3. Two-column minimums — stack earlier vs squeeze; fix Past work column weight vs comment.  
+4. Wrap vs scroll vs truncate vs **shorten labels** — when each is allowed.  
+5. Rules for `nowrap` + `flex-shrink: 0` (require a matching breakpoint).  
+6. Vertical stack gap scale.  
+7. Breakpoint scale (collapse to a few steps).  
+8. Paired panel height policy (match Tasks clamp vs natural grow).
+
+**M0 vs M1:** Shell width + spacing/breakpoint **tokens** can lock in M0 with vibe. Chrome-budget and column behavior are M1 layout patterns (with Tasks compaction / Q11). M0-02 prototypes should include a **narrow dual-column / tab-row stress case** (Past work–like), not only a comfy single column.
+
+---
+
+## 15. Recommendations for M0-02 (agent opinion — not locked)
+
+1. **Start prototypes at vibe (Q12)** with type + elevation as co-equal axes — e.g. Raised Sakura + mono chrome, Flat Pastel + sans-led titles, Hybrid, Ink variants; optional “softer Sakura” (mono brand/nav only, sans titles).  
+2. On each direction, show: shell+nav, card, primary/secondary/ghost, segmented, modal chrome, **heatmap sample**, one priority + urgency pair, and a **type specimen** (brand / nav / section title / body / badge / counter).  
+3. Treat **accent roles** and **type roles** as first-class deliverables.  
 4. Decide early whether Rewards art (CatCake / friendship) is inside the system or a documented exception zone.  
-5. Keep Q8–Q11 out of these prototypes (M1), but use Tasks/Jobs density as **visual** context only.
+5. Include one **width-stress** frame (tabs + chips + dual column) so layout pain informs shell-width discussion.  
+6. Keep Q8–Q11 / Q15 nesting rules / full layout policy for M1, but don’t hide depth/width problems from M0 visuals.  
+7. Plan a **later font exploration** beyond DM Sans + JetBrains Mono once roles are locked — do not freeze the pair as permanent in M0.
 
 ---
 
@@ -298,10 +482,12 @@ Parked table already covers: global button chain, global fields, secondary, toke
 
 Please mark up or reply with:
 
-1. Which vibe directions you want built (agree / cut / add).  
+1. Which vibe directions you want built (agree / cut / add) — including how **mono vs sans** should show up in those directions.  
 2. Whether Rewards/CatCake art should follow the same elevation rules.  
 3. Whether priority traffic lights should stay outside the pastel system.  
-4. Any surfaces you care about that this inventory still missed (Status page, rich-text toolbar, document links, etc.).  
-5. Corrections to any claim above — especially if runtime behavior differs from what the CSS/TSX suggest.
+4. Typography: keep JetBrains Mono for which roles (brand only / nav+tabs / numbers+badges / drop entirely from content chrome)? Interest in exploring other font families in M0 vs a later pass?  
+5. Nav depth: max chrome rows you’re willing to live with; gut feel on side nav vs refined top nav; should Jobs location stop looking like tabs?  
+6. Layout: is 960px still the right shell, or should dual-column Progress force a wider well / earlier stack?  
+7. Any surfaces this inventory still missed; corrections if runtime differs from CSS/TSX.
 
 Once you respond, M0-01 can be closed with your feedback folded into Verification notes / this file.

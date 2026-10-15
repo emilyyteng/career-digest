@@ -30,13 +30,15 @@ Every variant must still respect locked hard rules in `docs/design-system.md` (t
 
 The only axes prototype variants may differ on. Every variant must satisfy every locked requirement.
 
-1. **Q12 — Theme / vibe:** What does the app communicate? Raised Sakura Terminal, clean/flat, a deliberate hybrid, or something else?
-2. **Q4 — Palette:** Keep the pastel token set as the base, revise roles only, or revise the set?
-3. **Q2 — Elevation:** Where (if anywhere) do shadows / raised surfaces appear?
-4. **Q1 — Primary action & accent roles:** Primary button look; which accent is action vs selection vs brand vs data?
-5. **Q3 — Control sizes:** How many button (and related control) sizes, and when?
-6. **Q5 — Pattern winners (visual):** Which existing competing looks win for tabs/segmented, chips, cards, modal chrome (appearance only)?
-7. **Q13 — Data viz:** Heatmap / intensity gradient family and empty/future/peak reading
+1. **Q12 — Theme / vibe:** What does the app communicate? Raised Sakura Terminal, clean/flat, a deliberate hybrid, or something else? Treat **typography** (mono vs sans roles) as co-equal with elevation.
+2. **Q14 — Type roles / scale:** Where JetBrains Mono vs DM Sans (or interim stand-ins) appear — brand, nav, tabs, section titles, body, badges, numbers — and a small size scale. Full alternate-family exploration may be a later pass.
+3. **Q4 — Palette:** Keep the pastel token set as the base, revise roles only, or revise the set?
+4. **Q2 — Elevation:** Where (if anywhere) do shadows / raised surfaces appear?
+5. **Q1 — Primary action & accent roles:** Primary button look; which accent is action vs selection vs brand vs data?
+6. **Q3 — Control sizes:** How many button (and related control) sizes, and when?
+7. **Q5 — Pattern winners (visual):** Which existing competing looks win for tabs/segmented, chips, cards, modal chrome (appearance only)?
+8. **Q13 — Data viz:** Heatmap / intensity gradient family and empty/future/peak reading
+9. **Q16 (visual sample):** Include at least one width-stress frame (tab row + secondary chrome + dual column) so shell width can be judged; full layout policy stays M1
 
 Prototype URL: `/prototype/f09/visual-direction` (adjust if split across pages; list all URLs in Verification notes)
 

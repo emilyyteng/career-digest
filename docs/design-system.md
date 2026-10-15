@@ -34,8 +34,9 @@ Defined in `:root` in `apps/web/src/styles.css`.
 | Danger | `--danger`, `--danger-deep` | Existing |
 | Radius | `--radius-card`, `--radius-soft` (pill), `--radius-soft-box` | Existing |
 | Elevation | `--shadow-soft`, `--shadow-button`, `--shadow-minimal` | Existing; shadow policy is **Pending** (M0) |
-| Type | `--font-sans` (DM Sans), `--font-mono` (JetBrains Mono) | Existing; size scale **Pending** (M0) |
-| Spacing | none | **Pending** (M0) |
+| Type | `--font-sans` (DM Sans), `--font-mono` (JetBrains Mono) | Existing; **roles + size scale Pending** (M0, Q14). Mono vs sans is a vibe driver (titles/chrome inconsistent today). Exploring families beyond these two is planned after roles lock |
+| Spacing | none | **Pending** (M0); layout shell/gaps/breakpoints also open (Q16) |
+| Layout | `.shell` max-width 960px, padding 1.5rem | Existing; shell width / chrome budget **Pending** (Q16) |
 | Data viz / intensity | (none as design tokens; Progress heatmaps use JS scale in `intensityScale`) | **Pending** (M0, Q13) |
 
 ## Components
