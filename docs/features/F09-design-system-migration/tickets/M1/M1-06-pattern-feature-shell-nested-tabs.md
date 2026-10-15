@@ -41,12 +41,13 @@ Chrome budget: app nav → **one of** {shell subnav, page-tab row} → ≤1 L2 f
 1. Does underline `ChromeTab` at **subnav** scale read quieter than app nav (same language, smaller)?
 2. Is one L2 **Segmented** row enough under Past work (Completions / Points / Reflections) vs nested type tabs?
 3. Does the chrome budget feel right in practice: app nav → one of {shell, page tabs} → ≤1 L2 → content?
-4. **Filter placement** relative to tabs: below full-width · below right-aligned · same row (tabs left / filter right) · shared toolbar track · recessed strip · in header beside title?
-5. Confirm **title → tabs → filter → content** all inside one card (full containment).
+4. **Filter control look** (not ChromeTab): rounded `Segmented` vs **squared chip row** (sidebar-chip language, horizontal) vs **single `<select>`** — must scale to Jobs’ many location options.
+5. **Filter placement** relative to tabs: below full-width · below right-aligned · same row · toolbar · recessed · header.
+6. Confirm **title → tabs → filter → content** all inside one card (full containment).
 
-Prototype URL: `/prototype/f09/nesting`
+Prototype URL: `/prototype/f09/nesting` (defaults to Jobs / chips)
 
-Surfaces (← / →): A Progress week · B Past work proposed · C Jobs · D Rewards · E anti-pattern. Sidebar: `?filter=` placement axis (A–C).
+Surfaces (← / →): A Progress week · B Past work · C Jobs (many locs) · D Rewards · E anti-pattern. Sidebar: `?control=` + `?filter=` (A–C).
 
 ## Reuse notes
 

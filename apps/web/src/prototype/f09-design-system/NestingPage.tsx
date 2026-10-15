@@ -3,23 +3,25 @@
  *
  * Design questions:
  * 1. Does underline ChromeTab at subnav scale read quieter than app nav?
- * 2. Is one L2 Segmented row enough under Past work (vs nested type tabs)?
+ * 2. Is one L2 control enough under Past work (vs nested type tabs)?
  * 3. Does the chrome budget feel right: app nav → one of {shell, page tabs} → ≤1 L2 → content?
- * 4. Where should L2 filters sit relative to tabs so the stack stays cohesive?
- * 5. Confirm title → tabs → (filter) → content all inside one card (full containment).
+ * 4. Filter control look: rounded Segmented vs squared chip row vs single select
+ *    (must scale to Jobs location list)?
+ * 5. Where should L2 sit relative to tabs?
+ * 6. Confirm title → tabs → (filter) → content all inside one card.
  *
- * Surfaces via ?variant= · filter placement via ?filter=
+ * Surfaces via ?variant= · filter placement via ?filter= · control via ?control=
  */
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Badge, ChromeTab, Segmented } from "../../ui";
+import { Badge, ChromeTab, Segmented, SelectField } from "../../ui";
 import PrototypeSwitcher from "../PrototypeSwitcher";
 import "./nesting.css";
 
 const SURFACES = [
+  { key: "C", name: "Jobs · many locations (stress)" },
   { key: "A", name: "Progress · This week (conforms)" },
   { key: "B", name: "Progress · Past work (proposed)" },
-  { key: "C", name: "Jobs list (page tabs + filter)" },
   { key: "D", name: "Rewards shell (conforms)" },
   { key: "E", name: "Anti-pattern · stacked ChromeTabs" },
 ] as const;
@@ -33,12 +35,49 @@ const FILTER_OPTS = [
   { key: "header", name: "In header beside title" },
 ] as const;
 
-type FilterPlace = (typeof FILTER_OPTS)[number]["key"];
+const CONTROL_OPTS = [
+  { key: "chips", name: "Squared chip row" },
+  { key: "select", name: "Single select" },
+  { key: "segmented", name: "Rounded Segmented (current)" },
+] as const;
 
-function useFilterPlace(): FilterPlace {
+type FilterPlace = (typeof FILTER_OPTS)[number]["key"];
+type FilterControl = (typeof CONTROL_OPTS)[number]["key"];
+
+type Opt = { value: string; label: string; count?: number };
+
+/** Jobs-like location list (stress case for many options). */
+const LOC_OPTS: Opt[] = [
+  { value: "all", label: "All", count: 48 },
+  { value: "bay", label: "Bay", count: 14 },
+  { value: "la", label: "LA", count: 6 },
+  { value: "nyc", label: "NYC", count: 9 },
+  { value: "hub", label: "Hub", count: 5 },
+  { value: "remote", label: "Remote", count: 11 },
+  { value: "weak", label: "Weak", count: 2 },
+  { value: "unknown", label: "?", count: 1 },
+];
+
+const LANE_OPTS: Opt[] = [
+  { value: "all", label: "All" },
+  { value: "lc", label: "LC" },
+  { value: "apps", label: "Apps" },
+];
+
+const LEDGER_OPTS: Opt[] = [
+  { value: "completions", label: "Completions" },
+  { value: "points", label: "Points" },
+  { value: "reflections", label: "Reflections" },
+];
+
+function useAxisParam<T extends string>(
+  name: string,
+  opts: ReadonlyArray<{ key: T }>,
+  fallback: T,
+): T {
   const [params] = useSearchParams();
-  const value = params.get("filter") as FilterPlace | null;
-  return value && FILTER_OPTS.some((o) => o.key === value) ? value : "below";
+  const value = params.get(name) as T | null;
+  return value && opts.some((o) => o.key === value) ? value : fallback;
 }
 
 function ParamRow({
@@ -76,6 +115,80 @@ function ParamRow({
   );
 }
 
+function FilterControlView({
+  control,
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  control: FilterControl;
+  label: string;
+  value: string;
+  options: ReadonlyArray<Opt>;
+  onChange: (value: string) => void;
+}) {
+  if (control === "select") {
+    return (
+      <label className="f09n-filter-select">
+        <span className="f09n-filter-select-label">{label}</span>
+        <SelectField
+          aria-label={label}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.count != null ? `${o.label} (${o.count})` : o.label}
+            </option>
+          ))}
+        </SelectField>
+      </label>
+    );
+  }
+
+  if (control === "segmented") {
+    return (
+      <Segmented
+        label={label}
+        value={value}
+        onChange={onChange}
+        options={options.map((o) => ({
+          value: o.value,
+          label:
+            o.count != null ? (
+              <>
+                {o.label} <span className="f09n-opt-count">{o.count}</span>
+              </>
+            ) : (
+              o.label
+            ),
+        }))}
+      />
+    );
+  }
+
+  // chips — squared horizontal row (same language as sidebar param chips)
+  return (
+    <div className="f09n-filter-chips" role="group" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          className={`f09n-chip f09n-filter-chip${value === o.value ? " is-active" : ""}`}
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+          {o.count != null && (
+            <span className="f09n-opt-count">{o.count}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function RuleCard() {
   return (
     <aside className="f09n-rule card">
@@ -83,29 +196,20 @@ function RuleCard() {
       <ol className="f09n-rule-list">
         <li>
           <strong>Containerized page chrome</strong> — title, tabs/subnav, filter, and
-          body live <em>inside</em> one card (nothing sitting on the pink desk).
+          body inside one card.
         </li>
         <li>
-          <strong>Feature shell + subnav</strong> — peer destinations (Progress;
-          Rewards). Nested routes + <code>ChromeTab</code>{" "}
-          <code>size=&quot;subnav&quot;</code>.
-        </li>
-        <li>
-          <strong>Page tabs</strong> — same resource partitions (Jobs, Tasks).{" "}
-          <code>ChromeTab</code> <code>size=&quot;page&quot;</code>.
-        </li>
-        <li>
-          <strong>Filters / modes</strong> — <code>Segmented</code> / quiet chips;
-          never ChromeTab clothes. Placement is the open axis below.
+          <strong>Shell / page tabs / filters</strong> — peer destinations → subnav;
+          list partitions → page tabs; narrow-within → L2 (never ChromeTab clothes).
         </li>
       </ol>
       <p className="f09n-budget">
-        Budget: app nav → <em>one of</em> {"{"}shell subnav, page-tab row{"}"} → at
-        most one L2 filter → content. Never two ChromeTab rows stacked.
+        Budget: app nav → one of {"{"}shell, page tabs{"}"} → ≤1 L2 → content.
       </p>
-      <ParamRow name="filter" label="4 · Filter placement" options={FILTER_OPTS} />
+      <ParamRow name="control" label="4 · Filter control" options={CONTROL_OPTS} />
+      <ParamRow name="filter" label="5 · Filter placement" options={FILTER_OPTS} />
       <p className="muted f09n-note">
-        Placement applies on A–C (and the bad L2 on E). D has no filter.{" "}
+        Prefer surface <strong>C</strong> for many locations. Axes apply on A–C.{" "}
         <Link to="/prototype/f09/refinements">M1-15</Link>
       </p>
     </aside>
@@ -128,7 +232,6 @@ function ProgressSubnav({ active }: { active: "week" | "past" | "lifetime" }) {
   );
 }
 
-/** Tabs + optional L2 filter composed per placement axis. */
 function ChromeStack({
   place,
   tabs,
@@ -174,11 +277,9 @@ function ChromeStack({
   }
 
   if (place === "header") {
-    // Filter rendered by caller in the header; only tabs here.
     return <div className="f09n-tabs-only">{tabs}</div>;
   }
 
-  // below (default)
   return (
     <>
       <div className="f09n-tabs-only">{tabs}</div>
@@ -187,28 +288,31 @@ function ChromeStack({
   );
 }
 
-function SurfaceA({ place }: { place: FilterPlace }) {
+function SurfaceA({
+  place,
+  control,
+}: {
+  place: FilterPlace;
+  control: FilterControl;
+}) {
   const [lane, setLane] = useState("all");
   const filter = (
-    <Segmented
-      label="Lane filter"
+    <FilterControlView
+      control={control}
+      label="Lane"
       value={lane}
+      options={LANE_OPTS}
       onChange={setLane}
-      options={[
-        { value: "all", label: "All" },
-        { value: "lc", label: "LC" },
-        { value: "apps", label: "Apps" },
-      ]}
     />
   );
   return (
-    <section className="f09n-surface card" data-filter={place}>
+    <section className="f09n-surface card" data-filter={place} data-control={control}>
       <header className="f09n-surface-head">
         <div>
           <p className="f09n-kicker">Conforms · route feature shell</p>
           <h3 className="f09n-surface-title">Progress · This week</h3>
         </div>
-        {place === "header" ? filter : <Badge tone="ok">L0 + shell + L2</Badge>}
+        {place === "header" ? filter : <Badge tone="ok">few options</Badge>}
       </header>
       <ChromeStack
         place={place}
@@ -226,36 +330,38 @@ function SurfaceA({ place }: { place: FilterPlace }) {
           <span className="muted">1 / 3</span>
         </div>
         <p className="muted f09n-caption">
-          Title and chrome stay inside the card. Flip <strong>Filter placement</strong>{" "}
-          in the sidebar to compare L2 treatments.
+          Few options — chips and Segmented both fit; select stays compact.
         </p>
       </div>
     </section>
   );
 }
 
-function SurfaceB({ place }: { place: FilterPlace }) {
+function SurfaceB({
+  place,
+  control,
+}: {
+  place: FilterPlace;
+  control: FilterControl;
+}) {
   const [ledger, setLedger] = useState("completions");
   const filter = (
-    <Segmented
-      label="Ledger type"
+    <FilterControlView
+      control={control}
+      label="Ledger"
       value={ledger}
+      options={LEDGER_OPTS}
       onChange={setLedger}
-      options={[
-        { value: "completions", label: "Completions" },
-        { value: "points", label: "Points" },
-        { value: "reflections", label: "Reflections" },
-      ]}
     />
   );
   return (
-    <section className="f09n-surface card" data-filter={place}>
+    <section className="f09n-surface card" data-filter={place} data-control={control}>
       <header className="f09n-surface-head">
         <div>
           <p className="f09n-kicker">Proposed · Past work depth fix</p>
           <h3 className="f09n-surface-title">Progress · Past work</h3>
         </div>
-        {place === "header" ? filter : <Badge tone="ok">ledger → Segmented</Badge>}
+        {place === "header" ? filter : <Badge tone="ok">ledger → L2</Badge>}
       </header>
       <ChromeStack
         place={place}
@@ -274,9 +380,6 @@ function SurfaceB({ place }: { place: FilterPlace }) {
               />
             ))}
           </div>
-          <p className="muted f09n-caption">
-            Day/calendar is content, not a nav level.
-          </p>
         </div>
         <div className="f09n-ledger card">
           <p className="f09n-kicker">Ledger · {ledger}</p>
@@ -288,28 +391,28 @@ function SurfaceB({ place }: { place: FilterPlace }) {
             <span>Mon · LC medium</span>
             <span className="muted">+8</span>
           </div>
-          <p className="muted f09n-caption">
-            Nested Completions/Points/Reflections ChromeTabs demoted to Segmented.
-          </p>
         </div>
       </div>
     </section>
   );
 }
 
-function SurfaceC({ place }: { place: FilterPlace }) {
+function SurfaceC({
+  place,
+  control,
+}: {
+  place: FilterPlace;
+  control: FilterControl;
+}) {
   const [view, setView] = useState<"ranked" | "unranked">("ranked");
   const [loc, setLoc] = useState("all");
   const filter = (
-    <Segmented
+    <FilterControlView
+      control={control}
       label="Location"
       value={loc}
+      options={LOC_OPTS}
       onChange={setLoc}
-      options={[
-        { value: "all", label: "All" },
-        { value: "sf", label: "SF Bay" },
-        { value: "remote", label: "Remote" },
-      ]}
     />
   );
   const tabs = (
@@ -327,16 +430,16 @@ function SurfaceC({ place }: { place: FilterPlace }) {
     </div>
   );
   return (
-    <section className="f09n-surface card" data-filter={place}>
+    <section className="f09n-surface card" data-filter={place} data-control={control}>
       <header className="f09n-surface-head">
         <div>
-          <p className="f09n-kicker">Conforms · page tabs + filter</p>
+          <p className="f09n-kicker">Stress · many location options</p>
           <h3 className="f09n-surface-title">Jobs</h3>
         </div>
         {place === "header" && view === "ranked" ? (
           filter
         ) : (
-          <Badge tone="ok">no shell</Badge>
+          <Badge tone="ok">8 locs</Badge>
         )}
       </header>
       <ChromeStack
@@ -345,7 +448,6 @@ function SurfaceC({ place }: { place: FilterPlace }) {
         filter={filter}
         showFilter={view === "ranked" && place !== "header"}
       />
-      {place === "header" && view !== "ranked" && null}
       <div className="f09n-body">
         <div className="f09n-fake-row">
           <span>Acme · SWE intern</span>
@@ -356,8 +458,8 @@ function SurfaceC({ place }: { place: FilterPlace }) {
           <Badge tone="score">88</Badge>
         </div>
         <p className="muted f09n-caption">
-          Location is a filter under the Ranked partition — switch Unranked to see
-          the filter disappear (partition-scoped L2).
+          Active: <strong>{LOC_OPTS.find((o) => o.value === loc)?.label}</strong>.
+          Chip rows wrap; select stays one control; rounded Segmented gets wide.
         </p>
       </div>
     </section>
@@ -400,12 +502,8 @@ function SurfaceD() {
         </div>
       </div>
       <div className="f09n-body">
-        <p className="f09n-caption">
-          Active mock page: <strong>{items.find((i) => i.id === tab)?.label}</strong>
-        </p>
         <p className="muted f09n-caption">
-          No L2 on this surface. Ranges on Earnings/History would use the same
-          filter-placement rule once locked.
+          No L2 here — filter control axis does not apply.
         </p>
       </div>
     </section>
@@ -434,21 +532,9 @@ function SurfaceE() {
           <ChromeTab size="page">Reflections</ChromeTab>
         </div>
       </div>
-      <div className="f09n-l2">
-        <Segmented
-          label="Extra mode"
-          value="7"
-          onChange={() => {}}
-          options={[
-            { value: "7", label: "7 days" },
-            { value: "30", label: "30 days" },
-          ]}
-        />
-      </div>
       <div className="f09n-body">
         <p className="muted f09n-caption">
-          Two ChromeTab rows plus an L2 — the budget failure. Filter placement
-          axis does not apply here; use A–C to judge placement.
+          Two ChromeTab rows — use A–C to judge filter control + placement.
         </p>
       </div>
     </section>
@@ -456,24 +542,45 @@ function SurfaceE() {
 }
 
 export default function NestingPage() {
-  const [params] = useSearchParams();
-  const variant = params.get("variant") ?? "A";
-  const place = useFilterPlace();
+  const [params, setParams] = useSearchParams();
+  const variant = params.get("variant") ?? "C";
+  const place = useAxisParam("filter", FILTER_OPTS, "below");
+  const control = useAxisParam("control", CONTROL_OPTS, "chips");
+
+  // Seed shareable defaults so PrototypeSwitcher and axes agree on first load.
+  useEffect(() => {
+    const next = new URLSearchParams(params);
+    let changed = false;
+    if (!next.has("variant")) {
+      next.set("variant", "C");
+      changed = true;
+    }
+    if (!next.has("control")) {
+      next.set("control", "chips");
+      changed = true;
+    }
+    if (!next.has("filter")) {
+      next.set("filter", "below");
+      changed = true;
+    }
+    if (changed) setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- first-load seed only
+  }, []);
 
   return (
     <div className="f09n-page">
       <div className="f09n-banner" role="status">
         <strong>Experimental prototype</strong>
         {" · "}
-        F09 M1-06 · nesting. ← / → flips surfaces; sidebar picks filter placement.
-        Prefer judging A–C for placement; E is the anti-pattern.
+        F09 M1-06 · nesting. Sidebar: filter <em>control</em> (chips / select /
+        Segmented) and placement. Defaults to Jobs (C) + squared chips.
       </div>
       <div className="f09n-layout">
         <RuleCard />
         <div className="f09n-preview">
-          {variant === "A" && <SurfaceA place={place} />}
-          {variant === "B" && <SurfaceB place={place} />}
-          {variant === "C" && <SurfaceC place={place} />}
+          {variant === "A" && <SurfaceA place={place} control={control} />}
+          {variant === "B" && <SurfaceB place={place} control={control} />}
+          {variant === "C" && <SurfaceC place={place} control={control} />}
           {variant === "D" && <SurfaceD />}
           {variant === "E" && <SurfaceE />}
         </div>

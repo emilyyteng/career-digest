@@ -205,6 +205,51 @@
   border: 1px solid var(--border);
 }
 
+/* L2 filter controls */
+.f09n-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.f09n-filter-chip {
+  font-size: 0.72rem;
+  padding: 0.28rem 0.55rem;
+}
+
+.f09n-opt-count {
+  margin-left: 0.25rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle);
+  font-weight: 600;
+}
+
+.f09n-filter-chip.is-active .f09n-opt-count,
+.f09n-chip.is-active .f09n-opt-count {
+  color: color-mix(in srgb, var(--ink) 65%, var(--text-muted));
+}
+
+.f09n-filter-select {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.f09n-filter-select-label {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.f09n-filter-select .ui-field {
+  min-width: 9.5rem;
+  max-width: 14rem;
+}
+
 .f09n-body {
   display: grid;
   gap: 0.45rem;
