@@ -6,6 +6,7 @@ import {
   type WeeklyGoalsSnapshot,
   type WeeklyPaceLabel,
 } from "../../api";
+import { Button, TextField } from "../../ui";
 
 const LC_LABEL_MAX = 50;
 /** Proposed show-from for weekly-goal streak (M5-07 / M5-08). */
@@ -101,11 +102,13 @@ function TargetField({
   return (
     <label className="weekly-goal-target-field">
       <span className="muted">Target</span>
-      <input
+      <TextField
         type="number"
+        fieldSize="num"
         min={1}
         defaultValue={targetCount}
         key={`target-${targetCount}`}
+        aria-label="LC weekly target"
         onBlur={(event) => {
           const n = Number(event.target.value);
           if (Number.isInteger(n) && n >= 1) {
@@ -134,23 +137,23 @@ function LabelLine({
     return (
       <div className="weekly-goal-label-line">
         {label ? <span className="weekly-goal-label-text">{label}</span> : null}
-        <button
-          type="button"
-          className="secondary ui-btn ui-btn-ghost"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => {
             setDraft(label ?? "");
             setEditing(true);
           }}
         >
           {label ? "Edit label" : "+ Add label"}
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="weekly-goal-label-edit">
-      <input
+      <TextField
         type="text"
         autoFocus
         value={draft}
@@ -175,23 +178,23 @@ function LabelLine({
       <span className={length >= LC_LABEL_MAX ? "weekly-goal-counter is-max" : "weekly-goal-counter"}>
         {length}/{LC_LABEL_MAX}
       </span>
-      <button
-        type="button"
-        className="secondary ui-btn ui-btn-ghost"
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => {
           setDraft(label ?? "");
           setEditing(false);
         }}
       >
         Cancel
-      </button>
-      <button
-        type="button"
-        className="secondary ui-btn ui-btn-primary"
+      </Button>
+      <Button
+        variant="primary"
+        size="sm"
         onClick={() => void onSave(draft.trim()).then(() => setEditing(false))}
       >
         Save
-      </button>
+      </Button>
     </div>
   );
 }

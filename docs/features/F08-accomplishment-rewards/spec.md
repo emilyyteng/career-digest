@@ -6,7 +6,7 @@
 
 ## Problem
 
-Finishing work in Career Digest doesn't feel like anything. Tasks and applications had no detail page of their own. Reflections floated free of the work they described. Completing a task, sending an application or finishing an interview step left no lasting trace or reward. Weekly goals lived on Progress, away from the Home view where the week is planned. Without a visible payoff for steady effort, it's harder to keep a long internship search going.
+Finishing work in flora.exe doesn't feel like anything. Tasks and applications had no detail page of their own. Reflections floated free of the work they described. Completing a task, sending an application or finishing an interview step left no lasting trace or reward. Weekly goals lived on Progress, away from the Home view where the week is planned. Without a visible payoff for steady effort, it's harder to keep a long internship search going.
 
 ## Goals
 

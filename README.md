@@ -1,6 +1,6 @@
-# Career Digest
+# flora.exe
 
-Personal internship digest and application tracker. Ingests public ATS job boards, ranks roles with OpenAI against your private profile, and tracks applications, interviews, tasks, and daily prep progress in a local React UI.
+Personal internship digest and application tracker (product mark **flora.exe**; repo package still `career-digest`). Ingests public ATS job boards, ranks roles with OpenAI against your private profile, and tracks applications, interviews, tasks, and daily prep progress in a local React UI.
 
 ## What it does
 

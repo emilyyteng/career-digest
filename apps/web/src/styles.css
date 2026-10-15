@@ -4143,7 +4143,7 @@ textarea { min-height: 10rem; width: 100%; }
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
-button.secondary.ui-btn.lc-step-btn {
+button.secondary.ui-button.lc-step-btn {
   min-width: 2rem;
   padding-left: 0.45rem;
   padding-right: 0.45rem;
@@ -4843,9 +4843,6 @@ button.progress-cal-cell.effort::after {
   gap: 0.35rem;
   font-size: 0.85rem;
   flex-shrink: 0;
-}
-.weekly-goal-target-field input {
-  width: 4.5rem;
 }
 .weekly-goal-apps-plain {
   list-style: none;

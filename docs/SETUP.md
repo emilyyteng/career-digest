@@ -1,6 +1,6 @@
 # Setup
 
-Cold-clone checklist for Career Digest. The README summarizes routes and commands; this doc is the full setup path.
+Cold-clone checklist for **flora.exe**. The README summarizes routes and commands; this doc is the full setup path.
 
 ## Prerequisites
 

@@ -1,6 +1,6 @@
 # Local runtime data
 
-This directory holds machine-local state for Career Digest. It is **not** committed to git.
+This directory holds machine-local state for flora.exe. It is **not** committed to git.
 
 Typical contents:
 

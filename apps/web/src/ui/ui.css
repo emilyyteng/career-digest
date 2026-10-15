@@ -1,0 +1,147 @@
+/* F09 M1-02 — Ink desk control primitives.
+   Buttons include `.secondary` so production’s global button:not(…) chain does not apply.
+   Do not add these classes to that opt-out chain. */
+
+/* —— Button —— */
+button.secondary.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 0.38rem 0.85rem;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+button.secondary.ui-button:not(:disabled):hover {
+  background: var(--hover);
+  border-color: color-mix(in srgb, var(--ink) 35%, var(--border));
+  color: var(--ink);
+  box-shadow: none;
+}
+
+button.secondary.ui-button-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-primary);
+}
+
+button.secondary.ui-button-primary:not(:disabled):hover {
+  background: #2e2a30;
+  border-color: #2e2a30;
+  color: var(--on-primary);
+  box-shadow: none;
+}
+
+button.secondary.ui-button-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+button.secondary.ui-button-ghost:not(:disabled):hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink);
+  box-shadow: none;
+}
+
+button.secondary.ui-button-sm {
+  font-size: 0.75rem;
+  padding: 0.28rem 0.65rem;
+}
+
+button.secondary.ui-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* —— Fields —— */
+.ui-field {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.3;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.ui-field:hover {
+  border-color: color-mix(in srgb, var(--ink) 40%, var(--border));
+  background: var(--surface);
+}
+
+.ui-field:focus {
+  outline: 2px solid color-mix(in srgb, var(--brand) 55%, transparent);
+  outline-offset: 1px;
+  border-color: var(--brand-deep);
+  background: var(--hover);
+}
+
+.ui-field:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ui-field-num {
+  width: 4.5rem;
+  max-width: 100%;
+  padding: 0.28rem 0.4rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+textarea.ui-field {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+/* —— Segmented —— */
+.ui-segmented {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-seg);
+  background: var(--surface-2);
+}
+
+button.secondary.ui-button.ui-seg {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-seg);
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+button.secondary.ui-button.ui-seg:not(:disabled):hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink);
+  box-shadow: none;
+}
+
+button.secondary.ui-button.ui-seg.is-active,
+button.secondary.ui-button.ui-seg.is-active:not(:disabled):hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-primary);
+  font-weight: 600;
+}

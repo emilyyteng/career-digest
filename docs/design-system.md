@@ -2,7 +2,7 @@
 
 The source of truth for visual and interaction conventions in `apps/web`. **Read this before changing any `.tsx` or `.css` in the web app.** It overrides tickets and prototypes on anything visual (see `AGENTS.md` → Precedence). If a feature requirement conflicts with or is ambiguous against this file, surface that to the user before implementing (`AGENTS.md` → Feature requirements vs design system).
 
-**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live in production** (F09 M1-01); control primitives and page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
+**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented primitives live in `apps/web/src/ui/`** (F09 M1-02); remaining helpers, patterns, and page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
 
 **Migration approach:** comprehensive system + phased migration (F09). M1 builds primitives and interaction/IA patterns; M2–M3 restyle surfaces. Extend this doc when something new is needed—do not fork a feature-local look.
 
@@ -85,21 +85,23 @@ Live in `:root` in [`apps/web/src/styles.css`](../apps/web/src/styles.css) (F09 
 
 ## Components
 
-Visual appearance locked (M0). Shared React primitives land in M1.
+Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui/`](../apps/web/src/ui/) (F09 M1-02+). Import from `../ui` (or `@/` if aliased). Styles: [`ui/ui.css`](../apps/web/src/ui/ui.css) (loaded from `main.tsx`).
 
-| Component | Variants / sizes | Policy |
-|-----------|------------------|--------|
-| **Button** | `primary` (ink fill, white text) · `secondary` (surface, ink text, border) · `ghost` (no border) · sizes `sm` / `md` | Flat; primary hover darkens ink; secondary hover = wash + stronger border. Never blue/purple fill |
-| **Segmented** | Rounded track; active = ink fill like primary | Not blush/purple select |
-| **Tabs / nav / chips** | Squared control radius; active = gray wash + ink text + ink border; display font | App nav, feature subnav, and in-page tabs share this language (scale may differ) |
-| **Fields** | Text, select, date | Surface bg; border strengthens on hover; wash **only on focus** |
-| **Badge / chip** | Priority RYG · kind (interview/goal) · job status (applied / interviewing / accepted / declined) · score/streak (tech purple) · liked (warn) | Map onto color roles; no one-off hex |
-| **Card** | Bordered surface + optional soft shadow | Default containment for all features including Rewards |
-| **Modal** | `ModalLayer`; footer secondary then primary | Secondary flat; anatomy structure still M1 |
-| **Banner** | `EarnFlash` / `OneTimeNotice` | Mint visual base unchanged; placement M1 (Q10) |
-| **Heatmap** | Shared 5-stop rose scale | Peak must feel rewarding, not navy/ink |
-| **Deadline urgency** | Severity-5 pie/countdown colors | No domain purple/blue in the middle steps |
-| **Priority** | `PriorityBadge` P0–P2 RYG | Unchanged seating |
+| Component | Implementation | Variants / sizes | Policy |
+|-----------|----------------|------------------|--------|
+| **Button** | `Button` — classes `secondary ui-button` (+ `-primary` / `-ghost` / `-sm`) | `primary` · `secondary` · `ghost` × `sm` / `md` | Flat ink primary; always includes `.secondary` to escape the global blue `button` default until M1-04 removes it. Never add to the `:not(...)` chain |
+| **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = ink fill | Replaces interim `ui-btn` + `.ui-segmented` for new code |
+| **Fields** | `TextField` · `SelectField` · `TextAreaField` — `.ui-field` (+ `.ui-field-num`) | `md` · `num` (compact number) | Border-only hover; wash on focus |
+| **Tabs / nav / chips** | (M1-03) | Squared; gray wash + ink text/border | App nav, feature subnav, page tabs |
+| **Badge / chip** | (M1-03) + existing `PriorityBadge` | Role-mapped | No page-local hex |
+| **Card** | `.card` | Soft shadow OK | All-carded |
+| **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
+| **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | Placement M1-10 |
+| **Heatmap** | `ProgressHeatmap` + tokens | 5-stop rose | Apply stops in M1-14 |
+| **Deadline urgency** | `DeadlineUrgency` | Severity-5 tokens | M1-14 |
+| **Priority** | `PriorityBadge` | P0–P2 RYG | |
+
+Interim F08 `ui-btn*` / old `.ui-segmented` button pairing remains in `styles.css` for unmigrated call sites until those surfaces move to `ui/`. New UI must use `apps/web/src/ui`.
 
 ## Patterns
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { LeetcodeTier, LeetcodeTierCounts, LeetcodeType } from "../../api";
+import { Button, Segmented } from "../../ui";
 
 const TIERS: LeetcodeTier[] = ["easy", "medium", "hard"];
 const TIER_LABEL: Record<LeetcodeTier, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
@@ -58,20 +59,16 @@ export default function LeetcodeLogger({
   return (
     <div className="lc-logger">
       {!fixedType && (
-        <div className="ui-segmented" role="radiogroup" aria-label="Solve type">
-          {(["weekly", "misc"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="radio"
-              aria-checked={type === t}
-              className={`secondary ui-btn ui-btn-ghost${type === t ? " is-active" : ""}`}
-              onClick={() => setChosenType(t)}
-            >
-              {t === "weekly" ? "Weekly" : "Misc"}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Solve type"
+          value={type}
+          onChange={setChosenType}
+          disabled={busy}
+          options={[
+            { value: "weekly", label: "Weekly" },
+            { value: "misc", label: "Misc" },
+          ]}
+        />
       )}
       <div className="lc-tier-list">
         {TIERS.map((tier) => {
@@ -85,25 +82,25 @@ export default function LeetcodeLogger({
                 {TIER_LABEL[tier]}
                 <span className="lc-tier-pts"> +{TIER_POINTS[tier]}</span>
               </span>
-              <button
-                type="button"
-                className="secondary ui-btn lc-step-btn"
+              <Button
+                size="sm"
+                className="lc-step-btn"
                 disabled={removeDisabled}
                 aria-label={`Remove one ${TIER_LABEL[tier]} (${type})`}
                 onClick={() => void step(tier, -1)}
               >
                 −
-              </button>
+              </Button>
               <span className="lc-tier-count">{display[tier]}</span>
-              <button
-                type="button"
-                className="secondary ui-btn lc-step-btn"
+              <Button
+                size="sm"
+                className="lc-step-btn"
                 disabled={busy}
                 aria-label={`Add one ${TIER_LABEL[tier]} (${type})`}
                 onClick={() => void step(tier, 1)}
               >
                 +
-              </button>
+              </Button>
             </div>
           );
         })}

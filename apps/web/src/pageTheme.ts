@@ -1,6 +1,6 @@
 export type GreetingPeriod = "morning" | "afternoon" | "evening";
 
-/** Brand mark beside the career-digest header — fixed on every page. */
+/** Brand mark beside the flora.exe header — fixed on every page. */
 export const HEADER_BRAND_EMOJI = "🌸";
 
 const GREETING_EMOJI: Record<GreetingPeriod, string> = {

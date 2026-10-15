@@ -25,7 +25,6 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M1-02](./tickets/M1/M1-02-button-field-segmented-primitives.md) | Button, field, segmented primitives | build | Ready | After M1-01 |
 | [M1-03](./tickets/M1/M1-03-tabs-and-badge-helpers.md) | Tabs / chrome-tab + badge helpers | build | Ready | After M1-01 |
 | [M1-04](./tickets/M1/M1-04-neutralize-global-control-defaults.md) | Neutralize global button/field defaults | refactor | Draft | After M1-02 |
 | [M1-05](./tickets/M1/M1-05-pilot-home.md) | Pilot migrate Home + app shell | build | Draft | After M1-02–04 |
@@ -40,11 +39,12 @@ No open tickets.
 | [M1-14](./tickets/M1/M1-14-apply-heat-urgency-washes.md) | Apply heat, urgency, surface-2 washes | build | Ready | After M1-01 |
 
 <details>
-<summary>Done (1)</summary>
+<summary>Done (2)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
 | [M1-01](./tickets/M1/M1-01-production-tokens-fonts-brand.md) | Production tokens, fonts, shell 1100, flora mark | `9b5af76` |
+| [M1-02](./tickets/M1/M1-02-button-field-segmented-primitives.md) | Button, field, segmented primitives | (pending) |
 
 </details>
 
