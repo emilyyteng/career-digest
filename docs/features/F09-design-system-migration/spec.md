@@ -19,7 +19,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
-| M0 | Purely visual + brand framing. Inventory production UI; explore direction broadly in **F09-owned** prototypes (not F08) — vibe packs, font switcher, color-meaning schemes, containment — then lock foundations in `docs/design-system.md`. Includes discussing product identity / possible rebrand as it ties to vibe | Design |
+| M0 | Purely visual + brand framing. Inventory production UI; explore direction broadly in **F09-owned** prototypes (not F08) — vibe packs, font switcher, color-meaning schemes, containment — then lock foundations in `docs/design-system.md`. Includes discussing product identity / possible rebrand as it ties to vibe | Done |
 | M1 | Build primitives; remove the global inheritance trap; document interaction/IA patterns (lists, feature shell, banner placement, compact long pages); enforce mechanically; pilot-migrate a small set of surfaces | Not started |
 | M2 | Wave migration of core surfaces (Tasks compaction first; then Jobs / Applications / Interviews, including R.6); list pagination defaults as implemented convention | Not started |
 | M3 | Remaining pages; CSS organization if still needed; retire dead opt-out and obsolete prototype styles; feature close-out | Not started |
@@ -74,59 +74,59 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | A global `button` rule makes every button filled `--accent-blue-deep` with `--shadow-button`; buttons escape only via a `:not(...)` chain of 22 classes, repeated on hover with 21 (`.rank-batch-dismiss` is missing, so it still gets the blue hover) | `apps/web/src/styles.css` L367–375 | Conflicts R.1 | Most likely mechanism behind the blue-button and shadow complaints. Many `box-shadow: none` rules undo the default. New variants must be built on `.secondary` to escape it (checked by running, 2026-10-13) |
 | Global element rules style `a`, `input`, `textarea`, `select` | `styles.css` | Conflicts R.1 | |
 | `button.secondary` is the de facto second variant (about 120 uses) | across `apps/web/src` | Unspecified | Candidate starting point for explicit variants |
-| `:root` tokens ("Sakura Terminal" palette): `--accent-{pink,blue,purple,mint,yellow}` + `-deep`, `--surface`, `--border`, `--text*`, `--danger*`, `--radius-*`, `--shadow-*` | `styles.css` | Unspecified | Keep or revise is Q4; vibe clash with flat surfaces is Q12 |
+| `:root` tokens ("Sakura Terminal" palette): `--accent-{pink,blue,purple,mint,yellow}` + `-deep`, `--surface`, `--border`, `--text*`, `--danger*`, `--radius-*`, `--shadow-*` | `styles.css` | Conflicts (roles remapped in M0) | M0 locked ink-desk roles in `design-system.md`; prod token names/values migrate in M1+ |
 | `ModalLayer` provides the shared backdrop, Escape handling and dirty-discard guard; nearly every dialog renders inside it | `apps/web/src/ModalLayer.tsx` | Conforms R.4 (layer only) | Inner anatomy (header, body, footer, button order and size) unaudited; likely source of modal inconsistency |
 | Each prototype milestone has its own stylesheet (`prototype-m1.css`, `-m2`, `-m4`, `-m5`, F08 topic CSS, …) | `apps/web/src/prototype/` | Conflicts R.2 | F09 direction work must not live under F08 prototypes (R.13) |
 | All styles live in one ~6k-line file | `styles.css` | Unspecified | Splitting is Q7 |
 | Number inputs inherit the global `input` padding and size, so a small number field such as the Progress weekly LC target (`.weekly-goal-target-field input`, width 4.5rem) looks too large next to its label | `styles.css` | Conflicts R.1 | Form-field sizes are Q3/Q5 |
-| Interim button classes from F08 M5 (`docs/design-system.md` → Interim decisions), built on `.secondary`: `ui-btn`, `ui-btn-primary`, `ui-btn-ghost`, `.is-active`, `ui-segmented` | [`styles.css`](../../../apps/web/src/styles.css), [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Unspecified | Working choice until M0; may become standard or be replaced |
+| Interim button classes from F08 M5 (`ui-btn*`, purple primary / blue toggles), built on `.secondary` | [`styles.css`](../../../apps/web/src/styles.css), [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conflicts (M0 ink-desk) | F08 M5 interim superseded 2026-10-15; replace in M1 primitives / surface waves |
 | The Jobs ranking banner stays until dismissed with ×, remembering dismissals per batch in `sessionStorage` (per tab); a successful batch hides on its own after 30 minutes | [`JobsPage.tsx`](../../../apps/web/src/features/jobs/JobsPage.tsx) | Conflicts R.6 | Moves to the one-time notice in M2 |
 | Completions diary and similar logs are long unpaginated day-grouped lists | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R.7 (Proposed) | F08 M8 paginates Past work only; F09 owns the default (M1) |
 | Rewards and Progress use nested routes + subnav shells; other pages vary | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`ProgressLayout.tsx`](../../../apps/web/src/features/progress/ProgressLayout.tsx) | Conflicts R.8 (Proposed) | App-wide rule in M1 |
 | `EarnFlash` is rendered near the top of the host page/section, not anchored to the control that earned | [`EarnFlash.tsx`](../../../apps/web/src/features/completion/EarnFlash.tsx), [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx), Progress week/past pages | Conflicts R.9 | Placement in M1 |
 | Tasks is a long, dense scroll surface; common actions often sit below the first viewport | [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx) | Conflicts R.10 | Tactics M1; migrate M2 |
-| Progress heatmaps color cells via a JS intensity scale (`workIntensityFill` / legend stops), not named design-system tokens | [`intensityScale`](../../../apps/web/src/features/progress/intensityScale.ts), [`ProgressHeatmap.tsx`](../../../apps/web/src/features/progress/ProgressHeatmap.tsx) | Unspecified | Example of a niche visual that M0 must cover (R0.3 / R.12); not previously parked |
-| Most workflow pages wrap content in raised `.card` panels (border + soft shadow) on the pastel canvas; Rewards often sits on the open page background with flat subnav; Progress mixes Rewards-like flat subnav with carded body panels | `.card` in `styles.css`; [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx); Progress shell + pages | Unspecified | Containment / open-canvas split — Sakura vs flat signal (M0-01 findings §1) |
+| Progress heatmaps color cells via a JS intensity scale (`workIntensityFill` / legend stops), not named design-system tokens; peak reads navy | [`intensityScale`](../../../apps/web/src/features/progress/intensityScale.ts), [`ProgressHeatmap.tsx`](../../../apps/web/src/features/progress/ProgressHeatmap.tsx) | Conflicts (M0 vivid-rose soft peak) | Scale locked in `design-system.md`; implement in M1+ Progress wave |
+| Most workflow pages wrap content in raised `.card` panels; Rewards often open-canvas; Progress hybrid flat subnav + carded body | `.card` in `styles.css`; [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx); Progress shell + pages | Conflicts (M0 all-carded) | All features carded per M0; migrate Rewards open canvas in surface waves |
 
 ## Out of scope (for now)
 
 - Full-app visual migration in a single milestone (phased waves instead).
-- Changing the palette before M0 decides whether the pastel set stays (Q4) and what vibe wins (Q12).
-- Using F08 prototype routes as the lasting home for design-system direction work.
+- Using F08 prototype routes as the lasting home for design-system direction work (R.13).
 
 ## Open questions
 
 | # | Question | Blocks | Answer |
 |---|----------|--------|--------|
-| Q1 | Visual direction: what does a primary button look like if not filled blue? Which accent is primary? | M0 | (open) Preferences (2026-10-13, F08 M5-06 review): not the filled blue default. Liked tinted purple pastel (direction W) and also ink. Toggles: blue or purple, not pink. **2026-10-15:** W was preferred in that round, but M0 restarts from vibe (Q12) and explores beyond W/A/B/C |
-| Q2 | Elevation: flat, or a subtle shadow? Where (cards, modals, buttons)? | M0 | (open) Undecided (2026-10-13): flat looks clean, slight elevation appeals, app mixes both. M5 interim is flat. No token for raised surfaces: `.modal` and popovers use raw `var(--shadow-strong)` shadows. Tied to Q12 |
-| Q3 | Button sizes: how many (e.g. sm / md), and which contexts use each? | M0 | (open) |
-| Q4 | Is the current pastel token set kept as the base, or open to revision? | M0 | (open) |
-| Q5 | Which conflicting existing patterns win (needs a thorough production audit: buttons, tabs, chips, modal anatomy, form fields, cards, banners, data viz, …)? | M0 | (open) Audit is not limited to this table (R.12) |
 | Q6 | How will UI rules be enforced mechanically (e.g. a lint rule against variant-less `<button>`)? A single `npm run check` command comes from maintenance ticket MT-01 and can host it. | M1 | (open) |
 | Q7 | Should `styles.css` be split (per component or per feature), and when? | M1 / M3 | (open) Prefer after primitives exist |
 | Q8 | Long-list pagination: default page sizes, control placement, and whether day-based windows (1 / 7) are a Progress-only idea or a reusable pattern? | M1 | (open) Deferred from M0 (2026-10-15); R.7 |
-| Q9 | Nested feature shell + subnav vs in-page tabs: one app rule? Does it live in `docs/design-system.md` or a separate app-shell / IA doc? | M1 | (open) Deferred from M0 (2026-10-15); R.8. Expanded by M0-01 inventory into Q15 (depth / route vs tab vs filter / top vs side) |
+| Q9 | Nested feature shell + subnav vs in-page tabs: one app rule? Does it live in `docs/design-system.md` or a separate app-shell / IA doc? | M1 | (open) Deferred from M0 (2026-10-15); R.8. Expanded by M0-01 inventory into Q15 |
 | Q10 | How should `EarnFlash` stay in view: portal near the clicked control, sticky/toast in the viewport, scroll-into-view of a top flash, or something else? Does the same rule apply to `OneTimeNotice`? | M1 | (open) Deferred from M0 (2026-10-15); R.9 |
 | Q11 | What makes Tasks (and similar long pages) compact enough: tighter row density, collapsible sections, sticky compose/actions, pagination/virtualization, or a redesign of the list chrome? | M1 (tactics) / M2 (Tasks migrate) | (open) Deferred from M0 (2026-10-15); R.10 |
-| Q12 | **Theme / vibe:** What should the app communicate? Explore broadly (not only Sakura vs flat). What to keep from baby pink + clean readability? Contained cards vs open canvas? | M0 | (open) Decide from prototypes (2026-10-15 review). Loved: baby pink; refreshing clean flat. Open to other palettes/directions |
-| Q13 | Heatmap / intensity gradients: one shared scale (and which hues), separate scales per domain (apps vs technical), and how empty / future / peak cells read? | M0 | (open) Seat inside a color-meaning scheme (R0.5), not in isolation |
-| Q14 | **Typography:** Font switcher in M0 prototypes — which families/stacks? Roles for display vs body vs chrome vs numbers? Size scale? Style ↔ readability (and any further axes found in review)? | M0 | (open) Explore families in M0 via switcher (R0.4); do not rebuild every pack per font |
-| Q15 | **Information depth:** Max chrome rows before content; route vs tab vs filter; which features get a shell; calendar/day as a nav level; modal vs route for writes; top nav vs side nav vs hybrid? | M1 (expands Q9); M0 shows stress samples only | (open) Approaches via prototypes; avoid locking from inventory alone |
-| Q16 | **Layout / shell:** Keep 960px shell or change? Content vs chrome width budget; wrap vs scroll vs truncate vs shortened labels; two-column mins; stack gap scale; breakpoint scale; paired panel heights? | M0 (shell/spacing tokens after lab); M1 (full chrome budget) | (open) Approaches via prototypes; Past work / Jobs are stress cases |
-| Q17 | **Brand / identity:** What is the product now (job board, prep OS, motivation hub, command center, …)? Keep `career-digest` or rebrand? How does identity constrain vibe? | M0 | (open) R.16; framing needed to choose vibe — full ship of rename optional |
-| Q18 | **Color-meaning scheme:** How do action, selection, brand, success, warning, danger, data-sequential, and severity divide? Where do priority traffic lights sit once the scheme exists? | M0 | (open) R0.5; R/Y/G useful if intentional; brainstorm schemes before seating priority |
+| Q15 | **Information depth:** Max chrome rows before content; route vs tab vs filter; which features get a shell; calendar/day as a nav level; modal vs route for writes; top nav vs side nav vs hybrid? | M1 (expands Q9) | (open) M0 stress samples only; nested-tab representation not solved by carded containment |
+| Q16 | **Layout / chrome budget** (remaining): wrap vs scroll vs truncate vs shortened labels; two-column mins; stack gap scale; breakpoint scale; paired panel heights? | M1 | (open) Shell width locked at 1100px in M0; rest deferred |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (3)</summary>
+<summary>Resolved questions (14)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
 | RQ1 | Full-app migration before F08 M5 needs are known? | No; then superseded by comprehensive system + phased migration (2026-10-15) | R.11, milestones |
 | RQ2 | Wait on F08 M7/M8 before M0? | Yes until those layouts settled; gate cleared when M7/M8 Done (2026-10-15) | M0 status |
 | RQ3 | M0 vs M1: visual vs patterns? | M0 purely visual; Q8–Q11 / R.7–R.10 tactics deferred to M1 pattern tickets (2026-10-15) | R.14 |
+| Q1 | Primary button / accent | Ink fill primary (flat); not blue or purple pastel. Segmented active matches ink | `design-system.md` |
+| Q2 | Elevation | Flat controls (no button shadow); soft card + modal overlay OK | `design-system.md` |
+| Q3 | Button sizes | `sm` / `md` | `design-system.md` |
+| Q4 | Pastel token set | Keep blush atmosphere; remap accent *roles* (ink action, domain hues, RYG severity) | `design-system.md` |
+| Q5 | Conflicting patterns | See conflicting-patterns table (ink desk shortlist) | `design-system.md` |
+| Q12 | Theme / vibe | **Ink desk (V1×V4)** — sakura canvas + ink chrome/actions; all carded | `design-system.md` |
+| Q13 | Heatmap | Shared **vivid rose soft peak** (5 stops; peak = former step-3) | `design-system.md` |
+| Q14 | Typography | **IBM Plex** Mono display / Sans body; size ladder documented | `design-system.md` |
+| Q16† | Shell width | **1100px** (chrome budget remains open as Q16 above) | `design-system.md` |
+| Q17 | Brand | **flora.exe** (mark/voice); full string rename not required in M0 | `design-system.md` |
+| Q18 | Color meaning | Identity (apps/tech/reward) ≠ severity RYG ≠ urgency Severity-5; purple = domain tech only | `design-system.md` |
 
 </details>
 
@@ -143,3 +143,4 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 - **2026-10-15 (Phase 0):** Success definition locked: **comprehensive system + phased migration** (R.11). M0 is **purely visual** and starts from **theme/vibe** (Q12), exploring beyond F08 W/A/B/C; W remains a preference from that round, not the locked direction. Foundations inventory is thorough (R.12), including niche visuals such as heatmap gradients (R0.3, Q13). Visual-direction prototyping moves to **F09-owned** prototypes (R.13); F08's visual-direction page is historical input only. Q8–Q11 deferred to **M1** pattern tickets (R.14). Future features must extend the system (R.15). M1/M2/M3 milestones rewritten accordingly; F08 M7/M8 wait gate cleared. Feature status → Active.
 - **2026-10-15 (M0-01 addendum):** Inventory expanded with typography (Q14), information depth (Q15), and shell/layout fit (Q16). Type is a primary vibe axis alongside elevation. Depth/layout standards mostly land in M1 (with shell/type tokens in M0); findings in `tickets/M0/M0-01-findings.md` §§12–14.
 - **2026-10-15 (M0-01 review):** Lock visual choices from **exploratory prototypes**, not from inventory opinions. Brand/identity in M0 (R.16, Q17). Font switcher + other families in M0 (R0.4, Q14). Color-meaning scheme before priority seating (R0.5, Q18). Broad vibe pool beyond Sakura vs flat; baby pink and clean readability are preferences to preserve if possible. Containment (carded vs open canvas vs Progress hybrid) is an explicit axis. Elevation/nav/layout: develop approaches in the lab, then pick or remix.
+- **2026-10-15 (M0-02 / M0-03):** Lab shortlist locked into `docs/design-system.md`: Ink desk vibe, flora.exe, IBM Plex, flat elev, all carded, 1100px shell, vivid-rose heat, Severity-5 urgency, purple=domain tech, RYG priority. F08 M5 interim visuals superseded. Q8–Q11 / Q15 / remaining Q16 stay open for M1. Prototype `/prototype/f09/lab` retained as reference (`548ba4e`).
