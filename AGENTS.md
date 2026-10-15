@@ -43,7 +43,7 @@ For visual and interaction conventions, `docs/design-system.md` overrides ticket
 3. **Prototype (only when the ticket names design questions).** See Prototypes.
 4. **Implement.** Work one ticket at a time. Prefer a fresh conversation per ticket; the ticket file carries the context.
 5. **Verify** against the Definition of done.
-6. **Commit** the ticket, with its status and the board row updated in the same commit.
+6. **Commit** the ticket, with its status and the board row updated in the same commit. Do **not** put that commit's own hash in the board or ticket in the same commit (a commit cannot contain its own hash). After the ticket commit exists, add the short hash to the board's Done row (and the ticket's verification notes if useful) in a **separate small follow-up commit** — often one follow-up that fills hashes for several tickets, or bundled with the next related docs touch. Until then the Done row may say `(this commit)` or leave the Commit cell blank.
 7. **Close the milestone** when all its tickets are Done: update the board and roadmap status, then add a changelog entry in its own commit. A bug found later in a closed milestone gets a ticket in that milestone's folder; the milestone stays Done, and the board shows the open ticket.
 8. **Close the feature** when every milestone is Done and every prototype the feature created is deleted (routes included).
 
@@ -96,7 +96,7 @@ Surface everything; fix nothing outside the ticket's scope; create tickets only 
 - [ ] UI changes follow `docs/design-system.md`: component variants only, no new global or element-level CSS, no one-off modal
 - [ ] Reuse check done: searched for existing components/helpers first; reused pieces listed in the ticket
 - [ ] No prototype code imported by production code
-- [ ] Ticket updated: status `Done`, verification notes, commit hash
+- [ ] Ticket updated: status `Done`, verification notes (commit hash may wait for the follow-up in Git below)
 - [ ] Committed
 - [ ] End-of-task report given (see End-of-task report), including tests added and **Issues found**
 
@@ -105,6 +105,7 @@ Surface everything; fix nothing outside the ticket's scope; create tickets only 
 ## Git
 
 - One commit per ticket. Message: `F08 M5-02: <imperative summary>` (or `MT-01: …` for maintenance), with a short body saying what changed and why.
+- **Board / ticket commit hashes:** record the short hash only after that commit exists, in a separate follow-up commit (see Feature workflow step 6). Do not amend repeatedly to self-reference the hash.
 - Milestone close-out is its own commit: roadmap status + changelog entry.
 - Never push without the user asking. Never `git push --force`, `git add -f`, `git reset --hard`, `git clean`, or drop stashes or branches without explicit approval.
 - Before any cleanup, inspect and report first. Uncommitted work is never discarded.
@@ -151,7 +152,7 @@ Prototypes are exploratory and throwaway. They answer design questions listed in
 
 ## Ticket board
 
-Each feature folder has a `board.md` (from `_templates/board.md`): one section per milestone, with the milestone's status, a table of open tickets, and a collapsed list of done tickets. `docs/features/maintenance/board.md` is the same without milestones: one open table and one done list. The ticket file's `Status:` line is the source of truth; the board mirrors it and is updated in the same commit. Ticket files never move between folders when their status changes.
+Each feature folder has a `board.md` (from `_templates/board.md`): one section per milestone, with the milestone's status, a table of open tickets, and a collapsed list of done tickets. `docs/features/maintenance/board.md` is the same without milestones: one open table and one done list. The ticket file's `Status:` line is the source of truth; the board mirrors it and is updated in the same commit (status and row move). The Done table's Commit hash is filled afterward in a follow-up commit once the ticket commit exists (see Git). Ticket files never move between folders when their status changes.
 
 ## Skills
 

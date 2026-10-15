@@ -127,7 +127,7 @@ Done (11)
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M8-02](./tickets/M8/M8-02-progress-shell-routes.md) | Progress nested shell; remove ledger/points | `c8bb3ca` |
+| [M8-02](./tickets/M8/M8-02-progress-shell-routes.md) | Progress nested shell; remove ledger/points | `a94075b` |
 | [M8-01](./tickets/M8/M8-01-prototype-progress-hub.md) | Prototype Progress hub | (closing commit) |
 
 </details>

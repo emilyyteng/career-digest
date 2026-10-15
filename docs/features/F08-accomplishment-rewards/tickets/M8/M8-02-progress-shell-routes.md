@@ -52,3 +52,4 @@ Old `?tab=` / `?view=` URLs need not keep working unless cheap; if not, document
 - Unrouted `ProgressPage.tsx` still contains the old four-tab + Points stub code (not reachable). `LedgerPointsPanel.tsx` is unused.
 - `npm run check` green (typecheck, web build, 341 API tests).
 - No new tests (routing/shell only; no API change).
+- Commit: `a94075b`.
