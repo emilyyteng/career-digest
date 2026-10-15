@@ -2,14 +2,17 @@
  * R8.13 work-intensity colors for Past work calendar and Lifetime heatmaps.
  * Gradient is proportional to raw apps / LC counts (not seeds, not clamped to 3).
  * Points math still uses the 0–3 activity-credit cap elsewhere.
+ *
+ * Stops stay pastel through the light end (baby pink), then light → deeper
+ * purple, then navy. Empty cells use --surface-2 separately.
  */
 
-/** Soft RGB stops from empty → hottest (same family as the old 0–3 swatches). */
+/** Soft RGB stops from lightest work → hottest (sakura → purple → navy). */
 const STOPS: Array<[number, number, number]> = [
-  [232, 228, 236], // near --surface-2
-  [243, 208, 220],
-  [201, 168, 216],
-  [91, 124, 153],
+  [250, 214, 228], // baby pink
+  [216, 186, 230], // light purple
+  [132, 118, 176], // deeper purple
+  [40, 68, 112], // navy
 ];
 
 function lerp(a: number, b: number, t: number): number {

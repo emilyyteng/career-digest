@@ -15,13 +15,55 @@ import ProgressHeatmap from "./ProgressHeatmap";
 const RANGES = [
   { key: 7, label: "1 week" },
   { key: 30, label: "1 month" },
-  { key: 90, label: "~3 months" },
+  { key: 90, label: "3 months" },
 ] as const;
 
 const HEATMAP_DAYS = 182;
 
 function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+}
+
+/** Round a max up to a clean axis top. */
+function niceCeiling(n: number): number {
+  if (n <= 0) return 1;
+  if (n <= 1) return 1;
+  const exp = Math.floor(Math.log10(n));
+  const pow = 10 ** exp;
+  const m = n / pow;
+  const nice = m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10;
+  return nice * pow;
+}
+
+function yTickValues(max: number): number[] {
+  const top = niceCeiling(max);
+  const steps = top <= 4 ? top : 4;
+  const step = top / steps;
+  const out: number[] = [];
+  for (let i = 0; i <= steps; i++) out.push(Math.round(i * step));
+  return out;
+}
+
+/** Evenly spaced indices including first and last. */
+function tickIndices(length: number, count: number): number[] {
+  if (length <= 0) return [];
+  if (length === 1) return [0];
+  const n = Math.min(count, length);
+  if (n === 1) return [0];
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    out.push(Math.round((i * (length - 1)) / (n - 1)));
+  }
+  return [...new Set(out)];
+}
+
+function formatAxisDate(iso: string, rangeDays: number): string {
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  if (rangeDays <= 7) {
+    return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
+  }
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 function SeedsActivityChart({
@@ -33,15 +75,26 @@ function SeedsActivityChart({
   rangeDays: number;
   onRangeDays: (days: number) => void;
 }) {
-  const max = Math.max(1, ...activity.map((p) => p.seeds));
-  const w = 560;
-  const h = 120;
-  const pad = 8;
-  const coords = activity.map((p, i) => {
-    const x = pad + (i / Math.max(1, activity.length - 1)) * (w - pad * 2);
-    const y = h - pad - (p.seeds / max) * (h - pad * 2);
-    return `${x},${y}`;
-  });
+  const dataMax = Math.max(0, ...activity.map((p) => p.seeds));
+  const yMax = niceCeiling(Math.max(1, dataMax));
+  const yTicks = yTickValues(yMax);
+
+  const w = 640;
+  const h = 200;
+  const padL = 36;
+  const padR = 40;
+  const padT = 12;
+  const padB = 32;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const xAt = (i: number) =>
+    padL + (activity.length <= 1 ? plotW / 2 : (i / (activity.length - 1)) * plotW);
+  const yAt = (seeds: number) => padT + plotH - (seeds / yMax) * plotH;
+
+  const coords = activity.map((p, i) => `${xAt(i)},${yAt(p.seeds)}`);
+  const xTickCount = rangeDays <= 7 ? Math.min(activity.length, 7) : rangeDays <= 30 ? 5 : 6;
+  const xTicks = tickIndices(activity.length, xTickCount);
 
   return (
     <section className="card progress-lifetime-chart">
@@ -69,15 +122,88 @@ function SeedsActivityChart({
         role="img"
         aria-label={`${CURRENCY_DISPLAY.plural} earned over time`}
       >
-        <polyline
-          fill="none"
-          stroke="var(--accent-blue-deep)"
-          strokeWidth="2.5"
-          points={coords.join(" ")}
+        {/* Axes */}
+        <line
+          x1={padL}
+          y1={padT}
+          x2={padL}
+          y2={padT + plotH}
+          stroke="var(--border-strong)"
+          strokeWidth="1"
         />
+        <line
+          x1={padL}
+          y1={padT + plotH}
+          x2={padL + plotW}
+          y2={padT + plotH}
+          stroke="var(--border-strong)"
+          strokeWidth="1"
+        />
+        {yTicks.map((v) => {
+          const y = yAt(v);
+          return (
+            <g key={`y-${v}`}>
+              {v > 0 && (
+                <line
+                  x1={padL}
+                  y1={y}
+                  x2={padL + plotW}
+                  y2={y}
+                  stroke="var(--border)"
+                  strokeWidth="1"
+                  strokeDasharray="3 3"
+                />
+              )}
+              <text
+                x={padL - 6}
+                y={y}
+                textAnchor="end"
+                dominantBaseline="middle"
+                className="progress-lifetime-axis-label"
+              >
+                {v}
+              </text>
+            </g>
+          );
+        })}
+        {xTicks.map((i, tickIdx) => {
+          const p = activity[i];
+          if (!p) return null;
+          const x = xAt(i);
+          const anchor =
+            tickIdx === 0 ? "start" : tickIdx === xTicks.length - 1 ? "end" : "middle";
+          return (
+            <g key={`x-${p.date}`}>
+              <line
+                x1={x}
+                y1={padT + plotH}
+                x2={x}
+                y2={padT + plotH + 4}
+                stroke="var(--border-strong)"
+                strokeWidth="1"
+              />
+              <text
+                x={x}
+                y={padT + plotH + 16}
+                textAnchor={anchor}
+                className="progress-lifetime-axis-label"
+              >
+                {formatAxisDate(p.date, rangeDays)}
+              </text>
+            </g>
+          );
+        })}
+        {coords.length > 0 && (
+          <polyline
+            fill="none"
+            stroke="var(--accent-blue-deep)"
+            strokeWidth="2.5"
+            points={coords.join(" ")}
+          />
+        )}
       </svg>
       <p className="muted progress-lifetime-chart-foot">
-        Last {rangeDays} days · peak {max} {CURRENCY_DISPLAY.plural}
+        Last {rangeDays} days · peak {dataMax} {CURRENCY_DISPLAY.plural}
       </p>
     </section>
   );
@@ -124,42 +250,36 @@ export default function LifetimePage() {
   const t = snap.totals;
   const today = snap.localDate;
 
+  const primaryStats = [
+    { value: t.leetcode, label: "LC solves" },
+    { value: t.apps, label: "applications" },
+    { value: t.minutes, label: "minutes worked" },
+    { value: t.seedsEarned, label: CURRENCY_DISPLAY.plural + " earned" },
+  ] as const;
+  const secondaryStats = [
+    { value: t.tasks, label: "Tasks" },
+    { value: t.interviews, label: "Interviews" },
+    { value: t.reflections, label: "Reflections" },
+    { value: t.daysWorked, label: "Days worked" },
+  ] as const;
+
   return (
     <div className="progress-lifetime">
       {error && <p className="error">{error}</p>}
 
       <section className="card progress-lifetime-header">
         <span className="progress-kicker">Lifetime record</span>
-        <div className="progress-lifetime-primaries">
-          <div>
-            <strong>{t.leetcode.toLocaleString()}</strong>
-            <div className="muted">LC solves</div>
-          </div>
-          <div>
-            <strong>{t.apps.toLocaleString()}</strong>
-            <div className="muted">applications</div>
-          </div>
-          <div>
-            <strong>{t.minutes.toLocaleString()}</strong>
-            <div className="muted">minutes worked</div>
-          </div>
-          <div>
-            <strong>{t.seedsEarned.toLocaleString()}</strong>
-            <div className="muted">{CURRENCY_DISPLAY.plural} earned</div>
-          </div>
-        </div>
-        <div className="progress-lifetime-secondaries">
-          {(
-            [
-              ["Tasks", t.tasks],
-              ["Interviews", t.interviews],
-              ["Reflections", t.reflections],
-              ["Days worked", t.daysWorked],
-            ] as const
-          ).map(([label, n]) => (
-            <div key={label} className="progress-lifetime-stat">
-              <strong>{n.toLocaleString()}</strong>
-              <span className="muted">{label}</span>
+        <div className="progress-lifetime-stats">
+          {primaryStats.map((s) => (
+            <div key={s.label} className="progress-lifetime-stat is-primary">
+              <strong>{s.value.toLocaleString()}</strong>
+              <span className="muted">{s.label}</span>
+            </div>
+          ))}
+          {secondaryStats.map((s) => (
+            <div key={s.label} className="progress-lifetime-stat is-secondary">
+              <strong>{s.value.toLocaleString()}</strong>
+              <span className="muted">{s.label}</span>
             </div>
           ))}
         </div>

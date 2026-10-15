@@ -2978,7 +2978,8 @@ textarea { min-height: 10rem; width: 100%; }
 
 /* M5-11 · achievements tab + unlock modal */
 .achievements-panel {
-  max-width: 40rem;
+  width: 100%;
+  max-width: none;
 }
 .achievements-heading {
   margin: 0 0 0.25rem;
@@ -2987,13 +2988,31 @@ textarea { min-height: 10rem; width: 100%; }
   margin: 0 0 0.75rem;
   font-size: 0.88rem;
 }
+.achievements-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.achievements-group-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-purple-deep);
+}
 .achievements-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.45rem 0.75rem;
+}
+@media (max-width: 640px) {
+  .achievements-list {
+    grid-template-columns: 1fr;
+  }
 }
 .achievements-item {
   display: grid;
@@ -4312,37 +4331,45 @@ button.secondary.progress-note-edit {
 .progress-lifetime-header .progress-kicker {
   margin-bottom: 0.55rem;
 }
-.progress-lifetime-primaries {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  margin-bottom: 0.85rem;
-}
-.progress-lifetime-primaries strong {
-  font-size: 1.75rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-}
-.progress-lifetime-primaries .muted {
-  font-size: 0.85rem;
-}
-.progress-lifetime-secondaries {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
+.progress-lifetime-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 1.25rem;
+  row-gap: 0.85rem;
 }
 .progress-lifetime-stat {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  min-width: 4.5rem;
+  min-width: 0;
 }
-.progress-lifetime-stat strong {
+.progress-lifetime-stat.is-primary strong {
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.progress-lifetime-stat.is-primary .muted {
+  font-size: 0.85rem;
+}
+.progress-lifetime-stat.is-secondary strong {
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
 }
-.progress-lifetime-stat .muted {
+.progress-lifetime-stat.is-secondary .muted {
   font-size: 0.78rem;
+}
+@media (max-width: 560px) {
+  .progress-lifetime-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .progress-lifetime-stat.is-primary:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .progress-lifetime-stat.is-primary:nth-child(2) { grid-column: 2; grid-row: 1; }
+  .progress-lifetime-stat.is-secondary:nth-child(5) { grid-column: 1; grid-row: 2; }
+  .progress-lifetime-stat.is-secondary:nth-child(6) { grid-column: 2; grid-row: 2; }
+  .progress-lifetime-stat.is-primary:nth-child(3) { grid-column: 1; grid-row: 3; }
+  .progress-lifetime-stat.is-primary:nth-child(4) { grid-column: 2; grid-row: 3; }
+  .progress-lifetime-stat.is-secondary:nth-child(7) { grid-column: 1; grid-row: 4; }
+  .progress-lifetime-stat.is-secondary:nth-child(8) { grid-column: 2; grid-row: 4; }
 }
 .progress-lifetime-chart-head {
   display: flex;
@@ -4355,9 +4382,14 @@ button.secondary.progress-note-edit {
 .progress-lifetime-svg {
   display: block;
   width: 100%;
-  max-width: 36rem;
+  max-width: 42rem;
   height: auto;
   margin: 0.35rem 0;
+}
+.progress-lifetime-axis-label {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-sans);
 }
 .progress-lifetime-chart-foot {
   margin: 0;
