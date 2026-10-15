@@ -1,17 +1,11 @@
 import type { ProgressHeatmapDay } from "../../api";
-
-const CREDIT_COLORS = [
-  "var(--surface-2)",
-  "#f3d0dc",
-  "#c9a8d8",
-  "#5b7c99",
-];
+import {
+  peakRaw,
+  workIntensityFill,
+  workIntensityLegendStops,
+} from "./intensityScale";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function creditFill(earned: number): string {
-  return CREDIT_COLORS[Math.max(0, Math.min(CREDIT_COLORS.length - 1, earned))] ?? CREDIT_COLORS[0]!;
-}
 
 function addDays(value: string, delta: number): string {
   const [y, m, d] = value.split("-").map(Number);
@@ -42,33 +36,41 @@ function padHeatmap(days: ProgressHeatmapDay[], today: string): ProgressHeatmapD
 }
 
 export function ProgressHeatLegend() {
+  const stops = workIntensityLegendStops(5);
   return (
     <div className="progress-heat-legend">
       <span className="muted">Less</span>
-      {CREDIT_COLORS.map((color, i) => (
+      {stops.map((color, i) => (
         <span
-          key={color}
+          key={`${color}-${i}`}
           className="progress-heat-swatch"
           style={{ background: color }}
-          title={`${i}/3`}
+          title={i === 0 ? "0" : "more work"}
         />
       ))}
       <span className="muted">More</span>
-      <span className="muted progress-heat-legend-note">✓ = reflection</span>
     </div>
   );
 }
 
+/**
+ * Prep heatmap. Colors by raw count (apps or LC) per R8.13 — unclamped ∝ gradient.
+ * `effort` on the payload is ignored for display.
+ */
 export default function ProgressHeatmap({
   title,
   days,
   today,
+  unitLabel = "items",
 }: {
   title: string;
   days: ProgressHeatmapDay[];
   today: string;
+  /** Tooltip unit, e.g. "apps" or "LC". */
+  unitLabel?: string;
 }) {
   const padded = padHeatmap(days, today);
+  const peak = peakRaw(padded.filter((d) => d.date <= today).map((d) => d.raw));
   const weeks: ProgressHeatmapDay[][] = [];
   for (let i = 0; i < padded.length; i += 7) {
     weeks.push(padded.slice(i, i + 7));
@@ -90,17 +92,17 @@ export default function ProgressHeatmap({
                 const future = day.date > today;
                 const tip = future
                   ? undefined
-                  : `${day.date}: ${day.earned}/3${day.effort ? " · reflection" : ""}`;
+                  : `${day.date}: ${day.raw} ${unitLabel}`;
                 return (
                   <span
                     key={day.date}
-                    className={[
-                      "progress-heat-cell",
-                      future ? "future" : "",
-                      day.effort ? "effort" : "",
-                    ].join(" ")}
+                    className={["progress-heat-cell", future ? "future" : ""].join(
+                      " ",
+                    )}
                     style={{
-                      background: future ? "transparent" : creditFill(day.earned),
+                      background: future
+                        ? "transparent"
+                        : workIntensityFill(day.raw, peak),
                     }}
                     title={tip}
                   />
@@ -115,4 +117,4 @@ export default function ProgressHeatmap({
   );
 }
 
-export { creditFill, addDays, dowSunday };
+export { addDays, dowSunday, workIntensityFill as creditFill };

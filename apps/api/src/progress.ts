@@ -90,6 +90,15 @@ export type ApplicationInterviewStepOption = {
   threadCompany: string | null;
 };
 
+export type ProgressDayInterview = {
+  id: string;
+  title: string;
+  status: string;
+  threadId: string;
+  company: string | null;
+  href: string;
+};
+
 export type ProgressDayDetail = {
   tz: string;
   date: string;
@@ -100,6 +109,8 @@ export type ProgressDayDetail = {
   effortTechnical: boolean;
   effortOther: boolean;
   applicationRows: ProgressDayApplication[];
+  /** Interview steps finished that local day (Past work day panel, R8.4). */
+  interviewRows: ProgressDayInterview[];
   reflections: ProgressReflection[];
 };
 
@@ -493,6 +504,44 @@ export async function getProgressDay(
     [tz, date],
   );
 
+  const interviewRows = await pool.query<{
+    id: string;
+    title: string;
+    status: string;
+    threadId: string;
+    company: string | null;
+  }>(
+    `SELECT
+       s.id,
+       s.title,
+       s.status,
+       t.id AS "threadId",
+       COALESCE(
+         (
+           SELECT COALESCE(
+             a.company_name,
+             CASE WHEN p.source = 'simplify' THEN NULLIF(p.department, '') END,
+             c.name
+           )
+           FROM application_thread_members m
+           JOIN applications a ON a.id = m.application_id
+           LEFT JOIN postings p ON p.id = a.posting_id
+           LEFT JOIN companies c ON c.id = p.company_id
+           WHERE m.thread_id = t.id
+           ORDER BY CASE WHEN a.id = t.primary_application_id THEN 0 ELSE 1 END
+           LIMIT 1
+         ),
+         t.label
+       ) AS company
+     FROM application_steps s
+     JOIN interview_threads t ON t.id = s.thread_id
+     WHERE s.status IN ('completed', 'awaiting_employer')
+       AND s.completed_at IS NOT NULL
+       AND ((s.completed_at AT TIME ZONE $1)::date = $2::date)
+     ORDER BY s.completed_at DESC`,
+    [tz, date],
+  );
+
   return {
     tz,
     date,
@@ -503,6 +552,10 @@ export async function getProgressDay(
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,
     applicationRows: appRows.rows,
+    interviewRows: interviewRows.rows.map((row) => ({
+      ...row,
+      href: `/interviews/${row.threadId}`,
+    })),
     reflections: reflections.rows,
   };
 }

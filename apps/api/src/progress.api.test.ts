@@ -278,6 +278,7 @@ describe.skipIf(!integrationReady)("progress API", () => {
       company: "Prog Co",
       title: "Intern",
     });
+    expect(res.body.interviewRows).toEqual([]);
     expect(res.body.reflections).toHaveLength(1);
   });
 

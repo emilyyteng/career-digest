@@ -1,10 +1,11 @@
-import { ProgressHeatLegend, creditFill, addDays, dowSunday } from "./ProgressHeatmap";
+import { ProgressHeatLegend, addDays, dowSunday } from "./ProgressHeatmap";
+import { peakRaw, workIntensityFill } from "./intensityScale";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
+/** Calendar cell intensity: raw apps + LC that day (R8.13). */
 export type CalendarDayMark = {
-  earned: number;
-  effort: boolean;
+  raw: number;
 };
 
 function monthLabel(anchor: string): string {
@@ -58,6 +59,12 @@ export default function HistoryCalendar({
     cells.push(cursor);
   }
 
+  const peak = peakRaw(
+    Object.entries(marks)
+      .filter(([date]) => date >= start && date <= end && date <= today)
+      .map(([, m]) => m.raw),
+  );
+
   return (
     <section className="card progress-cal">
       <div className="progress-cal-head">
@@ -89,6 +96,7 @@ export default function HistoryCalendar({
           if (!date) return <span key={`e-${i}`} />;
           const future = date > today;
           const mark = marks[date];
+          const raw = mark?.raw ?? 0;
           return (
             <button
               key={date}
@@ -98,13 +106,11 @@ export default function HistoryCalendar({
                 "progress-cal-cell",
                 selectedDate === date ? "on" : "",
                 future ? "future" : "",
-                mark?.effort ? "effort" : "",
               ].join(" ")}
               style={{
-                background: future
-                  ? "transparent"
-                  : creditFill(mark?.earned ?? 0),
+                background: future ? "transparent" : workIntensityFill(raw, peak),
               }}
+              title={future ? undefined : `${date} · apps+LC=${raw}`}
               disabled={future}
               onClick={() => onSelectDate(date)}
             >
@@ -114,6 +120,9 @@ export default function HistoryCalendar({
         })}
       </div>
       <ProgressHeatLegend />
+      <p className="muted progress-cal-intensity-note">
+        Color ∝ apps + LC that day (not seeds)
+      </p>
     </section>
   );
 }

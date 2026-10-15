@@ -1,6 +1,6 @@
 # M8-04: Past work surface
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R8.4, R8.7, R8.13 (from `../../spec.md`); kind filters kept (Q65)
 **Type:** build
@@ -21,27 +21,31 @@ Prefer a server query for the completions window when needed, with tests. No sta
 
 ## Acceptance criteria
 
-- [ ] `/progress/past` matches locked A layout and day-panel rules (R8.4)
-- [ ] Completions week window + filters (no `weekly goals` tab); reachable without ledger
-- [ ] Day panel always editable; reflection linking per R8.7
-- [ ] Calendar marks follow R8.13 (raw apps+LC, unclamped gradient, no effort marks); prefer owning the shared intensity scale here for M8-05 reuse
-- [ ] API/tests cover any new completions window query
-- [ ] Follows `docs/design-system.md`
+- [x] `/progress/past` matches locked A layout and day-panel rules (R8.4)
+- [x] Completions week window + filters (no `weekly goals` tab); reachable without ledger
+- [x] Day panel always editable; reflection linking per R8.7
+- [x] Calendar marks follow R8.13 (raw apps+LC, unclamped gradient, no effort marks); prefer owning the shared intensity scale here for M8-05 reuse
+- [x] API/tests cover any new completions window query
+- [x] Follows `docs/design-system.md`
 
 ## Reuse notes
 
-`LedgerCompletionsPanel`, `HistoryCalendar`, history day detail from `ProgressPage`, reflection compose/edit. Prototype: `/prototype/f08/progress/past-work`.
+`LedgerCompletionsPanel` (window + hide stats/weekly tab), `HistoryCalendar`, `intensityScale` (shared with heatmaps), day detail + interviews from API, reflection compose/edit. Deleted unrouted `ProgressPage` / `LedgerPointsPanel` after mining. Prototype `/prototype/f08/progress/past-work` kept as reference.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M8-04: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M8-04: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+- Dual column A; day panel always editable; LC misc-only; interviews above apps; no misc tasks in panel.
+- Completions: `endDate` + `days=7`; empty days shown; no weekly-goals kind tab.
+- `intensityScale.ts` + calendar/heatmap use raw ∝ peak (no clamp to 3, no effort ✓).
+- Tests: completions window filter; day `interviewRows` empty array assertion.
+- `npm run check` green (343 tests). Board hash in follow-up.

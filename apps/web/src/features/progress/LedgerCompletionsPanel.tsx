@@ -8,7 +8,7 @@ import {
   type CompletionsDiary,
 } from "../../api";
 
-const TYPE_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
+const ALL_TYPE_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
   { key: "all", label: "all" },
   { key: "task", label: "tasks" },
   { key: "application", label: "apps" },
@@ -17,6 +17,14 @@ const TYPE_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
   { key: "weekly", label: "weekly goals" },
   { key: "leetcode", label: "leetcode" },
 ];
+
+/** Past work (R8.4): drop weekly-goals filter tab; rows stay under `all`. */
+const PAST_WORK_TABS = ALL_TYPE_TABS.filter((t) => t.key !== "weekly");
+
+function addDaysYmd(value: string, delta: number): string {
+  const [y, m, d] = value.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + delta)).toISOString().slice(0, 10);
+}
 
 function allTimeCount(
   stats: CompletionsDiary["stats"]["allTime"],
@@ -205,10 +213,26 @@ function CompletionRow({
 export default function LedgerCompletionsPanel({
   tz,
   todayYmd,
+  endDate,
+  days,
+  hideStats = false,
+  hideWeeklyTab = false,
+  focusDate,
+  reloadToken,
 }: {
   tz: string;
   todayYmd: string;
+  /** Inclusive end of window (Past work). */
+  endDate?: string;
+  days?: number;
+  hideStats?: boolean;
+  hideWeeklyTab?: boolean;
+  /** Highlight this day heading (selected calendar day). */
+  focusDate?: string;
+  /** Bump to refetch after day-panel writes. */
+  reloadToken?: number;
 }) {
+  const tabs = hideWeeklyTab ? PAST_WORK_TABS : ALL_TYPE_TABS;
   const [kind, setKind] = useState<CompletionKind | "all">("all");
   const [data, setData] = useState<CompletionsDiary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -218,7 +242,11 @@ export default function LedgerCompletionsPanel({
     setLoading(true);
     setError(null);
     try {
-      const diary = await getProgressCompletions(tz, { kind: nextKind });
+      const diary = await getProgressCompletions(tz, {
+        kind: nextKind,
+        endDate,
+        days,
+      });
       setData(diary);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load completions");
@@ -228,9 +256,13 @@ export default function LedgerCompletionsPanel({
   }
 
   useEffect(() => {
+    if (hideWeeklyTab && kind === "weekly") setKind("all");
+  }, [hideWeeklyTab, kind]);
+
+  useEffect(() => {
     void load(kind);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload on kind/tz
-  }, [tz, kind]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload on filters
+  }, [tz, kind, endDate, days, reloadToken]);
 
   const byDay = useMemo(() => {
     if (!data) return [];
@@ -240,8 +272,17 @@ export default function LedgerCompletionsPanel({
       list.push(row);
       map.set(row.localDate, list);
     }
+    if (endDate && days != null) {
+      const ordered: Array<[string, CompletionDiaryItem[]]> = [];
+      for (let i = 0; i < days; i += 1) {
+        const day = addDaysYmd(endDate, -(days - 1 - i));
+        ordered.push([day, map.get(day) ?? []]);
+      }
+      // Newest first
+      return ordered.reverse();
+    }
     return [...map.entries()];
-  }, [data]);
+  }, [data, endDate, days]);
 
   if (error && !data) return <p className="error">{error}</p>;
   if (loading && !data) return <p className="muted">Loading completions…</p>;
@@ -252,21 +293,23 @@ export default function LedgerCompletionsPanel({
   return (
     <div className="ledger-completions">
       {error && <p className="error">{error}</p>}
-      <div className="ledger-stats">
-        <div className="ledger-stat-card">
-          <span className="progress-kicker">This week</span>
-          <strong>{formatCompletionStatLine(week)}</strong>
-          <span className="ledger-stat-mins">{week.minutes} minutes worked</span>
+      {!hideStats && (
+        <div className="ledger-stats">
+          <div className="ledger-stat-card">
+            <span className="progress-kicker">This week</span>
+            <strong>{formatCompletionStatLine(week)}</strong>
+            <span className="ledger-stat-mins">{week.minutes} minutes worked</span>
+          </div>
+          <div className="ledger-stat-card">
+            <span className="progress-kicker">This month</span>
+            <strong>{formatCompletionStatLine(month)}</strong>
+            <span className="ledger-stat-mins">{month.minutes} minutes worked</span>
+          </div>
         </div>
-        <div className="ledger-stat-card">
-          <span className="progress-kicker">This month</span>
-          <strong>{formatCompletionStatLine(month)}</strong>
-          <span className="ledger-stat-mins">{month.minutes} minutes worked</span>
-        </div>
-      </div>
+      )}
 
       <div className="ledger-subtabs" role="tablist" aria-label="Completion type">
-        {TYPE_TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.key}
             type="button"
@@ -283,15 +326,24 @@ export default function LedgerCompletionsPanel({
         <p className="muted">No completions yet.</p>
       ) : (
         byDay.map(([day, rows]) => (
-          <div key={day} className="ledger-day">
+          <div
+            key={day}
+            className={
+              focusDate && day === focusDate ? "ledger-day is-focus" : "ledger-day"
+            }
+          >
             <h5 className="ledger-day-label">{dayHeading(day, todayYmd)}</h5>
-            {rows.map((row) => (
-              <CompletionRow
-                key={row.id}
-                row={row}
-                onReflectionSaved={() => void load(kind)}
-              />
-            ))}
+            {rows.length === 0 ? (
+              <p className="muted ledger-day-empty">No completions this day.</p>
+            ) : (
+              rows.map((row) => (
+                <CompletionRow
+                  key={row.id}
+                  row={row}
+                  onReflectionSaved={() => void load(kind)}
+                />
+              ))
+            )}
           </div>
         ))
       )}

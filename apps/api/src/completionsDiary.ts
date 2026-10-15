@@ -115,10 +115,28 @@ function emptyCounts(): CompletionCounts {
 export async function getCompletionsDiary(
   pool: Pool,
   tz: string,
-  opts: { kind?: CompletionKind | "all"; limit?: number } = {},
+  opts: {
+    kind?: CompletionKind | "all";
+    limit?: number;
+    /** Inclusive end of a Past work window (R8.4). */
+    endDate?: string;
+    /** Days in the window ending on `endDate` (default 7 when endDate set). */
+    days?: number;
+  } = {},
 ): Promise<CompletionsDiary> {
   const kindFilter = opts.kind && opts.kind !== "all" ? opts.kind : null;
-  const limit = Math.min(Math.max(opts.limit ?? 80, 1), 200);
+  const windowEnd =
+    opts.endDate && /^\d{4}-\d{2}-\d{2}$/.test(opts.endDate) ? opts.endDate : null;
+  const windowDays = windowEnd
+    ? Math.min(Math.max(opts.days ?? 7, 1), 31)
+    : null;
+  const windowStart =
+    windowEnd && windowDays != null
+      ? addCivilDays(windowEnd, -(windowDays - 1))
+      : null;
+  // Past work week window needs enough rows to cover the slice after filter.
+  const defaultLimit = windowStart ? 200 : 80;
+  const limit = Math.min(Math.max(opts.limit ?? defaultLimit, 1), 200);
   const now = new Date();
   const today = localDateInTimezone(now, tz);
   const weekStart = mondayOf(today);
@@ -465,14 +483,20 @@ export async function getCompletionsDiary(
           ? `/tasks/${row.task_id}`
           : row.application_id
             ? `/applications/${row.application_id}`
-            : "/progress?tab=ledger",
+            : "/progress/past",
         reflections: [],
       });
     }
   }
 
   items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-  const trimmed = items.slice(0, limit);
+  const inWindow =
+    windowStart && windowEnd
+      ? items.filter(
+          (item) => item.localDate >= windowStart && item.localDate <= windowEnd,
+        )
+      : items;
+  const trimmed = inWindow.slice(0, limit);
 
   const allTime = { ...emptyCounts(), weekly: 0, leetcode: 0, leetcodeDays: 0 };
 

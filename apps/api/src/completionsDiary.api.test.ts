@@ -90,4 +90,21 @@ describe.skipIf(!integrationReady)("completions diary · LeetCode (M5-16)", () =
     expect(res.body.stats.week.leetcode).toBeGreaterThanOrEqual(5);
     expect(res.body.stats.month.leetcode).toBeGreaterThanOrEqual(5);
   });
+
+  it("endDate+days returns only items in the inclusive window (M8-04)", async () => {
+    const today = localDateInTimezone(new Date(), TZ);
+    const inWindow = addCivilDays(today, -2);
+    const outside = addCivilDays(today, -10);
+    await seedLeetcodeDaily(today, 1);
+    await seedLeetcodeDaily(inWindow, 2);
+    await seedLeetcodeDaily(outside, 4);
+
+    const res = await apiClient()
+      .get(`/api/progress/completions${q}&kind=leetcode&endDate=${today}&days=7`)
+      .expect(200);
+    const dates = res.body.items.map((i: { localDate: string }) => i.localDate);
+    expect(dates).toContain(today);
+    expect(dates).toContain(inWindow);
+    expect(dates).not.toContain(outside);
+  });
 });

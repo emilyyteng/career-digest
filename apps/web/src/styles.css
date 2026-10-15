@@ -4311,11 +4311,52 @@ button.secondary.progress-note-edit {
   color: var(--accent-purple-deep);
   margin-right: 0.45rem;
 }
+.progress-past-work {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.progress-past-columns {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 1.15fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+.progress-past-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.progress-past-completions .progress-section-title {
+  margin: 0 0 0.25rem;
+}
+.progress-past-completions-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+}
+.ledger-day.is-focus > .ledger-day-label {
+  color: var(--text);
+  font-weight: 600;
+}
+.ledger-day-empty {
+  margin: 0 0 0.55rem;
+  font-size: 0.85rem;
+}
+.progress-cal-intensity-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+}
 .progress-history {
   display: grid;
   grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
   gap: 0.75rem;
   align-items: start;
+}
+@media (max-width: 900px) {
+  .progress-past-columns {
+    grid-template-columns: 1fr;
+  }
 }
 .progress-cal {
   width: 100%;

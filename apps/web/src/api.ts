@@ -986,6 +986,14 @@ export type ProgressDayDetail = {
     title: string | null;
     appliedAt: string;
   }>;
+  interviewRows: Array<{
+    id: string;
+    title: string;
+    status: string;
+    threadId: string;
+    company: string | null;
+    href: string;
+  }>;
   reflections: ProgressReflection[];
 };
 
@@ -1113,11 +1121,18 @@ export type CompletionsDiary = {
 
 export const getProgressCompletions = (
   tz: string,
-  opts?: { kind?: CompletionKind | "all"; limit?: number },
+  opts?: {
+    kind?: CompletionKind | "all";
+    limit?: number;
+    endDate?: string;
+    days?: number;
+  },
 ) => {
   const params = new URLSearchParams({ tz });
   if (opts?.kind) params.set("kind", opts.kind);
   if (opts?.limit != null) params.set("limit", String(opts.limit));
+  if (opts?.endDate) params.set("endDate", opts.endDate);
+  if (opts?.days != null) params.set("days", String(opts.days));
   return parse<CompletionsDiary>(api(`/api/progress/completions?${params}`));
 };
 

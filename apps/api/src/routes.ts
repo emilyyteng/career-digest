@@ -1594,10 +1594,15 @@ api.get("/progress/completions", async (req, res) => {
     ? rawKind
     : "all") as CompletionKind | "all";
   const limit = Number(req.query.limit);
+  const endDateRaw = String(req.query.endDate ?? "");
+  const endDate = /^\d{4}-\d{2}-\d{2}$/.test(endDateRaw) ? endDateRaw : undefined;
+  const daysNum = Number(req.query.days);
   res.json(
     await getCompletionsDiary(pool, tz, {
       kind,
       limit: Number.isFinite(limit) ? limit : undefined,
+      endDate,
+      days: Number.isFinite(daysNum) ? daysNum : undefined,
     }),
   );
 });
