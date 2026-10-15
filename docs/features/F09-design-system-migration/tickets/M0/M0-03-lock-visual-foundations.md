@@ -49,3 +49,4 @@ n/a
 - Superseded F08 M5 interim (purple primary / blue toggles)
 - Spec: M0 → Done; Q1–Q5, Q12–Q14, Q17–Q18, Q16 shell width → Resolved; Q8–Q11 / Q15 / remaining Q16 stay open for M1
 - Prototype lab kept as reference (still cited by this closed ticket / future M1 work)
+- Commit: `b26fb29`
