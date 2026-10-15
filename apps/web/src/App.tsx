@@ -49,6 +49,10 @@ const proto = import.meta.env.DEV
       F08TodayStripStreak: lazy(() => import("./prototype/f08-streaks/TodayStripStreakPrototypePage")),
       F08Achievements: lazy(() => import("./prototype/f08-streaks/AchievementsPrototypePage")),
       F08Flourish: lazy(() => import("./prototype/f08-streaks/FlourishPrototypePage")),
+      F08ProgressHub: lazy(() => import("./prototype/f08-progress/F08ProgressHub")),
+      F08ProgressThisWeek: lazy(() => import("./prototype/f08-progress/ThisWeekPrototypePage")),
+      F08ProgressPastWork: lazy(() => import("./prototype/f08-progress/PastWorkPrototypePage")),
+      F08ProgressLifetime: lazy(() => import("./prototype/f08-progress/LifetimePrototypePage")),
     }
   : null;
 
@@ -196,6 +200,22 @@ export default function App() {
                 <Route
                   path="/prototype/f08/streaks/flourish"
                   element={<ProtoPage page={proto.F08Flourish} />}
+                />
+                <Route
+                  path="/prototype/f08/progress"
+                  element={<ProtoPage page={proto.F08ProgressHub} />}
+                />
+                <Route
+                  path="/prototype/f08/progress/this-week"
+                  element={<ProtoPage page={proto.F08ProgressThisWeek} />}
+                />
+                <Route
+                  path="/prototype/f08/progress/past-work"
+                  element={<ProtoPage page={proto.F08ProgressPastWork} />}
+                />
+                <Route
+                  path="/prototype/f08/progress/lifetime"
+                  element={<ProtoPage page={proto.F08ProgressLifetime} />}
                 />
               </>
             ) : (

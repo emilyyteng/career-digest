@@ -48,4 +48,4 @@ Reference only: `WeeklyGoalsBlock`, `TodayStrip`, `LeetcodeLogger`, `HistoryCale
 
 ## Verification notes
 
-(In progress: prototype scaffolded for review. Verdict TBD.)
+**Built (in progress, awaiting verdict):** hub at `/prototype/f08/progress` with `past-work`, `this-week`, `lifetime`. Past work variants A/B/C explore the calendar → day panel + 7-day completions window and the edit/completions overlap (Q55). `npm run check` green on the prototype commit. Verdict TBD after browser review.
