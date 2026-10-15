@@ -1,35 +1,27 @@
 /**
- * F08 M8-01 · Lifetime — accumulation record: richer header, full achievements,
- * heatmaps + activity chart. Explores metrics (Q67–Q69). Ticket: M8-01.
+ * F08 M8-01 · Lifetime — accumulation record.
+ * Chart = seeds/day with in-container range; heatmaps = existing ProgressHeatmap
+ * side by side; days worked in secondary stats. Ticket: M8-01.
  */
-import ProgressShell, { ParamToggle, useParam, useVariant } from "./ProgressShell";
+import { useState } from "react";
+import ProgressHeatmap from "../../features/progress/ProgressHeatmap";
+import ProgressShell, { btn, useVariant } from "./ProgressShell";
 import {
   ACHIEVEMENTS,
-  DAYS,
   LIFETIME_STATS,
-  TODAY,
-  addDays,
-  intensityForDay,
+  mockHeatmapDays,
   series,
-  type IntensityMetric,
 } from "./fixtures";
 
 const VARIANTS = [
-  { key: "A", name: "Header + chart + heatmaps + full achievements" },
-  { key: "B", name: "Header + heatmaps + chart below + full achievements" },
+  { key: "A", name: "Chart above heatmaps" },
+  { key: "B", name: "Heatmaps above chart" },
 ] as const;
 
-const METRICS: Array<{ key: IntensityMetric; label: string }> = [
-  { key: "seeds", label: "seeds (all)" },
-  { key: "seedsWork", label: "seeds (no weekly)" },
-  { key: "minutes", label: "minutes" },
-  { key: "events", label: "events" },
-];
-
 const RANGES = [
-  { key: "7", label: "1 week" },
-  { key: "30", label: "1 month" },
-  { key: "90", label: "~3 months" },
+  { key: 7, label: "1 week" },
+  { key: 30, label: "1 month" },
+  { key: 90, label: "~3 months" },
 ] as const;
 
 function AccumulationHeader() {
@@ -47,11 +39,11 @@ function AccumulationHeader() {
           <div className="muted">applications</div>
         </div>
         <div>
-          <strong style={{ fontSize: "1.75rem" }}>4,820</strong>
+          <strong style={{ fontSize: "1.75rem" }}>{s.minutes.toLocaleString()}</strong>
           <div className="muted">minutes worked</div>
         </div>
         <div>
-          <strong style={{ fontSize: "1.75rem" }}>12,640</strong>
+          <strong style={{ fontSize: "1.75rem" }}>{s.seedsLifetime.toLocaleString()}</strong>
           <div className="muted">seeds earned (lifetime)</div>
         </div>
       </div>
@@ -61,9 +53,9 @@ function AccumulationHeader() {
             ["Tasks", s.tasks],
             ["Interviews", s.interviews],
             ["Reflections", s.reflections],
-            ["Weekly records", s.weekly],
-            ["Longest LC streak", 14],
-            ["Longest apps streak", 9],
+            ["Days worked", s.daysWorked],
+            ["Longest LC streak", s.longestLcStreak],
+            ["Longest apps streak", s.longestAppsStreak],
           ] as const
         ).map(([label, n]) => (
           <div key={label} className="f08p-stat">
@@ -72,22 +64,13 @@ function AccumulationHeader() {
           </div>
         ))}
       </div>
-      <p className="muted" style={{ margin: 0, fontSize: "0.8rem" }}>
-        Header content still open (Q69) — this mock mixes counts, time, seeds earned, and streak
-        highs to feel like a record, not a sparse strip.
-      </p>
     </div>
   );
 }
 
-function ActivityChart({
-  metric,
-  days,
-}: {
-  metric: IntensityMetric;
-  days: number;
-}) {
-  const points = series(Math.min(days, 42), metric);
+function ActivityChart() {
+  const [days, setDays] = useState<(typeof RANGES)[number]["key"]>(30);
+  const points = series(Math.min(days, 90), "seeds");
   const max = Math.max(1, ...points.map((p) => p.value));
   const w = 560;
   const h = 120;
@@ -99,8 +82,25 @@ function ActivityChart({
   });
   return (
     <div className="f08p-panel">
-      <span className="f08p-kicker">Activity · last {days} days · {metric}</span>
-      <svg viewBox={`0 0 ${w} ${h}`} className="f08p-chart" role="img" aria-label="Activity over time">
+      <div className="f08p-chart-head">
+        <span className="f08p-kicker" style={{ marginBottom: 0 }}>
+          Activity · seeds earned / day
+        </span>
+        <div className="f08p-kind-tabs" style={{ marginBottom: 0 }} role="group" aria-label="Chart range">
+          {RANGES.map((r) => (
+            <button
+              key={r.key}
+              type="button"
+              className={btn("ghost", "sm", days === r.key ? "is-active" : "")}
+              aria-pressed={days === r.key}
+              onClick={() => setDays(r.key)}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="f08p-chart" role="img" aria-label="Seeds earned over time">
         <polyline
           fill="none"
           stroke="var(--accent-blue-deep)"
@@ -109,48 +109,20 @@ function ActivityChart({
         />
       </svg>
       <div className="muted" style={{ fontSize: "0.75rem" }}>
-        Peak {max}
-        {metric.startsWith("seeds") ? " seeds" : metric === "minutes" ? " min" : " events"} · mock
-        Mondays spike when metric includes weekly-close lumps
+        Last {days} days · peak {max} seeds · week-close lumps may spike Mondays (accepted for now)
       </div>
     </div>
   );
 }
 
-function Heatmaps({ metric }: { metric: IntensityMetric }) {
-  const dates = Array.from({ length: 28 }, (_, i) => addDays(TODAY, -(27 - i)));
+function HeatmapsRow() {
+  const appDays = mockHeatmapDays("application");
+  const techDays = mockHeatmapDays("technical");
+  const today = appDays[appDays.length - 1]!.date;
   return (
-    <div className="f08p-panel f08p-stack">
-      <span className="f08p-kicker">
-        Prep heatmaps · 28 days (stand-in) · intensity = {metric} · no effort marks
-      </span>
-      <div>
-        <span className="muted" style={{ fontSize: "0.8rem" }}>
-          Application lane
-        </span>
-        <div className="f08p-heat-grid" style={{ gridTemplateColumns: "repeat(14, 1fr)" }}>
-          {dates.map((d) => {
-            const day = DAYS[d]!;
-            const level = intensityForDay(day, metric);
-            return <span key={`a-${d}`} className={`f08p-rhythm-cell${level ? ` is-i${level}` : ""}`} />;
-          })}
-        </div>
-      </div>
-      <div>
-        <span className="muted" style={{ fontSize: "0.8rem" }}>
-          Technical lane
-        </span>
-        <div className="f08p-heat-grid" style={{ gridTemplateColumns: "repeat(14, 1fr)" }}>
-          {dates.map((d) => {
-            const day = DAYS[d]!;
-            const level = intensityForDay(
-              { ...day, seeds: day.reflections.length ? day.seedsWork : 0, seedsWork: day.reflections.length ? day.seedsWork : 0 },
-              metric === "events" ? "events" : metric,
-            );
-            return <span key={`t-${d}`} className={`f08p-rhythm-cell${level ? ` is-i${level}` : ""}`} />;
-          })}
-        </div>
-      </div>
+    <div className="f08p-heat-row">
+      <ProgressHeatmap title="Application prep" days={appDays} today={today} />
+      <ProgressHeatmap title="Technical prep" days={techDays} today={today} />
     </div>
   );
 }
@@ -205,57 +177,32 @@ function AchievementsList() {
 
 export default function LifetimePrototypePage() {
   const variant = useVariant(VARIANTS);
-  const metric = useParam(
-    "metric",
-    METRICS.map((m) => m.key),
-  );
-  const rangeKey = useParam(
-    "range",
-    RANGES.map((r) => r.key),
-  );
-  const days = Number(rangeKey);
 
   return (
     <ProgressShell
       title="Lifetime · accumulation"
-      question="Richer header (Q69); activity chart + heatmaps (Q67–Q68); full achievements. Next-ups live on This week."
+      question="Header with days worked; seeds activity chart (range in-container); existing heatmaps side by side; full achievements."
       variants={VARIANTS}
       surfaceLabel="Lifetime"
-      controls={
-        <>
-          <ParamToggle
-            name="metric"
-            label="Activity metric"
-            options={METRICS.map((m) => ({ key: m.key, label: m.label }))}
-          />
-          <ParamToggle
-            name="range"
-            label="Chart range"
-            options={RANGES.map((r) => ({ key: r.key, label: r.label }))}
-          />
-        </>
-      }
       notes={
         <p>
-          Seeds-as-activity on Progress is change-over-time, not Rewards purse chrome. Toggle
-          “seeds (all)” vs “seeds (no weekly)” to see week-close bias on the chart and heatmaps.
+          Chart metric locked to seeds/day (R8.14). Heatmaps reuse production{" "}
+          <code>ProgressHeatmap</code> + colors. Past work calendar intensity is still open (Q68).
         </p>
       }
     >
-      <p className="f08p-state">
-        variant={variant} · metric={metric} · range={days}d
-      </p>
+      <p className="f08p-state">variant={variant} · chart=seeds · heatmaps=existing side-by-side</p>
       <div className="f08p-stack">
         <AccumulationHeader />
         {variant === "A" ? (
           <>
-            <ActivityChart metric={metric} days={days} />
-            <Heatmaps metric={metric} />
+            <ActivityChart />
+            <HeatmapsRow />
           </>
         ) : (
           <>
-            <Heatmaps metric={metric} />
-            <ActivityChart metric={metric} days={days} />
+            <HeatmapsRow />
+            <ActivityChart />
           </>
         )}
         <AchievementsList />

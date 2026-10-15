@@ -346,12 +346,15 @@ M8 follows M7, so Progress is redesigned knowing what Rewards covers. Design loc
   - **Completions:** kind filters kept, except **drop the `weekly goals` filter tab**; weekly-goal rows still appear under **`all`**. Lifetime totals stay on Lifetime.
   - Standalone 1-day / 7-day pagination remains superseded.
 - **R8.7** (Established; refined 2026-10-14) After-the-fact reflection linking: detail pages remain primary for linked work; Past work day panel (always editable) and completions nested reflection edit cover the rest. No fourth orphan entry.
-- **R8.13** (Established 2026-10-14 M8-01) **Deprecate effort / deep-work-style checkmarks** on the History calendar and prep heatmaps (legacy “effort” marks). Marks should read as a clearer activity intensity. **Proposed:** color by **seeds earned that day**, with a richer gradient than today — but weekly-goal (and similar lump) awards bias Sunday/Monday close days; metric alternatives are open (Q68). Visual polish may continue in F09.
+- **R8.13** (Established 2026-10-14 M8-01; refined same day) **Deprecate effort / deep-work-style checkmarks on the Past work calendar** (legacy “effort” marks). Calendar intensity metric remains open for Past work (still exploring seeds-style coloring). **Lifetime prep heatmaps** keep the **existing** `ProgressHeatmap` credit colors and presentation for now (R8.12).
 
 **Lifetime** (`/progress/lifetime`)
 
-- **R8.12** (Established 2026-10-14; refined M8-01 same day) Lifetime is an **accumulation / data record**: richer than a sparse stat strip. It hosts **all-time** work totals (more substantial presentation than bare counts alone), the **full** achievements list (R5.26; next-per-family moves to This week per R8.10), and **prep heatmaps** (no This week peek).
-- **R8.14** (Proposed 2026-10-14 M8-01) An **activity fluctuation** chart on Lifetime (above or below heatmaps): line (or similar) over an adjustable range (e.g. 1 week, 1 month, …). Framing is change-over-time on Progress, not Rewards purse chrome. **Metric open (Q67):** leaning seeds earned per day as the objective activity signal; may support multiple series. Weekly-close lump bias applies (same as R8.13 / Q68).
+- **R8.12** (Established 2026-10-14; refined M8-01 same day) Lifetime is an **accumulation / data record**. It hosts:
+  - an accumulation header (large LC / apps / minutes / seeds earned, plus secondary stats including **days worked** = count of distinct days with any completions-diary row; replaces “weekly records” in the secondary strip)
+  - the **full** achievements list (R5.26; next-per-family on This week per R8.10)
+  - **prep heatmaps** side by side (application + technical), using today’s existing heatmap component and color scheme (not stacked)
+- **R8.14** (Established 2026-10-14 M8-01) An **activity fluctuation** chart on Lifetime (seeds earned per day). Range is adjustable **inside the chart container** (e.g. 1 week / 1 month / …), not as page-level chrome. Framing is change-over-time on Progress, not Rewards purse chrome. Weekly-close lumps may spike some days; accept for now and revisit if it feels wrong in practice (Q68).
 
 **Cross-page IA**
 
@@ -509,14 +512,12 @@ Nothing that depends on an open question may be implemented.
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
-| Q67 | Activity chart + calendar/heatmap color: seeds earned per day, seeds excluding weekly-close (and/or streak) lumps, minutes worked, completion event count, or multiple series? | R8.13, R8.14 | M8-01 |
-| Q68 | If seeds color the calendar/heatmaps/chart, how should week-close weekly-goal awards be attributed so Sundays aren’t falsely “hottest”? | R8.13, R8.14 | M8-01 |
-| Q69 | Lifetime top stats: what makes the accumulation header feel substantial (lifetime minutes, LC solves, streak highs, seeds lifetime earned as a Progress statistic, …)? | R8.12 | M8-01 |
+| Q68 | Past work calendar intensity: seeds (all), seeds without weekly lumps, or another metric — and whether week-close spikes need special handling? (Lifetime chart accepts seeds + spikes for now.) | R8.13 | M8-01 |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (67)</summary>
+<summary>Resolved questions (70)</summary>
 
 
 | # | Question | Answer (date) | Now in |
@@ -588,6 +589,9 @@ Nothing that depends on an open question may be implemented.
 | Q72 | This week achievements? | Compact **next per family** on This week; full list on Lifetime (2026-10-14) | R8.10, R8.12 |
 | Q73 | This week pulse? | Keep week **and** month; completions-style counts + minutes (2026-10-14) | R8.10 |
 | Q70 | Pulse counts order / LC? | Include LC; order **LC · apps · tasks · interviews · reflections** / minutes (2026-10-14). Earlier “6 tasks” meant LC | R8.10 |
+| Q67 | Lifetime activity chart metric? | **Seeds earned per day** for now; revisit if week-close spikes feel wrong (2026-10-14) | R8.14 |
+| Q69 | Lifetime top stats? | Direction OK; replace secondary “weekly records” with **days worked** (distinct days with any completion log) (2026-10-14) | R8.12 |
+| Q74 | Lifetime heatmaps? | Existing `ProgressHeatmap` + color scheme, **side by side** (not stacked); chart range controls live **in the chart container** (2026-10-14) | R8.12, R8.14 |
 
 </details>
 
@@ -638,3 +642,4 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-14 (later):** Past work direction for M8-01: drop standalone 1-/7-day pagination. Calendar selects the focus day; completions show the 7 days ending on that day with kind filters kept; explore combining the day edit panel with completions to cut apps/reflections overlap. Lifetime keeps lifetime numbers.
 - **2026-10-14 (M8-01 review):** Past work **A** locked (dual column; overlap OK). Day panel always editable; interviews above apps; no misc tasks in panel; drop completions `weekly goals` filter tab. This week: no heatmap peek; keep week+month completions-style pulse; next achievement per family; show weekly-goal streaks; LC and reflection compose stay separate. Lifetime: fuller accumulation header (open), full achievements, heatmaps + Proposed activity line chart. Deprecate calendar/heatmap effort checkmarks; Proposed seeds-per-day color with open metric questions (Q67–Q68).
 - **2026-10-14 (pulse line):** Week/month pulse order is **LC · apps · tasks · interviews · reflections** / minutes worked (Q70).
+- **2026-10-14 (Lifetime):** Activity chart = seeds/day (R8.14 Established); range control inside the chart; heatmaps = existing component side by side; header keeps large stats and uses **days worked** instead of weekly records (Q67, Q69, Q74).

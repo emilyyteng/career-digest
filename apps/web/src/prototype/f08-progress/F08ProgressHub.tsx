@@ -22,9 +22,9 @@ const SURFACES = [
   },
   {
     path: "lifetime",
-    title: "Lifetime (exploring)",
+    title: "Lifetime",
     blurb:
-      "Richer accumulation header · activity chart (range + metric) · heatmaps · full achievements. Chart above or below heatmaps via ← / →.",
+      "Accumulation header (days worked) · seeds activity chart with in-container range · existing heatmaps side by side · full achievements. ← / → chart above vs below.",
   },
 ] as const;
 
@@ -37,8 +37,7 @@ export default function F08ProgressHub() {
       </p>
       <h2>F08 M8 · Progress hub</h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        Nested Progress surfaces. Open: activity metric for chart/calendar (Q67–Q68), Lifetime
-        header contents (Q69).
+        Nested Progress surfaces. Still open: Past work calendar intensity (Q68).
       </p>
       {SURFACES.map((s) => (
         <Link key={s.path} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}`}>

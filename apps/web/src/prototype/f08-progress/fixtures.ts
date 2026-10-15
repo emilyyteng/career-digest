@@ -85,7 +85,7 @@ export const TODAY = localYmd();
 
 function buildDays(): Record<string, MockDay> {
   const out: Record<string, MockDay> = {};
-  for (let i = 0; i < 42; i += 1) {
+  for (let i = 0; i < 90; i += 1) {
     const date = addDays(TODAY, -i);
     const lcEasy = i % 5 === 0 ? 1 : 0;
     const lcMedium = i % 3 === 0 ? 1 : i % 2 === 0 ? 1 : 0;
@@ -125,7 +125,7 @@ function buildDays(): Record<string, MockDay> {
     /** Fake week-close lump on Mondays to show the bias problem. */
     const [y, m, d] = date.split("-").map(Number);
     const isMonday = new Date(y, m - 1, d).getDay() === 1;
-    const weeklyLump = isMonday && i > 0 && i < 21 ? 340 : 0;
+    const weeklyLump = isMonday && i > 0 && i < 70 ? 340 : 0;
     out[date] = {
       date,
       lcEasy,
@@ -147,7 +147,7 @@ export const DAYS = buildDays();
 export const COMPLETIONS: MockCompletion[] = (() => {
   const rows: MockCompletion[] = [];
   let n = 0;
-  for (let i = 0; i < 42; i += 1) {
+  for (let i = 0; i < 90; i += 1) {
     const date = addDays(TODAY, -i);
     const day = DAYS[date]!;
     const lcTotal = day.lcEasy + day.lcMedium + day.lcHard;
@@ -202,7 +202,7 @@ export const COMPLETIONS: MockCompletion[] = (() => {
       });
     }
     const [y, m, d] = date.split("-").map(Number);
-    if (new Date(y, m - 1, d).getDay() === 1 && i > 0 && i < 21) {
+    if (new Date(y, m - 1, d).getDay() === 1 && i > 0 && i < 70) {
       rows.push({
         id: `c-${n++}`,
         localDate: date,
@@ -216,14 +216,51 @@ export const COMPLETIONS: MockCompletion[] = (() => {
   return rows;
 })();
 
+/** Distinct days with any completion-log row. */
+export const DAYS_WORKED = new Set(COMPLETIONS.map((c) => c.localDate)).size;
+
 export const LIFETIME_STATS = {
   tasks: 48,
   apps: 36,
   interviews: 9,
   reflections: 62,
   leetcode: 214,
-  weekly: 6,
+  daysWorked: DAYS_WORKED,
+  minutes: 4820,
+  seedsLifetime: 12640,
+  longestLcStreak: 14,
+  longestAppsStreak: 9,
 };
+
+/** ~26 weeks of mock heatmap days for the production ProgressHeatmap. */
+export function mockHeatmapDays(lane: "application" | "technical"): Array<{
+  date: string;
+  raw: number;
+  earned: number;
+  effort: boolean;
+}> {
+  const out: Array<{ date: string; raw: number; earned: number; effort: boolean }> = [];
+  for (let i = 181; i >= 0; i -= 1) {
+    const date = addDays(TODAY, -i);
+    const day = DAYS[date];
+    if (!day) {
+      out.push({ date, raw: 0, earned: 0, effort: false });
+      continue;
+    }
+    if (lane === "application") {
+      const raw = day.apps.length + day.interviews.length;
+      const earned = Math.min(3, raw);
+      const effort = day.reflections.some((r) => r.lane === "application");
+      out.push({ date, raw, earned, effort });
+    } else {
+      const raw = day.lcEasy + day.lcMedium + day.lcHard;
+      const earned = Math.min(3, raw);
+      const effort = day.reflections.some((r) => r.lane === "technical");
+      out.push({ date, raw, earned, effort });
+    }
+  }
+  return out;
+}
 
 export const ACHIEVEMENTS = [
   { id: "a1", family: "apps", label: "10 applications", unlocked: true, current: 36, threshold: 10, points: 50 },

@@ -2,7 +2,7 @@
 
 **Status:** In progress
 **Blocked by:** (none)
-**Implements:** R8.1, R8.3, R8.4, R8.5, R8.7, R8.8–R8.14, RX.2 (from `../../spec.md`); answers Q55, Q57, Q61, Q65, Q70–Q73; explores Q67–Q69
+**Implements:** R8.1, R8.3, R8.4, R8.5, R8.7, R8.8–R8.14, RX.2 (from `../../spec.md`); answers Q55, Q57, Q61, Q65, Q67, Q69–Q74; explores Q68
 **Type:** prototype
 
 ## What to build
@@ -21,8 +21,7 @@ Prototypes for the Progress nested hub. Locked layout decisions from the 2026-10
 
 **Still open (explore in prototype / discuss):**
 
-- Q67–Q68: activity / calendar color metric (seeds vs alternatives; week-close bias)
-- Q69: Lifetime accumulation header content
+- Q68: Past work calendar intensity (seeds vs alternatives; week-close spikes)
 
 Prototype URL: `/prototype/f08/progress`
 
@@ -31,11 +30,11 @@ Prototype URL: `/prototype/f08/progress`
 - [x] Hub + This week / Past work / Lifetime under `apps/web/src/prototype/f08-progress/`
 - [x] Past work reflects locked A + day-panel rules; completions week window; no `weekly goals` filter tab
 - [x] This week reflects locked composition (no heatmap peek; next-per-family; week+month pulse; weekly streaks)
-- [ ] Lifetime explores richer header + activity chart (+ metric toggles for Q67)
-- [ ] Calendar/heatmap mock shows intensity without effort checkmarks (Q68 options)
+- [x] Lifetime: seeds chart with in-container range; existing heatmaps side by side; days worked in header
+- [ ] Past work calendar intensity options for Q68 (no effort checkmarks)
 - [ ] No Progress points / ledger framing
 - [ ] No production imports of prototype code
-- [ ] User locks Q67–Q69; remaining verdict written into `../../spec.md`
+- [ ] User locks Q68; final M8-01 verdict written into `../../spec.md`
 
 ## Reuse notes
 
@@ -53,4 +52,4 @@ Shared `PrototypeSwitcher`; Rewards-style subnav mock; mock fixtures only.
 
 ## Verification notes
 
-**Partial verdict (2026-10-14):** Past work **A**; This week without heatmap peek; next achievements per family on This week; pulse order **LC · apps · tasks · interviews · reflections** / minutes (Q70); full achievements + heatmaps + activity chart exploration on Lifetime; effort checkmarks to go; seeds-per-day Proposed for intensity/chart with Q67–Q68 open; Lifetime header Q69 open.
+**Partial verdict (2026-10-14):** Past work **A**; This week layout locked; pulse **LC · apps · tasks · interviews · reflections** / minutes; Lifetime header OK with **days worked**; activity chart = **seeds/day** with range in-container; heatmaps = existing component **side by side**. Open: Past work calendar intensity (Q68).

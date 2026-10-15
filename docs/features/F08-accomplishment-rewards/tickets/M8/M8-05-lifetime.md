@@ -7,15 +7,20 @@
 
 ## What to build
 
-Implement `/progress/lifetime` as an accumulation record (R8.12): substantial all-time header (per Q69), **full** achievements list, prep heatmaps (no effort checkmarks; intensity per Q67–Q68), and activity fluctuation chart if R8.14 is Established after M8-01.
+Implement `/progress/lifetime` as an accumulation record (R8.12–R8.14):
 
-No Rewards purse chrome, Earnings log, or pull UI — those stay on Rewards. A Progress statistic that *uses* seeds earned as a time-series metric is allowed if Q67 locks it (distinct from Rewards spending chrome).
+- Header with large LC / apps / minutes / seeds earned, plus secondary stats including **days worked** (distinct days with any completion log)
+- **Seeds/day** activity chart; range control **inside** the chart container
+- Application + technical **ProgressHeatmap** side by side (existing colors)
+- **Full** achievements list
+
+No Rewards purse chrome, Earnings log, or pull UI.
 
 ## Acceptance criteria
 
-- [ ] `/progress/lifetime` feels like an accumulation/data record (header per Q69)
-- [ ] Full achievements list; not only next-ups (those are on This week)
-- [ ] Heatmaps + activity chart per locked R8.12–R8.14 / Q67–Q68
+- [ ] `/progress/lifetime` matches R8.12–R8.14 (header, chart, side-by-side heatmaps, full achievements)
+- [ ] Chart range is controlled in the chart container; metric is seeds/day
+- [ ] Days worked counts distinct completion-log days
 - [ ] No Rewards spending chrome on this surface
 - [ ] Follows `docs/design-system.md`
 
