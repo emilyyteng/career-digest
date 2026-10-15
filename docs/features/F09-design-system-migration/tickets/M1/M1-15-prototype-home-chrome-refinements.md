@@ -66,4 +66,4 @@ Also: last-digest remains background-less (direct Home fix in this workstream).
 Applied to `docs/design-system.md`, `ui.css` (Segmented / ChromeTab / Badge goal), `DeadlineUrgency.tsx`, urgency token, Home link hover CSS. Prototype kept at `/prototype/f09/refinements` as reference.
 
 `npm run check` pass.
-Commit: (filled on commit)
+Commit: `518386b`
