@@ -9,7 +9,7 @@ Each feature has a permanent ID (`F<NN>`) and, once it has a spec, a folder `F<N
 | ID | Feature | Summary | Spec |
 |----|---------|---------|------|
 | F08 | Accomplishment, detail pages & rewards | Task/application detail pages, reflections on real work, points ledger, weekly goals, celebration, Cat Cake Collection v1 (seeds), Progress redesign, recurring tasks. M0–M2, M4, M5, M7, M8 shipped; then M3, M6 | [spec](./F08-accomplishment-rewards/spec.md) · [board](./F08-accomplishment-rewards/board.md) |
-| F09 | Design system migration | Comprehensive visual system + phased migration: M0 visual foundations (theme/vibe), then primitives/patterns, then surface waves | [spec](./F09-design-system-migration/spec.md) · [board](./F09-design-system-migration/board.md) |
+| F09 | Design system migration | Comprehensive visual system + phased migration: M0 visual foundations locked (Ink desk / flora.exe); next M1 primitives/patterns, then surface waves | [spec](./F09-design-system-migration/spec.md) · [board](./F09-design-system-migration/board.md) |
 | F11 | Custom habits & weekly targets | Multi-habit daily tracker (checkoff, archive/restore, same streak points as LC/apps, max 5 active); custom weekly targets for non-daily quotas. M0 design | [spec](./F11-habits-and-weekly-targets/spec.md) · [board](./F11-habits-and-weekly-targets/board.md) |
 
 ## Planned

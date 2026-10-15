@@ -326,6 +326,24 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 
 ---
 
+## Design system migration (F09)
+
+*Built 2026-10-15 (M0).* Spec: [F09](./features/F09-design-system-migration/spec.md).
+
+**Why:** The app accumulated conflicting visual dialects (filled blue buttons, purple interim controls, open-canvas Rewards, overloaded accent meanings). New UI needed an authoritative foundation before primitives and surface migrations.
+
+### M0: Visual direction and foundations
+
+- Inventory of production UI (beyond parked defects), then an exploratory lab at `/prototype/f09/lab`.
+- Locked **Ink desk** vibe: sakura canvas, ink primary actions and titles, flat controls, all-carded containment (including Rewards), 1100px shell.
+- Brand mark **flora.exe**; type roles **IBM Plex** Mono / Sans.
+- Color-meaning roles: identity (apps blue / tech purple / reward pink) separate from severity RYG and Severity-5 urgency; heatmap = vivid rose soft peak.
+- Documented in [`docs/design-system.md`](./design-system.md). F08 M5 interim visuals superseded. Production CSS migrates in later milestones.
+
+**Outcome:** New UI and F09 waves have a single visual standard to follow; interaction/IA patterns remain for M1.
+
+---
+
 ## Documentation & development process (F10)
 
 *Built 2026-08-31 and 2026-10-12 to 2026-10-13.*

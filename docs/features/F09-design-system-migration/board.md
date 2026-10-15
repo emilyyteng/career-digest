@@ -4,7 +4,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 ## M0: Visual direction & foundations
 
-**Milestone status:** Design
+**Milestone status:** Done
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
@@ -16,7 +16,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 |--------|-------|--------|
 | [M0-01](./tickets/M0/M0-01-production-ui-inventory.md) | Production UI visual inventory (spike) | `e872617` / `9297b9d` + review close-out |
 | [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (exploratory lab) | `548ba4e` |
-| [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | (this commit) |
+| [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | `b26fb29` |
 
 </details>
 
