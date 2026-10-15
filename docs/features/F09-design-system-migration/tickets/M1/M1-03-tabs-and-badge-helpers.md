@@ -46,4 +46,4 @@ n/a
 - Score/streak tones use domain tech (purple) per Q18; goal kind uses domain reward (not amber)
 - No growth of `button:not(...)` chain
 - `npm run check` pass
-- Commit: (recorded after commit)
+- Commit: `26329b2`
