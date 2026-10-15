@@ -49,7 +49,7 @@ Keep the named hue set small. Map meaning onto roles — do not invent page-loca
 | **Success / ok** | Positive feedback, met state | Mint |
 | **Danger** | Destructive / error | Rose-danger (distinct from brand blush when possible) |
 | **Surfaces** | `--surface` cards; `--surface-2` warm/cool washes for containers & description blocks | Not purple washes |
-| **Tab active** | Underline ink | Active = ink text + 2px ink underline; no gray wash fill (M1-15) |
+| **Tab active** | Underline ink | Active = ink text + 2px ink underline; hover = ink text only (no underline); no gray wash fill (M1-15) |
 | **Heat (vivid rose, soft peak)** | Productivity intensity empty→peak | `#fff8fa` → `#fce4ee` → `#f5c0d4` → `#eba0bc` → `#e078a0` (peak = former step-3 intensity) |
 
 **Identity ≠ severity ≠ urgency.** Purple means “tech/identity,” not “due soon.”

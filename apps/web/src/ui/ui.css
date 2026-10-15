@@ -174,7 +174,7 @@ nav a.ui-chrome-tab:hover,
 button.secondary.ui-chrome-tab:not(:disabled):hover {
   color: var(--ink);
   background: transparent;
-  border-bottom-color: color-mix(in srgb, var(--ink) 28%, transparent);
+  border-bottom-color: transparent;
   box-shadow: none;
 }
 

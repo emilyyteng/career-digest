@@ -154,6 +154,15 @@
   background: var(--hover);
 }
 
+.f09r-page[data-tab="underline"] .f09r-tab:hover {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
+.f09r-page[data-tab="underline"] .f09r-tab.is-active:hover {
+  border-bottom-color: var(--ink);
+}
+
 /* —— Tab active variants —— */
 .f09r-page[data-tab="gray-ink"] .f09r-tab.is-active {
   background: var(--tab-active-bg);
