@@ -137,6 +137,7 @@ import {
   getCompletionsDiary,
   type CompletionKind,
 } from "./completionsDiary.js";
+import { getLifetimeSnapshot } from "./lifetime.js";
 import { listAchievements, syncAchievements } from "./achievements.js";
 import { getCatCakeCollection } from "./catCakeCollection.js";
 import {
@@ -1603,6 +1604,20 @@ api.get("/progress/completions", async (req, res) => {
       limit: Number.isFinite(limit) ? limit : undefined,
       endDate,
       days: Number.isFinite(daysNum) ? daysNum : undefined,
+    }),
+  );
+});
+
+api.get("/progress/lifetime", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  const activityDays = Number(req.query.activityDays);
+  res.json(
+    await getLifetimeSnapshot(pool, tz, {
+      activityDays: Number.isFinite(activityDays) ? activityDays : undefined,
     }),
   );
 });

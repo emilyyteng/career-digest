@@ -1,6 +1,6 @@
 # M8-05: Lifetime surface
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R8.12, R8.13, R8.14 (from `../../spec.md`); placement for R5.26
 **Type:** build
@@ -19,28 +19,31 @@ No Rewards purse chrome, Earnings log, or pull UI. Reuse the intensity scale fro
 
 ## Acceptance criteria
 
-- [ ] `/progress/lifetime` matches R8.12–R8.14 (header, chart above heatmaps, side-by-side heatmaps, full achievements)
-- [ ] Chart range in-container; metric seeds/day
-- [ ] Heatmap colors ∝ raw lane counts (not clamped to 3; not seeds)
-- [ ] Days worked counts distinct completion-log days
-- [ ] No Rewards spending chrome on this surface
-- [ ] Follows `docs/design-system.md`
+- [x] `/progress/lifetime` matches R8.12–R8.14 (header, chart above heatmaps, side-by-side heatmaps, full achievements)
+- [x] Chart range in-container; metric seeds/day
+- [x] Heatmap colors ∝ raw lane counts (not clamped to 3; not seeds)
+- [x] Days worked counts distinct completion-log days
+- [x] No Rewards spending chrome on this surface
+- [x] Follows `docs/design-system.md`
 
 ## Reuse notes
 
-`AchievementsPanel`, completions diary stats (`getProgressCompletions` / diary stats), `ProgressHeatmap`. Prototype: `/prototype/f08/progress` (Lifetime pages).
+`AchievementsPanel`, `ProgressHeatmap` + M8-04 `intensityScale`, new `GET /api/progress/lifetime`. Prototype `/prototype/f08/progress` kept until F08 cleanup (RX.3); no production import.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M8-05: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
-- [ ] After this ticket (and M8-03–M8-04) are Done, delete `f08-progress` when no open ticket references it (or in F08 cleanup) per RX.3
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M8-05: …`
+- [x] End-of-task report given, including tests added and **Issues found**
+- [x] Prototype retained for now (no open ticket needs it; delete in F08 cleanup per RX.3)
 
 ## Verification notes
 
-(Filled in when done.)
+- Header: LC / apps / minutes / seeds + tasks, interviews, reflections, days worked.
+- Chart: seeds/day with in-container 1 week / 1 month / ~3 months; spends excluded from seeds.
+- Heatmaps side by side above achievements; raw intensity from M8-04.
+- API tests in `lifetime.api.test.ts`. `npm run check` green (345 tests). Board hash in follow-up.

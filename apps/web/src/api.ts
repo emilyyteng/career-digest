@@ -1137,6 +1137,31 @@ export const getProgressCompletions = (
   return parse<CompletionsDiary>(api(`/api/progress/completions?${params}`));
 };
 
+export type LifetimeTotals = {
+  leetcode: number;
+  apps: number;
+  minutes: number;
+  seedsEarned: number;
+  tasks: number;
+  interviews: number;
+  reflections: number;
+  daysWorked: number;
+};
+
+export type LifetimeSnapshot = {
+  tz: string;
+  localDate: string;
+  totals: LifetimeTotals;
+  activity: Array<{ date: string; seeds: number }>;
+  activityDays: number;
+};
+
+export const getProgressLifetime = (tz: string, activityDays?: number) => {
+  const params = new URLSearchParams({ tz });
+  if (activityDays != null) params.set("activityDays", String(activityDays));
+  return parse<LifetimeSnapshot>(api(`/api/progress/lifetime?${params}`));
+};
+
 export type PointsCategory =
   | "task"
   | "application"

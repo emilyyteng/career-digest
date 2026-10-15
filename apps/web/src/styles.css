@@ -4301,6 +4301,79 @@ button.secondary.progress-note-edit {
   color: var(--accent-purple-deep);
   margin-right: 0.45rem;
 }
+.progress-lifetime {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.progress-lifetime .card {
+  margin-bottom: 0;
+}
+.progress-lifetime-header .progress-kicker {
+  margin-bottom: 0.55rem;
+}
+.progress-lifetime-primaries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 0.85rem;
+}
+.progress-lifetime-primaries strong {
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.progress-lifetime-primaries .muted {
+  font-size: 0.85rem;
+}
+.progress-lifetime-secondaries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+.progress-lifetime-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 4.5rem;
+}
+.progress-lifetime-stat strong {
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+.progress-lifetime-stat .muted {
+  font-size: 0.78rem;
+}
+.progress-lifetime-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.progress-lifetime-svg {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
+  height: auto;
+  margin: 0.35rem 0;
+}
+.progress-lifetime-chart-foot {
+  margin: 0;
+  font-size: 0.75rem;
+}
+.progress-lifetime-heats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .progress-lifetime-heats {
+    grid-template-columns: 1fr;
+  }
+}
 .progress-past-work {
   display: flex;
   flex-direction: column;
