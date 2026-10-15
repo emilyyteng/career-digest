@@ -1,6 +1,6 @@
 # M0-02: F09 visual-direction prototypes (exploratory lab)
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none) — M0-01 findings are the problem map; this ticket is the option lab
 **Implements:** R.3, R.13, R.14, R.16, R0.1, R0.3, R0.4, R0.5, Q1–Q5, Q12–Q14, Q16 (samples), Q17–Q18
 **Type:** prototype
@@ -26,18 +26,19 @@ Prototype-local CSS/tokens under the F09 prototype folder may explore fonts and 
 
 ## Acceptance criteria
 
-- [ ] Prototype lives only under `apps/web/src/prototype/f09-design-system/`; routes wired behind `import.meta.env.DEV` under `/prototype/f09/…`
-- [ ] Visible "Experimental prototype" banner; file headers name this ticket and the design questions
-- [ ] Uses shared `PrototypeSwitcher` and/or clear lab controls (vibe pack, font stack, color scheme, containment) — no fragile one-off switcher copied from F08 beyond reuse of `PrototypeSwitcher`
-- [ ] Does **not** depend on `/prototype/f08/weekly/visual-direction` remaining
-- [ ] More directions than F08 W/A/B/C; pool starts from findings §16 (may trim for implementation cost but must stay exploratory/broad)
-- [ ] Font switcher present with ≥4 stacks including current Mono+DM Sans and at least two more-readable alternatives (R0.4)
-- [ ] Brand theses shown or selectable enough to discuss Q17
-- [ ] Color-meaning scheme board includes priority + urgency + heatmap + success (Q18); does not decide priority in isolation
-- [ ] Containment axis explicit: carded / open canvas / hybrid (Progress-like)
-- [ ] At least one width-stress frame (tabs + secondary chrome + dual column)
-- [ ] Ticket links all prototype URL(s) for review
-- [ ] Findings §16 updated if the implemented pool diverges (what shipped vs deferred)
+- [x] Prototype lives only under `apps/web/src/prototype/f09-design-system/`; routes wired behind `import.meta.env.DEV` under `/prototype/f09/…`
+- [x] Visible "Experimental prototype" banner; file headers name this ticket and the design questions
+- [x] Uses shared `PrototypeSwitcher` and/or clear lab controls (vibe pack, font stack, color scheme, containment) — no fragile one-off switcher copied from F08 beyond reuse of `PrototypeSwitcher`
+- [x] Does **not** depend on `/prototype/f08/weekly/visual-direction` remaining
+- [x] More directions than F08 W/A/B/C; pool starts from findings §16 (may trim for implementation cost but must stay exploratory/broad)
+- [x] Font switcher present with ≥4 stacks including current Mono+DM Sans and at least two more-readable alternatives (R0.4)
+- [x] Brand theses shown or selectable enough to discuss Q17
+- [x] Color-meaning scheme board includes priority + urgency + heatmap + success (Q18); does not decide priority in isolation
+- [x] Containment axis explicit: carded / open canvas / hybrid (Progress-like)
+- [x] At least one width-stress frame (tabs + secondary chrome + dual column)
+- [x] Ticket links all prototype URL(s) for review
+- [x] Findings §16 updated if the implemented pool diverges (what shipped vs deferred)
+- [x] **User shortlist / remix notes** recorded after exploration (then mark Done)
 
 ## Design questions (prototype tickets only)
 
@@ -51,25 +52,49 @@ Axes the lab may vary. Locked requirements still apply.
 6. **Q3 / Q5 — Controls (visual):** Sizes and winning looks for tabs/segmented/chips/modal chrome
 7. **Q16 samples — Layout:** Shell width / stress readability (policy detail may wait for M1)
 
-Prototype URL (planned): `/prototype/f09/lab` (hub) with subroutes as needed — list finals in Verification notes.
+**Prototype URL:** [/prototype/f09/lab](http://localhost:5173/prototype/f09/lab) (dev). `/prototype/f09` redirects here.
+
+Query params (orthogonal): `?variant=` (vibe; ←/→) · `brand=` · `font=` · `color=` · `heat=` · `urgency=` · `elev=` · `contain=` · `shell=`
+
+Defaults lean locked prefs: `V1` · `flora` · `plex` · `c3` · `rose` · `u-sev5` · `flat` · `carded` · `1100`.
 
 ## Reuse notes
 
-- `apps/web/src/prototype/PrototypeSwitcher.tsx`
-- M0-01 findings (especially §§1 containment, 12 type, 13–14 depth/layout, **§16 proposed approach**)
-- F08 visual-direction page as historical input only
-- Google fonts already loaded in `index.html` may be extended for the prototype only (document added families in the prototype header)
+- `apps/web/src/prototype/PrototypeSwitcher.tsx` (vibe packs)
+- M0-01 findings §16 approach (implemented as single lab page)
+- Lab buttons use scoped `.f09-*` classes + `!important` where needed to escape production global button defaults (long `:not(...)` hover chain)
+- Extra Google fonts injected on demand from the prototype (not added to production `index.html`)
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` for any production touch; prototype stays under `prototype/`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F09 M0-02: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked (including user shortlist)
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` for any production touch; prototype stays under `prototype/`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F09 M0-02: …` (verdict close-out)
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(filled when done: what was shown, user verdict / shortlist, remix notes, last commit hash of the prototype before any later deletion)
+**Verdict (2026-10-15) — shortlist for M0-03 lock:**
+
+| Axis | Decision |
+|------|----------|
+| Vibe | **V1×V4 ink desk** — sakura pastel canvas + ink titles/actions |
+| Brand | **flora.exe** |
+| Font | **IBM Plex** (Mono display / Sans body); tabs & titles use display |
+| Elevation | **Flat** (no button shadow; secondary never lifts; modals may use overlay shadow) |
+| Tabs / nav | Ink text + ink border + **gray** active wash (`--f09-tab-active-bg`); squared control radius |
+| Segmented | Rounded track; active = ink/action fill |
+| Containment | **All carded** (Rewards included: earnings, pull history, rules, cat cake, banner) |
+| Shell | **1100px** |
+| Color meaning | Identity (apps blue / tech purple / reward pink) ≠ severity RYG ≠ urgency Severity-5 (no purple/blue) |
+| Heatmap | **Vivid rose soft peak** (former step-3 as peak) |
+| Priority | RYG traffic |
+| Kind badges | Interview = apps blue; goal = reward pink |
+| Purple | Domain tech only (score, streak, interviewing); containers = surface-2 |
+
+Prototype remains at `/prototype/f09/lab` as the M0-03 reference until M0-03 records the lock (lab may stay while open tickets reference it).
+
+**Build history:** see earlier notes in git history (`35cd57a`, `cdb3fc4`, plus this close-out). Findings §16 interim leanings match the verdict table.

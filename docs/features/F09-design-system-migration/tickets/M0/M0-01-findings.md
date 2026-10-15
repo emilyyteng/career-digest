@@ -564,3 +564,49 @@ Show at least three containment modes on the same content: **all carded**, **ope
 ### What M0-02 should not lock yet
 
 Final product name, production font shipping set, final shell width, side vs top nav IA rules, and “delete traffic lights” — those fall out of lab review (and M1 for IA).
+
+### Implemented (2026-10-15)
+
+Single lab page at **`/prototype/f09/lab`** (`apps/web/src/prototype/f09-design-system/`).
+
+**Pool (live):** brand theses (flora.exe + B1/B2/B4), vibes V5/V5b (flora soft / flora ink) + V1–V4 + V6–V7, fonts (Plex default · current · grotesk · hyper · editorial), color maps C1–C4, **heatmap peaks** (rose / orchid / coral / flora / navy-elim), **deadline urgency** (warm-3 / mono / soft-5 / prod-5), containment carded/open/hybrid, shell 1100/960.
+
+**Cohesion rule in lab:** each vibe owns `--f09-chrome`, `--f09-action*`, `--f09-select*` so segmented controls, tabs, titles, and “Keep editing” do not inherit production purple/blue.
+
+### Interim leanings (2026-10-15 — not locked)
+
+| Axis | Leaning | Notes |
+|------|---------|--------|
+| Vibe | **V1×V4 ink desk** | Sakura desk + ink titles/buttons; tabs = ink + gray wash; rounded segmented; flat elev. |
+| Tabs / nav | **Ink + gray wash** | Black text + black border; gray surface-2 background (not blush). App nav, subnav, Jobs tabs. |
+| Elevation | **Flat** | No button shadow; secondary never lifts. |
+| Brand | **flora.exe** | Locked for M0 framing / mark. |
+| Font | **IBM Plex** | Prefer over Space Grotesk + Source Sans (too clean). Titles/tabs in display stack. |
+| Priority | **RYG traffic** | Decorative pastels elsewhere; severity stays R/Y/G. |
+| Kind badges | **Interview=apps blue · goal=reward pink** | Domain hue map (C3). Keep the named hue set small. |
+| Heatmap | **Vivid rose, soft peak** | Locked. Former 4th stop = peak; empties cream. |
+| Urgency | **Severity 5** (no purple/blue) | Overdue=P0 · urgent=rose · soon=amber · ahead=muted · ok=mint. |
+| Purple | **Domain tech** | Score/streak/interviewing identity chips. Containers & description washes = surface-2. |
+| Contain | **All carded** | Including Rewards (earnings, pull history, rules, cat cake, banner). Nested-tab IA → **M1**. |
+| Shell | **1100px** | Free dual-column space. |
+| Hover / segmented | Vibe-owned | `--f09-hover` gray wash; segmented active = action/ink. |
+
+### M0 lab vs later work (recommendation)
+
+**Finish in this prototyping session (M0-02 → M0-03 lock):**
+
+1. **Role map for the small hue set** — ink, brand/blush, domain apps/tech/reward, severity R/Y/G, success/ok, data-heat steps. Purple’s seat (tech only vs gone) is part of this lock.
+2. **Control anatomy** — primary / secondary / ghost, segmented, tabs/chips, fields+selects, modal footer. Hover/focus/active owned by vibe tokens (no prod blue/purple leak).
+3. **Type + radius + size scales** — display vs body roles; panel / control / seg / pill radii; a short type-size ladder. Enough to stop inventing per page.
+4. **Semantic boards already in the lab** — priority, kind, job/application status badges, heatmap, urgency, “purple leftovers” (streak/rank/description). Verdicts recorded even if “retire purple” or “urgency still open.”
+5. **Shell + containment preference** — 1100 + carded as defaults; note open questions for Rewards open-canvas exception.
+
+**Leave for M1+ (page work / patterns — not more lab surface area):**
+
+- Nested-tab IA and how This week / Past / Lifetime / ledger filters are represented.
+- Per-page redesigns (Home hero, Tasks/Interviews purple containers, Rewards as its own dialect, Jobs list density).
+- Full migration of production CSS; component extraction beyond what M0-03 writes into `design-system.md`.
+- Interaction patterns deferred earlier (Q8–Q11).
+- Pixel-perfect every badge variant — map the *roles*; apply during page tickets.
+
+**Confidence bar for ending M0:** you can answer “what token/role does this use?” for any new UI without inventing a color, and purple/blue overload has an explicit rule (keep as domain-tech only, or ban). Uncovered page quirks become M1/M2 tickets against that map — they should not reopen vibe from scratch.

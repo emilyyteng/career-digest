@@ -13,6 +13,8 @@ When sources conflict, the higher one wins. Never resolve a conflict silently: s
 
 For visual and interaction conventions, `docs/design-system.md` overrides tickets and prototypes. For what actually shipped, the code is the truth and `docs/CHANGELOG.md` describes it.
 
+**Feature requirements vs design system:** If a current feature's Established requirements (or a ticket's acceptance criteria) are ambiguous against, or conflict with, `docs/design-system.md`, **stop and surface that to the user before implementing** — do not silently favor either side. State the conflict, any assumptions you would otherwise make, and wait for a decision. Record the answer in the feature spec (decisions log) and/or `docs/design-system.md` as appropriate, then continue.
+
 ## Where things live
 
 | What | Where | Notes |

@@ -8,15 +8,15 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (exploratory lab) | prototype | In progress | Lab at `/prototype/f09/lab` — explore & shortlist |
-| [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | docs | Draft | After M0-02 verdict |
+| [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | docs | Ready | After M0-02 verdict |
 
 <details>
-<summary>Done (1)</summary>
+<summary>Done (2)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
 | [M0-01](./tickets/M0/M0-01-production-ui-inventory.md) | Production UI visual inventory (spike) | `e872617` / `9297b9d` + review close-out |
+| [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (exploratory lab) | (this commit) |
 
 </details>
 
