@@ -8,7 +8,7 @@ Each feature has a permanent ID (`F<NN>`) and, once it has a spec, a folder `F<N
 
 | ID | Feature | Summary | Spec |
 |----|---------|---------|------|
-| F08 | Accomplishment, detail pages & rewards | Task/application detail pages, reflections on real work, points ledger, weekly goals, celebration, Cat Cake Collection v1 (seeds), recurring tasks. M0–M2, M4, M5, M7 shipped; M8 in Design; then M3, M6 | [spec](./F08-accomplishment-rewards/spec.md) · [board](./F08-accomplishment-rewards/board.md) |
+| F08 | Accomplishment, detail pages & rewards | Task/application detail pages, reflections on real work, points ledger, weekly goals, celebration, Cat Cake Collection v1 (seeds), recurring tasks. M0–M2, M4, M5, M7 shipped; M8 in progress; then M3, M6 | [spec](./F08-accomplishment-rewards/spec.md) · [board](./F08-accomplishment-rewards/board.md) |
 
 ## Planned
 

@@ -114,20 +114,20 @@ Done (11)
 
 ## M8: Progress redesign, LeetCode tier polish, information architecture
 
-**Milestone status:** Design
+**Milestone status:** In progress
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M8-01](./tickets/M8/M8-01-prototype-progress-hub.md) | Prototype Progress hub | prototype | In progress | Past work calendar + week window is the main exploration |
-| [M8-02](./tickets/M8/M8-02-progress-shell-routes.md) | Progress nested shell; remove ledger/points | build | Blocked | Blocked by M8-01 |
-| [M8-03](./tickets/M8/M8-03-this-week.md) | This week surface | build | Blocked | Blocked by M8-01, M8-02 |
-| [M8-04](./tickets/M8/M8-04-past-work.md) | Past work surface | build | Blocked | Blocked by M8-01, M8-02; calendar-driven week window |
-| [M8-05](./tickets/M8/M8-05-lifetime.md) | Lifetime surface | build | Blocked | Blocked by M8-01, M8-02 |
+| [M8-02](./tickets/M8/M8-02-progress-shell-routes.md) | Progress nested shell; remove ledger/points | build | Ready | Do first |
+| [M8-03](./tickets/M8/M8-03-this-week.md) | This week surface | build | Blocked | Blocked by M8-02 |
+| [M8-04](./tickets/M8/M8-04-past-work.md) | Past work surface | build | Blocked | Blocked by M8-02; owns shared heatmap intensity scale |
+| [M8-05](./tickets/M8/M8-05-lifetime.md) | Lifetime surface | build | Blocked | Blocked by M8-02; reuses R8.13 scale from M8-04 |
 
 <details>
-<summary>Done (0)</summary>
+<summary>Done (1)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M8-01](./tickets/M8/M8-01-prototype-progress-hub.md) | Prototype Progress hub | (closing commit) |
 
 </details>

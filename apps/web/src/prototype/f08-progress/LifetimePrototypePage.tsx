@@ -14,8 +14,7 @@ import {
 } from "./fixtures";
 
 const VARIANTS = [
-  { key: "A", name: "Chart above heatmaps" },
-  { key: "B", name: "Heatmaps above chart" },
+  { key: "A", name: "Locked · chart above heatmaps" },
 ] as const;
 
 const RANGES = [
@@ -176,35 +175,27 @@ function AchievementsList() {
 }
 
 export default function LifetimePrototypePage() {
-  const variant = useVariant(VARIANTS);
+  useVariant(VARIANTS);
 
   return (
     <ProgressShell
       title="Lifetime · accumulation"
-      question="Header with days worked; seeds activity chart (range in-container); existing heatmaps side by side; full achievements."
+      question="Header with days worked; seeds chart above; heatmaps side by side colored by raw apps/LC (R8.13 — build will unclamp)."
       variants={VARIANTS}
       surfaceLabel="Lifetime"
       notes={
         <p>
-          Chart metric locked to seeds/day (R8.14). Heatmaps reuse production{" "}
-          <code>ProgressHeatmap</code> + colors. Past work calendar intensity is still open (Q68).
+          Chart = seeds/day (R8.14). Heatmap <em>layout</em> reuses <code>ProgressHeatmap</code>;
+          build must switch colors to unclamped raw apps/LC per R8.13 (prototype still shows legacy 0–3
+          fills until that lands).
         </p>
       }
     >
-      <p className="f08p-state">variant={variant} · chart=seeds · heatmaps=existing side-by-side</p>
+      <p className="f08p-state">chart=seeds above · heatmaps side-by-side · intensity=apps+LC raw (build)</p>
       <div className="f08p-stack">
         <AccumulationHeader />
-        {variant === "A" ? (
-          <>
-            <ActivityChart />
-            <HeatmapsRow />
-          </>
-        ) : (
-          <>
-            <HeatmapsRow />
-            <ActivityChart />
-          </>
-        )}
+        <ActivityChart />
+        <HeatmapsRow />
         <AchievementsList />
       </div>
     </ProgressShell>

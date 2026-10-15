@@ -1,7 +1,7 @@
 # M8-02: Progress nested shell and remove ledger framing
 
-**Status:** Blocked
-**Blocked by:** M8-01
+**Status:** Ready
+**Blocked by:** (none)
 **Implements:** R8.1, R8.2, R8.8, R8.9 (from `../../spec.md`)
 **Type:** build
 

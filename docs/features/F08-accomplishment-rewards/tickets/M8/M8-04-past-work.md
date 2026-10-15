@@ -1,8 +1,8 @@
 # M8-04: Past work surface
 
 **Status:** Blocked
-**Blocked by:** M8-01, M8-02
-**Implements:** R8.4, R8.7 (from `../../spec.md`); kind filters kept (Q65)
+**Blocked by:** M8-02
+**Implements:** R8.4, R8.7, R8.13 (from `../../spec.md`); kind filters kept (Q65)
 **Type:** build
 
 ## What to build
@@ -15,7 +15,7 @@ Locked (R8.4 / M8-01 A):
 - Right: completions for the **7 days ending on the selected day**
 - Kind filters without the **`weekly goals`** tab; weekly rows remain in **`all`**
 - Overlap between day panel and log is fine
-- Calendar intensity per R8.13 / Q67–Q68 (no effort checkmarks)
+- Calendar intensity per R8.13: apps + LC raw count, proportional gradient (no clamp to 3), no effort checkmarks
 
 Prefer a server query for the completions window when needed, with tests. No standalone 1-/7-day pagination control.
 
@@ -24,7 +24,7 @@ Prefer a server query for the completions window when needed, with tests. No sta
 - [ ] `/progress/past` matches locked A layout and day-panel rules (R8.4)
 - [ ] Completions week window + filters (no `weekly goals` tab); reachable without ledger
 - [ ] Day panel always editable; reflection linking per R8.7
-- [ ] Calendar/heatmap marks follow R8.13 / locked Q67–Q68
+- [ ] Calendar marks follow R8.13 (raw apps+LC, unclamped gradient, no effort marks); prefer owning the shared intensity scale here for M8-05 reuse
 - [ ] API/tests cover any new completions window query
 - [ ] Follows `docs/design-system.md`
 

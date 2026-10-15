@@ -1,20 +1,20 @@
 /**
  * F08 M8-01 · Past work — locked layout A (calendar + day panel | week completions).
- * Explores calendar intensity metrics (Q67–Q68). Ticket: M8-01.
+ * Calendar intensity = apps + LC raw (R8.13). Ticket: M8-01.
  */
 import { useMemo, useState } from "react";
-import ProgressShell, { ParamToggle, btn, useParam, useVariant } from "./ProgressShell";
+import ProgressShell, { btn, useVariant } from "./ProgressShell";
 import {
   COMPLETIONS,
   DAYS,
   KIND_TABS,
   TODAY,
+  appsLcRaw,
   formatDay,
   formatLong,
   intensityForDay,
   windowEndingOn,
   type CompletionKind,
-  type IntensityMetric,
   type MockCompletion,
   type MockDay,
 } from "./fixtures";
@@ -22,13 +22,6 @@ import {
 const VARIANTS = [
   { key: "A", name: "Locked · dual column (day panel + week log)" },
 ] as const;
-
-const METRICS: Array<{ key: IntensityMetric; label: string }> = [
-  { key: "seeds", label: "seeds (all)" },
-  { key: "seedsWork", label: "seeds (no weekly lump)" },
-  { key: "minutes", label: "minutes" },
-  { key: "events", label: "event count" },
-];
 
 const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -69,14 +62,12 @@ function ProtoCalendar({
   month,
   selected,
   today,
-  metric,
   onMonth,
   onSelect,
 }: {
   month: string;
   selected: string;
   today: string;
-  metric: IntensityMetric;
   onMonth: (a: string) => void;
   onSelect: (d: string) => void;
 }) {
@@ -110,20 +101,13 @@ function ProtoCalendar({
         {cells.map((date, i) => {
           if (date == null) return <span key={`e-${i}`} className="f08p-cal-cell is-empty" />;
           const day = DAYS[date] ?? emptyDay(date);
-          const level = intensityForDay(day, metric);
+          const raw = appsLcRaw(day);
+          const level = intensityForDay(day, "appsLc");
           return (
             <button
               key={date}
               type="button"
-              title={`${date} · ${metric}=${
-                metric === "seeds"
-                  ? day.seeds
-                  : metric === "seedsWork"
-                    ? day.seedsWork
-                    : metric === "minutes"
-                      ? day.minutes
-                      : level
-              }`}
+              title={`${date} · apps+LC=${raw}`}
               className={[
                 "f08p-cal-cell",
                 level ? `is-i${level}` : "",
@@ -140,8 +124,7 @@ function ProtoCalendar({
         })}
       </div>
       <p className="muted" style={{ margin: "0.5rem 0 0", fontSize: "0.75rem" }}>
-        Intensity = {metric}. No effort checkmarks. Mondays may spike on “seeds (all)” from
-        week-close lumps.
+        Intensity = apps + LC (raw). No effort checkmarks. Build uses a continuous gradient (R8.13).
       </p>
     </div>
   );
@@ -311,10 +294,6 @@ function DayPanel({ day }: { day: MockDay }) {
 
 export default function PastWorkPrototypePage() {
   useVariant(VARIANTS);
-  const metric = useParam(
-    "metric",
-    METRICS.map((m) => m.key),
-  );
   const [selected, setSelected] = useState(TODAY);
   const [month, setMonth] = useState(monthAnchor(TODAY));
   const [kind, setKind] = useState<CompletionKind | "all">("all");
@@ -325,32 +304,18 @@ export default function PastWorkPrototypePage() {
   return (
     <ProgressShell
       title="Past work · locked A"
-      question="Calendar = day selector for the edit panel; completions = week filter. Explore intensity metric (Q67–Q68)."
+      question="Calendar = day selector; completions = week filter. Intensity = apps + LC raw (R8.13)."
       variants={VARIANTS}
       surfaceLabel="Past work"
-      controls={
-        <ParamToggle
-          name="metric"
-          label="Calendar intensity"
-          options={METRICS.map((m) => ({ key: m.key, label: m.label }))}
-        />
-      }
       notes={
-        <>
-          <p>
-            Locked: dual column; always-editable day panel; interviews above apps; no misc-task
-            list; no Edit-this-day; drop weekly-goals filter (rows remain in all).
-          </p>
-          <p>
-            Flip calendar intensity: “seeds (all)” spikes on Mondays with week-close lumps;
-            “seeds (no weekly lump)” smooths that. Minutes / event count are alternatives.
-          </p>
-        </>
+        <p>
+          Locked: dual column; always-editable day panel; interviews above apps; no misc-task
+          list; no Edit-this-day; drop weekly-goals filter; calendar = apps+LC, no effort marks.
+        </p>
       }
     >
       <p className="f08p-state" aria-live="polite">
-        selected={selected} · window={weekDays[0]}→{weekDays[6]} · kind={kind} · metric={metric} ·
-        daySeeds={day.seeds}/{day.seedsWork}
+        selected={selected} · window={weekDays[0]}→{weekDays[6]} · kind={kind} · apps+LC={appsLcRaw(day)}
       </p>
       <div className="f08p-dual">
         <div className="f08p-stack">
@@ -358,7 +323,6 @@ export default function PastWorkPrototypePage() {
             month={month}
             selected={selected}
             today={TODAY}
-            metric={metric}
             onMonth={setMonth}
             onSelect={(d) => {
               setSelected(d);

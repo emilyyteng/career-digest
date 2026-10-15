@@ -287,9 +287,17 @@ export const WEEKLY_GOALS = {
   },
 };
 
-export type IntensityMetric = "seeds" | "seedsWork" | "minutes" | "events";
+export type IntensityMetric = "seeds" | "appsLc";
 
-/** 0–4 intensity for calendar/heatmap cells (no effort checkmarks). */
+/** Raw apps + LC solves for a day (calendar / combined intensity). */
+export function appsLcRaw(day: MockDay): number {
+  return day.apps.length + day.lcEasy + day.lcMedium + day.lcHard;
+}
+
+/**
+ * Display buckets for the prototype only. Production (R8.13) should scale the
+ * gradient continuously (or with richer stops) from the raw count — not clamp at 3.
+ */
 export function intensityForDay(day: MockDay, metric: IntensityMetric): number {
   if (metric === "seeds") {
     if (day.seeds <= 0) return 0;
@@ -298,26 +306,12 @@ export function intensityForDay(day: MockDay, metric: IntensityMetric): number {
     if (day.seeds < 250) return 3;
     return 4;
   }
-  if (metric === "seedsWork") {
-    if (day.seedsWork <= 0) return 0;
-    if (day.seedsWork < 40) return 1;
-    if (day.seedsWork < 80) return 2;
-    if (day.seedsWork < 140) return 3;
-    return 4;
-  }
-  if (metric === "minutes") {
-    if (day.minutes <= 0) return 0;
-    if (day.minutes < 30) return 1;
-    if (day.minutes < 60) return 2;
-    if (day.minutes < 120) return 3;
-    return 4;
-  }
-  const events =
-    day.apps.length +
-    day.interviews.length +
-    day.reflections.length +
-    (day.lcEasy + day.lcMedium + day.lcHard > 0 ? 1 : 0);
-  return Math.min(4, events);
+  const raw = appsLcRaw(day);
+  if (raw <= 0) return 0;
+  if (raw === 1) return 1;
+  if (raw === 2) return 2;
+  if (raw <= 4) return 3;
+  return 4;
 }
 
 export function series(
@@ -327,17 +321,7 @@ export function series(
   return Array.from({ length: days }, (_, i) => {
     const date = addDays(TODAY, -(days - 1 - i));
     const day = DAYS[date]!;
-    const value =
-      metric === "seeds"
-        ? day.seeds
-        : metric === "seedsWork"
-          ? day.seedsWork
-          : metric === "minutes"
-            ? day.minutes
-            : day.apps.length +
-              day.interviews.length +
-              day.reflections.length +
-              (day.lcEasy + day.lcMedium + day.lcHard > 0 ? 1 : 0);
+    const value = metric === "seeds" ? day.seeds : appsLcRaw(day);
     return { date, value };
   });
 }

@@ -1,8 +1,8 @@
 # M8-05: Lifetime surface
 
 **Status:** Blocked
-**Blocked by:** M8-01, M8-02
-**Implements:** R8.12 (from `../../spec.md`); placement for R5.26
+**Blocked by:** M8-02
+**Implements:** R8.12, R8.13, R8.14 (from `../../spec.md`); placement for R5.26
 **Type:** build
 
 ## What to build
@@ -11,15 +11,17 @@ Implement `/progress/lifetime` as an accumulation record (R8.12–R8.14):
 
 - Header with large LC / apps / minutes / seeds earned, plus secondary stats including **days worked** (distinct days with any completion log)
 - **Seeds/day** activity chart; range control **inside** the chart container
-- Application + technical **ProgressHeatmap** side by side (existing colors)
+- Application + technical heatmaps **side by side**, colored per R8.13 (raw apps / raw LC, unclamped proportional gradient; no effort checkmarks)
+- Seeds/day chart **above** the heatmaps; range control inside the chart container
 - **Full** achievements list
 
-No Rewards purse chrome, Earnings log, or pull UI.
+No Rewards purse chrome, Earnings log, or pull UI. Reuse the intensity scale from M8-04 if already built.
 
 ## Acceptance criteria
 
-- [ ] `/progress/lifetime` matches R8.12–R8.14 (header, chart, side-by-side heatmaps, full achievements)
-- [ ] Chart range is controlled in the chart container; metric is seeds/day
+- [ ] `/progress/lifetime` matches R8.12–R8.14 (header, chart above heatmaps, side-by-side heatmaps, full achievements)
+- [ ] Chart range in-container; metric seeds/day
+- [ ] Heatmap colors ∝ raw lane counts (not clamped to 3; not seeds)
 - [ ] Days worked counts distinct completion-log days
 - [ ] No Rewards spending chrome on this surface
 - [ ] Follows `docs/design-system.md`
