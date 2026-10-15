@@ -44,4 +44,4 @@ EarnFlash and achievement unlock modal behavior stay as today.
 - Layout: streaks → pulse → next achievements + weekly goals | LC + daily compose/notes/apps. No heatmaps.
 - Pulse uses completions diary week/month with new `leetcode` field; API test covers week/month LC totals.
 - LC stepper shows Easy/Medium/Hard with +20/+30/+50.
-- `npm run check` green (342 tests). Commit hash filled on board in a follow-up.
+- `npm run check` green (342 tests). Commit: `c93c25d`.

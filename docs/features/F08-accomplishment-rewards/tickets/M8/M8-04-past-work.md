@@ -48,4 +48,4 @@ Prefer a server query for the completions window when needed, with tests. No sta
 - Completions: `endDate` + `days=7`; empty days shown; no weekly-goals kind tab.
 - `intensityScale.ts` + calendar/heatmap use raw ∝ peak (no clamp to 3, no effort ✓).
 - Tests: completions window filter; day `interviewRows` empty array assertion.
-- `npm run check` green (343 tests). Board hash in follow-up.
+- `npm run check` green (343 tests). Commit: `7b4304e`.
