@@ -47,3 +47,4 @@ No Rewards purse chrome, Earnings log, or pull UI. Reuse the intensity scale fro
 - Chart: seeds/day with in-container 1 week / 1 month / ~3 months; spends excluded from seeds.
 - Heatmaps side by side above achievements; raw intensity from M8-04.
 - API tests in `lifetime.api.test.ts`. `npm run check` green (345 tests). Board hash in follow-up.
+- Commit: `9345c47`.

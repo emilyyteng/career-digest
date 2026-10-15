@@ -123,7 +123,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M8-05](./tickets/M8/M8-05-lifetime.md) | Lifetime surface | (this commit) |
+| [M8-05](./tickets/M8/M8-05-lifetime.md) | Lifetime surface | `9345c47` |
 | [M8-04](./tickets/M8/M8-04-past-work.md) | Past work surface | `7b4304e` |
 | [M8-03](./tickets/M8/M8-03-this-week.md) | This week surface | `c93c25d` |
 | [M8-02](./tickets/M8/M8-02-progress-shell-routes.md) | Progress nested shell; remove ledger/points | `a94075b` |
