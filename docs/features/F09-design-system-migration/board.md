@@ -8,7 +8,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (exploratory lab) | prototype | Ready | Font switcher, brand theses, vibe packs, color-meaning, containment |
+| [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (exploratory lab) | prototype | In progress | Lab at `/prototype/f09/lab` — explore & shortlist |
 | [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | docs | Draft | After M0-02 verdict |
 
 <details>
