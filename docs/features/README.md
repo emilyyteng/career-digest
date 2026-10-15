@@ -2,19 +2,19 @@
 
 The index of every feature: start here. Process and conventions: [`AGENTS.md`](../../AGENTS.md). Shipped history: [`CHANGELOG.md`](../CHANGELOG.md).
 
-Each feature has a permanent ID (`F<NN>`) and, once it has a spec, a folder `F<NN>-<slug>/`. Next free ID: **F11**.
+Each feature has a permanent ID (`F<NN>`) and, once it has a spec, a folder `F<NN>-<slug>/`. Next free ID: **F12**.
 
 ## Active
 
 | ID | Feature | Summary | Spec |
 |----|---------|---------|------|
 | F08 | Accomplishment, detail pages & rewards | Task/application detail pages, reflections on real work, points ledger, weekly goals, celebration, Cat Cake Collection v1 (seeds), Progress redesign, recurring tasks. M0–M2, M4, M5, M7, M8 shipped; then M3, M6 | [spec](./F08-accomplishment-rewards/spec.md) · [board](./F08-accomplishment-rewards/board.md) |
+| F09 | Design system migration | Comprehensive visual system + phased migration: M0 visual foundations (theme/vibe), then primitives/patterns, then surface waves | [spec](./F09-design-system-migration/spec.md) · [board](./F09-design-system-migration/board.md) |
+| F11 | Custom habits & weekly targets | Multi-habit daily tracker (checkoff, archive/restore, same streak points as LC/apps, max 5 active); custom weekly targets for non-daily quotas. M0 design | [spec](./F11-habits-and-weekly-targets/spec.md) · [board](./F11-habits-and-weekly-targets/board.md) |
 
 ## Planned
 
-| ID | Feature | Summary | Spec |
-|----|---------|---------|------|
-| F09 | Design system migration | Explicit component variants and one visual standard, scoped first to what F08 M5 needs | [spec](./F09-design-system-migration/spec.md) |
+None right now.
 
 ## Parked
 
@@ -36,7 +36,7 @@ Each feature has a permanent ID (`F<NN>`) and, once it has a spec, a folder `F<N
 
 "Legacy" means the feature shipped before this process: its requirements live only in older local docs and the changelog. It gets a folder (keeping its ID) only if reopened.
 
-IDs F01–F09 were assigned on 2026-10-12 in order of each feature's first appearance in the changelog. F10 was added on 2026-10-13 for the documentation work previously grouped under F06.
+IDs F01–F09 were assigned on 2026-10-12 in order of each feature's first appearance in the changelog. F10 was added on 2026-10-13 for the documentation work previously grouped under F06. F11 was added on 2026-10-15 for custom daily habits and custom weekly targets.
 
 ## Not features
 
