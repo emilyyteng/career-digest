@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   completeTask,
@@ -88,6 +88,8 @@ export default function TaskDetailPage() {
   const [priority, setPriority] = useState<TaskPriority | null>(null);
   const [estimateMinutes, setEstimateMinutes] = useState("");
   const [actualMinutes, setActualMinutes] = useState("");
+  /** Bumped so a slow GET cannot overwrite a newer save or a later load. */
+  const loadGen = useRef(0);
 
   const isApplication = task?.category === "application";
   const showDescriptionEditor = Boolean(isApplication && task && !task.postingId);
@@ -113,11 +115,13 @@ export default function TaskDetailPage() {
 
   async function load() {
     if (!taskId) return;
+    const gen = ++loadGen.current;
     const [row, cats, refl] = await Promise.all([
       getTask(taskId),
       getTaskCategories(),
       getTaskReflections(taskId),
     ]);
+    if (gen !== loadGen.current) return;
     setTask(row);
     hydrateForm(row);
     setReflections(refl.reflections);
@@ -125,9 +129,11 @@ export default function TaskDetailPage() {
     if (row.category === "application") {
       try {
         const snap = await getWeeklyGoals(browserTz());
+        if (gen !== loadGen.current) return;
         const apps = snap.goals.find((g) => g.slot === "apps");
         setWeeklyTarget(Boolean(apps?.members.some((m) => m.taskId === row.id)));
       } catch {
+        if (gen !== loadGen.current) return;
         setWeeklyTarget(false);
       }
     }
@@ -135,6 +141,9 @@ export default function TaskDetailPage() {
 
   useEffect(() => {
     load().catch((err: Error) => setError(err.message));
+    return () => {
+      loadGen.current += 1;
+    };
   }, [taskId]);
 
   async function saveDetails(event: FormEvent) {
@@ -191,8 +200,13 @@ export default function TaskDetailPage() {
         await setWeeklyAppTargetMember(browserTz(), task.id, weeklyTarget);
       }
       if (points) setEarnFlash(points);
-      setTask(row);
-      hydrateForm(row);
+      // Drop any in-flight load so it cannot clobber this save with a pre-patch GET.
+      loadGen.current += 1;
+      const categoryName =
+        miscCategories.find((c) => c.id === row.categoryId)?.name ?? row.categoryName;
+      const next = { ...row, categoryName };
+      setTask(next);
+      hydrateForm(next);
       invalidateListCache("tasks:");
       setFlash("Saved!");
       window.setTimeout(() => setFlash(null), 2200);
@@ -224,6 +238,7 @@ export default function TaskDetailPage() {
         return;
       }
       if (row.points) setEarnFlash(row.points);
+      loadGen.current += 1;
       setTask(row);
       hydrateForm(row);
       const refl = await getTaskReflections(task.id);
@@ -241,6 +256,7 @@ export default function TaskDetailPage() {
     try {
       const row = await reopenTask(task.id);
       invalidateListCache("tasks:");
+      loadGen.current += 1;
       setTask(row);
       hydrateForm(row);
     } catch (err) {

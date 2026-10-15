@@ -87,9 +87,13 @@
 .cc-card--clickable:focus-visible {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px var(--shadow-strong);
+}
+.cc-card--clickable:focus-visible:not(.cc-card--selected) {
   outline: none;
 }
-.cc-card--selected {
+.cc-card--selected,
+.cc-card--selected.cc-card--clickable:hover,
+.cc-card--selected.cc-card--clickable:focus-visible {
   outline: 2.5px solid var(--accent-purple);
   outline-offset: 2px;
 }

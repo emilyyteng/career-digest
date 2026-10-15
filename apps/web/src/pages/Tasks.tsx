@@ -223,7 +223,10 @@ export default function Tasks() {
   function onEdited(row: TaskRow) {
     setEditing(null);
     invalidateListCache("tasks:");
-    setRows((current) => current.map((item) => (item.id === row.id ? row : item)));
+    const categoryName =
+      categories.find((c) => c.id === row.categoryId)?.name ?? row.categoryName;
+    const next = { ...row, categoryName };
+    setRows((current) => current.map((item) => (item.id === row.id ? next : item)));
     // Keep list order stable after edit; checkbox state still updates.
     void refreshWeeklyAppTargets({ resort: false });
   }
@@ -503,15 +506,40 @@ export default function Tasks() {
     setRenameDraft(category.name);
   }
 
+  function applyCategoryRename(updated: TaskCategoryRow) {
+    setCategories((current) =>
+      current.map((c) => (c.id === updated.id ? { ...c, name: updated.name } : c)),
+    );
+    setRows((current) =>
+      current.map((row) =>
+        row.categoryId === updated.id ? { ...row, categoryName: updated.name } : row,
+      ),
+    );
+    for (const v of TABS) {
+      const key = tasksCacheKey(v);
+      const snap = readListCache<TasksSnapshot>(key);
+      if (!snap) continue;
+      writeListCache(key, {
+        ...snap,
+        categories: (snap.categories ?? []).map((c) =>
+          c.id === updated.id ? { ...c, name: updated.name } : c,
+        ),
+        tasks: snap.tasks.map((row) =>
+          row.categoryId === updated.id ? { ...row, categoryName: updated.name } : row,
+        ),
+      });
+    }
+  }
+
   async function saveRename(categoryId: string) {
     const name = renameDraft.trim();
     if (!name) return;
     setRenamingSaving(true);
     setError(null);
     try {
-      await renameTaskCategory(categoryId, name);
+      const updated = await renameTaskCategory(categoryId, name);
       setRenamingCategoryId(null);
-      invalidateListCache("tasks:");
+      applyCategoryRename(updated);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not rename category");

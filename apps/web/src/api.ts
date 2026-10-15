@@ -60,7 +60,8 @@ async function parse<T>(res: Response | Promise<Response>): Promise<T> {
 }
 
 export function api(path: string, init?: RequestInit) {
-  return fetch(path, init);
+  // List GETs often follow mutations; never serve a stale HTTP-cached response.
+  return fetch(path, { ...init, cache: "no-store" });
 }
 
 export type JobView = "ranked" | "mismatches" | "unranked" | "needs-description";

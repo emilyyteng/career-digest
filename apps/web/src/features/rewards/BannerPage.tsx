@@ -75,7 +75,9 @@ export default function BannerPage() {
   const showSkip = seqActive || batchPhase === "waiting";
   const stageHint = seqActive
     ? seqOpen
-      ? "Tap for next"
+      ? results.length <= 1
+        ? "Tap to dismiss"
+        : "Tap for next"
       : "Tap to open"
     : batchPhase === "waiting"
       ? "Tap to open all"
@@ -131,10 +133,14 @@ export default function BannerPage() {
       }
       const next = seqIndex + 1;
       if (next >= results.length) {
-        // Finished one-by-one: show all results together; wait for dismiss.
         setSeqActive(false);
         setSeqOpen(false);
-        setBatchPhase("revealed");
+        // ×1: dismiss to empty stage. ×10: re-show the full grid, then dismiss.
+        if (results.length <= 1) {
+          resetReveal();
+        } else {
+          setBatchPhase("revealed");
+        }
         return;
       }
       setSeqIndex(next);
@@ -152,10 +158,16 @@ export default function BannerPage() {
 
   function handleSkip() {
     if (seqActive) {
-      // Jump to all gift boxes still closed.
       setSeqActive(false);
       setSeqOpen(false);
-      setBatchPhase("waiting");
+      if (results.length <= 1) {
+        // ×1: if still closed, show the cake once; if already open, dismiss.
+        if (seqOpen) resetReveal();
+        else setBatchPhase("revealed");
+      } else {
+        // ×10: jump to all gift boxes still closed.
+        setBatchPhase("waiting");
+      }
       return;
     }
     if (batchPhase === "waiting") {
