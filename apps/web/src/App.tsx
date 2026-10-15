@@ -65,6 +65,9 @@ const proto = import.meta.env.DEV
       F09Nesting: lazy(
         () => import("./prototype/f09-design-system/NestingPage"),
       ),
+      F09Layout: lazy(
+        () => import("./prototype/f09-design-system/LayoutPage"),
+      ),
     }
   : null;
 
@@ -243,6 +246,10 @@ export default function App() {
                 <Route
                   path="/prototype/f09/nesting"
                   element={<ProtoPage page={proto.F09Nesting} />}
+                />
+                <Route
+                  path="/prototype/f09/layout"
+                  element={<ProtoPage page={proto.F09Layout} />}
                 />
               </>
             ) : (

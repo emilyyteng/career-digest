@@ -26,8 +26,8 @@ No open tickets.
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
 | [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) | Apply in-content link hover app-wide | build | Ready | After M1-15 Home lock |
-| [M1-07](./tickets/M1/M1-07-pattern-paired-panel-height.md) | Pattern: paired panel height + in-panel overflow (Q16) | docs | Draft | Progress stress; parallel OK |
-| [M1-08](./tickets/M1/M1-08-pattern-chrome-budget.md) | Pattern: chrome budget / width (Q16 remainder) | docs | Draft | Height is M1-07 |
+| [M1-07](./tickets/M1/M1-07-pattern-paired-panel-height.md) | Pattern: paired panel height + in-panel overflow (Q16) | docs | In progress | Prototype `/prototype/f09/layout` |
+| [M1-08](./tickets/M1/M1-08-pattern-chrome-budget.md) | Pattern: chrome budget / width (Q16 remainder) | docs | In progress | Shared prototype with M1-07 |
 | [M1-09](./tickets/M1/M1-09-pattern-list-pagination.md) | Pattern: list pagination (Q8/R.7) | docs | Draft | Parallel OK |
 | [M1-10](./tickets/M1/M1-10-pattern-earnflash-placement.md) | Pattern: EarnFlash placement (Q10/R.9) | docs | Draft | Parallel OK |
 | [M1-11](./tickets/M1/M1-11-pattern-compact-long-pages.md) | Pattern: compact long-page tactics (Q11/R.10) | docs | Draft | Tactics only; Tasks = M2 |
