@@ -107,7 +107,7 @@ export default function ReflectionAccordion({
   const [busy, setBusy] = useState(false);
 
   if (reflections.length === 0) {
-    return <p className="muted">No reflections this day.</p>;
+    return <p className="progress-day-empty">No reflections this day.</p>;
   }
 
   return (

@@ -336,17 +336,17 @@ export default function ThisWeekPage() {
 
       <div className="progress-week-split">
         <div className="progress-week-main">
-          <NextAchievements />
           {weeklyGoals && (
             <WeeklyGoalsBlock
               snapshot={weeklyGoals}
               onChange={(next) => setWeeklyGoals(next)}
             />
           )}
+          <NextAchievements />
         </div>
 
-        <aside className="card progress-log-panel">
-          <div className="card progress-lc-card">
+        <div className="progress-week-aside">
+          <section className="card progress-lc-panel">
             <h4 className="progress-section-title">LeetCode</h4>
             <LeetcodeLogger
               tiers={today.leetcodeTiers}
@@ -354,57 +354,63 @@ export default function ThisWeekPage() {
               weeklyProgress={weeklyLcProgress}
               onChange={(tier, delta, type) => changeLeetcode(tier, delta, type)}
             />
-          </div>
-          <div className="lc-counts-aside">
-            <p className="muted lc-day-line">{lcCountsLine("Today", today.leetcodeTiers)}</p>
-            <p className="muted lc-day-line">
-              {lcCountsLine("This week", today.leetcodeWeekTiers)}
-            </p>
-          </div>
-          <h3 className="progress-section-title progress-daily-title">Daily progress</h3>
-          <div className="progress-log-block progress-compose-block">
-            <ReflectionCompose
-              lane={composeLane}
-              onLaneChange={setComposeLane}
-              linkKey={composeLinkKey}
-              onLinkKeyChange={setComposeLinkKey}
-              interviewStepId={composeStepId}
-              onInterviewStepIdChange={setComposeStepId}
-              linkOptions={linkOptions}
-              onDirtyChange={handleComposeDirtyChange}
-              onSubmit={(input) => addReflection(input)}
-            />
-          </div>
-          <div className="progress-log-block progress-notes-block">
-            <span className="progress-kicker">Today&apos;s notes</span>
-            <ReflectionAccordion
-              reflections={todayDetail?.reflections ?? []}
-              canEdit
-              linkOptions={linkOptions}
-              onSave={(id, patch) => saveReflection(id, patch)}
-            />
-          </div>
-          <div className="progress-log-block progress-apps-block">
-            <span className="progress-kicker">Apps</span>
-            <p className="progress-apps-summary">
-              {(todayDetail?.applications ?? today.applications).raw} logged ·{" "}
-              {(todayDetail?.applications ?? today.applications).earned}/3 earned
-            </p>
-            {(todayDetail?.applicationRows.length ?? 0) > 0 ? (
-              <ul className="progress-app-list">
-                {todayDetail!.applicationRows.map((app) => (
-                  <li key={app.id}>
-                    <Link to={`/applications/${app.id}`}>
-                      {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">No applications logged today.</p>
-            )}
-          </div>
-        </aside>
+            <div className="lc-counts-aside">
+              <p className="muted lc-day-line">{lcCountsLine("Today", today.leetcodeTiers)}</p>
+              <p className="muted lc-day-line">
+                {lcCountsLine("This week", today.leetcodeWeekTiers)}
+              </p>
+            </div>
+          </section>
+
+          <aside className="card progress-daily-panel">
+            <h3 className="progress-section-title progress-daily-title">Daily progress</h3>
+            <div className="progress-day-stack">
+              <div className="progress-log-block">
+                <span className="progress-kicker">Add reflection</span>
+                <ReflectionCompose
+                  lane={composeLane}
+                  onLaneChange={setComposeLane}
+                  linkKey={composeLinkKey}
+                  onLinkKeyChange={setComposeLinkKey}
+                  interviewStepId={composeStepId}
+                  onInterviewStepIdChange={setComposeStepId}
+                  linkOptions={linkOptions}
+                  onDirtyChange={handleComposeDirtyChange}
+                  onSubmit={(input) => addReflection(input)}
+                />
+              </div>
+              <div className="progress-log-block">
+                <span className="progress-kicker">Notes</span>
+                <ReflectionAccordion
+                  reflections={todayDetail?.reflections ?? []}
+                  canEdit
+                  linkOptions={linkOptions}
+                  onSave={(id, patch) => saveReflection(id, patch)}
+                />
+              </div>
+              <div className="progress-log-block">
+                <span className="progress-kicker">Apps</span>
+                <p className="progress-apps-summary">
+                  {(todayDetail?.applications ?? today.applications).raw} logged ·{" "}
+                  {(todayDetail?.applications ?? today.applications).earned}/3 earned
+                </p>
+                {(todayDetail?.applicationRows.length ?? 0) > 0 ? (
+                  <ul className="progress-app-list">
+                    {todayDetail!.applicationRows.map((app) => (
+                      <li key={app.id}>
+                        <Link to={`/applications/${app.id}`}>
+                          {app.company ?? "Unknown"} · {app.title ?? "Untitled"}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="progress-day-empty">No applications logged today.</p>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
 
       {leaveConfirmOpen && (

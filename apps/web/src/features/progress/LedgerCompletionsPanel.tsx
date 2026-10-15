@@ -18,8 +18,15 @@ const ALL_TYPE_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
   { key: "leetcode", label: "leetcode" },
 ];
 
-/** Past work (R8.4): drop weekly-goals filter tab; rows stay under `all`. */
-const PAST_WORK_TABS = ALL_TYPE_TABS.filter((t) => t.key !== "weekly");
+/** Past work (R8.4): shorter labels; no weekly-goals tab (rows stay under `all`). */
+const PAST_WORK_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
+  { key: "all", label: "all" },
+  { key: "task", label: "tasks" },
+  { key: "application", label: "apps" },
+  { key: "interview", label: "interviews" },
+  { key: "reflection", label: "notes" },
+  { key: "leetcode", label: "LC" },
+];
 
 function addDaysYmd(value: string, delta: number): string {
   const [y, m, d] = value.split("-").map(Number);

@@ -367,23 +367,19 @@ export default function PastWorkPage() {
               <p className="muted">Loading day…</p>
             ) : (
               <>
-                <div className="progress-history-flow">
-                  <div className="progress-lc-cluster">
-                    <div className="card progress-lc-card">
-                      <h4 className="progress-section-title">LeetCode</h4>
-                      <LeetcodeLogger
-                        tiers={dayDetail.leetcodeTiers}
-                        fixedType="misc"
-                        onChange={(tier, delta, type) =>
-                          changeLeetcode(tier, delta, type, focus)
-                        }
-                      />
-                    </div>
-                    <div className="lc-counts-aside">
-                      <p className="muted lc-day-line">
-                        {lcCountsLine("This day", dayDetail.leetcodeTiers)}
-                      </p>
-                    </div>
+                <div className="progress-day-stack">
+                  <div className="progress-log-block">
+                    <span className="progress-kicker">LeetCode (misc)</span>
+                    <LeetcodeLogger
+                      tiers={dayDetail.leetcodeTiers}
+                      fixedType="misc"
+                      onChange={(tier, delta, type) =>
+                        changeLeetcode(tier, delta, type, focus)
+                      }
+                    />
+                    <p className="muted lc-day-line">
+                      {lcCountsLine("This day", dayDetail.leetcodeTiers)}
+                    </p>
                   </div>
 
                   <div className="progress-log-block">
@@ -399,7 +395,7 @@ export default function PastWorkPage() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="muted">No interviews this day.</p>
+                      <p className="progress-day-empty">No interviews this day.</p>
                     )}
                   </div>
 
@@ -420,34 +416,34 @@ export default function PastWorkPage() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="muted">No applications logged this day.</p>
+                      <p className="progress-day-empty">No applications logged this day.</p>
                     )}
                   </div>
-                </div>
 
-                <div className="progress-log-block">
-                  <span className="progress-kicker">Add reflection</span>
-                  <ReflectionCompose
-                    lane={historyLane}
-                    onLaneChange={setHistoryLane}
-                    linkKey={historyLinkKey}
-                    onLinkKeyChange={setHistoryLinkKey}
-                    interviewStepId={historyStepId}
-                    onInterviewStepIdChange={setHistoryStepId}
-                    linkOptions={linkOptions}
-                    onDirtyChange={handleComposeDirtyChange}
-                    onSubmit={(input) => addReflection(input, focus)}
-                  />
-                </div>
+                  <div className="progress-log-block">
+                    <span className="progress-kicker">Add reflection</span>
+                    <ReflectionCompose
+                      lane={historyLane}
+                      onLaneChange={setHistoryLane}
+                      linkKey={historyLinkKey}
+                      onLinkKeyChange={setHistoryLinkKey}
+                      interviewStepId={historyStepId}
+                      onInterviewStepIdChange={setHistoryStepId}
+                      linkOptions={linkOptions}
+                      onDirtyChange={handleComposeDirtyChange}
+                      onSubmit={(input) => addReflection(input, focus)}
+                    />
+                  </div>
 
-                <div className="progress-log-block progress-notes-block">
-                  <span className="progress-kicker">Notes</span>
-                  <ReflectionAccordion
-                    reflections={dayDetail.reflections}
-                    canEdit
-                    linkOptions={linkOptions}
-                    onSave={(id, patch) => saveReflection(id, patch, focus)}
-                  />
+                  <div className="progress-log-block progress-notes-block">
+                    <span className="progress-kicker">Notes</span>
+                    <ReflectionAccordion
+                      reflections={dayDetail.reflections}
+                      canEdit
+                      linkOptions={linkOptions}
+                      onSave={(id, patch) => saveReflection(id, patch, focus)}
+                    />
+                  </div>
                 </div>
               </>
             )}
