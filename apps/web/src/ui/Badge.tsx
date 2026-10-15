@@ -2,7 +2,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 /**
  * Role-mapped badge tones (F09 Q18). Prefer these over page-local hex.
- * Priority RYG · kind interview/goal · job status · score/streak (domain tech) · liked (warn).
+ * Priority RYG · kind INTERVIEW/GOAL (uppercase) · job status · score/streak (domain tech) · liked (warn).
  */
 export type BadgeTone =
   | "neutral"

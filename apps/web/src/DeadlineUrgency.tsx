@@ -5,11 +5,11 @@ const HALF_DAY_MS = 12 * 3600_000;
 const MAX_CHUNKS = 14;
 const FIVE_DAYS_MS = 5 * 24 * 3600_000;
 
-export type DeadlineUrgencyTone = "overdue" | "urgent" | "soon" | "ahead" | "ok";
+/** Severity-4: overdue · soon (pink, under 24h) · ahead (amber) · ok (mint). */
+export type DeadlineUrgencyTone = "overdue" | "soon" | "ahead" | "ok";
 
 export function urgencyTone(ms: number): DeadlineUrgencyTone {
   if (ms <= 0) return "overdue";
-  if (ms < 6 * 3600_000) return "urgent";
   if (ms < 24 * 3600_000) return "soon";
   if (ms < FIVE_DAYS_MS) return "ahead";
   return "ok";

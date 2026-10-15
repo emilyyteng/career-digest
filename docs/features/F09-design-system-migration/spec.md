@@ -126,7 +126,7 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | Q14 | Typography | **IBM Plex** Mono display / Sans body; size ladder documented | `design-system.md` |
 | Q16† | Shell width | **1100px** (chrome budget remains open as Q16 above) | `design-system.md` |
 | Q17 | Brand | **flora.exe** (mark/voice); full string rename not required in M0 | `design-system.md` |
-| Q18 | Color meaning | Identity (apps/tech/reward) ≠ severity RYG ≠ urgency Severity-5; purple = domain tech only | `design-system.md` |
+| Q18 | Color meaning | Identity (apps/tech/reward) ≠ severity RYG ≠ urgency Severity-4; purple = domain tech only | `design-system.md` |
 
 </details>
 
@@ -145,3 +145,4 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 - **2026-10-15 (M0-01 review):** Lock visual choices from **exploratory prototypes**, not from inventory opinions. Brand/identity in M0 (R.16, Q17). Font switcher + other families in M0 (R0.4, Q14). Color-meaning scheme before priority seating (R0.5, Q18). Broad vibe pool beyond Sakura vs flat; baby pink and clean readability are preferences to preserve if possible. Containment (carded vs open canvas vs Progress hybrid) is an explicit axis. Elevation/nav/layout: develop approaches in the lab, then pick or remix.
 - **2026-10-15 (M0-02 / M0-03):** Lab shortlist locked into `docs/design-system.md`: Ink desk vibe, flora.exe, IBM Plex, flat elev, all carded, 1100px shell, vivid-rose heat, Severity-5 urgency, purple=domain tech, RYG priority. F08 M5 interim visuals superseded. Q8–Q11 / Q15 / remaining Q16 stay open for M1. Prototype `/prototype/f09/lab` retained as reference (`548ba4e`).
 - **2026-10-15 (M1 plan):** M1 tickets created. Pilot surface = **Home** (straightforward container placement). Q16 paired-panel height is its own pattern ticket: sibling columns share a defined height; overflow scrolls inside panels (Progress Past work is the stress case). Tokens/primitives → neutralize globals → Home pilot → IA/pattern tickets → enforcement.
+- **2026-10-15 (urgency / kind badges):** Urgency revised to **Severity-4**: overdue=P0 · soon=pink (under 24h; merges former urgent+soon) · ahead=amber · ok=mint — drop gray ahead. Kind badges `interview` / `goal` render **INTERVIEW** / **GOAL** (uppercase). Recorded in `design-system.md`.

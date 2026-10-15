@@ -2,7 +2,7 @@
 
 The source of truth for visual and interaction conventions in `apps/web`. **Read this before changing any `.tsx` or `.css` in the web app.** It overrides tickets and prototypes on anything visual (see `AGENTS.md` → Precedence). If a feature requirement conflicts with or is ambiguous against this file, surface that to the user before implementing (`AGENTS.md` → Feature requirements vs design system).
 
-**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02), **ChromeTab / Badge** (M1-03), and **heat / Severity-5 urgency / surface-2 description washes** (M1-14) are live; patterns and remaining page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
+**Status:** Visual foundations locked (F09 M0, 2026-10-15; urgency revised to Severity-4 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02), **ChromeTab / Badge** (M1-03), and **heat / Severity-4 urgency / surface-2 description washes** (M1-14) are live; patterns and remaining page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
 
 **Migration approach:** comprehensive system + phased migration (F09). M1 builds primitives and interaction/IA patterns; M2–M3 restyle surfaces. Extend this doc when something new is needed—do not fork a feature-local look.
 
@@ -45,7 +45,7 @@ Keep the named hue set small. Map meaning onto roles — do not invent page-loca
 | **Domain tech** | Technical / streak / score identity | **Purple** — streaks, rank/score chips, interviewing status. Not chrome, not urgency |
 | **Domain reward** | Motivation / seeds / goals | Blush / reward pink — e.g. goal kind badge |
 | **Severity P0 / P1 / P2** | Priority traffic | **R / Y / G** (`#c23b3b` / `#d4a017` / `#2f8f5b`) |
-| **Urgency (Severity 5)** | Deadline time pressure | Overdue=P0 · urgent=rose · soon=amber · ahead=muted gray · ok=mint. **No purple/blue** (frees domain tech) |
+| **Urgency (Severity 4)** | Deadline time pressure | Overdue=P0 · soon=pink (&lt;24h) · ahead=amber · ok=mint. **No purple/blue/gray mid** (frees domain tech) |
 | **Success / ok** | Positive feedback, met state | Mint |
 | **Danger** | Destructive / error | Rose-danger (distinct from brand blush when possible) |
 | **Surfaces** | `--surface` cards; `--surface-2` warm/cool washes for containers & description blocks | Not purple washes |
@@ -64,7 +64,7 @@ Live in `:root` in [`apps/web/src/styles.css`](../apps/web/src/styles.css) (F09 
 | Borders / text | `--border`, `--border-strong`, `--text`, `--text-muted`, `--text-subtle`, `--ink` | Active chrome uses `--ink` |
 | Brand / domain | `--brand`, `--brand-deep`, `--domain-apps`(+`-deep`), `--domain-tech`(+`-deep`), `--domain-reward`(+`-deep`) | Aliases: `--accent-pink/blue/purple` |
 | Severity | `--severity-p0`, `--severity-p1`, `--severity-p2` | RYG priority |
-| Urgency | `--urgency-overdue` … `--urgency-ok` | Severity-5; no purple/blue mid |
+| Urgency | `--urgency-overdue`, `--urgency-soon`, `--urgency-ahead`, `--urgency-ok` | Severity-4; no purple/blue/gray mid |
 | Heat | `--heat-0` … `--heat-4` | Vivid rose soft peak |
 | Success / warn / danger | `--ok`, `--ok-soft`, `--warn`, `--warn-soft`, `--danger`, `--danger-deep` | Mint / amber / rose-danger |
 | Radius | `--radius-panel`, `--radius-control`, `--radius-seg`, `--radius-pill` (+ legacy `--radius-card/soft/soft-box`) | Squared controls; pill seg/chips |
@@ -93,12 +93,12 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = ink fill | Replaces interim `ui-btn` + `.ui-segmented` for new code |
 | **Fields** | `TextField` · `SelectField` · `TextAreaField` — `.ui-field` (+ `.ui-field-num`) | `md` · `num` (compact number) | Border-only hover; wash on focus |
 | **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = gray wash + ink text/border | App nav, feature subnav, page tabs. Button form includes `.secondary`. Flat; display font; squared (`--radius-control`) |
-| **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview`/`goal`, `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak` (domain tech), `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Role tokens only; no page-local hex for these meanings |
+| **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview`/`goal` (rendered **INTERVIEW** / **GOAL** uppercase), `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak` (domain tech), `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Role tokens only; no page-local hex for these meanings |
 | **Card** | `.card` | Soft shadow OK | All-carded |
 | **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
 | **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | Placement M1-10 |
 | **Heatmap** | `ProgressHeatmap` / `HistoryCalendar` via [`intensityScale.ts`](../apps/web/src/features/progress/intensityScale.ts) | `--heat-0`…`--heat-4` (vivid rose soft peak); empty = `--surface-2` | RGB lerp mirrors tokens; legend uses CSS vars |
-| **Deadline urgency** | `DeadlineUrgency` + `.deadline-pie-*` / `.deadline-tone-*` in `styles.css` | `--urgency-overdue`…`--urgency-ok` (Severity-5) | No purple/blue mid steps |
+| **Deadline urgency** | `DeadlineUrgency` + `.deadline-pie-*` / `.deadline-tone-*` in `styles.css` | `--urgency-overdue` · `--urgency-soon` · `--urgency-ahead` · `--urgency-ok` (Severity-4) | overdue=P0 · soon=pink (&lt;24h) · ahead=amber · ok=mint |
 | **Priority** | `PriorityBadge` → `Badge` `p0`–`p2` compact | P0–P2 RYG | |
 
 Interim F08 `ui-btn*`, old `.tab.on` blue active, and legacy `.badge.*` hex classes remain in `styles.css` for unmigrated call sites. New UI must use `apps/web/src/ui`.
@@ -145,7 +145,7 @@ The 2026-10-13 F08 M5 interim choices (tinted purple primary, blue toggles, flat
 | Containment | Carded vs Rewards open canvas vs Progress hybrid | **All carded** |
 | Elevation | Raised buttons + flat patches | **Flat controls**; soft cards + modal overlay only |
 | Purple | Chrome, urgency mid, containers, streaks | **Domain tech identity only** |
-| Urgency | Prod pink/purple/blue/mint 5 | **Severity 5** (P0→rose→amber→muted→mint) |
+| Urgency | Prod pink/purple/blue/mint 5 | **Severity 4** (P0→pink soon→amber ahead→mint) |
 | Priority | Mixed | **RYG traffic** |
 | Heatmap | Navy peak | **Vivid rose soft peak** |
 | Shell | 960px | **1100px** |

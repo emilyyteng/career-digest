@@ -34,11 +34,10 @@
   --severity-p1: #d4a017;
   --severity-p2: #2f8f5b;
 
-  /* Urgency Severity-5 (no purple/blue mid steps) */
+  /* Urgency Severity-4 (no purple/blue; no gray mid) */
   --urgency-overdue: var(--severity-p0);
-  --urgency-urgent: #c97b8b;
-  --urgency-soon: var(--warn);
-  --urgency-ahead: #9a929e;
+  --urgency-soon: #c97b8b; /* pink — merged former urgent+soon (under 24h) */
+  --urgency-ahead: var(--warn); /* amber */
   --urgency-ok: var(--ok);
 
   /* Heat — vivid rose soft peak */
@@ -5006,9 +5005,8 @@ button.progress-cal-cell.effort::after {
   border: 1px solid color-mix(in srgb, var(--deadline-pie-fill) 35%, var(--border));
   flex: 0 0 auto;
 }
-/* Severity-5 urgency (F09): overdue=P0 · urgent=rose · soon=amber · ahead=muted · ok=mint — no purple/blue */
+/* Severity-4 urgency (F09): overdue=P0 · soon=pink · ahead=amber · ok=mint — no purple/blue/gray mid */
 .deadline-pie-overdue { --deadline-pie-fill: var(--urgency-overdue); }
-.deadline-pie-urgent { --deadline-pie-fill: var(--urgency-urgent); }
 .deadline-pie-soon { --deadline-pie-fill: var(--urgency-soon); }
 .deadline-pie-ahead { --deadline-pie-fill: var(--urgency-ahead); }
 .deadline-pie-ok { --deadline-pie-fill: var(--urgency-ok); }
@@ -5018,7 +5016,6 @@ button.progress-cal-cell.effort::after {
   font-size: 0.88rem;
 }
 .deadline-tone-overdue { color: var(--urgency-overdue); }
-.deadline-tone-urgent { color: var(--urgency-urgent); }
 .deadline-tone-soon { color: var(--urgency-soon); }
 .deadline-tone-ahead { color: var(--urgency-ahead); }
 .deadline-tone-ok { color: var(--urgency-ok); }

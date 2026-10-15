@@ -291,7 +291,8 @@ button.secondary.ui-chrome-tab-page.is-active:not(:disabled):hover {
   color: color-mix(in srgb, var(--domain-apps) 85%, #000);
   border-color: color-mix(in srgb, var(--domain-apps) 40%, var(--border));
   font-weight: 700;
-  text-transform: lowercase;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .ui-badge-goal {
@@ -299,7 +300,8 @@ button.secondary.ui-chrome-tab-page.is-active:not(:disabled):hover {
   color: color-mix(in srgb, var(--domain-reward) 80%, #000);
   border-color: color-mix(in srgb, var(--domain-reward) 45%, var(--border));
   font-weight: 700;
-  text-transform: lowercase;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .ui-badge-applied {
