@@ -77,14 +77,16 @@ function plural(count: number, singular: string, pluralForm?: string): string {
 }
 
 function formatCompletionStatLine(counts: {
+  leetcode: number;
   tasks: number;
   apps: number;
   interview: number;
   reflections: number;
 }): string {
   return [
-    `${counts.tasks} ${plural(counts.tasks, "task")}`,
+    `${counts.leetcode} LC`,
     `${counts.apps} ${plural(counts.apps, "app")}`,
+    `${counts.tasks} ${plural(counts.tasks, "task")}`,
     `${counts.interview} ${plural(counts.interview, "interview")}`,
     `${counts.reflections} ${plural(counts.reflections, "reflection")}`,
   ].join(" · ");

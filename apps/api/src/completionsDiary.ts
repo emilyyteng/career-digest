@@ -52,6 +52,8 @@ export type CompletionDiaryItem = {
 };
 
 export type CompletionCounts = {
+  /** Solves in range (F08 M8-03 pulse). */
+  leetcode: number;
   tasks: number;
   apps: number;
   interview: number;
@@ -107,7 +109,7 @@ function weeklySubtitle(r: WeeklyGoalRecord): string {
 }
 
 function emptyCounts(): CompletionCounts {
-  return { tasks: 0, apps: 0, interview: 0, reflections: 0 };
+  return { leetcode: 0, tasks: 0, apps: 0, interview: 0, reflections: 0 };
 }
 
 export async function getCompletionsDiary(
@@ -547,6 +549,14 @@ export async function getCompletionsDiary(
       [start, end, tz],
     );
     counts.reflections = Number(reflections.rows[0]?.n ?? 0);
+
+    const leetcode = await pool.query<{ n: string }>(
+      `SELECT COALESCE(SUM(count), 0)::text AS n
+       FROM leetcode_daily
+       WHERE local_date >= $1::date AND local_date <= $2::date`,
+      [start, end],
+    );
+    counts.leetcode = Number(leetcode.rows[0]?.n ?? 0);
     return counts;
   }
 

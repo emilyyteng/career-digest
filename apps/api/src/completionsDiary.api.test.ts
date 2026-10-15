@@ -80,4 +80,14 @@ describe.skipIf(!integrationReady)("completions diary · LeetCode (M5-16)", () =
     expect(all.body.stats.allTime.leetcode).toBe(8);
     expect(all.body.stats.allTime.leetcodeDays).toBe(2);
   });
+
+  it("week and month pulse stats include leetcode solve totals (M8-03)", async () => {
+    const today = localDateInTimezone(new Date(), TZ);
+    await seedLeetcodeDaily(today, 2);
+    await seedLeetcodeDaily(addCivilDays(today, -1), 3);
+
+    const res = await apiClient().get(`/api/progress/completions${q}`).expect(200);
+    expect(res.body.stats.week.leetcode).toBeGreaterThanOrEqual(5);
+    expect(res.body.stats.month.leetcode).toBeGreaterThanOrEqual(5);
+  });
 });

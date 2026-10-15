@@ -3,6 +3,8 @@ import type { LeetcodeTier, LeetcodeTierCounts, LeetcodeType } from "../../api";
 
 const TIERS: LeetcodeTier[] = ["easy", "medium", "hard"];
 const TIER_LABEL: Record<LeetcodeTier, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
+/** Display only; matches API `POINTS.leetcodeByTier` (R8.3). */
+const TIER_POINTS: Record<LeetcodeTier, number> = { easy: 20, medium: 30, hard: 50 };
 
 export function lcCountsLine(label: string, t: LeetcodeTierCounts): string {
   const total = t.easy + t.medium + t.hard;
@@ -79,7 +81,10 @@ export default function LeetcodeLogger({
             (type === "weekly" && (weeklyProgress ?? 0) <= 0);
           return (
             <div key={tier} className="lc-tier-stepper">
-              <span className="lc-tier-name">{TIER_LABEL[tier]}</span>
+              <span className="lc-tier-name">
+                {TIER_LABEL[tier]}
+                <span className="lc-tier-pts"> +{TIER_POINTS[tier]}</span>
+              </span>
               <button
                 type="button"
                 className="secondary ui-btn lc-step-btn"

@@ -118,15 +118,15 @@ Done (11)
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M8-03](./tickets/M8/M8-03-this-week.md) | This week surface | build | Ready | Was blocked by M8-02 |
-| [M8-04](./tickets/M8/M8-04-past-work.md) | Past work surface | build | Ready | Was blocked by M8-02; owns shared heatmap intensity scale |
+| [M8-04](./tickets/M8/M8-04-past-work.md) | Past work surface | build | Ready | Owns shared heatmap intensity scale |
 | [M8-05](./tickets/M8/M8-05-lifetime.md) | Lifetime surface | build | Blocked | Blocked by M8-04 for R8.13 intensity scale reuse |
 
 <details>
-<summary>Done (2)</summary>
+<summary>Done (3)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M8-03](./tickets/M8/M8-03-this-week.md) | This week surface | (this commit) |
 | [M8-02](./tickets/M8/M8-02-progress-shell-routes.md) | Progress nested shell; remove ledger/points | `a94075b` |
 | [M8-01](./tickets/M8/M8-01-prototype-progress-hub.md) | Prototype Progress hub | (closing commit) |
 

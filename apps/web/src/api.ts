@@ -1082,23 +1082,20 @@ export type CompletionDiaryItem = {
   };
 };
 
+export type CompletionPulseCounts = {
+  leetcode: number;
+  tasks: number;
+  apps: number;
+  interview: number;
+  reflections: number;
+  minutes: number;
+};
+
 export type CompletionsDiary = {
   tz: string;
   stats: {
-    week: {
-      tasks: number;
-      apps: number;
-      interview: number;
-      reflections: number;
-      minutes: number;
-    };
-    month: {
-      tasks: number;
-      apps: number;
-      interview: number;
-      reflections: number;
-      minutes: number;
-    };
+    week: CompletionPulseCounts;
+    month: CompletionPulseCounts;
     allTime: {
       tasks: number;
       apps: number;
