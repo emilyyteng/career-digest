@@ -49,4 +49,4 @@ n/a
 - Spot-check vs lab: chrome-tab nav + carded sections + ink titles match Ink desk shortlist
 - Outside Home: Jobs/Applications still use legacy `.tab.on` blue — logged for M2 wave (not expanded here)
 - `npm run check` pass
-- Commit: (recorded after commit)
+- Commit: `6ab5517`
