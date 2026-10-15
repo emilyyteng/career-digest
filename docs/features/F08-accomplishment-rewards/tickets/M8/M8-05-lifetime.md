@@ -7,16 +7,16 @@
 
 ## What to build
 
-Implement `/progress/lifetime` for accumulated work: all-time totals (from completions stats), the full achievements list (moved off the M5 peer tab), and heatmaps per the M8-01 answer to Q57.
+Implement `/progress/lifetime` as an accumulation record (R8.12): substantial all-time header (per Q69), **full** achievements list, prep heatmaps (no effort checkmarks; intensity per Q67–Q68), and activity fluctuation chart if R8.14 is Established after M8-01.
 
-No seeds balance, earnings log, or points chrome — those stay on Rewards.
+No Rewards purse chrome, Earnings log, or pull UI — those stay on Rewards. A Progress statistic that *uses* seeds earned as a time-series metric is allowed if Q67 locks it (distinct from Rewards spending chrome).
 
 ## Acceptance criteria
 
-- [ ] `/progress/lifetime` shows all-time work totals and the achievements list
-- [ ] Achievements are no longer a Progress peer tab
-- [ ] Heatmaps follow the M8-01 / Q57 verdict (full dual, combined, or omitted if only the This week peek remains)
-- [ ] No currency / Earnings UI on this surface
+- [ ] `/progress/lifetime` feels like an accumulation/data record (header per Q69)
+- [ ] Full achievements list; not only next-ups (those are on This week)
+- [ ] Heatmaps + activity chart per locked R8.12–R8.14 / Q67–Q68
+- [ ] No Rewards spending chrome on this surface
 - [ ] Follows `docs/design-system.md`
 
 ## Reuse notes

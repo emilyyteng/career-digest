@@ -1,11 +1,9 @@
 /**
- * F08 M8-01 · design question 3: Past work info split.
- * Calendar selects focus day; completions = 7 days ending on that day;
- * kind filters kept. Explore edit panel vs completions overlap (Q55).
- * Ticket: M8-01.
+ * F08 M8-01 · Past work — locked layout A (calendar + day panel | week completions).
+ * Explores calendar intensity metrics (Q67–Q68). Ticket: M8-01.
  */
 import { useMemo, useState } from "react";
-import ProgressShell, { btn, useVariant } from "./ProgressShell";
+import ProgressShell, { ParamToggle, btn, useParam, useVariant } from "./ProgressShell";
 import {
   COMPLETIONS,
   DAYS,
@@ -13,27 +11,24 @@ import {
   TODAY,
   formatDay,
   formatLong,
-  heatMarks,
+  intensityForDay,
   windowEndingOn,
   type CompletionKind,
+  type IntensityMetric,
   type MockCompletion,
   type MockDay,
 } from "./fixtures";
 
 const VARIANTS = [
-  {
-    key: "A",
-    name: "Dual column · full day panel + week log (your sketch)",
-  },
-  {
-    key: "B",
-    name: "Completions-led · slim LC/reflect only on the day",
-  },
-  {
-    key: "C",
-    name: "Unified feed · selected day actions inside the week list",
-  },
+  { key: "A", name: "Locked · dual column (day panel + week log)" },
 ] as const;
+
+const METRICS: Array<{ key: IntensityMetric; label: string }> = [
+  { key: "seeds", label: "seeds (all)" },
+  { key: "seedsWork", label: "seeds (no weekly lump)" },
+  { key: "minutes", label: "minutes" },
+  { key: "events", label: "event count" },
+];
 
 const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -43,10 +38,7 @@ function monthAnchor(ymd: string): string {
 
 function shiftMonth(anchor: string, delta: number): string {
   const [y, m] = anchor.split("-").map(Number);
-  return localMonthStart(new Date(y, m - 1 + delta, 1));
-}
-
-function localMonthStart(d: Date): string {
+  const d = new Date(y, m - 1 + delta, 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
@@ -58,18 +50,33 @@ function monthLabel(anchor: string): string {
   });
 }
 
+function emptyDay(date: string): MockDay {
+  return {
+    date,
+    lcEasy: 0,
+    lcMedium: 0,
+    lcHard: 0,
+    seeds: 0,
+    seedsWork: 0,
+    minutes: 0,
+    interviews: [],
+    apps: [],
+    reflections: [],
+  };
+}
+
 function ProtoCalendar({
   month,
   selected,
   today,
-  marks,
+  metric,
   onMonth,
   onSelect,
 }: {
   month: string;
   selected: string;
   today: string;
-  marks: Record<string, { earned: number; effort: boolean }>;
+  metric: IntensityMetric;
   onMonth: (a: string) => void;
   onSelect: (d: string) => void;
 }) {
@@ -100,16 +107,26 @@ function ProtoCalendar({
             {d}
           </span>
         ))}
-        {cells.map((date, i) =>
-          date == null ? (
-            <span key={`e-${i}`} className="f08p-cal-cell is-empty" />
-          ) : (
+        {cells.map((date, i) => {
+          if (date == null) return <span key={`e-${i}`} className="f08p-cal-cell is-empty" />;
+          const day = DAYS[date] ?? emptyDay(date);
+          const level = intensityForDay(day, metric);
+          return (
             <button
               key={date}
               type="button"
+              title={`${date} · ${metric}=${
+                metric === "seeds"
+                  ? day.seeds
+                  : metric === "seedsWork"
+                    ? day.seedsWork
+                    : metric === "minutes"
+                      ? day.minutes
+                      : level
+              }`}
               className={[
                 "f08p-cal-cell",
-                marks[date]?.earned ? "is-mark" : "",
+                level ? `is-i${level}` : "",
                 date === selected ? "is-selected" : "",
                 date === today ? "is-today" : "",
               ]
@@ -119,9 +136,13 @@ function ProtoCalendar({
             >
               {Number(date.slice(8))}
             </button>
-          ),
-        )}
+          );
+        })}
       </div>
+      <p className="muted" style={{ margin: "0.5rem 0 0", fontSize: "0.75rem" }}>
+        Intensity = {metric}. No effort checkmarks. Mondays may spike on “seeds (all)” from
+        week-close lumps.
+      </p>
     </div>
   );
 }
@@ -172,38 +193,30 @@ function CompletionsWeek({
         .reverse()
         .map((date) => {
           const group = filtered.filter((r) => r.localDate === date);
-          if (group.length === 0) {
-            return (
-              <div
-                key={date}
-                className={`f08p-day-group${date === focus ? " is-focus" : ""}`}
-              >
-                <p className="f08p-day-heading">{formatDay(date, today)}</p>
-                <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
-                  No completions this day
-                  {kind !== "all" ? ` in “${kind}”` : ""}.
-                </p>
-              </div>
-            );
-          }
           return (
             <div
               key={date}
               className={`f08p-day-group${date === focus ? " is-focus" : ""}`}
             >
               <p className="f08p-day-heading">{formatDay(date, today)}</p>
-              {group.map((r) => (
-                <div key={r.id} className="f08p-row">
-                  <div>
-                    <span className="f08p-row-kind">{r.kind}</span>
-                    {r.title}
-                    <div className="f08p-row-meta">{r.subtitle}</div>
+              {group.length === 0 ? (
+                <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
+                  No completions this day{kind !== "all" ? ` in “${kind}”` : ""}.
+                </p>
+              ) : (
+                group.map((r) => (
+                  <div key={r.id} className="f08p-row">
+                    <div>
+                      <span className="f08p-row-kind">{r.kind}</span>
+                      {r.title}
+                      <div className="f08p-row-meta">{r.subtitle}</div>
+                    </div>
+                    {r.points != null && r.points > 0 && (
+                      <span className="f08p-pts">+{r.points}</span>
+                    )}
                   </div>
-                  {r.points != null && r.points > 0 && (
-                    <span className="f08p-pts">+{r.points}</span>
-                  )}
-                </div>
-              ))}
+                ))
+              )}
             </div>
           );
         })}
@@ -211,47 +224,52 @@ function CompletionsWeek({
   );
 }
 
-function LcBlock({ day, showPoints }: { day: MockDay; showPoints?: boolean }) {
+function DayPanel({ day }: { day: MockDay }) {
   const tiers: Array<{ key: "lcEasy" | "lcMedium" | "lcHard"; label: string; pts: number }> = [
     { key: "lcEasy", label: "Easy", pts: 20 },
     { key: "lcMedium", label: "Medium", pts: 30 },
     { key: "lcHard", label: "Hard", pts: 50 },
   ];
   return (
-    <div>
-      <span className="f08p-kicker">LeetCode (misc edit)</span>
-      {tiers.map((t) => (
-        <div key={t.key} className="f08p-lc-row">
-          <span>
-            {t.label}
-            {showPoints && <span className="f08p-lc-pts"> · +{t.pts}</span>}
-          </span>
-          <span>
-            <button type="button" className={btn("ghost", "sm")} disabled>
-              −
-            </button>{" "}
-            {day[t.key]}{" "}
-            <button type="button" className={btn("ghost", "sm")} disabled>
-              +
-            </button>
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FullDayPanel({ day }: { day: MockDay }) {
-  return (
     <div className="f08p-panel f08p-stack">
       <div>
-        <span className="f08p-kicker">Selected day</span>
+        <span className="f08p-kicker">Selected day · always editable</span>
         <h3 style={{ margin: 0 }}>{formatLong(day.date)}</h3>
-        <label className="muted" style={{ display: "inline-flex", gap: "0.35rem", marginTop: "0.35rem" }}>
-          <input type="checkbox" defaultChecked /> Edit this day
-        </label>
       </div>
-      <LcBlock day={day} showPoints />
+      <div>
+        <span className="f08p-kicker">LeetCode (misc)</span>
+        {tiers.map((t) => (
+          <div key={t.key} className="f08p-lc-row">
+            <span>
+              {t.label}
+              <span className="f08p-lc-pts"> · +{t.pts}</span>
+            </span>
+            <span>
+              <button type="button" className={btn("ghost", "sm")} disabled>
+                −
+              </button>{" "}
+              {day[t.key]}{" "}
+              <button type="button" className={btn("ghost", "sm")} disabled>
+                +
+              </button>
+            </span>
+          </div>
+        ))}
+      </div>
+      <div>
+        <span className="f08p-kicker">Interviews</span>
+        {day.interviews.length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>
+            None this day.
+          </p>
+        ) : (
+          <ul className="f08p-list">
+            {day.interviews.map((iv) => (
+              <li key={iv.id}>{iv.label}</li>
+            ))}
+          </ul>
+        )}
+      </div>
       <div>
         <span className="f08p-kicker">Apps</span>
         {day.apps.length === 0 ? (
@@ -285,225 +303,82 @@ function FullDayPanel({ day }: { day: MockDay }) {
         </button>
       </div>
       <p className="muted" style={{ margin: 0, fontSize: "0.8rem" }}>
-        Overlap: apps and reflections also appear in the completions column.
+        Misc tasks stay in the completions log only. Overlap with the week log is fine.
       </p>
-    </div>
-  );
-}
-
-function SlimDayPanel({ day }: { day: MockDay }) {
-  return (
-    <div className="f08p-panel f08p-stack">
-      <div>
-        <span className="f08p-kicker">Day actions</span>
-        <h3 style={{ margin: 0 }}>{formatLong(day.date)}</h3>
-        <p className="muted" style={{ margin: "0.35rem 0 0", fontSize: "0.85rem" }}>
-          Apps and past notes live only in the log →
-        </p>
-      </div>
-      <LcBlock day={day} showPoints />
-      <button type="button" className={btn("primary", "sm")}>
-        Add reflection
-      </button>
     </div>
   );
 }
 
 export default function PastWorkPrototypePage() {
-  const variant = useVariant(VARIANTS);
+  useVariant(VARIANTS);
+  const metric = useParam(
+    "metric",
+    METRICS.map((m) => m.key),
+  );
   const [selected, setSelected] = useState(TODAY);
   const [month, setMonth] = useState(monthAnchor(TODAY));
   const [kind, setKind] = useState<CompletionKind | "all">("all");
-  const marks = useMemo(() => heatMarks(), []);
-  const weekDays = windowEndingOn(selected, 7);
-  const day = DAYS[selected] ?? {
-    date: selected,
-    lcEasy: 0,
-    lcMedium: 0,
-    lcHard: 0,
-    apps: [],
-    reflections: [],
-  };
+  const weekDays = useMemo(() => windowEndingOn(selected, 7), [selected]);
+  const day = DAYS[selected] ?? emptyDay(selected);
   const weekRows = COMPLETIONS.filter((r) => weekDays.includes(r.localDate));
-
-  const stateLine = `selected=${selected} · window=${weekDays[0]}→${weekDays[6]} · kind=${kind} · variant=${variant}`;
 
   return (
     <ProgressShell
-      title="Past work · edit vs completions"
-      question="Q3 / Q55: Calendar picks the day. Completions show the 7 days ending on that day (filters kept). How do we avoid duplicating apps/reflections between the day panel and the log?"
+      title="Past work · locked A"
+      question="Calendar = day selector for the edit panel; completions = week filter. Explore intensity metric (Q67–Q68)."
       variants={VARIANTS}
       surfaceLabel="Past work"
+      controls={
+        <ParamToggle
+          name="metric"
+          label="Calendar intensity"
+          options={METRICS.map((m) => ({ key: m.key, label: m.label }))}
+        />
+      }
       notes={
         <>
           <p>
-            Locked for this exploration: kind filters; calendar as selector; no standalone
-            1-/7-day pagination control; Lifetime owns lifetime totals.
+            Locked: dual column; always-editable day panel; interviews above apps; no misc-task
+            list; no Edit-this-day; drop weekly-goals filter (rows remain in all).
           </p>
           <p>
-            A keeps today&apos;s full day panel (clear overlap). B strips the day panel to
-            actions only. C folds day actions into the focused day inside the week feed.
+            Flip calendar intensity: “seeds (all)” spikes on Mondays with week-close lumps;
+            “seeds (no weekly lump)” smooths that. Minutes / event count are alternatives.
           </p>
         </>
       }
     >
       <p className="f08p-state" aria-live="polite">
-        {stateLine}
+        selected={selected} · window={weekDays[0]}→{weekDays[6]} · kind={kind} · metric={metric} ·
+        daySeeds={day.seeds}/{day.seedsWork}
       </p>
-
-      {variant === "A" && (
-        <div className="f08p-dual">
-          <div className="f08p-stack">
-            <ProtoCalendar
-              month={month}
-              selected={selected}
-              today={TODAY}
-              marks={marks}
-              onMonth={setMonth}
-              onSelect={(d) => {
-                setSelected(d);
-                setMonth(monthAnchor(d));
-              }}
-            />
-            <FullDayPanel day={day} />
-          </div>
-          <div className="f08p-panel">
-            <h3>Completions · 7 days ending {formatDay(selected, TODAY)}</h3>
-            <KindTabs kind={kind} onKind={setKind} />
-            <CompletionsWeek
-              days={weekDays}
-              kind={kind}
-              focus={selected}
-              today={TODAY}
-              rows={weekRows}
-            />
-          </div>
-        </div>
-      )}
-
-      {variant === "B" && (
+      <div className="f08p-dual">
         <div className="f08p-stack">
           <ProtoCalendar
             month={month}
             selected={selected}
             today={TODAY}
-            marks={marks}
+            metric={metric}
             onMonth={setMonth}
             onSelect={(d) => {
               setSelected(d);
               setMonth(monthAnchor(d));
             }}
           />
-          <div className="f08p-dual">
-            <SlimDayPanel day={day} />
-            <div className="f08p-panel">
-              <h3>Completions · week through {formatDay(selected, TODAY)}</h3>
-              <KindTabs kind={kind} onKind={setKind} />
-              <CompletionsWeek
-                days={weekDays}
-                kind={kind}
-                focus={selected}
-                today={TODAY}
-                rows={weekRows}
-              />
-            </div>
-          </div>
+          <DayPanel day={day} />
         </div>
-      )}
-
-      {variant === "C" && (
-        <div className="f08p-dual">
-          <ProtoCalendar
-            month={month}
-            selected={selected}
+        <div className="f08p-panel">
+          <h3>Completions · 7 days ending {formatDay(selected, TODAY)}</h3>
+          <KindTabs kind={kind} onKind={setKind} />
+          <CompletionsWeek
+            days={weekDays}
+            kind={kind}
+            focus={selected}
             today={TODAY}
-            marks={marks}
-            onMonth={setMonth}
-            onSelect={(d) => {
-              setSelected(d);
-              setMonth(monthAnchor(d));
-            }}
+            rows={weekRows}
           />
-          <div className="f08p-panel">
-            <h3>Week through {formatDay(selected, TODAY)}</h3>
-            <KindTabs kind={kind} onKind={setKind} />
-            {weekDays
-              .slice()
-              .reverse()
-              .map((date) => {
-                const d = DAYS[date] ?? {
-                  date,
-                  lcEasy: 0,
-                  lcMedium: 0,
-                  lcHard: 0,
-                  apps: [],
-                  reflections: [],
-                };
-                const group = weekRows.filter(
-                  (r) =>
-                    r.localDate === date && (kind === "all" || r.kind === kind),
-                );
-                const focus = date === selected;
-                return (
-                  <div
-                    key={date}
-                    className={`f08p-unified-day${focus ? " is-focus" : ""}`}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "0.5rem",
-                        alignItems: "baseline",
-                      }}
-                    >
-                      <strong>{formatDay(date, TODAY)}</strong>
-                      {!focus && (
-                        <button
-                          type="button"
-                          className={btn("ghost", "sm")}
-                          onClick={() => setSelected(date)}
-                        >
-                          Focus
-                        </button>
-                      )}
-                    </div>
-                    {focus && (
-                      <div style={{ margin: "0.55rem 0" }}>
-                        <LcBlock day={d} showPoints />
-                        <button
-                          type="button"
-                          className={btn("primary", "sm")}
-                          style={{ marginTop: "0.45rem" }}
-                        >
-                          Add reflection
-                        </button>
-                      </div>
-                    )}
-                    {group.length === 0 ? (
-                      <p className="muted" style={{ margin: "0.35rem 0 0", fontSize: "0.85rem" }}>
-                        No rows{kind !== "all" ? ` in “${kind}”` : ""}.
-                      </p>
-                    ) : (
-                      group.map((r) => (
-                        <div key={r.id} className="f08p-row">
-                          <div>
-                            <span className="f08p-row-kind">{r.kind}</span>
-                            {r.title}
-                            <div className="f08p-row-meta">{r.subtitle}</div>
-                          </div>
-                          {r.points != null && r.points > 0 && (
-                            <span className="f08p-pts">+{r.points}</span>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                );
-              })}
-          </div>
         </div>
-      )}
+      </div>
     </ProgressShell>
   );
 }

@@ -1,36 +1,25 @@
 /**
- * F08 M8-01 · design questions 1–2 + 5: This week composition, heatmap peek,
- * LC tier polish (+20 / +30 / +50 on the steppers).
+ * F08 M8-01 · This week — locked composition (no heatmap peek).
+ * LC · apps · tasks · interviews · reflections / minutes (Q70).
  * Ticket: M8-01.
  */
 import ProgressShell, { btn, useVariant } from "./ProgressShell";
-import {
-  TODAY,
-  WEEKLY_GOALS,
-  addDays,
-  heatMarks,
-  formatDay,
-} from "./fixtures";
+import { ACHIEVEMENTS, PULSE, TODAY, WEEKLY_GOALS, formatDay } from "./fixtures";
 
 const VARIANTS = [
-  {
-    key: "A",
-    name: "Goals hero · log beside · 7-day rhythm peek",
-  },
-  {
-    key: "B",
-    name: "Goals + 14-day short grids · log below",
-  },
-  {
-    key: "C",
-    name: "Collapsed peek · goals/log side by side · LC points loud",
-  },
+  { key: "A", name: "Locked · streaks, pulse, next achievements, goals, log" },
 ] as const;
 
 function GoalBar({ done, total }: { done: number; total: number }) {
   const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
   return (
-    <div className="f08p-goal-bar" role="progressbar" aria-valuenow={done} aria-valuemin={0} aria-valuemax={total}>
+    <div
+      className="f08p-goal-bar"
+      role="progressbar"
+      aria-valuenow={done}
+      aria-valuemin={0}
+      aria-valuemax={total}
+    >
       <span style={{ width: `${pct}%` }} />
     </div>
   );
@@ -58,30 +47,88 @@ function StreakStrip() {
   );
 }
 
+function PulseCards() {
+  return (
+    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+      {(
+        [
+          ["This week", PULSE.week],
+          ["This month", PULSE.month],
+        ] as const
+      ).map(([label, p]) => (
+        <div key={label} className="f08p-panel" style={{ flex: "1 1 14rem" }}>
+          <span className="f08p-kicker">{label}</span>
+          <strong style={{ fontSize: "0.95rem" }}>{p.line}</strong>
+          <div className="muted" style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
+            {p.minutes} minutes worked
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function NextAchievements() {
+  const families = [...new Set(ACHIEVEMENTS.map((a) => a.family))];
+  const next = families
+    .map((f) => ACHIEVEMENTS.find((a) => a.family === f && !a.unlocked))
+    .filter(Boolean) as typeof ACHIEVEMENTS;
+
+  return (
+    <div className="f08p-panel">
+      <h3 style={{ marginTop: 0 }}>Next achievements</h3>
+      <ul className="f08p-ach">
+        {next.map((a) => {
+          const pct = Math.min(100, Math.round((a.current / a.threshold) * 100));
+          return (
+            <li key={a.id} className="is-next">
+              <div>
+                <span className="muted" style={{ fontSize: "0.75rem" }}>
+                  {a.family}
+                </span>
+                <div>
+                  <strong>{a.label}</strong>
+                </div>
+              </div>
+              <span className="muted">+{a.points}</span>
+              <div className="f08p-ach-bar" aria-hidden>
+                <span style={{ width: `${pct}%` }} />
+              </div>
+              <span className="muted" style={{ fontSize: "0.8rem" }}>
+                {a.current}/{a.threshold}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="muted" style={{ margin: "0.5rem 0 0", fontSize: "0.8rem" }}>
+        Full list on Lifetime →
+      </p>
+    </div>
+  );
+}
+
 function WeeklyBlock() {
   const { lc, apps } = WEEKLY_GOALS;
   return (
     <div className="f08p-panel f08p-stack">
-      <h3 style={{ margin: 0 }}>This week</h3>
+      <h3 style={{ margin: 0 }}>Weekly goals</h3>
       <div>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" }}>
           <strong>LeetCode · {lc.label}</strong>
           <span className="muted">
             {lc.done}/{lc.total} · {lc.pace}
+            {lc.streak >= 2 ? ` · ${lc.streak} weeks in a row` : ""}
           </span>
         </div>
         <GoalBar done={lc.done} total={lc.total} />
-        {lc.streak >= 2 && (
-          <span className="muted" style={{ fontSize: "0.8rem" }}>
-            {lc.streak} weeks in a row
-          </span>
-        )}
       </div>
       <div>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" }}>
           <strong>Applications</strong>
           <span className="muted">
             {apps.done}/{apps.total} · {apps.pace}
+            {apps.streak >= 2 ? ` · ${apps.streak} weeks in a row` : ""}
           </span>
         </div>
         <GoalBar done={apps.done} total={apps.total} />
@@ -102,7 +149,7 @@ function WeeklyBlock() {
   );
 }
 
-function LcLogger({ loud }: { loud?: boolean }) {
+function LcLogger() {
   const tiers = [
     { label: "Easy", count: 0, pts: 20 },
     { label: "Medium", count: 1, pts: 30 },
@@ -123,14 +170,7 @@ function LcLogger({ loud }: { loud?: boolean }) {
         <div key={t.label} className="f08p-lc-row">
           <span>
             <strong>{t.label}</strong>
-            {loud ? (
-              <span className="f08p-lc-pts"> +{t.pts}</span>
-            ) : (
-              <span className="muted" style={{ fontSize: "0.8rem" }}>
-                {" "}
-                (+{t.pts})
-              </span>
-            )}
+            <span className="f08p-lc-pts"> +{t.pts}</span>
           </span>
           <span>
             <button type="button" className={btn("ghost", "sm")} disabled>
@@ -150,147 +190,62 @@ function LcLogger({ loud }: { loud?: boolean }) {
   );
 }
 
-function LogColumn({ loudLc }: { loudLc?: boolean }) {
-  return (
-    <div className="f08p-stack">
-      <LcLogger loud={loudLc} />
-      <div className="f08p-panel">
-        <h4 style={{ marginTop: 0 }}>Daily progress</h4>
-        <p className="muted" style={{ marginTop: 0, fontSize: "0.85rem" }}>
-          Reflection compose (mock)
-        </p>
-        <textarea rows={3} defaultValue="" placeholder="Write a note…" style={{ width: "100%" }} />
-        <button type="button" className={btn("primary", "sm")} style={{ marginTop: "0.45rem" }}>
-          Save note
-        </button>
-        <div style={{ marginTop: "0.75rem" }}>
-          <span className="f08p-kicker">Today&apos;s notes</span>
-          <p style={{ margin: 0, fontSize: "0.9rem" }}>
-            Worked two medium graphs; still slow on DFS framing.
-          </p>
-        </div>
-        <div style={{ marginTop: "0.75rem" }}>
-          <span className="f08p-kicker">Apps</span>
-          <p style={{ margin: 0, fontSize: "0.9rem" }}>Notion · Software Engineer Intern</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RhythmPeek({ days }: { days: 7 | 14 }) {
-  const marks = heatMarks();
-  const dates = Array.from({ length: days }, (_, i) => addDays(TODAY, -(days - 1 - i)));
+function DailyProgress() {
   return (
     <div className="f08p-panel">
-      <span className="f08p-kicker">Heatmap peek · last {days} days</span>
-      <div className="f08p-rhythm" aria-label={`Last ${days} days`}>
-        {dates.map((d) => {
-          const e = marks[d]?.earned ?? 0;
-          return (
-            <span
-              key={d}
-              className={`f08p-rhythm-cell${e ? ` e${e}` : ""}`}
-              title={`${d}: ${e}`}
-            />
-          );
-        })}
+      <h4 style={{ marginTop: 0 }}>Daily progress</h4>
+      <p className="muted" style={{ marginTop: 0, fontSize: "0.85rem" }}>
+        Reflection compose (separate from LC)
+      </p>
+      <textarea rows={3} defaultValue="" placeholder="Write a note…" style={{ width: "100%" }} />
+      <button type="button" className={btn("primary", "sm")} style={{ marginTop: "0.45rem" }}>
+        Save note
+      </button>
+      <div style={{ marginTop: "0.75rem" }}>
+        <span className="f08p-kicker">Today&apos;s notes</span>
+        <p style={{ margin: 0, fontSize: "0.9rem" }}>
+          Worked two medium graphs; still slow on DFS framing.
+        </p>
       </div>
-    </div>
-  );
-}
-
-function ShortGrids() {
-  const marks = heatMarks();
-  const dates = Array.from({ length: 14 }, (_, i) => addDays(TODAY, -(13 - i)));
-  return (
-    <div className="f08p-panel f08p-stack">
-      <span className="f08p-kicker">Application prep · 14 days</span>
-      <div className="f08p-heat-grid">
-        {dates.map((d) => {
-          const e = marks[d]?.earned ?? 0;
-          return <span key={`a-${d}`} className={`f08p-rhythm-cell${e ? ` e${e}` : ""}`} />;
-        })}
-      </div>
-      <span className="f08p-kicker">Technical prep · 14 days</span>
-      <div className="f08p-heat-grid">
-        {dates.map((d) => {
-          const e = marks[d]?.effort ? 2 : marks[d]?.earned ?? 0;
-          return <span key={`t-${d}`} className={`f08p-rhythm-cell${e ? ` e${Math.min(3, e)}` : ""}`} />;
-        })}
+      <div style={{ marginTop: "0.75rem" }}>
+        <span className="f08p-kicker">Apps</span>
+        <p style={{ margin: 0, fontSize: "0.9rem" }}>Notion · Software Engineer Intern</p>
       </div>
     </div>
   );
 }
 
 export default function ThisWeekPrototypePage() {
-  const variant = useVariant(VARIANTS);
+  useVariant(VARIANTS);
 
   return (
     <ProgressShell
-      title="This week · hub landing"
-      question="Q1–Q2 / Q5: First viewport = on track + log work. Heatmap is a peek (7 / 14 / collapsed). LC steppers show tier + points."
+      title="This week · locked layout"
+      question="Day streaks; week+month pulse (LC · apps · tasks · interviews · reflections / minutes); next achievement per family; weekly goals with weekly streaks; LC and compose separate. No heatmap peek."
       variants={VARIANTS}
       surfaceLabel="This week"
       notes={
         <p>
-          Full ~26-week dual heatmaps are intentionally absent. Lifetime decides whether
-          longer heatmaps still exist (Q57).
+          Achievements block placement vs a long apps member list is still worth a glance in the
+          browser — everything above the apps list by default.
         </p>
       }
     >
-      <p className="f08p-state">variant={variant} · today={TODAY}</p>
-
-      {variant === "A" && (
-        <div className="f08p-week">
-          <StreakStrip />
-          <div className="f08p-week-top">
+      <p className="f08p-state">pulse order = LC · apps · tasks · interviews · reflections</p>
+      <div className="f08p-week">
+        <StreakStrip />
+        <PulseCards />
+        <div className="f08p-week-top">
+          <div className="f08p-stack">
+            <NextAchievements />
             <WeeklyBlock />
-            <LogColumn />
           </div>
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-            <div className="f08p-panel" style={{ flex: "1 1 10rem" }}>
-              <span className="f08p-kicker">This week</span>
-              <strong>2 apps · 7 LC · 3 reflections</strong>
-            </div>
-            <div className="f08p-panel" style={{ flex: "1 1 10rem" }}>
-              <span className="f08p-kicker">Next achievement</span>
-              <strong>50 applications</strong>
-              <div className="muted" style={{ fontSize: "0.8rem" }}>
-                36/50 · Lifetime →
-              </div>
-            </div>
-            <div style={{ flex: "1 1 12rem" }}>
-              <RhythmPeek days={7} />
-            </div>
+          <div className="f08p-stack">
+            <LcLogger />
+            <DailyProgress />
           </div>
         </div>
-      )}
-
-      {variant === "B" && (
-        <div className="f08p-week">
-          <StreakStrip />
-          <WeeklyBlock />
-          <ShortGrids />
-          <LogColumn />
-        </div>
-      )}
-
-      {variant === "C" && (
-        <div className="f08p-week">
-          <StreakStrip />
-          <details className="f08p-panel">
-            <summary style={{ cursor: "pointer" }}>Heatmap peek · last 7 days (collapsed)</summary>
-            <div style={{ marginTop: "0.65rem" }}>
-              <RhythmPeek days={7} />
-            </div>
-          </details>
-          <div className="f08p-week-top">
-            <WeeklyBlock />
-            <LogColumn loudLc />
-          </div>
-        </div>
-      )}
+      </div>
     </ProgressShell>
   );
 }

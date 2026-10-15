@@ -245,7 +245,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   - **Timing:** a day's streak points are awarded on its first qualifying action and reversed if that day drops back to 0. Editing a past day in History updates the displayed streak, but doesn't award or reverse streak points for that day or any later day.
   - **Launch:** a streak running at launch keeps its earlier days; daily points start from launch.
   - Streak points have their own ledger category, `streak`.
-- **R5.26** (Established 2026-10-13; display 2026-10-13 M5-07; placement 2026-10-14) **Achievements** for accumulated counts, with points roughly proportional to the count. Each pays once. The numbers are a starting point. In M5 they surface as a Progress tab **`achievements`** next to **ledger**; unlock is a modal (“Great work!”, `Balance: N`). M8 moves them to Progress **Lifetime** (R8.12). Ticket: M5-11; placement M8-05.
+- **R5.26** (Established 2026-10-13; display 2026-10-13 M5-07; placement 2026-10-14 M8-01) **Achievements** for accumulated counts, with points roughly proportional to the count. Each pays once. The numbers are a starting point. Unlock is a modal (“Great work!”, `Balance: N`). M8: **next unlock per family** on Progress **This week** (R8.10); **full list** on Progress **Lifetime** (R8.12). Ticket: M5-11; placement M8-03 / M8-05.
   - Applications marked applied: 10, 25, 50, 100, 150, 200, 300, 500; 3 × N points.
   - LC solves: 25, 50, 100, 200, 300, 500; 5 × N points.
   - Finished interview steps, counted per kind, worth the step's own points × N (they reward more than applications or LC): assessment and phone at 5, 10, 25, 50; technical at 3, 5, 10, 25; onsite at 1, 3, 5, 10; offer at 1, 2, 3, 5. Custom steps don't count.
@@ -328,27 +328,35 @@ M8 follows M7, so Progress is redesigned knowing what Rewards covers. Design loc
 
 **This week** (`/progress/week`)
 
-- **R8.10** (Established 2026-10-14) This week is the default Progress landing. Its job is: am I on track this week, and can I log today's work here. It hosts the today streak strip, the weekly goals block (R5.3–R5.5, R5.28), LC logging and reflection compose for today, today's notes and apps logged today, and a compact week/month pulse (not competing hero cards).
-- **R8.11** (Established 2026-10-14) This week shows a **heatmap peek**: short, not a second hero — collapsed, a rhythm strip, and/or roughly the past 7 or 14 days. Exact treatment is chosen in the M8 prototype (M8-01). Full heatmaps may also appear on Lifetime if useful.
+- **R8.10** (Established 2026-10-14; layout 2026-10-14 M8-01) This week is the default Progress landing. Its job is: am I on track this week, and can I log today's work here. Locked composition (prototype variant A arrangement, refined):
+  - today **day-streak** strip (R5.27)
+  - **week and month** pulse side by side, using the completions-diary stats shape: counts line plus minutes worked. Order is **`N LC · N apps · N tasks · N interviews · N reflections` / `N minutes worked`** (LC first; tasks third)
+  - **next achievements**: compact rows, **one next unlock per achievement family/category** (not a single teaser). Full list stays on Lifetime (R8.12)
+  - weekly goals block (R5.3–R5.5) with **weekly-goal streaks** visible (R5.28); apps member list may push other blocks above it when long
+  - **Log work** keeps LC steppers and daily reflection compose as **separate** blocks (not merged)
+  - today's notes and apps logged today remain available in the daily-progress area
+- **R8.11** (Established 2026-10-14; dropped same day M8-01) ~~Heatmap peek on This week.~~ **Dropped:** day streaks at the top are enough; heatmaps live on Lifetime (R8.12).
 - **R8.3** (Established) Polish the LeetCode tier stepper built in M5 (R5.20): show the increment and the tier in a visually appealing way (including the settled +20 / +30 / +50 values).
 
 **Past work** (`/progress/past`)
 
-- **R8.4** (Established; refined 2026-10-14; Past work direction same day) **Past work** is the Progress surface for completion and reflection history. Completions live here (not under a ledger). **Kind filters stay.** A **month calendar selects the focus day** for both the day edit panel and the completions window. Working hypothesis under M8-01 (lock only after prototype verdict):
-  - **Layout:** calendar + per-day edit on one side; completions on the other (or a more unified alternative if the prototype finds less overlap).
-  - **Completions window:** the **7 days ending on the selected day** (week-wise filter driven by the calendar), not a separate 1-day / 7-day pagination control. Lifetime totals belong on Lifetime (R8.12), not as an unfiltered global completions scroll here.
-  - **Overlap:** today's edit panel repeats apps and reflections that also appear in completions — M8-01 explores a cleaner split (what the day panel edits vs what the log lists).
-  The earlier selectable 1-day / 7-day **pagination** requirement is **superseded** by this calendar-driven week window; F09 may still define a general long-list pagination default (F09 R.7) for other surfaces.
-- **R8.7** (Established; refined 2026-10-14) After-the-fact reflection linking entry points, against Past work: detail pages remain primary for work that already has a page; Past work covers day-level edit and diary-style linking. No fourth orphan entry. Exact chrome is settled in M8-01.
+- **R8.4** (Established; refined 2026-10-14; **locked M8-01 variant A** same day) **Past work** is the Progress surface for completion and reflection history. Completions live here (not under a ledger).
+  - **Layout (locked):** left column = month **calendar** above a **day panel**; right column = **completions** for the **7 days ending on the selected day**. Calendar selects the day for the panel and the week window for the log. Overlap between day panel and completions is acceptable (day = selector/editor; log = week filter).
+  - **Day panel:** editable **by default** (no “Edit this day” checkbox). Shows LC (misc) controls, **interviews that day** (above apps), **apps** that day, and **reflections** / add reflection. **Misc/other tasks are not listed** in the day panel (they remain in the completions log).
+  - **Completions:** kind filters kept, except **drop the `weekly goals` filter tab**; weekly-goal rows still appear under **`all`**. Lifetime totals stay on Lifetime.
+  - Standalone 1-day / 7-day pagination remains superseded.
+- **R8.7** (Established; refined 2026-10-14) After-the-fact reflection linking: detail pages remain primary for linked work; Past work day panel (always editable) and completions nested reflection edit cover the rest. No fourth orphan entry.
+- **R8.13** (Established 2026-10-14 M8-01) **Deprecate effort / deep-work-style checkmarks** on the History calendar and prep heatmaps (legacy “effort” marks). Marks should read as a clearer activity intensity. **Proposed:** color by **seeds earned that day**, with a richer gradient than today — but weekly-goal (and similar lump) awards bias Sunday/Monday close days; metric alternatives are open (Q68). Visual polish may continue in F09.
 
 **Lifetime** (`/progress/lifetime`)
 
-- **R8.12** (Established 2026-10-14) Lifetime surfaces accumulated work: all-time totals (from completions stats), the full achievements list (moves off the M5 peer tab; R5.26), and prep heatmaps as needed once This week's peek is chosen. Seeds / earnings never live here — currency stays on Rewards.
+- **R8.12** (Established 2026-10-14; refined M8-01 same day) Lifetime is an **accumulation / data record**: richer than a sparse stat strip. It hosts **all-time** work totals (more substantial presentation than bare counts alone), the **full** achievements list (R5.26; next-per-family moves to This week per R8.10), and **prep heatmaps** (no This week peek).
+- **R8.14** (Proposed 2026-10-14 M8-01) An **activity fluctuation** chart on Lifetime (above or below heatmaps): line (or similar) over an adjustable range (e.g. 1 week, 1 month, …). Framing is change-over-time on Progress, not Rewards purse chrome. **Metric open (Q67):** leaning seeds earned per day as the objective activity signal; may support multiple series. Weekly-close lump bias applies (same as R8.13 / Q68).
 
 **Cross-page IA**
 
 - **R8.5** (Established; refined 2026-10-14) Placement across Progress, Rewards, Home and Status:
-  - **Progress:** weekly goals, today logging, Past work (completions + day history), Lifetime (totals, achievements, heatmaps as decided)
+  - **Progress:** weekly goals + logging + next achievements on This week; Past work (calendar day panel + week completions); Lifetime (totals, full achievements, heatmaps, activity chart as decided)
   - **Rewards:** seeds chrome, Banner, Collection, Earnings, Pull history, Rules
   - **Home:** plan the week (Targets, streaks, congrats); unchanged in M8 except as R8.6 may later explore
   - **Status:** ops only. Board departures wait for M6; not on Progress
@@ -472,12 +480,12 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
 | Progress is one page with peer tabs `today` · `history` · `ledger` · `achievements` via `?tab=` | [`ProgressPage.tsx`](../../../apps/web/src/features/progress/ProgressPage.tsx) L44–50, L460–491 | Conflicts R8.1, R8.9 | Stopgap; M8 nested hub |
-| Today tab packs streak strip, week/month cards, weekly goals, dual ~26-week heatmaps, LC logger, reflection compose, notes, apps | `ProgressPage.tsx` today branch | Conflicts R8.10, R8.11 | Heatmaps are full dual grids, not a peek |
-| History tab: month calendar + selected-day LC/apps/notes with edit toggle | `ProgressPage.tsx` history branch | Conflicts R8.4 (placement) | Edit panel overlaps completions (apps/reflections); M8-01 explores split with calendar-driven week window |
+| Today tab packs streak strip, week/month cards, weekly goals, dual ~26-week heatmaps, LC logger, reflection compose, notes, apps | `ProgressPage.tsx` today branch | Conflicts R8.10, R8.11 | No heatmap on This week; need next-per-family achievements + completions-style week/month pulse |
+| History tab: month calendar + selected-day LC/apps/notes with edit toggle; effort marks on calendar | `ProgressPage.tsx` history branch, `HistoryCalendar` | Conflicts R8.4, R8.13 | Need always-editable day panel with interviews; drop effort checkmarks; color metric open (Q68) |
 | Ledger tab: Completions diary + Points stub linking to `/rewards/earnings` | `ProgressPage.tsx` L746–778 | Conflicts R8.2 | Points stub must go; completions move under Past work |
-| Achievements are a peer tab | `ProgressPage.tsx`, [`AchievementsPanel.tsx`](../../../apps/web/src/features/achievements/AchievementsPanel.tsx) | Conflicts R8.12 | Move to Lifetime |
+| Achievements are a peer tab | `ProgressPage.tsx`, [`AchievementsPanel.tsx`](../../../apps/web/src/features/achievements/AchievementsPanel.tsx) | Conflicts R8.10, R8.12 | Next-per-family on This week; full list on Lifetime |
 | LC stepper shows tier names and counts; point values are not shown on the control | [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conflicts R8.3 (polish) | Function conforms R5.20; visual polish is M8 |
-| Completions diary is an unpaginated day-grouped list with kind tabs; no calendar link | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R8.4 | Past work: calendar selects focus day; completions show ~7 days ending on that day |
+| Completions diary is an unpaginated day-grouped list with kind tabs including `weekly goals`; no calendar link | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R8.4 | Past work: calendar week window; drop `weekly goals` filter tab; keep rows in `all` |
 
 ### Cross-cutting
 
@@ -501,13 +509,14 @@ Nothing that depends on an open question may be implemented.
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
-| Q55 | Past work: how should the day edit panel and the completions log split content so apps/reflections aren't duplicated awkwardly? | R8.4 | M8-01 |
-| Q57 | Lifetime: keep dual application/technical heatmaps in full, one combined heatmap, or only the This week peek? | R8.11, R8.12 | M8-01 |
+| Q67 | Activity chart + calendar/heatmap color: seeds earned per day, seeds excluding weekly-close (and/or streak) lumps, minutes worked, completion event count, or multiple series? | R8.13, R8.14 | M8-01 |
+| Q68 | If seeds color the calendar/heatmaps/chart, how should week-close weekly-goal awards be attributed so Sundays aren’t falsely “hottest”? | R8.13, R8.14 | M8-01 |
+| Q69 | Lifetime top stats: what makes the accumulation header feel substantial (lifetime minutes, LC solves, streak highs, seeds lifetime earned as a Progress statistic, …)? | R8.12 | M8-01 |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (61)</summary>
+<summary>Resolved questions (67)</summary>
 
 
 | # | Question | Answer (date) | Now in |
@@ -567,12 +576,18 @@ Nothing that depends on an open question may be implemented.
 | Q53 | LeetCode days in the `all` tab | Yes, like every other kind. The `leetcode` tab counts total solves; `all` counts one per LeetCode day row, so a day with N solves is N on `leetcode` and 1 on `all` (2026-10-13) | R5.33, M5-16 |
 | Q54 | LeetCode day row | One row per day with at least one solve; title `LC: 3 solved`; meta `1 easy · 1 medium · 1 hard`; the day's current LeetCode points in the aside when above 0, so pre-ledger days show none. The weekly goals row badge stays `weekly`; tab order all, tasks, apps, interviews, reflections, weekly goals, leetcode (2026-10-13) | R5.33, R5.34, M5-16 |
 | Q60 | Keep Progress name? | Yes; Past work is a Progress sub-route, not a rename (2026-10-14) | R8.8 |
-| Q61 | Heatmaps on This week? | Peek only — short (collapsed / rhythm strip / ~7–14 days); explore in prototype (2026-10-14) | R8.11 |
-| Q62 | Past work layout (first pass) | Day-segmented; initially 1-/7-day pagination (2026-10-14). **Superseded same day:** calendar as day selector; completions = 7 days ending on selected day; kind filters kept; pagination dropped pending M8-01 (Q55 content split still open) | R8.4 |
+| Q61 | Heatmaps on This week? | First: peek. **Dropped** after M8-01 review — day streaks enough; heatmaps on Lifetime (2026-10-14) | R8.11 |
+| Q62 | Past work layout (first pass) | Day-segmented; initially 1-/7-day pagination (2026-10-14). Superseded: calendar + 7-day completions window. **Locked M8-01 A:** dual column; overlap OK (2026-10-14) | R8.4 |
 | Q63 | Progress routing | Nested Rewards-style routes for M8; app-wide shell/tab convention deferred to F09 (2026-10-14) | R8.9 |
 | Q64 | Home R8.6 in M8? | No; potential follow-up after Progress is locked; may be unnecessary (2026-10-14) | R8.6 |
-| Q65 | Past work kind filters? | Keep (2026-10-14) | R8.4 |
+| Q65 | Past work kind filters? | Keep (2026-10-14); **drop `weekly goals` tab**, rows stay in `all` (2026-10-14 M8-01) | R8.4 |
 | Q66 | Past work calendar? | Keep as the selector for the day panel and the completions week window (2026-10-14) | R8.4 |
+| Q55 | Past work edit vs completions overlap? | Variant **A**; overlap fine — day panel = day selector/editor, completions = week filter (2026-10-14) | R8.4 |
+| Q57 | Heatmaps where? | On **Lifetime** (with activity chart exploration); not a This week peek (2026-10-14) | R8.12, R8.14 |
+| Q71 | Past work day panel contents? | Always editable; interviews above apps; no misc-task list; no Edit-this-day checkbox (2026-10-14) | R8.4 |
+| Q72 | This week achievements? | Compact **next per family** on This week; full list on Lifetime (2026-10-14) | R8.10, R8.12 |
+| Q73 | This week pulse? | Keep week **and** month; completions-style counts + minutes (2026-10-14) | R8.10 |
+| Q70 | Pulse counts order / LC? | Include LC; order **LC · apps · tasks · interviews · reflections** / minutes (2026-10-14). Earlier “6 tasks” meant LC | R8.10 |
 
 </details>
 
@@ -621,3 +636,5 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** From the M5-01 R5.10 check: past LeetCode days aren't backfilled with points; the LeetCode card adds a this-week counts line (R5.32); the completion log gets a `leetcode` tab (R5.33) and `weekly` becomes `weekly goals` (R5.34), ticketed as M5-16. Q52–Q54 answered the same day: the `leetcode` tab counts total solves, LeetCode days show in `all` (1 per day), rows read `LC: 3 solved`.
 - **2026-10-14:** M8 Progress IA lock: keep nav label Progress; nested Rewards-style routes (`/progress/week`, `/past`, `/lifetime`); This week is the hub with a short heatmap peek (7/14 / rhythm / collapsed — prototype); Lifetime holds totals and achievements; remove Progress points/ledger framing; Home R8.6 deferred as a possible post-lock follow-up. Tickets M8-01–M8-05. Long-list pagination defaults and app-wide feature-shell conventions noted for F09.
 - **2026-10-14 (later):** Past work direction for M8-01: drop standalone 1-/7-day pagination. Calendar selects the focus day; completions show the 7 days ending on that day with kind filters kept; explore combining the day edit panel with completions to cut apps/reflections overlap. Lifetime keeps lifetime numbers.
+- **2026-10-14 (M8-01 review):** Past work **A** locked (dual column; overlap OK). Day panel always editable; interviews above apps; no misc tasks in panel; drop completions `weekly goals` filter tab. This week: no heatmap peek; keep week+month completions-style pulse; next achievement per family; show weekly-goal streaks; LC and reflection compose stay separate. Lifetime: fuller accumulation header (open), full achievements, heatmaps + Proposed activity line chart. Deprecate calendar/heatmap effort checkmarks; Proposed seeds-per-day color with open metric questions (Q67–Q68).
+- **2026-10-14 (pulse line):** Week/month pulse order is **LC · apps · tasks · interviews · reflections** / minutes worked (Q70).

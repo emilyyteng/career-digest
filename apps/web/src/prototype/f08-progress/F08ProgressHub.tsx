@@ -1,7 +1,6 @@
 /**
- * F08 M8-01 hub: Progress redesign prototypes (This week, Past work, Lifetime).
- * Past work (calendar + week completions + edit/completions split) is the main
- * exploration this pass.
+ * F08 M8-01 hub: Progress redesign prototypes.
+ * Past work A and This week layout locked; Lifetime + metrics still exploring.
  */
 import { Link } from "react-router-dom";
 import { HUB_PATH } from "./ProgressShell";
@@ -10,22 +9,22 @@ import "./prototype-f08-progress.css";
 
 const SURFACES = [
   {
-    path: "past-work",
-    title: "Q3 · Past work (start here)",
+    path: "this-week",
+    title: "This week (locked layout)",
     blurb:
-      "Calendar selects the day; completions = 7 days ending on that day; kind filters kept. A dual column (full day panel) · B completions-led slim actions · C unified week feed.",
+      "Day streaks · week+month pulse (LC · apps · tasks · interviews · reflections / minutes) · next achievement per family · weekly goals with weekly streaks · LC ⊥ compose. No heatmap peek.",
   },
   {
-    path: "this-week",
-    title: "Q1–Q2 / Q5 · This week + heatmap peek + LC polish",
+    path: "past-work",
+    title: "Past work (locked A)",
     blurb:
-      "Hub landing. A goals hero + 7-day rhythm · B 14-day short grids · C collapsed peek + louder LC points.",
+      "Calendar + always-editable day panel (interviews above apps) | 7-day completions. Toggle calendar intensity metrics (seeds / no weekly lump / minutes / events).",
   },
   {
     path: "lifetime",
-    title: "Q4 / Q57 · Lifetime",
+    title: "Lifetime (exploring)",
     blurb:
-      "All-time totals + achievements. A no heatmaps · B dual heatmaps · C next unlocks + combined rhythm.",
+      "Richer accumulation header · activity chart (range + metric) · heatmaps · full achievements. Chart above or below heatmaps via ← / →.",
   },
 ] as const;
 
@@ -34,12 +33,12 @@ export default function F08ProgressHub() {
     <section className="prototype-hub f08-proto f08p-page">
       <p className="prototype-banner">
         <strong>Experimental prototype</strong> · F08 M8-01 Progress hub · mock data only. ← /
-        → flips variants on each page.
+        → flips variants where present.
       </p>
       <h2>F08 M8 · Progress hub</h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        Nested Progress surfaces (This week / Past work / Lifetime). No points ledger.
-        Past work direction: calendar-driven week window — try that page first.
+        Nested Progress surfaces. Open: activity metric for chart/calendar (Q67–Q68), Lifetime
+        header contents (Q69).
       </p>
       {SURFACES.map((s) => (
         <Link key={s.path} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}`}>

@@ -22,17 +22,23 @@ export type MockDay = {
   lcEasy: number;
   lcMedium: number;
   lcHard: number;
+  /** Seeds earned that calendar day (mock; may include weekly-close lumps). */
+  seeds: number;
+  /** Seeds excluding weekly-goal category (mock alternative metric). */
+  seedsWork: number;
+  minutes: number;
+  interviews: Array<{ id: string; label: string }>;
   apps: Array<{ id: string; label: string }>;
   reflections: Array<{ id: string; lane: string; body: string }>;
 };
 
+/** Completions filters — no dedicated weekly-goals tab (R8.4). */
 export const KIND_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
   { key: "all", label: "all" },
   { key: "task", label: "tasks" },
   { key: "application", label: "apps" },
   { key: "interview", label: "interviews" },
   { key: "reflection", label: "reflections" },
-  { key: "weekly", label: "weekly goals" },
   { key: "leetcode", label: "leetcode" },
 ];
 
@@ -79,32 +85,58 @@ export const TODAY = localYmd();
 
 function buildDays(): Record<string, MockDay> {
   const out: Record<string, MockDay> = {};
-  for (let i = 0; i < 28; i += 1) {
+  for (let i = 0; i < 42; i += 1) {
     const date = addDays(TODAY, -i);
+    const lcEasy = i % 5 === 0 ? 1 : 0;
+    const lcMedium = i % 3 === 0 ? 1 : i % 2 === 0 ? 1 : 0;
+    const lcHard = i % 7 === 0 ? 1 : 0;
+    const lcPts = lcEasy * 20 + lcMedium * 30 + lcHard * 50;
+    const apps =
+      i % 4 === 0
+        ? [{ id: `app-${date}`, label: "Notion · Software Engineer Intern" }]
+        : i % 4 === 1
+          ? [{ id: `app-${date}`, label: "Stripe · Backend Intern" }]
+          : [];
+    const interviews =
+      i % 9 === 0
+        ? [{ id: `iv-${date}`, label: "Acme · Phone screen" }]
+        : i % 11 === 0
+          ? [{ id: `iv-${date}`, label: "Globex · Onsite round 1" }]
+          : [];
+    const reflections =
+      i % 3 === 0
+        ? [
+            {
+              id: `ref-${date}`,
+              lane: i % 2 === 0 ? "technical" : "application",
+              body:
+                i % 2 === 0
+                  ? "Worked two medium graphs; still slow on DFS framing."
+                  : "Tweaked resume bullets for the Stripe posting.",
+            },
+          ]
+        : [];
+    const workSeeds =
+      lcPts +
+      apps.length * 40 +
+      interviews.length * 60 +
+      reflections.length * 20 +
+      (i % 5 === 2 ? 35 : 0);
+    /** Fake week-close lump on Mondays to show the bias problem. */
+    const [y, m, d] = date.split("-").map(Number);
+    const isMonday = new Date(y, m - 1, d).getDay() === 1;
+    const weeklyLump = isMonday && i > 0 && i < 21 ? 340 : 0;
     out[date] = {
       date,
-      lcEasy: i % 5 === 0 ? 1 : 0,
-      lcMedium: i % 3 === 0 ? 1 : i % 2 === 0 ? 1 : 0,
-      lcHard: i % 7 === 0 ? 1 : 0,
-      apps:
-        i % 4 === 0
-          ? [{ id: `app-${date}`, label: "Notion · Software Engineer Intern" }]
-          : i % 4 === 1
-            ? [{ id: `app-${date}`, label: "Stripe · Backend Intern" }]
-            : [],
-      reflections:
-        i % 3 === 0
-          ? [
-              {
-                id: `ref-${date}`,
-                lane: i % 2 === 0 ? "technical" : "application",
-                body:
-                  i % 2 === 0
-                    ? "Worked two medium graphs; still slow on DFS framing."
-                    : "Tweaked resume bullets for the Stripe posting.",
-              },
-            ]
-          : [],
+      lcEasy,
+      lcMedium,
+      lcHard,
+      seeds: workSeeds + weeklyLump,
+      seedsWork: workSeeds,
+      minutes: apps.length * 45 + interviews.length * 60 + (i % 5 === 2 ? 25 : 0) + reflections.length * 0,
+      interviews,
+      apps,
+      reflections,
     };
   }
   return out;
@@ -115,7 +147,7 @@ export const DAYS = buildDays();
 export const COMPLETIONS: MockCompletion[] = (() => {
   const rows: MockCompletion[] = [];
   let n = 0;
-  for (let i = 0; i < 28; i += 1) {
+  for (let i = 0; i < 42; i += 1) {
     const date = addDays(TODAY, -i);
     const day = DAYS[date]!;
     const lcTotal = day.lcEasy + day.lcMedium + day.lcHard;
@@ -139,6 +171,16 @@ export const COMPLETIONS: MockCompletion[] = (() => {
         points: 40,
       });
     }
+    for (const iv of day.interviews) {
+      rows.push({
+        id: `c-${n++}`,
+        localDate: date,
+        kind: "interview",
+        title: iv.label,
+        subtitle: "finished step",
+        points: 60,
+      });
+    }
     for (const ref of day.reflections) {
       rows.push({
         id: `c-${n++}`,
@@ -159,25 +201,18 @@ export const COMPLETIONS: MockCompletion[] = (() => {
         points: 35,
       });
     }
-    if (i % 9 === 0) {
+    const [y, m, d] = date.split("-").map(Number);
+    if (new Date(y, m - 1, d).getDay() === 1 && i > 0 && i < 21) {
       rows.push({
         id: `c-${n++}`,
         localDate: date,
-        kind: "interview",
-        title: "Acme · Phone screen",
-        subtitle: "finished step",
-        points: 60,
+        kind: "weekly",
+        title: "Weekly LC 12/10",
+        subtitle: "Week close · target met (lump — biases the day)",
+        points: 340,
       });
     }
   }
-  rows.push({
-    id: `c-${n++}`,
-    localDate: addDays(TODAY, -((new Date(TODAY).getDay() + 6) % 7 || 7)),
-    kind: "weekly",
-    title: "Weekly LC 12/10",
-    subtitle: "Week of prior Monday · target met",
-    points: 340,
-  });
   return rows;
 })();
 
@@ -205,7 +240,7 @@ export const WEEKLY_GOALS = {
     done: 2,
     total: 4,
     pace: "on track",
-    streak: 0,
+    streak: 2,
     members: [
       { label: "Notion · Software Engineer Intern", applied: true },
       { label: "Stripe · Backend Intern", applied: false },
@@ -215,16 +250,69 @@ export const WEEKLY_GOALS = {
   },
 };
 
-export function heatMarks(): Record<string, { earned: number; effort: boolean }> {
-  const marks: Record<string, { earned: number; effort: boolean }> = {};
-  for (let i = 0; i < 28; i += 1) {
-    const date = addDays(TODAY, -i);
-    const day = DAYS[date]!;
-    const earned = Math.min(
-      3,
-      day.apps.length + (day.lcEasy + day.lcMedium + day.lcHard > 0 ? 1 : 0),
-    );
-    marks[date] = { earned, effort: day.reflections.length > 0 };
+export type IntensityMetric = "seeds" | "seedsWork" | "minutes" | "events";
+
+/** 0–4 intensity for calendar/heatmap cells (no effort checkmarks). */
+export function intensityForDay(day: MockDay, metric: IntensityMetric): number {
+  if (metric === "seeds") {
+    if (day.seeds <= 0) return 0;
+    if (day.seeds < 40) return 1;
+    if (day.seeds < 100) return 2;
+    if (day.seeds < 250) return 3;
+    return 4;
   }
-  return marks;
+  if (metric === "seedsWork") {
+    if (day.seedsWork <= 0) return 0;
+    if (day.seedsWork < 40) return 1;
+    if (day.seedsWork < 80) return 2;
+    if (day.seedsWork < 140) return 3;
+    return 4;
+  }
+  if (metric === "minutes") {
+    if (day.minutes <= 0) return 0;
+    if (day.minutes < 30) return 1;
+    if (day.minutes < 60) return 2;
+    if (day.minutes < 120) return 3;
+    return 4;
+  }
+  const events =
+    day.apps.length +
+    day.interviews.length +
+    day.reflections.length +
+    (day.lcEasy + day.lcMedium + day.lcHard > 0 ? 1 : 0);
+  return Math.min(4, events);
 }
+
+export function series(
+  days: number,
+  metric: IntensityMetric,
+): Array<{ date: string; value: number }> {
+  return Array.from({ length: days }, (_, i) => {
+    const date = addDays(TODAY, -(days - 1 - i));
+    const day = DAYS[date]!;
+    const value =
+      metric === "seeds"
+        ? day.seeds
+        : metric === "seedsWork"
+          ? day.seedsWork
+          : metric === "minutes"
+            ? day.minutes
+            : day.apps.length +
+              day.interviews.length +
+              day.reflections.length +
+              (day.lcEasy + day.lcMedium + day.lcHard > 0 ? 1 : 0);
+    return { date, value };
+  });
+}
+
+/** Week/month pulse — order locked: LC · apps · tasks · interviews · reflections. */
+export const PULSE = {
+  week: {
+    line: "7 LC · 15 apps · 4 tasks · 2 interviews · 10 reflections",
+    minutes: 362,
+  },
+  month: {
+    line: "48 LC · 36 apps · 18 tasks · 6 interviews · 41 reflections",
+    minutes: 1840,
+  },
+};

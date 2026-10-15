@@ -2,39 +2,44 @@
 
 **Status:** In progress
 **Blocked by:** (none)
-**Implements:** R8.1, R8.3, R8.4, R8.5, R8.7, R8.8–R8.12, RX.2 (from `../../spec.md`); answers Q55, Q57
+**Implements:** R8.1, R8.3, R8.4, R8.5, R8.7, R8.8–R8.14, RX.2 (from `../../spec.md`); answers Q55, Q57, Q61, Q65, Q70–Q73; explores Q67–Q69
 **Type:** prototype
 
 ## What to build
 
-Prototypes, with mock data only, for the Progress nested hub. Every variant must satisfy locked requirements (Progress keeps its name; three surfaces; no points/ledger framing; achievements on Lifetime; kind filters on Past work; calendar as Past work selector).
-
-**Past work is the main exploration** (2026-10-14): calendar-driven day panel + completions week window, and how to avoid duplicating apps/reflections across those two panels.
-
-Use the shared `PrototypeSwitcher`. Place under `apps/web/src/prototype/f08-progress/`, routes `/prototype/f08/progress/...`, DEV-only in `App.tsx`.
+Prototypes for the Progress nested hub. Locked layout decisions from the 2026-10-14 review are reflected in the pages; remaining work is metric/visual exploration (activity chart, calendar color, Lifetime header, pulse LC line).
 
 ## Design questions (prototype tickets only)
 
-1. **This week composition:** streak strip, weekly goals, log work, week/month pulse, optional next-achievement teaser — first viewport without reading as a dashboard.
-2. **Heatmap peek (R8.11):** collapsed vs rhythm strip vs short grid; **7 vs 14 days**; whether Lifetime still shows full heatmaps (Q57).
-3. **Past work info split (R8.4, Q55):** calendar selects focus day; completions = **7 days ending on that day** + kind filters. Variants must disagree on how the day edit panel relates to the completions log (dual column vs completions-led vs unified day feed) so overlap can be judged in the browser.
-4. **Lifetime:** layout of all-time totals + achievements (+ heatmaps if Q57 keeps them).
-5. **LC tier polish (R8.3):** easy / medium / hard with tier and +20 / +30 / +50 visible without clutter.
+**Locked (record in verification; variants may shrink to the chosen layout):**
+
+1. ~~This week composition~~ → R8.10 (A arrangement; no heatmap peek; week+month pulse; next-per-family achievements; weekly streaks; LC ⊥ compose)
+2. ~~Heatmap peek~~ → dropped (R8.11)
+3. ~~Past work split~~ → **A** (R8.4); overlap OK; day panel always editable; interviews above apps; drop `weekly goals` filter tab
+4. Lifetime: full achievements + heatmaps; explore richer header + activity chart (R8.12, R8.14)
+5. LC tier polish (R8.3) — still on This week log
+
+**Still open (explore in prototype / discuss):**
+
+- Q67–Q68: activity / calendar color metric (seeds vs alternatives; week-close bias)
+- Q69: Lifetime accumulation header content
 
 Prototype URL: `/prototype/f08/progress`
 
 ## Acceptance criteria
 
-- [ ] 2–3 variants per design question, switchable with the shared prototype switcher, under `apps/web/src/prototype/f08-progress/`
-- [ ] Nested hub chrome visible (This week / Past work / Lifetime)
-- [ ] Past work prototypes: calendar selection drives day panel + 7-day completions window; kind filters present; no standalone pagination control as the primary model
-- [ ] No Progress points / ledger framing in any variant
-- [ ] No production imports of prototype code; mock data only
-- [ ] User picks a variant (or mix) per question; verdict recorded below; Q55 and Q57 written into `../../spec.md`
+- [x] Hub + This week / Past work / Lifetime under `apps/web/src/prototype/f08-progress/`
+- [x] Past work reflects locked A + day-panel rules; completions week window; no `weekly goals` filter tab
+- [x] This week reflects locked composition (no heatmap peek; next-per-family; week+month pulse; weekly streaks)
+- [ ] Lifetime explores richer header + activity chart (+ metric toggles for Q67)
+- [ ] Calendar/heatmap mock shows intensity without effort checkmarks (Q68 options)
+- [ ] No Progress points / ledger framing
+- [ ] No production imports of prototype code
+- [ ] User locks Q67–Q69; remaining verdict written into `../../spec.md`
 
 ## Reuse notes
 
-Reference only: `WeeklyGoalsBlock`, `TodayStrip`, `LeetcodeLogger`, `HistoryCalendar`, `LedgerCompletionsPanel`, `AchievementsPanel`, `ProgressHeatmap`, `RewardsLayout` subnav pattern. Shared `PrototypeSwitcher`.
+Shared `PrototypeSwitcher`; Rewards-style subnav mock; mock fixtures only.
 
 ## Definition of done
 
@@ -48,4 +53,4 @@ Reference only: `WeeklyGoalsBlock`, `TodayStrip`, `LeetcodeLogger`, `HistoryCale
 
 ## Verification notes
 
-**Built (in progress, awaiting verdict):** hub at `/prototype/f08/progress` with `past-work`, `this-week`, `lifetime`. Past work variants A/B/C explore the calendar → day panel + 7-day completions window and the edit/completions overlap (Q55). `npm run check` green on the prototype commit. Verdict TBD after browser review.
+**Partial verdict (2026-10-14):** Past work **A**; This week without heatmap peek; next achievements per family on This week; pulse order **LC · apps · tasks · interviews · reflections** / minutes (Q70); full achievements + heatmaps + activity chart exploration on Lifetime; effort checkmarks to go; seeds-per-day Proposed for intensity/chart with Q67–Q68 open; Lifetime header Q69 open.

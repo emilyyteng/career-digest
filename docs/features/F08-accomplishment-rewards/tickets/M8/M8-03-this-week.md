@@ -7,24 +7,21 @@
 
 ## What to build
 
-Implement `/progress/week` as the default Progress landing, following the M8-01 verdict for This week composition, heatmap peek, and LC tier polish.
+Implement `/progress/week` as the default Progress landing per R8.10 / M8-01:
 
-Must include:
-
-- Today streak strip (R5.27)
-- Weekly goals block (R5.3–R5.5, R5.28) — content/behavior unchanged unless the verdict adjusts chrome only
-- Log work: polished LC stepper (R8.3: tier + increment visible), reflection compose, today's notes, apps logged today
-- Compact week/month pulse (not the old competing hero cards unless the verdict keeps a calm equivalent)
-- Heatmap peek per R8.11 / M8-01 (not the full dual ~26-week pair as the page hero)
-- Optional next-achievement teaser only if M8-01 locked it in
+- Today day-streak strip (R5.27)
+- Week **and** month pulse: **`N LC · N apps · N tasks · N interviews · N reflections` / `N minutes worked`**
+- Compact **next achievement per family**
+- Weekly goals block with **weekly-goal streaks** (R5.3–R5.5, R5.28)
+- Log work: polished LC stepper (R8.3) and reflection compose as **separate** blocks; today's notes and apps
+- **No** heatmap peek (R8.11 dropped)
 
 EarnFlash and achievement unlock modal behavior stay as today.
 
 ## Acceptance criteria
 
-- [ ] `/progress/week` matches the M8-01 This week + heatmap peek + LC polish verdicts
+- [ ] `/progress/week` matches R8.10 / M8-01 (including next-per-family, week+month pulse, weekly streaks, no heatmap peek)
 - [ ] Weekly goals and LC write path still work end to end (no regression of R5.14 / R5.17 / R5.20)
-- [ ] Heatmap peek is short (collapsed / rhythm / ~7–14 days per verdict), not the old full today-band dual grids as the primary visual
 - [ ] LC stepper shows tier and point increment clearly
 - [ ] Follows `docs/design-system.md`; reuse existing Progress components where they fit
 

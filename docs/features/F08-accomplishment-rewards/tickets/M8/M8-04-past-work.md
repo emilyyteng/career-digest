@@ -9,22 +9,22 @@
 
 Implement `/progress/past` following the M8-01 verdict for Past work.
 
-Locked going in (spec):
+Locked (R8.4 / M8-01 A):
 
-- Completions live here (not under ledger)
-- Kind filters stay
-- Month calendar selects the focus day
-- Working hypothesis until M8-01 locks: day edit panel + completions for the **7 days ending on the selected day**; Lifetime owns all-time totals
+- Left: calendar + always-editable day panel (LC, interviews above apps, reflections; no misc-task list; no Edit-this-day checkbox)
+- Right: completions for the **7 days ending on the selected day**
+- Kind filters without the **`weekly goals`** tab; weekly rows remain in **`all`**
+- Overlap between day panel and log is fine
+- Calendar intensity per R8.13 / Q67–Q68 (no effort checkmarks)
 
-Apply the M8-01 answer to Q55 (edit panel vs completions content split). Prefer a server query for the completions window when needed, with tests.
-
-Do **not** implement the superseded 1-day / 7-day pagination control unless the prototype verdict brings a form of it back.
+Prefer a server query for the completions window when needed, with tests. No standalone 1-/7-day pagination control.
 
 ## Acceptance criteria
 
-- [ ] `/progress/past` matches the M8-01 Past work verdict (calendar, week window, filters, edit/completions split)
-- [ ] Completions reachable without the old ledger tab
-- [ ] After-the-fact reflection linking works as locked in M8-01 (R8.7)
+- [ ] `/progress/past` matches locked A layout and day-panel rules (R8.4)
+- [ ] Completions week window + filters (no `weekly goals` tab); reachable without ledger
+- [ ] Day panel always editable; reflection linking per R8.7
+- [ ] Calendar/heatmap marks follow R8.13 / locked Q67–Q68
 - [ ] API/tests cover any new completions window query
 - [ ] Follows `docs/design-system.md`
 
