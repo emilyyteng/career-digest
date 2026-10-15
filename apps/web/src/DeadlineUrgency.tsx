@@ -5,7 +5,7 @@ const HALF_DAY_MS = 12 * 3600_000;
 const MAX_CHUNKS = 14;
 const FIVE_DAYS_MS = 5 * 24 * 3600_000;
 
-/** Severity-4: overdue · soon (pink, under 24h) · ahead (amber) · ok (mint). */
+/** Severity-4: overdue · soon (pink, under 24h) · ahead (P1 gold) · ok (mint). */
 export type DeadlineUrgencyTone = "overdue" | "soon" | "ahead" | "ok";
 
 export function urgencyTone(ms: number): DeadlineUrgencyTone {
@@ -15,6 +15,11 @@ export function urgencyTone(ms: number): DeadlineUrgencyTone {
   return "ok";
 }
 
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** Mono-friendly padded countdown; units joined with `:` (M1-15). */
 export function formatDeadlineCountdown(ms: number): string {
   if (ms <= 0) return "Overdue";
   const totalSec = Math.floor(ms / 1000);
@@ -22,9 +27,9 @@ export function formatDeadlineCountdown(ms: number): string {
   const hours = Math.floor((totalSec % 86400) / 3600);
   const mins = Math.floor((totalSec % 3600) / 60);
   const secs = totalSec % 60;
-  if (days > 0) return `${days}d ${hours}h ${mins}m`;
-  if (hours > 0) return `${hours}h ${mins}m ${secs}s`;
-  return `${mins}m ${secs}s`;
+  if (days > 0) return `${days}d:${pad2(hours)}h:${pad2(mins)}m`;
+  if (hours > 0) return `${pad2(hours)}h:${pad2(mins)}m:${pad2(secs)}s`;
+  return `${pad2(mins)}m:${pad2(secs)}s`;
 }
 
 /** Full 12h circles + exact pie fraction on the last; no empty trailing circles. */
@@ -46,16 +51,40 @@ export function buildDeadlineCircles(ms: number): Array<{ key: number; fill: num
   return circles;
 }
 
+function pieSlicePath(cx: number, cy: number, r: number, fill: number): string {
+  const clamped = Math.max(0, Math.min(1, fill));
+  if (clamped >= 0.999) {
+    return `M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0`;
+  }
+  const angle = clamped * 2 * Math.PI;
+  const x = cx + r * Math.sin(angle);
+  const y = cy - r * Math.cos(angle);
+  const large = clamped > 0.5 ? 1 : 0;
+  return `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${large} 1 ${x} ${y} Z`;
+}
+
 export function PieCircle({ fill, tone }: { fill: number; tone: string }) {
-  const pct = Math.max(0, Math.min(1, fill)) * 100;
+  const cx = 7;
+  const cy = 7;
+  const r = 5.5;
   return (
-    <span
+    <svg
       className={`deadline-pie deadline-pie-${tone}`}
-      style={{
-        background: `conic-gradient(var(--deadline-pie-fill) ${pct}%, var(--deadline-pie-empty) 0)`,
-      }}
+      width="12"
+      height="12"
+      viewBox="0 0 14 14"
       aria-hidden="true"
-    />
+    >
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="var(--deadline-pie-empty)"
+        stroke="color-mix(in srgb, var(--deadline-pie-fill) 35%, var(--border))"
+        strokeWidth="1"
+      />
+      <path d={pieSlicePath(cx, cy, r, fill)} fill="var(--deadline-pie-fill)" />
+    </svg>
   );
 }
 

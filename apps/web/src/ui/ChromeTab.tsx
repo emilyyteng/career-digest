@@ -24,7 +24,7 @@ type LinkProps = Omit<NavLinkProps, "className" | "children"> & {
   children: ReactNode;
 };
 
-/** App nav / feature subnav link — active = gray wash + ink text/border. */
+/** App nav / feature subnav link — active = underline ink (M1-15). */
 export function ChromeTabLink({
   size = "subnav",
   className = "",

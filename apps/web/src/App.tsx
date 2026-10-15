@@ -59,6 +59,9 @@ const proto = import.meta.env.DEV
       F08ProgressPastWork: lazy(() => import("./prototype/f08-progress/PastWorkPrototypePage")),
       F08ProgressLifetime: lazy(() => import("./prototype/f08-progress/LifetimePrototypePage")),
       F09Lab: lazy(() => import("./prototype/f09-design-system/F09LabPage")),
+      F09Refinements: lazy(
+        () => import("./prototype/f09-design-system/RefinementsPage"),
+      ),
     }
   : null;
 
@@ -230,6 +233,10 @@ export default function App() {
                 />
                 <Route path="/prototype/f09" element={<Navigate to="/prototype/f09/lab" replace />} />
                 <Route path="/prototype/f09/lab" element={<ProtoPage page={proto.F09Lab} />} />
+                <Route
+                  path="/prototype/f09/refinements"
+                  element={<ProtoPage page={proto.F09Refinements} />}
+                />
               </>
             ) : (
               <Route path="/prototype/*" element={<Navigate to="/" replace />} />

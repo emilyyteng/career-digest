@@ -2,7 +2,7 @@
 
 The source of truth for visual and interaction conventions in `apps/web`. **Read this before changing any `.tsx` or `.css` in the web app.** It overrides tickets and prototypes on anything visual (see `AGENTS.md` → Precedence). If a feature requirement conflicts with or is ambiguous against this file, surface that to the user before implementing (`AGENTS.md` → Feature requirements vs design system).
 
-**Status:** Visual foundations locked (F09 M0, 2026-10-15; urgency revised to Severity-4 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02), **ChromeTab / Badge** (M1-03), **heat / Severity-4 urgency / surface-2 washes** (M1-14), and **neutralized global button/field defaults** (M1-04) are live; patterns and remaining page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
+**Status:** Visual foundations locked (F09 M0, 2026-10-15; urgency revised to Severity-4 2026-10-15; **M1-15 chrome/urgency refinements 2026-10-15**). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02), **ChromeTab / Badge** (M1-03), **heat / Severity-4 urgency / surface-2 washes** (M1-14), **neutralized global button/field defaults** (M1-04), and **Home pilot + M1-15 refinements** are live; patterns and remaining page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`. Refinements lab: `/prototype/f09/refinements` (kept while useful).
 
 **Migration approach:** comprehensive system + phased migration (F09). M1 builds primitives and interaction/IA patterns; M2–M3 restyle surfaces. Extend this doc when something new is needed—do not fork a feature-local look.
 
@@ -42,14 +42,14 @@ Keep the named hue set small. Map meaning onto roles — do not invent page-loca
 | **Ink** | Chrome text, primary actions, active tab text/border | Near-black `#1a181c` |
 | **Brand / blush** | Atmosphere, reward domain, brand spark | Pastel pink; not primary button fill |
 | **Domain apps** | Application / pipeline identity | Blue — e.g. applied, interview *kind* badge |
-| **Domain tech** | Technical / streak / score identity | **Purple** — streaks, rank/score chips, interviewing status. Not chrome, not urgency |
-| **Domain reward** | Motivation / seeds / goals | Blush / reward pink — e.g. goal kind badge |
+| **Domain tech** | Technical / streak / score / **GOAL kind** identity | **Purple** — streaks, rank/score chips, interviewing status, GOAL badge. Not chrome, not urgency |
+| **Domain reward** | Motivation / seeds / collection | Blush / reward pink — not GOAL (GOAL is domain tech) |
 | **Severity P0 / P1 / P2** | Priority traffic | **R / Y / G** (`#c23b3b` / `#d4a017` / `#2f8f5b`) |
-| **Urgency (Severity 4)** | Deadline time pressure | Overdue=P0 · soon=pink (&lt;24h) · ahead=amber · ok=mint. **No purple/blue/gray mid** (frees domain tech) |
+| **Urgency (Severity 4)** | Deadline time pressure | Overdue=P0 · soon=pink (&lt;24h) · **ahead=P1 gold** · ok=mint. **No purple/blue/gray mid** (frees domain tech) |
 | **Success / ok** | Positive feedback, met state | Mint |
 | **Danger** | Destructive / error | Rose-danger (distinct from brand blush when possible) |
 | **Surfaces** | `--surface` cards; `--surface-2` warm/cool washes for containers & description blocks | Not purple washes |
-| **Tab active wash** | Gray (`#ebe8ee`-class), not blush | With ink text + ink border |
+| **Tab active** | Underline ink | Active = ink text + 2px ink underline; no gray wash fill (M1-15) |
 | **Heat (vivid rose, soft peak)** | Productivity intensity empty→peak | `#fff8fa` → `#fce4ee` → `#f5c0d4` → `#eba0bc` → `#e078a0` (peak = former step-3 intensity) |
 
 **Identity ≠ severity ≠ urgency.** Purple means “tech/identity,” not “due soon.”
@@ -64,7 +64,7 @@ Live in `:root` in [`apps/web/src/styles.css`](../apps/web/src/styles.css) (F09 
 | Borders / text | `--border`, `--border-strong`, `--text`, `--text-muted`, `--text-subtle`, `--ink` | Active chrome uses `--ink` |
 | Brand / domain | `--brand`, `--brand-deep`, `--domain-apps`(+`-deep`), `--domain-tech`(+`-deep`), `--domain-reward`(+`-deep`) | Aliases: `--accent-pink/blue/purple` |
 | Severity | `--severity-p0`, `--severity-p1`, `--severity-p2` | RYG priority |
-| Urgency | `--urgency-overdue`, `--urgency-soon`, `--urgency-ahead`, `--urgency-ok` | Severity-4; no purple/blue/gray mid |
+| Urgency | `--urgency-overdue`, `--urgency-soon` (pink), `--urgency-ahead` (=P1), `--urgency-ok` | Severity-4; ahead shares P1 gold; no purple/blue/gray mid |
 | Heat | `--heat-0` … `--heat-4` | Vivid rose soft peak |
 | Success / warn / danger | `--ok`, `--ok-soft`, `--warn`, `--warn-soft`, `--danger`, `--danger-deep` | Mint / amber / rose-danger |
 | Radius | `--radius-panel`, `--radius-control`, `--radius-seg`, `--radius-pill` (+ legacy `--radius-card/soft/soft-box`) | Squared controls; pill seg/chips |
@@ -90,16 +90,17 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | Component | Implementation | Variants / sizes | Policy |
 |-----------|----------------|------------------|--------|
 | **Button** | `Button` — classes `secondary ui-button` (+ `-primary` / `-ghost` / `-sm`) | `primary` · `secondary` · `ghost` × `sm` / `md` | Flat ink primary. Global filled-blue `button` + `:not(...)` chain removed (M1-04). Legacy `button.secondary` / `modal-confirm-btn` restyled to ink |
-| **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = ink fill | Replaces interim `ui-btn` + `.ui-segmented` for new code |
+| **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = **soft ink wash** (ink text; not solid ink fill) | Distinct from track (`--surface-2`); M1-15 |
 | **Fields** | `TextField` · `SelectField` · `TextAreaField` — `.ui-field` (+ `.ui-field-num`) | `md` · `num` (compact number) | Border-only hover; wash on focus |
-| **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = gray wash + ink text/border | App nav, feature subnav, page tabs. Button form includes `.secondary`. Flat; display font; squared (`--radius-control`) |
-| **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview`/`goal` (rendered **INTERVIEW** / **GOAL** uppercase), `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak` (domain tech), `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Role tokens only; no page-local hex for these meanings |
+| **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = **underline ink** | App nav, feature subnav, page tabs. Matches lab Completions shortened-label underline. Flat; display font |
+| **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview` (apps) / `goal` (**domain tech**), `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak`, `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Kind labels rendered **INTERVIEW** / **GOAL** uppercase; role tokens only |
 | **Card** | `.card` | Soft shadow OK | All-carded |
 | **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
 | **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | Placement M1-10 |
 | **Heatmap** | `ProgressHeatmap` / `HistoryCalendar` via [`intensityScale.ts`](../apps/web/src/features/progress/intensityScale.ts) | `--heat-0`…`--heat-4` (vivid rose soft peak); empty = `--surface-2` | RGB lerp mirrors tokens; legend uses CSS vars |
-| **Deadline urgency** | `DeadlineUrgency` + `.deadline-pie-*` / `.deadline-tone-*` in `styles.css` | `--urgency-overdue` · `--urgency-soon` · `--urgency-ahead` · `--urgency-ok` (Severity-4) | overdue=P0 · soon=pink (&lt;24h) · ahead=amber · ok=mint |
+| **Deadline urgency** | `DeadlineUrgency` + SVG pies + `.deadline-tone-*` | `--urgency-overdue` · `--urgency-soon` (pink) · `--urgency-ahead` (=P1) · `--urgency-ok` | Countdown: **Plex Mono**, zero-padded units joined by **`:`**; extra gap after pie cluster; SVG pies (no conic seam) |
 | **Priority** | `PriorityBadge` → `Badge` `p0`–`p2` compact | P0–P2 RYG | |
+| **In-content links (Home)** | `.home-section-link` / `.home-job-main` titles | Hover = **underline**; text may stay dark/ink (no purple required) | Underline is the hover signal (M1-15) |
 
 Interim F08 `ui-btn*`, old `.tab.on` blue active, legacy `.badge.*`, and bare `input`/`textarea`/`select` structural shim remain in `styles.css` for unmigrated call sites. New UI must use `apps/web/src/ui`. Do not reintroduce a global filled `button` default or a `:not(...)` opt-out chain.
 
@@ -116,7 +117,7 @@ Interaction / IA / layout patterns are **Pending M1** tickets (see F09 board):
 | EarnFlash placement | F09 M1-10 | Q10 / R.9 |
 | Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks migrate in M2 |
 
-Pilot surface for primitives: **Home** (F09 M1-05) — Ink desk titles/links, surface-2 side panel, `Segmented` for upcoming range; app shell uses flora.exe + chrome-tab nav + 1100px.
+Pilot surface for primitives: **Home** (F09 M1-05 + M1-15) — Ink desk titles, underline link hover, background-less last-digest, soft-ink `Segmented`, underline chrome-tabs; app shell uses flora.exe + 1100px.
 
 ## Banner patterns
 
@@ -139,14 +140,16 @@ The 2026-10-13 F08 M5 interim choices (tinted purple primary, blue toggles, flat
 |------|----------------------------|----------|
 | Primary button | Filled blue + shadow vs tinted purple vs ink | **Ink fill, flat** |
 | Secondary / hover | Purple text + purple surface-2 wash; blue hover leak | **Ink text; gray/warm wash; no blue** |
-| Segmented active | Blue / purple / blush | **Ink fill** (matches primary) |
-| Tabs / nav active | Pink lift, blue fill, blush border, purple chips | **Gray wash + ink text/border**; display font |
+| Segmented active | Blue / purple / blush / solid ink | **Soft ink wash** + ink text (M1-15) |
+| Tabs / nav active | Pink lift, blue fill, gray wash box | **Underline ink**; display font (M1-15) |
 | Titles | Pink / purple / mono mix | **Ink + display font** |
 | Containment | Carded vs Rewards open canvas vs Progress hybrid | **All carded** |
 | Elevation | Raised buttons + flat patches | **Flat controls**; soft cards + modal overlay only |
-| Purple | Chrome, urgency mid, containers, streaks | **Domain tech identity only** |
-| Urgency | Prod pink/purple/blue/mint 5 | **Severity 4** (P0→pink soon→amber ahead→mint) |
+| Purple | Chrome, urgency mid, containers, streaks, GOAL pink | **Domain tech identity** (incl. GOAL badge); not urgency |
+| Urgency | Prod pink/purple/blue/mint 5; then amber ahead | **Severity 4** (P0 → pink soon → **P1 gold ahead** → mint) |
 | Priority | Mixed | **RYG traffic** |
+| Countdown | Proportional sans, space-separated, conic pies | **Mono + padded `:` units**; SVG pies; gap after circles |
+| Link hover (Home) | Purple-deep / invisible ink-only | **Underline** (text may stay dark) |
 | Heatmap | Navy peak | **Vivid rose soft peak** |
 | Shell | 960px | **1100px** |
 | Fonts | JetBrains + DM Sans | **IBM Plex Mono + Sans** (roles) |

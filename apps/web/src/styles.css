@@ -34,10 +34,10 @@
   --severity-p1: #d4a017;
   --severity-p2: #2f8f5b;
 
-  /* Urgency Severity-4 (no purple/blue; no gray mid) */
+  /* Urgency Severity-4 (no purple/blue; no gray mid) — M1-15: ahead = P1 gold */
   --urgency-overdue: var(--severity-p0);
-  --urgency-soon: #c97b8b; /* pink — merged former urgent+soon (under 24h) */
-  --urgency-ahead: var(--warn); /* amber */
+  --urgency-soon: #c97b8b; /* pink — under 24h */
+  --urgency-ahead: var(--severity-p1);
   --urgency-ok: var(--ok);
 
   /* Heat — vivid rose soft peak */
@@ -3166,10 +3166,6 @@ textarea { min-height: 10rem; width: 100%; }
   font-variant-numeric: tabular-nums;
 }
 .home-last-digest {
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--surface-2);
   display: grid;
   gap: 0.2rem;
   text-align: right;
@@ -3599,10 +3595,13 @@ textarea { min-height: 10rem; width: 100%; }
   font-family: var(--font-display);
   color: var(--text-muted);
   text-decoration: none;
+  text-underline-offset: 0.14em;
 }
+a.home-section-link:hover,
 .home-section-link:hover {
   color: var(--ink);
   text-decoration: underline;
+  text-decoration-line: underline;
 }
 .home-list {
   list-style: none;
@@ -3626,8 +3625,13 @@ textarea { min-height: 10rem; width: 100%; }
   display: grid;
   gap: 0.15rem;
 }
-.home-job-main:hover .home-job-title {
-  color: var(--ink);
+.home-job-main:hover .home-job-title:not(.task-title-line) {
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+.home-job-main:hover .task-title-text {
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 .home-job-title {
   font-size: 0.9rem;
@@ -4978,7 +4982,7 @@ button.progress-cal-cell.effort::after {
 .deadline-urgency-inline {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.7rem;
   flex-wrap: wrap;
 }
 .deadline-pies {
@@ -4986,24 +4990,27 @@ button.progress-cal-cell.effort::after {
   align-items: center;
   gap: 0.22rem;
 }
+/* SVG pie discs (M1-15) — avoids conic-gradient seam gap when zoomed */
 .deadline-pie {
   --deadline-pie-empty: var(--surface-2);
   --deadline-pie-fill: var(--urgency-ok);
   width: 0.72rem;
   height: 0.72rem;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--deadline-pie-fill) 35%, var(--border));
   flex: 0 0 auto;
+  display: block;
+  overflow: visible;
 }
-/* Severity-4 urgency (F09): overdue=P0 · soon=pink · ahead=amber · ok=mint — no purple/blue/gray mid */
+/* Severity-4 urgency (F09 M1-15): overdue=P0 · soon=pink · ahead=P1 gold · ok=mint */
 .deadline-pie-overdue { --deadline-pie-fill: var(--urgency-overdue); }
 .deadline-pie-soon { --deadline-pie-fill: var(--urgency-soon); }
 .deadline-pie-ahead { --deadline-pie-fill: var(--urgency-ahead); }
 .deadline-pie-ok { --deadline-pie-fill: var(--urgency-ok); }
 .deadline-countdown {
-  font-weight: 650;
+  font-family: var(--font-mono);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   font-size: 0.88rem;
+  letter-spacing: 0.01em;
 }
 .deadline-tone-overdue { color: var(--urgency-overdue); }
 .deadline-tone-soon { color: var(--urgency-soon); }
