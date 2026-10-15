@@ -22,7 +22,7 @@ import {
   greetingPeriodFromHour,
 } from "../pageTheme";
 import { listLinkState } from "../navigationReturn";
-import { Badge } from "../ui";
+import { Badge, Segmented } from "../ui";
 
 function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -319,32 +319,15 @@ export default function Home() {
       <section className="card home-section home-attention-card">
         <div className="home-section-head home-upcoming-head">
           <h3 className="home-section-title">{upcomingTitle}</h3>
-          <div className="home-upcoming-range" role="group" aria-label="Upcoming range">
-            <button
-              type="button"
-              className={
-                upcomingDays === 7
-                  ? "secondary home-upcoming-range-btn is-active"
-                  : "secondary home-upcoming-range-btn"
-              }
-              aria-pressed={upcomingDays === 7}
-              onClick={() => onUpcomingDaysChange(7)}
-            >
-              1 week
-            </button>
-            <button
-              type="button"
-              className={
-                upcomingDays === 14
-                  ? "secondary home-upcoming-range-btn is-active"
-                  : "secondary home-upcoming-range-btn"
-              }
-              aria-pressed={upcomingDays === 14}
-              onClick={() => onUpcomingDaysChange(14)}
-            >
-              2 weeks
-            </button>
-          </div>
+          <Segmented
+            label="Upcoming range"
+            value={String(upcomingDays)}
+            onChange={(value) => onUpcomingDaysChange(Number(value) as 7 | 14)}
+            options={[
+              { value: "7", label: "1 week" },
+              { value: "14", label: "2 weeks" },
+            ]}
+          />
         </div>
         {sections.every(sectionIsEmpty) ? (
           <p className="muted home-pick-empty">{upcomingEmpty}</p>

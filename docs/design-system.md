@@ -116,7 +116,7 @@ Interaction / IA / layout patterns are **Pending M1** tickets (see F09 board):
 | EarnFlash placement | F09 M1-10 | Q10 / R.9 |
 | Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks migrate in M2 |
 
-Pilot surface for primitives: **Home** (F09 M1-05).
+Pilot surface for primitives: **Home** (F09 M1-05) — Ink desk titles/links, surface-2 side panel, `Segmented` for upcoming range; app shell uses flora.exe + chrome-tab nav + 1100px.
 
 ## Banner patterns
 
