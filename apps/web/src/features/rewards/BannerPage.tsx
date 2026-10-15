@@ -272,7 +272,10 @@ export default function BannerPage() {
               <SlotMeta result={results[seqIndex]!} />
             </div>
           ) : (
-            <BoxOnly shaking />
+            <BoxOnly
+              shaking
+              collector={results[seqIndex]!.edition === "collector"}
+            />
           ))}
 
         {!seqActive &&
@@ -368,9 +371,21 @@ function SlotMeta({ result }: { result: GachaPullResult }) {
   );
 }
 
-function BoxOnly({ shaking }: { shaking: boolean }) {
+function BoxOnly({
+  shaking,
+  collector = false,
+}: {
+  shaking: boolean;
+  collector?: boolean;
+}) {
   return (
-    <div className={`rw-box ${shaking ? "rw-box--shaking" : ""} rw-box--normal`}>
+    <div
+      className={[
+        "rw-box",
+        shaking ? "rw-box--shaking" : "",
+        collector ? "rw-box--ce" : "rw-box--normal",
+      ].join(" ")}
+    >
       <div className="rw-box-body" />
       <div className="rw-box-ribbon" />
       <div className="rw-box-lid" />
@@ -392,7 +407,7 @@ function BoxSlot({
   if (waiting) {
     return (
       <div style={{ animationDelay: `${index * 70}ms` }}>
-        <BoxOnly shaking />
+        <BoxOnly shaking collector={ce} />
       </div>
     );
   }
