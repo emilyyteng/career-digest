@@ -98,10 +98,7 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
   }
 
   function removeRow(key: string) {
-    setRows((current) => {
-      const next = current.filter((row) => row.key !== key);
-      return next.length > 0 ? next : [emptyRow()];
-    });
+    setRows((current) => current.filter((row) => row.key !== key));
   }
 
   async function onSubmit(event: FormEvent) {
@@ -191,6 +188,9 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
               Remove
             </span>
           </div>
+          {rows.length === 0 && (
+            <p className="muted field-hint">No subtasks</p>
+          )}
           {rows.map((row) => (
             <div
               key={row.key}
