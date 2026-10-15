@@ -2,7 +2,7 @@
 
 **ID:** F08 (folder `docs/features/F08-accomplishment-rewards/`; tickets on the [board](./board.md))
 **Status:** Active
-**Last updated:** 2026-10-13
+**Last updated:** 2026-10-14
 
 ## Problem
 
@@ -39,7 +39,7 @@ Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and
 | M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | Done |
 | M6 | Board departures log | Not started |
 | M7 | Cat Cake Collection v1: spending seeds, the Rewards page | Done |
-| M8 | Progress redesign, LeetCode tier polish, information architecture | Not started |
+| M8 | Progress redesign, LeetCode tier polish, information architecture | Design |
 
 ## Requirements
 
@@ -245,7 +245,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
   - **Timing:** a day's streak points are awarded on its first qualifying action and reversed if that day drops back to 0. Editing a past day in History updates the displayed streak, but doesn't award or reverse streak points for that day or any later day.
   - **Launch:** a streak running at launch keeps its earlier days; daily points start from launch.
   - Streak points have their own ledger category, `streak`.
-- **R5.26** (Established 2026-10-13; display 2026-10-13 M5-07) **Achievements** for accumulated counts, with points roughly proportional to the count. Each pays once. The numbers are a starting point. In M5 they surface as a Progress tab **`achievements`** next to **ledger**; unlock is a modal (“Great work!”, `Balance: N`). M8 may still redesign Progress IA (R8.5). Ticket: M5-11.
+- **R5.26** (Established 2026-10-13; display 2026-10-13 M5-07; placement 2026-10-14) **Achievements** for accumulated counts, with points roughly proportional to the count. Each pays once. The numbers are a starting point. In M5 they surface as a Progress tab **`achievements`** next to **ledger**; unlock is a modal (“Great work!”, `Balance: N`). M8 moves them to Progress **Lifetime** (R8.12). Ticket: M5-11; placement M8-05.
   - Applications marked applied: 10, 25, 50, 100, 150, 200, 300, 500; 3 × N points.
   - LC solves: 25, 50, 100, 200, 300, 500; 5 × N points.
   - Finished interview steps, counted per kind, worth the step's own points × N (they reward more than applications or LC): assessment and phone at 5, 10, 25, 50; technical at 3, 5, 10, 25; onsite at 1, 3, 5, 10; offer at 1, 2, 3, 5. Custom steps don't count.
@@ -310,23 +310,56 @@ M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*
 - **R7.9** (Established 2026-10-13) Rewards hosts a readable **Rules** reference: earning (Seed formula including bases, work time and reflections per R5.31, weekly scoring, streaks including that the weekly-goal streak earns nothing, achievements) and spending (gacha rates, friendship, refunds, Day/Night). It reads the same values the code uses so it can't drift.
 - **R7.10** (Established 2026-10-13; Q20; casing 2026-10-14) The currency display name is **seeds** / **seed** (lowercase) for now, but it must stay easy to rename: one shared constant (or small config module) supplies the user-facing singular/plural labels used by Rewards, Rules, banners, and other copy. UI code must not hard-code those strings in many places. Internal/API/storage names may remain `points` / `points_*` and need not match the display name.
 
-### M8: Progress redesign, LeetCode tier polish, information architecture (Not started)
+### M8: Progress redesign, LeetCode tier polish, information architecture (Design)
 
-M8 follows M7, so Progress is redesigned knowing what Rewards covers.
+M8 follows M7, so Progress is redesigned knowing what Rewards covers. Design lock (2026-10-14): Progress stays the top-nav label and becomes a nested hub (Rewards-style routes) for weekly progress and lifetime work — not currency.
 
-- **R8.1** (Established) Fully redesign the Progress page. It is currently a stopgap host for the completions and points logs.
-- **R8.2** (Established) The earn log leaves Progress for Rewards (R7.8); completions stay on Progress. Move happens in M7 (Q35).
-- **R8.3** (Established) Polish the LeetCode tier stepper built in M5 (R5.20): show the increment and the tier in a visually appealing way.
-- **R8.4** (Established) A past-work surface for completion and reflection history. Its name is open, and it may absorb or rename Progress.
-- **R8.5** (Established) A design pass decides what lives where across Progress, past work, Rewards and Status: heatmaps, weekly counters, calendar, board departures, and points chrome.
-- **R8.6** (Established) Home: explore showing Upcoming and recent completions side by side (or alternatives) once card density is known.
-- **R8.7** (Established) Settle the entry points for linking reflections after the fact, against the chosen history page.
+**Hub and routing**
+
+- **R8.1** (Established; refined 2026-10-14) Fully redesign Progress. It is currently a stopgap host for completions and a deprecated points view. The redesign uses three nested surfaces under one Progress shell (R8.8–R8.12). A prototype pass comes before production builds (ticket M8-01).
+- **R8.2** (Established) The earn log leaves Progress for Rewards (R7.8); completions stay on Progress. Move happened in M7 (Q35). M8 removes the Progress ledger → Points stub and the ledger framing around completions.
+- **R8.8** (Established 2026-10-14) The app nav label stays **Progress**. Past work does not rename or replace Progress.
+- **R8.9** (Established 2026-10-14) Progress uses **nested routes** with a shared shell and subnav, matching the Rewards pattern for this milestone:
+  - `/progress` redirects to This week
+  - `/progress/week` — This week
+  - `/progress/past` — Past work
+  - `/progress/lifetime` — Lifetime  
+  Standardizing feature shells vs in-page tabs across the app is out of M8; note for F09 / app-shell conventions (see F09).
+
+**This week** (`/progress/week`)
+
+- **R8.10** (Established 2026-10-14) This week is the default Progress landing. Its job is: am I on track this week, and can I log today's work here. It hosts the today streak strip, the weekly goals block (R5.3–R5.5, R5.28), LC logging and reflection compose for today, today's notes and apps logged today, and a compact week/month pulse (not competing hero cards).
+- **R8.11** (Established 2026-10-14) This week shows a **heatmap peek**: short, not a second hero — collapsed, a rhythm strip, and/or roughly the past 7 or 14 days. Exact treatment is chosen in the M8 prototype (M8-01). Full heatmaps may also appear on Lifetime if useful.
+- **R8.3** (Established) Polish the LeetCode tier stepper built in M5 (R5.20): show the increment and the tier in a visually appealing way (including the settled +20 / +30 / +50 values).
+
+**Past work** (`/progress/past`)
+
+- **R8.4** (Established; refined 2026-10-14; Past work direction same day) **Past work** is the Progress surface for completion and reflection history. Completions live here (not under a ledger). **Kind filters stay.** A **month calendar selects the focus day** for both the day edit panel and the completions window. Working hypothesis under M8-01 (lock only after prototype verdict):
+  - **Layout:** calendar + per-day edit on one side; completions on the other (or a more unified alternative if the prototype finds less overlap).
+  - **Completions window:** the **7 days ending on the selected day** (week-wise filter driven by the calendar), not a separate 1-day / 7-day pagination control. Lifetime totals belong on Lifetime (R8.12), not as an unfiltered global completions scroll here.
+  - **Overlap:** today's edit panel repeats apps and reflections that also appear in completions — M8-01 explores a cleaner split (what the day panel edits vs what the log lists).
+  The earlier selectable 1-day / 7-day **pagination** requirement is **superseded** by this calendar-driven week window; F09 may still define a general long-list pagination default (F09 R.7) for other surfaces.
+- **R8.7** (Established; refined 2026-10-14) After-the-fact reflection linking entry points, against Past work: detail pages remain primary for work that already has a page; Past work covers day-level edit and diary-style linking. No fourth orphan entry. Exact chrome is settled in M8-01.
+
+**Lifetime** (`/progress/lifetime`)
+
+- **R8.12** (Established 2026-10-14) Lifetime surfaces accumulated work: all-time totals (from completions stats), the full achievements list (moves off the M5 peer tab; R5.26), and prep heatmaps as needed once This week's peek is chosen. Seeds / earnings never live here — currency stays on Rewards.
+
+**Cross-page IA**
+
+- **R8.5** (Established; refined 2026-10-14) Placement across Progress, Rewards, Home and Status:
+  - **Progress:** weekly goals, today logging, Past work (completions + day history), Lifetime (totals, achievements, heatmaps as decided)
+  - **Rewards:** seeds chrome, Banner, Collection, Earnings, Pull history, Rules
+  - **Home:** plan the week (Targets, streaks, congrats); unchanged in M8 except as R8.6 may later explore
+  - **Status:** ops only. Board departures wait for M6; not on Progress
+  - **Points chrome:** Rewards only; removed from Progress
+- **R8.6** (Established; deferred 2026-10-14) Home: explore showing Upcoming and recent completions side by side (or alternatives) once Progress density is known. **Not in M8 build scope.** Treat as a potential follow-up after Progress is locked; it may prove unnecessary once the Progress hub is revitalized. Revisit only after M8 design/build lock.
 
 ### Cross-cutting
 
 - **RX.1** (Established) Remove the Prototype nav tab (`App.tsx`). Prototypes are reached by URL only.
 - **RX.2** (Established) New F08 prototypes live under `apps/web/src/prototype/f08-<topic>/`, at routes `/prototype/f08/<topic>`, per `AGENTS.md`.
-- **RX.3** (Established; clarified 2026-10-13) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it: `f08-weekly` stays until M5-02, M5-08 and M5-09 are Done (M5-01, M5-05 and M5-15 are Done). F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
+- **RX.3** (Established; clarified 2026-10-13; M8 2026-10-14) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it. `f08-progress` (M8-01) stays until M8-02–M8-05 are Done. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
 
 ## Behavior rules
 
@@ -434,6 +467,18 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Rules reference from live POINTS / gacha / achievements | [`RulesPage.tsx`](../../../apps/web/src/features/rewards/RulesPage.tsx), [`rewardsRules.ts`](../../../apps/api/src/rewardsRules.ts) | Conforms R7.9 | Done by M7-10 |
 | 10k-run gacha Monte Carlo on production rates | [`gachaSimulate.ts`](../../../apps/api/src/gachaSimulate.ts) | Conforms R7.7 (sim) | Done by M7-11 |
 
+### M8
+
+| Behavior | Where | Status | Notes |
+|----------|-------|--------|-------|
+| Progress is one page with peer tabs `today` · `history` · `ledger` · `achievements` via `?tab=` | [`ProgressPage.tsx`](../../../apps/web/src/features/progress/ProgressPage.tsx) L44–50, L460–491 | Conflicts R8.1, R8.9 | Stopgap; M8 nested hub |
+| Today tab packs streak strip, week/month cards, weekly goals, dual ~26-week heatmaps, LC logger, reflection compose, notes, apps | `ProgressPage.tsx` today branch | Conflicts R8.10, R8.11 | Heatmaps are full dual grids, not a peek |
+| History tab: month calendar + selected-day LC/apps/notes with edit toggle | `ProgressPage.tsx` history branch | Conflicts R8.4 (placement) | Edit panel overlaps completions (apps/reflections); M8-01 explores split with calendar-driven week window |
+| Ledger tab: Completions diary + Points stub linking to `/rewards/earnings` | `ProgressPage.tsx` L746–778 | Conflicts R8.2 | Points stub must go; completions move under Past work |
+| Achievements are a peer tab | `ProgressPage.tsx`, [`AchievementsPanel.tsx`](../../../apps/web/src/features/achievements/AchievementsPanel.tsx) | Conflicts R8.12 | Move to Lifetime |
+| LC stepper shows tier names and counts; point values are not shown on the control | [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conflicts R8.3 (polish) | Function conforms R5.20; visual polish is M8 |
+| Completions diary is an unpaginated day-grouped list with kind tabs; no calendar link | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R8.4 | Past work: calendar selects focus day; completions show ~7 days ending on that day |
+
 ### Cross-cutting
 
 | Behavior | Where | Status | Notes |
@@ -456,11 +501,14 @@ Nothing that depends on an open question may be implemented.
 | # | Question | Blocks | Due by |
 |---|----------|--------|--------|
 | Q15 | How do recurring instances earn points like normal tasks if the shared page handles all instances? Does each instance need its own actual time and metadata? | R3.8 | M3 design |
+| Q55 | Past work: how should the day edit panel and the completions log split content so apps/reflections aren't duplicated awkwardly? | R8.4 | M8-01 |
+| Q57 | Lifetime: keep dual application/technical heatmaps in full, one combined heatmap, or only the This week peek? | R8.11, R8.12 | M8-01 |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (54)</summary>
+<summary>Resolved questions (61)</summary>
+
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -518,6 +566,13 @@ Nothing that depends on an open question may be implemented.
 | Q52 | `leetcode` tab count | Total solves, all time; each row is one day (2026-10-13) | R5.33, M5-16 |
 | Q53 | LeetCode days in the `all` tab | Yes, like every other kind. The `leetcode` tab counts total solves; `all` counts one per LeetCode day row, so a day with N solves is N on `leetcode` and 1 on `all` (2026-10-13) | R5.33, M5-16 |
 | Q54 | LeetCode day row | One row per day with at least one solve; title `LC: 3 solved`; meta `1 easy · 1 medium · 1 hard`; the day's current LeetCode points in the aside when above 0, so pre-ledger days show none. The weekly goals row badge stays `weekly`; tab order all, tasks, apps, interviews, reflections, weekly goals, leetcode (2026-10-13) | R5.33, R5.34, M5-16 |
+| Q60 | Keep Progress name? | Yes; Past work is a Progress sub-route, not a rename (2026-10-14) | R8.8 |
+| Q61 | Heatmaps on This week? | Peek only — short (collapsed / rhythm strip / ~7–14 days); explore in prototype (2026-10-14) | R8.11 |
+| Q62 | Past work layout (first pass) | Day-segmented; initially 1-/7-day pagination (2026-10-14). **Superseded same day:** calendar as day selector; completions = 7 days ending on selected day; kind filters kept; pagination dropped pending M8-01 (Q55 content split still open) | R8.4 |
+| Q63 | Progress routing | Nested Rewards-style routes for M8; app-wide shell/tab convention deferred to F09 (2026-10-14) | R8.9 |
+| Q64 | Home R8.6 in M8? | No; potential follow-up after Progress is locked; may be unnecessary (2026-10-14) | R8.6 |
+| Q65 | Past work kind filters? | Keep (2026-10-14) | R8.4 |
+| Q66 | Past work calendar? | Keep as the selector for the day panel and the completions week window (2026-10-14) | R8.4 |
 
 </details>
 
@@ -564,3 +619,5 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Completion flourish dropped (Q7 / R5.2); M5-13 won't-do. Unlock moment for achievements/milestones: modal (“Great work!”, `Balance: N`). Weekly-goal streak: flame, compact (right on Progress, inline on congrats). Today strip: day-streak pills (✓ / −, `+N` or `+0 today`); no reflection badges. Achievements live in a Progress `achievements` tab beside ledger for M5; M8 may still redesign Progress.
 - **2026-10-13:** Accepted edge cases from M5-03 and M5-05: re-completing a reopened task records its category at the new completion (R5.21); a renamed category shows its current name, and a deleted one keeps its last name; a tagged task reopened before its week closes is carried forward as open (R5.11); untagging a completed task stays allowed. The `all` completions tab count includes weekly records (M5-15).
 - **2026-10-13:** From the M5-01 R5.10 check: past LeetCode days aren't backfilled with points; the LeetCode card adds a this-week counts line (R5.32); the completion log gets a `leetcode` tab (R5.33) and `weekly` becomes `weekly goals` (R5.34), ticketed as M5-16. Q52–Q54 answered the same day: the `leetcode` tab counts total solves, LeetCode days show in `all` (1 per day), rows read `LC: 3 solved`.
+- **2026-10-14:** M8 Progress IA lock: keep nav label Progress; nested Rewards-style routes (`/progress/week`, `/past`, `/lifetime`); This week is the hub with a short heatmap peek (7/14 / rhythm / collapsed — prototype); Lifetime holds totals and achievements; remove Progress points/ledger framing; Home R8.6 deferred as a possible post-lock follow-up. Tickets M8-01–M8-05. Long-list pagination defaults and app-wide feature-shell conventions noted for F09.
+- **2026-10-14 (later):** Past work direction for M8-01: drop standalone 1-/7-day pagination. Calendar selects the focus day; completions show the 7 days ending on that day with kind filters kept; explore combining the day edit panel with completions to cut apps/reflections overlap. Lifetime keeps lifetime numbers.

@@ -2,7 +2,7 @@
 
 **ID:** F09
 **Status:** Planned
-**Last updated:** 2026-10-13
+**Last updated:** 2026-10-14
 
 ## Problem
 
@@ -32,6 +32,8 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 - **R.4** (Established) Modals follow one common standard.
 - **R.5** (Established) The design-system reference must be something agents consult proactively. It is referenced from `AGENTS.md` and auto-attached for web UI files via `.cursor/rules/design-system.mdc`.
 - **R.6** (Established 2026-10-13) Banners behave consistently across the app. F08 M5-02 introduces the "one-time notice" (shown once, × closes it early, marked seen per item in `localStorage`) and documents it in `docs/design-system.md` next to the transient flash (`EarnFlash`). F09 then moves the Jobs ranking banner onto the one-time notice: it has no reason to be more persistent than the weekly congrats banner. Scheduled in the broader migration (M2+), not done in F08.
+- **R.7** (Proposed 2026-10-14; from F08 M8) **Long lists are paginated by default.** Infinite or very long unpaginated result lists should not be the default pattern. Page size and controls belong in the design system (or a documented list convention). F08 M8 Past work is exploring a **calendar-driven 7-day window** instead of classic page controls (F08 R8.4); F09 still owns the general rule for other lists.
+- **R.8** (Proposed 2026-10-14; from F08 M8) **Feature shell / subnav convention.** Nested feature routes with a shared shell and subnav (Rewards today; Progress in F08 M8) vs peer in-page tabs should be one documented app pattern. May belong in the design system or in a small app-shell / IA note if it is not "visual design." F08 M8 uses the Rewards nested pattern for Progress without settling the app-wide rule.
 
 ### M1
 
@@ -51,6 +53,8 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | Number inputs inherit the global `input` padding and size, so a small number field such as the Progress weekly LC target (`.weekly-goal-target-field input`, width 4.5rem) looks too large next to its label | `styles.css` L336–343, L4121 | Conflicts R.1 | Found in the F08 M5-06 review (2026-10-13). Form-field sizes are Q3/Q5 |
 | Interim button classes from F08 M5 (`docs/design-system.md` → Interim decisions), built on `.secondary`: `ui-btn` (outline, muted text, flat, `--radius-soft-box`), `ui-btn-primary` (tinted purple), `ui-btn-ghost` (no border), `.is-active` (blue fill and border, for toggles), and the `ui-segmented` toggle group. First used by the Progress LeetCode logger | [`styles.css` L1694–1745](../../../apps/web/src/styles.css), [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Unspecified | Added by F08 M5-01 (2026-10-13). Reused by M5-08, M5-09 and M5-02. M0 decides whether they become the standard variants or get replaced. Sizes are one small size only (Q3) |
 | The Jobs ranking banner stays until dismissed with ×, remembering dismissals per batch in `sessionStorage` (per tab); a successful batch hides on its own after 30 minutes | [`JobsPage.tsx` L114–175](../../../apps/web/src/features/jobs/JobsPage.tsx) | Conflicts R.6 | Checked by reading, 2026-10-13. Moves to the one-time notice once F08 M5-02 defines it |
+| Completions diary and similar logs are long unpaginated day-grouped lists | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R.7 (Proposed) | F08 M8 paginates Past work only; F09 owns the default |
+| Rewards uses nested routes + subnav shell; Progress (pre-M8) uses peer `?tab=` tabs on one page; other pages vary | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`ProgressPage.tsx`](../../../apps/web/src/features/progress/ProgressPage.tsx) | Conflicts R.8 (Proposed) | F08 M8 aligns Progress with Rewards; app-wide rule stays F09 |
 
 ## Out of scope (for now)
 
@@ -68,6 +72,8 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | Q5 | Which conflicting existing patterns win (needs an audit of buttons, tabs, chips, modal anatomy, form fields)? | M0 | (open) |
 | Q6 | How will UI rules be enforced mechanically (e.g. a lint rule against variant-less `<button>`)? A single `npm run check` command comes from maintenance ticket MT-01 and can host it. | M1 | (open) |
 | Q7 | Should `styles.css` be split (per component or per feature), and when? | M1 | (open) |
+| Q8 | Long-list pagination: default page sizes, control placement, and whether day-based windows (1 / 7) are a Progress-only idea or a reusable pattern? | M0 / M2+ | (open) Noted 2026-10-14 from F08 M8; F08 implements Past work only |
+| Q9 | Nested feature shell + subnav vs in-page tabs: one app rule? Does it live in `docs/design-system.md` or a separate app-shell / IA doc? | M0 | (open) Noted 2026-10-14 from F08 M8 |
 
 ## Decisions log
 
@@ -77,3 +83,4 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 - **2026-10-13 (M5-06 close):** M0 waits until F08 M7 and M8 define the rewards and Progress pages, so the whole app's look can be judged together. Until then, styling issues found during other work are logged here (Current behavior) for M0 to resolve, not fixed in place, unless a ticket needs the fix to work.
 - **2026-10-13 (later):** The F08 M5-06 review didn't settle Q1–Q5; they stay in F09. F08 M5 uses interim working decisions (flat, tinted purple primary buttons, blue toggles, pace text never bold), recorded in `docs/design-system.md`. The `:not(...)` chain and the missing raised-surface shadow token stay in F09's scope. The M5-06 prototypes' direction page (`/prototype/f08/weekly/visual-direction`) and its conflicting-patterns audit remain the test case.
 - **2026-10-13:** Banner behavior is standardized. F08 M5-02 defines the one-time notice; F09 owns moving the Jobs ranking banner onto it (R.6).
+- **2026-10-14:** From F08 M8 IA lock: Proposed R.7 (paginate long lists by default) and R.8 (feature shell / subnav convention); open Q8–Q9. F08 M8 implements Past work pagination and Progress nested routes only.
