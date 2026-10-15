@@ -48,3 +48,4 @@ n/a
 - `.shell` → `var(--shell-max)` 1100px; brand mark + document title `flora.exe`
 - `design-system.md` Tokens table lists live variable names
 - Side effects expected until primitives land: whole app uses Plex and warmer surface-2; global buttons lose blue shadow (fill color unchanged until M1-02/04)
+- Commit: `9b5af76`

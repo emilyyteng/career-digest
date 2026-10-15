@@ -44,7 +44,7 @@ No open tickets.
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M1-01](./tickets/M1/M1-01-production-tokens-fonts-brand.md) | Production tokens, fonts, shell 1100, flora mark | (this commit) |
+| [M1-01](./tickets/M1/M1-01-production-tokens-fonts-brand.md) | Production tokens, fonts, shell 1100, flora mark | `9b5af76` |
 
 </details>
 
