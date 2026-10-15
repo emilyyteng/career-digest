@@ -48,4 +48,4 @@ n/a — visuals locked in M0; lab is reference only
 - `design-system.md` Components catalogue lists class/component names and policies
 - Also: user-facing docs product name → flora.exe (repo/package names unchanged)
 - `npm run check`: typecheck, web build, 345 API tests — pass
-- Commit: (recorded after commit)
+- Commit: `caa0d3c`

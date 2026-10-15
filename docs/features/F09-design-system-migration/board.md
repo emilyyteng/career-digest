@@ -44,7 +44,7 @@ No open tickets.
 | Ticket | Title | Commit |
 |--------|-------|--------|
 | [M1-01](./tickets/M1/M1-01-production-tokens-fonts-brand.md) | Production tokens, fonts, shell 1100, flora mark | `9b5af76` |
-| [M1-02](./tickets/M1/M1-02-button-field-segmented-primitives.md) | Button, field, segmented primitives | (pending) |
+| [M1-02](./tickets/M1/M1-02-button-field-segmented-primitives.md) | Button, field, segmented primitives | `caa0d3c` |
 
 </details>
 
