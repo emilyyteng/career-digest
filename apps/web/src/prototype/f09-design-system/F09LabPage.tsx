@@ -5,8 +5,8 @@
  * Q18/Q4/Q1/Q13 color-meaning + palette, Q2 containment/elevation,
  * Q3/Q5 control looks, Q16 shell-width stress samples.
  *
- * Orthogonal controls via URL: ?variant=V1…V7&brand=&font=&color=&contain=&shell=
- * Fonts load on demand (prototype-only). Does not depend on F08 prototypes.
+ * Full-viewport sandbox with sidebar controls (not production shell).
+ * Orthogonal URL params: ?variant=V1…V7&brand=&font=&color=&contain=&shell=
  */
 import { useEffect, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -48,21 +48,23 @@ function ParamRow({
   return (
     <div className="f09-param" role="group" aria-label={label}>
       <span className="f09-param-label">{label}</span>
-      {options.map((o) => (
-        <button
-          key={o.key}
-          type="button"
-          className={`secondary f09-chip${current === o.key ? " is-active" : ""}`}
-          aria-pressed={current === o.key}
-          onClick={() => {
-            const next = new URLSearchParams(params);
-            next.set(name, o.key);
-            setParams(next, { replace: true });
-          }}
-        >
-          {o.name}
-        </button>
-      ))}
+      <div className="f09-param-options">
+        {options.map((o) => (
+          <button
+            key={o.key}
+            type="button"
+            className={`f09-chip${current === o.key ? " is-active" : ""}`}
+            aria-pressed={current === o.key}
+            onClick={() => {
+              const next = new URLSearchParams(params);
+              next.set(name, o.key);
+              setParams(next, { replace: true });
+            }}
+          >
+            {o.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -82,7 +84,22 @@ function usePrototypeFont(fontKey: FontKey) {
   return font;
 }
 
+/** Hide the production app chrome while the lab covers the viewport. */
+function useHideAppChrome() {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.classList.add("f09-lab-open");
+    return () => {
+      document.body.style.overflow = prev;
+      document.documentElement.classList.remove("f09-lab-open");
+    };
+  }, []);
+}
+
 export default function F09LabPage() {
+  useHideAppChrome();
+
   const vibeKeys = VIBES.map((v) => v.key);
   const vibe = useLabParam("variant", vibeKeys) as VibeKey;
   const brand = useLabParam(
@@ -131,16 +148,17 @@ export default function F09LabPage() {
         } as CSSProperties
       }
     >
-      <div className="f09-inner">
+      <aside className="f09-sidebar">
         <p className="f09-banner">
-          <strong>Experimental prototype</strong> · F09 M0-02 design lab · mock
-          surfaces only ·{" "}
-          <Link to={HUB_PATH}>reset to defaults</Link>
-          {" · "}← / → flips vibe packs · other axes via controls below.
+          <strong>Experimental prototype</strong> · F09 M0-02 ·{" "}
+          <Link to="/">exit to app</Link>
+          {" · "}
+          <Link to={HUB_PATH}>reset params</Link>
+          {" · "}←/→ vibe
         </p>
 
         <div className="f09-controls">
-          <h2>Lab controls (orthogonal)</h2>
+          <h2>Lab controls</h2>
           <ParamRow name="brand" label="Brand" options={BRANDS} />
           <p className="f09-brand-promise">
             <strong>{brandMeta.name}:</strong> {brandMeta.promise}
@@ -154,258 +172,264 @@ export default function F09LabPage() {
           <ParamRow name="contain" label="Contain" options={CONTAINS} />
           <p className="f09-vibe-blurb">{containMeta.blurb}</p>
           <ParamRow name="shell" label="Shell" options={SHELLS} />
-          <p className="f09-vibe-blurb">
-            Vibe pack: <strong>{vibeMeta.name}</strong> — {vibeMeta.blurb}
-          </p>
         </div>
 
-        <header className="f09-top">
-          <h1 className="f09-brand-mark">{brandMeta.mark} 🌸</h1>
-          <nav className="f09-nav" aria-label="Sample app nav">
-            {["Home", "Jobs", "Tasks", "Progress", "Rewards"].map((label, i) => (
-              <span key={label} className={i === 3 ? "is-on" : undefined}>
+        <p className="f09-live">
+          Live: <strong>{vibeMeta.name}</strong> · {vibeMeta.blurb}
+        </p>
+      </aside>
+
+      <div className="f09-stage">
+        <div className="f09-stage-inner">
+          <header className="f09-top">
+            <h1 className="f09-brand-mark">{brandMeta.mark} 🌸</h1>
+            <nav className="f09-nav" aria-label="Sample app nav">
+              {["Home", "Jobs", "Tasks", "Progress", "Rewards"].map((label, i) => (
+                <span key={label} className={i === 3 ? "is-on" : undefined}>
+                  {label}
+                </span>
+              ))}
+            </nav>
+          </header>
+
+          <div className="f09-subnav" aria-label="Sample feature subnav">
+            {["This week", "Past work", "Lifetime"].map((label, i) => (
+              <span key={label} className={i === 0 ? "is-on" : undefined}>
                 {label}
               </span>
             ))}
-          </nav>
-        </header>
-
-        <div className="f09-subnav" aria-label="Sample feature subnav">
-          {["This week", "Past work", "Lifetime"].map((label, i) => (
-            <span key={label} className={i === 0 ? "is-on" : undefined}>
-              {label}
-            </span>
-          ))}
-        </div>
-
-        <p className="f09-section-label">Composition sample</p>
-        <div className="f09-grid-2">
-          <section className="f09-panel">
-            <h2 className="f09-panel-title">This week</h2>
-            <p className="f09-body">
-              Log a LeetCode solve and keep weekly goals in view. Body text uses
-              the readable stack; judge whether chrome still feels like the brand
-              thesis above.
-            </p>
-            <div className="f09-actions">
-              <div className="f09-segmented" role="group" aria-label="LC type">
-                <button
-                  type="button"
-                  className={`secondary f09-seg${seg === "weekly" ? " is-active" : ""}`}
-                  onClick={() => setSeg("weekly")}
-                >
-                  Weekly
-                </button>
-                <button
-                  type="button"
-                  className={`secondary f09-seg${seg === "misc" ? " is-active" : ""}`}
-                  onClick={() => setSeg("misc")}
-                >
-                  Misc
-                </button>
-              </div>
-              <button type="button" className="secondary f09-btn f09-btn-primary">
-                Save
-              </button>
-              <button type="button" className="secondary f09-btn">
-                Secondary
-              </button>
-              <button type="button" className="secondary f09-btn f09-btn-ghost">
-                Ghost
-              </button>
-              <button type="button" className="secondary f09-btn f09-btn-primary f09-btn-sm">
-                Sm primary
-              </button>
-            </div>
-          </section>
-
-          <section className="f09-panel">
-            <h2 className="f09-panel-title">Type specimen</h2>
-            <div className="f09-type-grid">
-              <div className="f09-type-row">
-                <span className="f09-type-role">Brand</span>
-                <span className="f09-type-brand">{brandMeta.mark}</span>
-              </div>
-              <div className="f09-type-row">
-                <span className="f09-type-role">Nav</span>
-                <span className="f09-type-nav">Jobs · Tasks · Progress</span>
-              </div>
-              <div className="f09-type-row">
-                <span className="f09-type-role">Title</span>
-                <span className="f09-type-title">Weekly goals</span>
-              </div>
-              <div className="f09-type-row">
-                <span className="f09-type-role">Body</span>
-                <span className="f09-type-body">
-                  Read this paragraph for comfort and density.
-                </span>
-              </div>
-              <div className="f09-type-row">
-                <span className="f09-type-role">Badge</span>
-                <span className="f09-type-badge">P0 · INTERVIEW</span>
-              </div>
-              <div className="f09-type-row">
-                <span className="f09-type-role">Number</span>
-                <span className="f09-type-num">Balance 128 · 3/5</span>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <p className="f09-section-label">Color meaning (priority · urgency · heat · success)</p>
-        <section className="f09-panel">
-          <div className="f09-meaning">
-            <div>
-              <p className="f09-muted" style={{ margin: "0 0 0.35rem" }}>
-                Priority
-              </p>
-              <div className="f09-meaning-row">
-                <span className="f09-pill f09-pill-p0">P0</span>
-                <span className="f09-pill f09-pill-p1">P1</span>
-                <span className="f09-pill f09-pill-p2">P2</span>
-              </div>
-            </div>
-            <div>
-              <p className="f09-muted" style={{ margin: "0 0 0.35rem" }}>
-                Deadline urgency
-              </p>
-              <div className="f09-meaning-row">
-                <span className="f09-urgency f09-urgency-overdue" title="overdue" />
-                <span className="f09-muted">overdue</span>
-                <span className="f09-urgency f09-urgency-soon" title="soon" />
-                <span className="f09-muted">soon</span>
-                <span className="f09-urgency f09-urgency-ok" title="ok" />
-                <span className="f09-muted">ok</span>
-              </div>
-            </div>
-            <div>
-              <p className="f09-muted" style={{ margin: "0 0 0.35rem" }}>
-                Heatmap intensity (empty → peak)
-              </p>
-              <div className="f09-heat" aria-hidden>
-                <span className="f09-heat-0" />
-                <span className="f09-heat-1" />
-                <span className="f09-heat-2" />
-                <span className="f09-heat-3" />
-                <span className="f09-heat-4" />
-              </div>
-            </div>
-            <div className="f09-flash">
-              <span>+12 Seeds for finishing a task</span>
-              <span className="f09-type-num">Balance 128</span>
-            </div>
-            <p className="f09-legend">
-              <span>
-                <i style={{ background: "var(--f09-p0)" }} /> severity / P0
-              </span>
-              <span>
-                <i style={{ background: "var(--f09-danger)" }} /> danger
-              </span>
-              <span>
-                <i style={{ background: "var(--f09-ok)" }} /> ok / success
-              </span>
-              <span>
-                <i style={{ background: "var(--f09-brand)" }} /> brand blush
-              </span>
-              <span>
-                <i style={{ background: "var(--f09-action)" }} /> action
-              </span>
-              <span>
-                <i style={{ background: "var(--f09-select)" }} /> selection
-              </span>
-            </p>
-            <p className="f09-muted" style={{ margin: 0 }}>
-              Scheme <strong>{colorMeta.name}</strong>: {colorMeta.blurb} Ask
-              whether priority, urgency, heat, and success still collide.
-            </p>
           </div>
-        </section>
 
-        <p className="f09-section-label">Modal chrome</p>
-        <section className="f09-panel" style={{ padding: 0, border: "none", background: "transparent", boxShadow: "none" }}>
-          <div className="f09-modal-demo">
-            <div className="f09-modal-card">
-              <h3>Complete task?</h3>
-              <p className="f09-muted" style={{ margin: 0 }}>
-                Sample dialog anatomy — header, body, footer actions.
-              </p>
-              <div className="f09-modal-foot">
-                <button type="button" className="secondary f09-btn">
-                  Keep editing
-                </button>
-                <button type="button" className="secondary f09-btn f09-btn-primary">
-                  Complete
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <p className="f09-section-label">
-          Width stress · tabs + location chips + dual column (shell {shell}px)
-        </p>
-        <section className="f09-panel">
-          <div className="f09-stress-tabs">
-            {["ranked", "mismatches", "unranked", "needs description"].map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`secondary f09-tab${tab === t ? " is-active" : ""}`}
-                onClick={() => setTab(t)}
-              >
-                {t}
-              </button>
-            ))}
-            <button type="button" className="secondary f09-btn f09-btn-sm">
-              Refresh
-            </button>
-          </div>
-          <div className="f09-chips-row">
-            {["all", "Bay Area", "Remote US", "NYC", "Seattle", "Austin"].map((l) => (
-              <button
-                key={l}
-                type="button"
-                className={`secondary f09-loc${loc === l ? " is-active" : ""}`}
-                onClick={() => setLoc(l)}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-          <div className="f09-columns">
-            <div>
-              <p className="f09-muted" style={{ margin: "0 0 0.4rem" }}>
-                Day panel · compose row (nowrap)
-              </p>
-              <div className="f09-compose-row">
-                {["application", "technical", "other"].map((lane, i) => (
-                  <span key={lane} className={`f09-lane${i === 0 ? " is-on" : ""}`}>
-                    {lane}
-                  </span>
-                ))}
-                <button type="button" className="secondary f09-btn f09-btn-primary f09-btn-sm">
-                  Add reflection
-                </button>
-              </div>
-            </div>
-            <div>
-              <p className="f09-muted" style={{ margin: "0 0 0.4rem" }}>
-                Completions · shortened labels
-              </p>
-              <div className="f09-ledger-tabs">
-                {["all", "tasks", "apps", "interviews", "notes", "LC"].map((t, i) => (
-                  <span key={t} className={i === 0 ? "is-on" : undefined}>
-                    {t}
-                  </span>
-                ))}
-              </div>
+          <p className="f09-section-label">Composition sample</p>
+          <div className="f09-grid-2">
+            <section className="f09-panel">
+              <h2 className="f09-panel-title">This week</h2>
               <p className="f09-body">
-                Dual-column stress at the current shell. Flip shell width above;
-                notice whether chips/tabs stay one line or scroll.
+                Log a LeetCode solve and keep weekly goals in view. Body text uses
+                the readable stack; judge whether chrome still feels like the brand
+                thesis.
+              </p>
+              <div className="f09-actions">
+                <div className="f09-segmented" role="group" aria-label="LC type">
+                  <button
+                    type="button"
+                    className={`f09-seg${seg === "weekly" ? " is-active" : ""}`}
+                    onClick={() => setSeg("weekly")}
+                  >
+                    Weekly
+                  </button>
+                  <button
+                    type="button"
+                    className={`f09-seg${seg === "misc" ? " is-active" : ""}`}
+                    onClick={() => setSeg("misc")}
+                  >
+                    Misc
+                  </button>
+                </div>
+                <button type="button" className="f09-btn f09-btn-primary">
+                  Save
+                </button>
+                <button type="button" className="f09-btn">
+                  Secondary
+                </button>
+                <button type="button" className="f09-btn f09-btn-ghost">
+                  Ghost
+                </button>
+                <button type="button" className="f09-btn f09-btn-primary f09-btn-sm">
+                  Sm primary
+                </button>
+              </div>
+            </section>
+
+            <section className="f09-panel">
+              <h2 className="f09-panel-title">Type specimen</h2>
+              <div className="f09-type-grid">
+                <div className="f09-type-row">
+                  <span className="f09-type-role">Brand</span>
+                  <span className="f09-type-brand">{brandMeta.mark}</span>
+                </div>
+                <div className="f09-type-row">
+                  <span className="f09-type-role">Nav</span>
+                  <span className="f09-type-nav">Jobs · Tasks · Progress</span>
+                </div>
+                <div className="f09-type-row">
+                  <span className="f09-type-role">Title</span>
+                  <span className="f09-type-title">Weekly goals</span>
+                </div>
+                <div className="f09-type-row">
+                  <span className="f09-type-role">Body</span>
+                  <span className="f09-type-body">
+                    Read this paragraph for comfort and density.
+                  </span>
+                </div>
+                <div className="f09-type-row">
+                  <span className="f09-type-role">Badge</span>
+                  <span className="f09-type-badge">P0 · INTERVIEW</span>
+                </div>
+                <div className="f09-type-row">
+                  <span className="f09-type-role">Number</span>
+                  <span className="f09-type-num">Balance 128 · 3/5</span>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <p className="f09-section-label">
+            Color meaning (priority · urgency · heat · success)
+          </p>
+          <section className="f09-panel">
+            <div className="f09-meaning">
+              <div>
+                <p className="f09-muted" style={{ marginBottom: "0.35rem" }}>
+                  Priority
+                </p>
+                <div className="f09-meaning-row">
+                  <span className="f09-pill f09-pill-p0">P0</span>
+                  <span className="f09-pill f09-pill-p1">P1</span>
+                  <span className="f09-pill f09-pill-p2">P2</span>
+                </div>
+              </div>
+              <div>
+                <p className="f09-muted" style={{ marginBottom: "0.35rem" }}>
+                  Deadline urgency
+                </p>
+                <div className="f09-meaning-row">
+                  <span className="f09-urgency f09-urgency-overdue" title="overdue" />
+                  <span className="f09-muted">overdue</span>
+                  <span className="f09-urgency f09-urgency-soon" title="soon" />
+                  <span className="f09-muted">soon</span>
+                  <span className="f09-urgency f09-urgency-ok" title="ok" />
+                  <span className="f09-muted">ok</span>
+                </div>
+              </div>
+              <div>
+                <p className="f09-muted" style={{ marginBottom: "0.35rem" }}>
+                  Heatmap intensity (empty → peak)
+                </p>
+                <div className="f09-heat" aria-hidden>
+                  <span className="f09-heat-0" />
+                  <span className="f09-heat-1" />
+                  <span className="f09-heat-2" />
+                  <span className="f09-heat-3" />
+                  <span className="f09-heat-4" />
+                </div>
+              </div>
+              <div className="f09-flash">
+                <span>+12 Seeds for finishing a task</span>
+                <span className="f09-type-num">Balance 128</span>
+              </div>
+              <p className="f09-legend">
+                <span>
+                  <i style={{ background: "var(--f09-p0)" }} /> severity / P0
+                </span>
+                <span>
+                  <i style={{ background: "var(--f09-danger)" }} /> danger
+                </span>
+                <span>
+                  <i style={{ background: "var(--f09-ok)" }} /> ok / success
+                </span>
+                <span>
+                  <i style={{ background: "var(--f09-brand)" }} /> brand blush
+                </span>
+                <span>
+                  <i style={{ background: "var(--f09-action)" }} /> action
+                </span>
+                <span>
+                  <i style={{ background: "var(--f09-select)" }} /> selection
+                </span>
+              </p>
+              <p className="f09-muted">
+                Scheme <strong>{colorMeta.name}</strong>: {colorMeta.blurb}
               </p>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <p className="f09-section-label">Modal chrome</p>
+          <section className="f09-panel f09-modal-host">
+            <div className="f09-modal-demo">
+              <div className="f09-modal-card">
+                <h3>Complete task?</h3>
+                <p className="f09-muted">
+                  Sample dialog anatomy — header, body, footer actions.
+                </p>
+                <div className="f09-modal-foot">
+                  <button type="button" className="f09-btn">
+                    Keep editing
+                  </button>
+                  <button type="button" className="f09-btn f09-btn-primary">
+                    Complete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <p className="f09-section-label">
+            Width stress · tabs + chips + dual column (shell {shell}px)
+          </p>
+          <section className="f09-panel">
+            <div className="f09-stress-tabs">
+              {["ranked", "mismatches", "unranked", "needs description"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`f09-tab${tab === t ? " is-active" : ""}`}
+                  onClick={() => setTab(t)}
+                >
+                  {t}
+                </button>
+              ))}
+              <button type="button" className="f09-btn f09-btn-sm">
+                Refresh
+              </button>
+            </div>
+            <div className="f09-chips-row">
+              {["all", "Bay Area", "Remote US", "NYC", "Seattle", "Austin"].map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  className={`f09-loc${loc === l ? " is-active" : ""}`}
+                  onClick={() => setLoc(l)}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div className="f09-columns">
+              <div>
+                <p className="f09-muted" style={{ marginBottom: "0.4rem" }}>
+                  Day panel · compose row (nowrap)
+                </p>
+                <div className="f09-compose-row">
+                  {["application", "technical", "other"].map((lane, i) => (
+                    <span key={lane} className={`f09-lane${i === 0 ? " is-on" : ""}`}>
+                      {lane}
+                    </span>
+                  ))}
+                  <button type="button" className="f09-btn f09-btn-primary f09-btn-sm">
+                    Add reflection
+                  </button>
+                </div>
+              </div>
+              <div>
+                <p className="f09-muted" style={{ marginBottom: "0.4rem" }}>
+                  Completions · shortened labels
+                </p>
+                <div className="f09-ledger-tabs">
+                  {["all", "tasks", "apps", "interviews", "notes", "LC"].map((t, i) => (
+                    <span key={t} className={i === 0 ? "is-on" : undefined}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <p className="f09-body">
+                  Flip shell width in the sidebar; notice whether chips/tabs stay
+                  one line or scroll.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <PrototypeSwitcher
