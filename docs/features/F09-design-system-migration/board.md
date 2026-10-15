@@ -44,7 +44,7 @@ No open tickets.
 | [M1-02](./tickets/M1/M1-02-button-field-segmented-primitives.md) | Button, field, segmented primitives | `caa0d3c` |
 | [M1-03](./tickets/M1/M1-03-tabs-and-badge-helpers.md) | Tabs / chrome-tab + badge helpers | `26329b2` |
 | [M1-14](./tickets/M1/M1-14-apply-heat-urgency-washes.md) | Apply heat, urgency, surface-2 washes | `7e7c335` |
-| [M1-04](./tickets/M1/M1-04-neutralize-global-control-defaults.md) | Neutralize global button/field defaults | (pending) |
+| [M1-04](./tickets/M1/M1-04-neutralize-global-control-defaults.md) | Neutralize global button/field defaults | `8af8ad0` |
 
 </details>
 

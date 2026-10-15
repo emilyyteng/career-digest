@@ -56,4 +56,4 @@ n/a
 - Migrated former unclassed primaries to `Button` (ModalLayer, task/app/interview forms, Progress save rows, list “Add …” CTAs, discard confirms)
 - `design-system.md` + F09 current-behavior rows updated
 - `npm run check` pass
-- Commit: (recorded after commit)
+- Commit: `8af8ad0`
