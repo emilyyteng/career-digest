@@ -1,7 +1,7 @@
 # M1-03: Tabs / chrome-tab and badge role helpers
 
-**Status:** Draft
-**Blocked by:** M1-01
+**Status:** Ready
+**Blocked by:** (none) — M1-01 Done
 **Implements:** R.1, R1.1, Q5, Q18
 **Type:** build
 

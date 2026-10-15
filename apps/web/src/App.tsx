@@ -91,9 +91,9 @@ export default function App() {
       <div className="shell">
         <DemoBanner />
         <header className="top">
-          <Link to="/" className="top-brand" aria-label="career-digest home">
+          <Link to="/" className="top-brand" aria-label="flora.exe home">
             <h1 className="top-brand-title">
-              <span>career-digest</span>
+              <span>flora.exe</span>
               <ThemeEmoji emoji={HEADER_BRAND_EMOJI} />
             </h1>
           </Link>

@@ -2,7 +2,7 @@
 
 The source of truth for visual and interaction conventions in `apps/web`. **Read this before changing any `.tsx` or `.css` in the web app.** It overrides tickets and prototypes on anything visual (see `AGENTS.md` → Precedence). If a feature requirement conflicts with or is ambiguous against this file, surface that to the user before implementing (`AGENTS.md` → Feature requirements vs design system).
 
-**Status:** Visual foundations locked (F09 M0, 2026-10-15). Production CSS still largely reflects the pre-lock dialects; **new UI and F09 migration waves must follow this document.** Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
+**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live in production** (F09 M1-01); control primitives and page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
 
 **Migration approach:** comprehensive system + phased migration (F09). M1 builds primitives and interaction/IA patterns; M2–M3 restyle surfaces. Extend this doc when something new is needed—do not fork a feature-local look.
 
@@ -27,9 +27,11 @@ The source of truth for visual and interaction conventions in `apps/web`. **Read
 
 **Elevation — flat controls:** Buttons, tabs, chips, and fields have **no drop shadow**. Soft card shadow and modal overlay shadow are allowed. Secondary actions never elevate.
 
-**Typography — IBM Plex:** Display / chrome / titles / tabs / badges / numbers → **IBM Plex Mono**. Body → **IBM Plex Sans**. (Production may still ship JetBrains + DM Sans until the M1 font migration; new UI targets Plex roles.)
+**Typography — IBM Plex:** Display / chrome / titles / tabs / badges / numbers → **IBM Plex Mono** (`--font-display`). Body → **IBM Plex Sans** (`--font-body`). Live in production (M1-01).
 
-**Shell width — 1100px:** `.shell` max-width target is **1100px** (was 960). Full chrome-budget / wrap rules remain M1 (Q15 / remaining Q16).
+**Shell width — 1100px:** `.shell` uses `--shell-max: 1100px`. Full chrome-budget / wrap rules remain M1 (Q15 / remaining Q16).
+
+**Brand mark — flora.exe:** Top chrome mark (M1-01). Full string rewrite across the app is not required in M1.
 
 ## Color meaning (roles)
 
@@ -54,23 +56,21 @@ Keep the named hue set small. Map meaning onto roles — do not invent page-loca
 
 ## Tokens
 
-Defined in `:root` in `apps/web/src/styles.css` today; **roles below are authoritative**. M1 renames/adds CSS variables to match. Until then, new code should use the closest existing token or introduce a named variable in the same change.
+Live in `:root` in [`apps/web/src/styles.css`](../apps/web/src/styles.css) (F09 M1-01). Prefer **role names** in new code. Legacy `--accent-*`, `--font-sans` / `--font-mono`, `--radius-card` / `--radius-soft` remain as aliases so unmigrated pages keep working.
 
-| Group | Role / policy | Status |
-|-------|---------------|--------|
-| Surfaces | Page gradient blush→cool; `--surface` cards; `--surface-2` for nested washes (not purple) | Locked (M0); prod values migrate in waves |
-| Borders | Soft blush/gray borders; active chrome uses ink | Locked |
-| Text | Ink primary; muted secondary | Locked |
-| Accents | Brand blush; domain apps/tech/reward; severity RYG; success mint | Locked roles; prod `--accent-*` remap in M1 |
-| Danger | True danger / declined | Locked |
-| Radius | Panel ~12px; control ~8–10px (squared tabs); segmented track pill (`999px`); chip pill | Locked |
-| Elevation | `--shadow-soft` cards OK; **no button shadow**; modal overlay shadow OK | Locked |
-| Type | `--font-display` → Plex Mono; `--font-body` → Plex Sans; size ladder below | Locked roles; font files in M1 |
-| Spacing | Compact control padding; stack gaps TBD in M1 with chrome budget | Partial (M0 sizes); gaps M1 |
-| Layout | `.shell` **max-width 1100px** | Locked width; chrome budget M1 |
-| Data viz | Shared vivid-rose soft-peak scale (5 stops) | Locked |
-| Urgency | Severity-5 stops (see Color meaning) | Locked |
-| Hover | Warm/gray wash on secondary; ink darken on primary; fields: **border only** on hover, wash on focus | Locked |
+| Group | CSS variables (live) | Policy |
+|-------|----------------------|--------|
+| Surfaces | `--bg`, `--bg-gradient-end`, `--surface`, `--surface-2`, `--hover`, `--tab-active-bg`, `--overlay` | `--surface-2` is warm (not purple) |
+| Borders / text | `--border`, `--border-strong`, `--text`, `--text-muted`, `--text-subtle`, `--ink` | Active chrome uses `--ink` |
+| Brand / domain | `--brand`, `--brand-deep`, `--domain-apps`(+`-deep`), `--domain-tech`(+`-deep`), `--domain-reward`(+`-deep`) | Aliases: `--accent-pink/blue/purple` |
+| Severity | `--severity-p0`, `--severity-p1`, `--severity-p2` | RYG priority |
+| Urgency | `--urgency-overdue` … `--urgency-ok` | Severity-5; no purple/blue mid |
+| Heat | `--heat-0` … `--heat-4` | Vivid rose soft peak |
+| Success / warn / danger | `--ok`, `--ok-soft`, `--warn`, `--warn-soft`, `--danger`, `--danger-deep` | Mint / amber / rose-danger |
+| Radius | `--radius-panel`, `--radius-control`, `--radius-seg`, `--radius-pill` (+ legacy `--radius-card/soft/soft-box`) | Squared controls; pill seg/chips |
+| Elevation | `--shadow-soft`, `--shadow-modal`, `--shadow-button: none`, `--shadow-minimal` | Flat controls |
+| Type | `--font-display` (Plex Mono), `--font-body` (Plex Sans); `--font-mono`/`--font-sans` alias | Loaded from `index.html` |
+| Layout | `--shell-max: 1100px` → `.shell` | Chrome budget still M1-08 |
 
 ### Type size ladder (target)
 

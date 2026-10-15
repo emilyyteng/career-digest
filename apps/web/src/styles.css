@@ -1,24 +1,65 @@
 :root {
-  /* Sakura Terminal palette */
+  /* Ink desk (F09 M0/M1) — role tokens; legacy --accent-* kept as aliases */
+
+  /* Surfaces */
   --bg: #fdf2f7;
-  --bg-gradient-end: #f4f8fc;
+  --bg-gradient-end: #f7f4fb;
   --surface: #fffbfd;
-  --surface-2: #f5f0fc;
-  --border: #e8d5e3;
+  --surface-2: #f7f2f5; /* warm wash — not purple #f5f0fc */
+  --hover: #efe6ec;
+  --tab-active-bg: #ebe8ee;
+  --border: #e4d0dc;
   --border-strong: #d4c0d0;
   --text: #2a2830;
   --text-muted: #5c5668;
   --text-subtle: #7a7385;
-  --accent-pink: #e8a4bc;
-  --accent-pink-deep: #d489a8;
-  --accent-blue: #7ba3c9;
-  --accent-blue-deep: #5b7c99;
-  --accent-purple: #9b8ec4;
-  --accent-purple-deep: #7a6da8;
-  --accent-mint: #8fccb8;
-  --accent-mint-deep: #5a9f88;
-  --accent-yellow: #f5e6a8;
-  --accent-yellow-deep: #c9b36a;
+
+  /* Core roles */
+  --ink: #1a181c;
+  --brand: #e8a4bc;
+  --brand-deep: #c9789a;
+  --domain-apps: #7ba3c9;
+  --domain-apps-deep: #5b7c99;
+  --domain-tech: #9b8ec4;
+  --domain-tech-deep: #7a6da8;
+  --domain-reward: #e8a4bc;
+  --domain-reward-deep: #c9789a;
+  --ok: #5a9f88;
+  --ok-soft: #8fccb8;
+  --warn: #c9b36a;
+  --warn-soft: #f5e6a8;
+
+  /* Severity (priority RYG) */
+  --severity-p0: #c23b3b;
+  --severity-p1: #d4a017;
+  --severity-p2: #2f8f5b;
+
+  /* Urgency Severity-5 (no purple/blue mid steps) */
+  --urgency-overdue: var(--severity-p0);
+  --urgency-urgent: #c97b8b;
+  --urgency-soon: var(--warn);
+  --urgency-ahead: #9a929e;
+  --urgency-ok: var(--ok);
+
+  /* Heat — vivid rose soft peak */
+  --heat-0: #fff8fa;
+  --heat-1: #fce4ee;
+  --heat-2: #f5c0d4;
+  --heat-3: #eba0bc;
+  --heat-4: #e078a0;
+
+  /* Legacy accent names → role aliases (unmigrated call sites) */
+  --accent-pink: var(--brand);
+  --accent-pink-deep: var(--brand-deep);
+  --accent-blue: var(--domain-apps);
+  --accent-blue-deep: var(--domain-apps-deep);
+  --accent-purple: var(--domain-tech);
+  --accent-purple-deep: var(--domain-tech-deep);
+  --accent-mint: var(--ok-soft);
+  --accent-mint-deep: var(--ok);
+  --accent-yellow: var(--warn-soft);
+  --accent-yellow-deep: var(--warn);
+
   --danger: #c97b8b;
   --danger-deep: #9f5a68;
   --on-primary: #ffffff;
@@ -26,16 +67,30 @@
   --shadow-strong: rgba(42, 40, 48, 0.14);
   --overlay: rgba(42, 40, 48, 0.42);
 
-  --font-sans: "DM Sans", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
-  --radius-card: 12px;
-  --radius-soft: 999px;
-  --radius-soft-box: 14px;
-  --shadow-soft: 0 2px 8px var(--shadow);
-  --shadow-button: 0 2px 6px rgba(91, 124, 153, 0.22);
-  --shadow-minimal: none;
+  /* Type — IBM Plex; --font-sans/--font-mono alias for existing rules */
+  --font-display: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-display);
 
-  font-family: var(--font-sans);
+  /* Radius */
+  --radius-panel: 12px;
+  --radius-control: 8px;
+  --radius-seg: 999px;
+  --radius-pill: 999px;
+  --radius-card: var(--radius-panel);
+  --radius-soft: var(--radius-pill);
+  --radius-soft-box: 14px;
+
+  /* Elevation — flat controls; soft cards + modal OK */
+  --shadow-soft: 0 2px 8px var(--shadow);
+  --shadow-button: none;
+  --shadow-minimal: none;
+  --shadow-modal: 0 16px 40px var(--shadow-strong);
+
+  --shell-max: 1100px;
+
+  font-family: var(--font-body);
   color: var(--text);
   background: linear-gradient(165deg, var(--bg) 0%, var(--bg-gradient-end) 100%);
   background-attachment: fixed;
@@ -49,7 +104,7 @@ body { margin: 0; min-height: 100vh; }
 a { color: var(--accent-blue-deep); }
 a:hover { color: var(--accent-purple-deep); }
 
-.shell { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+.shell { max-width: var(--shell-max); margin: 0 auto; padding: 1.5rem; }
 
 .demo-banner {
   margin: 0 0 1rem;

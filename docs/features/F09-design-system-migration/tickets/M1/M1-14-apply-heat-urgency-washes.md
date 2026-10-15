@@ -1,7 +1,7 @@
 # M1-14: Apply heat, urgency, and surface-2 washes on hotspots
 
-**Status:** Draft
-**Blocked by:** M1-01
+**Status:** Ready
+**Blocked by:** (none) — M1-01 Done
 **Implements:** R0.3, R0.5, R1.1
 **Type:** build
 

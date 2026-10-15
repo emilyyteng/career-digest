@@ -1,7 +1,7 @@
 # M1-02: Button, field, and segmented primitives
 
-**Status:** Draft
-**Blocked by:** M1-01
+**Status:** Ready
+**Blocked by:** (none) — M1-01 Done
 **Implements:** R.1, R1.1, Q1–Q3
 **Type:** build
 
