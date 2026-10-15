@@ -4508,6 +4508,9 @@ button.progress-cal-cell.effort::after {
   flex-shrink: 0;
   white-space: nowrap;
 }
+.home-progress-row .progress-kicker {
+  margin-bottom: 0;
+}
 .weekly-goals-card {
   margin-top: 0.75rem;
 }

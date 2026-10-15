@@ -27,6 +27,17 @@ function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
+/** YYYY-MM-DD civil date → "Wed, Oct 14" (same as Progress today head). */
+function formatShort(date: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 const UPCOMING_DAYS_KEY = "home.upcomingDays";
 
 function readUpcomingDays(): 7 | 14 {
@@ -290,11 +301,14 @@ export default function Home() {
         {progress && (
           <div className="home-progress-stack">
             <div className="home-progress-row">
-              <TodayStrip today={progress} className="home-progress-strip" />
+              <span className="progress-kicker">
+                Today · {formatShort(progress.localDate)}
+              </span>
               <Link to="/progress" className="home-section-link">
                 Update progress →
               </Link>
             </div>
+            <TodayStrip today={progress} className="home-progress-strip" />
           </div>
         )}
       </header>
