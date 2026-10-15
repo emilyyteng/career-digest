@@ -103,7 +103,18 @@ Visual appearance locked (M0). Shared React primitives land in M1.
 
 ## Patterns
 
-Interaction / IA patterns remain **Pending M1** (F09 Q8–Q11, Q15, remaining Q16): long-list pagination, feature shell vs in-page tabs depth, EarnFlash placement, compact long-page tactics, full chrome budget.
+Interaction / IA / layout patterns are **Pending M1** tickets (see F09 board):
+
+| Topic | Ticket | Notes |
+|-------|--------|-------|
+| Feature shell / nested tabs | F09 M1-06 | Q9 / Q15 |
+| **Paired panel height + in-panel overflow** | F09 M1-07 | Q16 — sibling columns share height; scroll inside panels (user lean 2026-10-15) |
+| Chrome budget / width | F09 M1-08 | Q16 remainder (shell width already 1100px) |
+| List pagination | F09 M1-09 | Q8 / R.7 |
+| EarnFlash placement | F09 M1-10 | Q10 / R.9 |
+| Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks migrate in M2 |
+
+Pilot surface for primitives: **Home** (F09 M1-05).
 
 ## Banner patterns
 
