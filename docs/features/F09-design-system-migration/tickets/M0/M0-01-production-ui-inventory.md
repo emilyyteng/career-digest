@@ -1,6 +1,6 @@
 # M0-01: Production UI visual inventory (spike)
 
-**Status:** Ready
+**Status:** In progress
 **Blocked by:** (none)
 **Implements:** R.12, R0.1 (input), R0.3 (scope), Q5 / Q12 / Q13 (findings)
 **Type:** spike
@@ -25,12 +25,13 @@ Prototype-only stylesheets are out of scope except as optional historical notes.
 
 ## Acceptance criteria
 
-- [ ] Written findings doc in this ticket's Verification notes (or a short linked section in the F09 spec Current behavior / a spike appendix)—enough for M0-02 to design variants without re-auditing
-- [ ] Competing patterns listed per area (feeds the "Conflicting patterns → chosen standard" table)
-- [ ] Explicit call-out of vibe tension: raised Sakura Terminal vs clean/flat (Q12), with concrete examples (file + lines)
-- [ ] Heatmap / intensity coloring described (current scale behavior, hues, empty/future/peak) for Q13
-- [ ] Gaps called out that are **not** already in the F09 Current behavior table (proves R.12)
-- [ ] No production code changes required; if a blocking bug is found, report it per Issues found—do not fix in this spike
+- [x] Written findings doc in this ticket's Verification notes (or a short linked section in the F09 spec Current behavior / a spike appendix)—enough for M0-02 to design variants without re-auditing → [M0-01-findings.md](./M0-01-findings.md)
+- [x] Competing patterns listed per area (feeds the "Conflicting patterns → chosen standard" table)
+- [x] Explicit call-out of vibe tension: raised Sakura Terminal vs clean/flat (Q12), with concrete examples (file + lines)
+- [x] Heatmap / intensity coloring described (current scale behavior, hues, empty/future/peak) for Q13
+- [x] Gaps called out that are **not** already in the F09 Current behavior table (proves R.12)
+- [x] No production code changes required; if a blocking bug is found, report it per Issues found—do not fix in this spike
+- [ ] **User review:** fold feedback into findings; then mark Done
 
 ## Design questions (prototype tickets only)
 
@@ -44,7 +45,7 @@ n/a
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
+- [ ] Acceptance criteria met and checked (including user review)
 - [ ] `npm run check` passes (no code changes expected; still run if anything was touched)
 - [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
 - [ ] Reuse check done
@@ -54,4 +55,9 @@ n/a
 
 ## Verification notes
 
-(filled when done)
+**2026-10-15 — agent draft (awaiting user review):**
+
+- Findings: [M0-01-findings.md](./M0-01-findings.md)
+- Method: read-only production CSS/TSX audit (three parallel inventory passes: chrome/elevation/actions; forms/nav/feedback; heatmap/domain color). Not browser-verified.
+- Headline: two dialects (raised Sakura vs flat interim) share one pastel palette; accent roles are overloaded; heatmaps use an ad-hoc pink→navy JS scale.
+- Issues found while inventorying (not fixed): Achievement unlock modal bypasses `ModalLayer` ([`AchievementUnlockModal.tsx`](../../../../../apps/web/src/features/achievements/AchievementUnlockModal.tsx)); see findings §6 and end-of-task report.

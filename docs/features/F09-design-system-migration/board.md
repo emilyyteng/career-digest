@@ -8,7 +8,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M0-01](./tickets/M0/M0-01-production-ui-inventory.md) | Production UI visual inventory (spike) | spike | Ready | Seeds only from Current behavior; must go beyond it (R.12) |
+| [M0-01](./tickets/M0/M0-01-production-ui-inventory.md) | Production UI visual inventory (spike) | spike | In progress | Draft findings in [M0-01-findings.md](./tickets/M0/M0-01-findings.md); awaiting user review |
 | [M0-02](./tickets/M0/M0-02-prototype-visual-direction.md) | F09 visual-direction prototypes (vibe → components) | prototype | Ready | Blocked in practice on M0-01 findings; may start shell in parallel |
 | [M0-03](./tickets/M0/M0-03-lock-visual-foundations.md) | Lock visual foundations into `docs/design-system.md` | docs | Draft | After M0-02 verdict; closes Q1–Q5, Q12–Q13 |
 
