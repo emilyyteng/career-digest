@@ -442,7 +442,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Balance may go negative (`applyDeltaToBalance`; no `balance_after >= 0` check) | [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts), [`038_unclamp_points_balance.sql`](../../../apps/api/src/sql/038_unclamp_points_balance.sql) | Conforms R7.3 (supersedes R4.5) | Done by M7-01 |
 | Weekly goal points are awarded only at week close, from the stored record: +20 per unit, +100 when met, nothing for 0/0. No path pays a bonus when a target is hit | [`weeklyGoals.ts` `closeWeek`](../../../apps/api/src/weeklyGoals.ts), [`pointsFormulas.ts` `weeklyRecordPoints`](../../../apps/api/src/pointsFormulas.ts) | Conforms R5.9, R5.12, R5.15 | Fixed by M5-05 |
 | Applications, interview steps and weekly bonuses are never reversed; misc reopen reverses | [`routes.ts` L1110–1121](../../../apps/api/src/routes.ts) | Conforms R4.10, R4.11 | |
-| Progress Ledger tab: a Completions diary and a Points view | `LedgerCompletionsPanel.tsx`, `LedgerPointsPanel.tsx` | Conforms R4.1, R4.2, R4.8 | |
+| Completions diary component still exists; Progress ledger/Points chrome removed from routed UI (M8-02). Earnings live on Rewards | `LedgerCompletionsPanel.tsx`; Rewards `EarningsPage` | Conforms R4.8 / R8.2 for placement; diary UI moves under Past work in M8-04 | `LedgerPointsPanel.tsx` unused |
 
 ### M5 (existing behavior M5 builds on, from F07)
 
@@ -484,11 +484,11 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| Progress is one page with peer tabs `today` · `history` · `ledger` · `achievements` via `?tab=` | [`ProgressPage.tsx`](../../../apps/web/src/features/progress/ProgressPage.tsx) L44–50, L460–491 | Conflicts R8.1, R8.9 | Stopgap; M8 nested hub |
-| Today tab packs streak strip, week/month cards, weekly goals, dual ~26-week heatmaps, LC logger, reflection compose, notes, apps | `ProgressPage.tsx` today branch | Conflicts R8.10, R8.11 | No heatmap on This week; need next-per-family achievements + completions-style week/month pulse |
-| History tab: month calendar + selected-day LC/apps/notes with edit toggle; effort marks; heat cells use earned clamped 0–3 | `ProgressPage.tsx`, `HistoryCalendar`, `ProgressHeatmap` | Conflicts R8.4, R8.13 | Always-editable day panel; drop effort marks; color ∝ raw apps/LC |
-| Ledger tab: Completions diary + Points stub linking to `/rewards/earnings` | `ProgressPage.tsx` L746–778 | Conflicts R8.2 | Points stub must go; completions move under Past work |
-| Achievements are a peer tab | `ProgressPage.tsx`, [`AchievementsPanel.tsx`](../../../apps/web/src/features/achievements/AchievementsPanel.tsx) | Conflicts R8.10, R8.12 | Next-per-family on This week; full list on Lifetime |
+| Progress nested shell: `/progress` → week; subnav This week / Past work / Lifetime; old `?tab=`/`?view=` redirected (points → Earnings, ledger/history → past, achievements → lifetime) | [`ProgressLayout.tsx`](../../../apps/web/src/features/progress/ProgressLayout.tsx), [`ProgressIndexRedirect.tsx`](../../../apps/web/src/features/progress/ProgressIndexRedirect.tsx), [`App.tsx`](../../../apps/web/src/App.tsx) | Conforms R8.1, R8.8, R8.9 (shell); R8.2 (ledger/points gone from routed UI) | M8-02; child surfaces still placeholders until M8-03–M8-05. Unrouted [`ProgressPage.tsx`](../../../apps/web/src/features/progress/ProgressPage.tsx) kept as source for those builds |
+| This week / Past work / Lifetime are thin placeholders naming the owning tickets | `ThisWeekPage.tsx`, `PastWorkPage.tsx`, `LifetimePage.tsx` | Conflicts R8.10, R8.4, R8.12 | Expected until M8-03–M8-05 |
+| Unrouted ProgressPage still has peer-tab today/history/ledger/achievements and Points stub | `ProgressPage.tsx` | Unspecified (not shipped) | Mine then delete in M8-03–M8-05 |
+| History calendar + heatmaps: effort marks; heat cells use earned clamped 0–3 | `HistoryCalendar`, `ProgressHeatmap`, unrouted ProgressPage | Conflicts R8.4, R8.13 | Always-editable day panel; drop effort marks; color ∝ raw apps/LC (M8-04 / M8-05) |
+| AchievementsPanel exists; next-per-family and Lifetime full list not wired on new routes | [`AchievementsPanel.tsx`](../../../apps/web/src/features/achievements/AchievementsPanel.tsx) | Conflicts R8.10, R8.12 | M8-03 / M8-05 |
 | LC stepper shows tier names and counts; point values are not shown on the control | [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conflicts R8.3 (polish) | Function conforms R5.20; visual polish is M8 |
 | Completions diary is an unpaginated day-grouped list with kind tabs including `weekly goals`; no calendar link | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R8.4 | Past work: calendar week window; drop `weekly goals` filter tab; keep rows in `all` |
 

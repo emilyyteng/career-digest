@@ -1,6 +1,6 @@
 # M8-02: Progress nested shell and remove ledger framing
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R8.1, R8.2, R8.8, R8.9 (from `../../spec.md`)
 **Type:** build
@@ -23,27 +23,32 @@ Old `?tab=` / `?view=` URLs need not keep working unless cheap; if not, document
 
 ## Acceptance criteria
 
-- [ ] Nav label Progress; `/progress` → `/progress/week`
-- [ ] Shared Progress layout with subnav for week / past / lifetime (pattern from `RewardsLayout`)
-- [ ] Ledger tab, Points subtab, and `view=points` stub are gone from Progress
-- [ ] Placeholder or real child routes render without the old four-tab chrome
-- [ ] Follows `docs/design-system.md`; no new global element CSS
-- [ ] Builds follow the M8-01 verdict for shell/subnav labeling
+- [x] Nav label Progress; `/progress` → `/progress/week`
+- [x] Shared Progress layout with subnav for week / past / lifetime (pattern from `RewardsLayout`)
+- [x] Ledger tab, Points subtab, and `view=points` stub are gone from Progress
+- [x] Placeholder or real child routes render without the old four-tab chrome
+- [x] Follows `docs/design-system.md`; no new global element CSS
+- [x] Builds follow the M8-01 verdict for shell/subnav labeling
 
 ## Reuse notes
 
-[`RewardsLayout.tsx`](../../../../../apps/web/src/features/rewards/RewardsLayout.tsx) nested `Outlet` + subnav; [`App.tsx`](../../../../../apps/web/src/App.tsx) routes; current [`ProgressPage.tsx`](../../../../../apps/web/src/features/progress/ProgressPage.tsx) to be split across child pages in M8-03–M8-05.
+[`RewardsLayout.tsx`](../../../../../apps/web/src/features/rewards/RewardsLayout.tsx) nested `Outlet` + subnav (no Seeds chrome on Progress); [`App.tsx`](../../../../../apps/web/src/App.tsx) routes. Unrouted [`ProgressPage.tsx`](../../../../../apps/web/src/features/progress/ProgressPage.tsx) kept as source for M8-03–M8-05. Subnav CSS mirrors Rewards tokens/classes pattern under `.progress-shell`.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F08 M8-02: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F08 M8-02: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(Filled in when done.)
+- Nested routes wired; top nav still `Progress` and matches all `/progress/*`.
+- Child pages are thin placeholders naming M8-03 / M8-04 / M8-05.
+- Old query redirects on `/progress`: `tab=ledger&view=points` → `/rewards/earnings`; `tab=ledger` or `history` → `/progress/past`; `tab=achievements` → `/progress/lifetime`; else → `/progress/week`.
+- Unrouted `ProgressPage.tsx` still contains the old four-tab + Points stub code (not reachable). `LedgerPointsPanel.tsx` is unused.
+- `npm run check` green (typecheck, web build, 341 API tests).
+- No new tests (routing/shell only; no API change).

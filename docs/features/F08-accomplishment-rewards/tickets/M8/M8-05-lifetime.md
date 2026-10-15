@@ -1,7 +1,7 @@
 # M8-05: Lifetime surface
 
 **Status:** Blocked
-**Blocked by:** M8-02
+**Blocked by:** M8-04
 **Implements:** R8.12, R8.13, R8.14 (from `../../spec.md`); placement for R5.26
 **Type:** build
 

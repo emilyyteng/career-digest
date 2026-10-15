@@ -10,7 +10,11 @@ import Jobs from "./features/jobs/JobsPage";
 import Status from "./pages/Status";
 import Tasks from "./pages/Tasks";
 import TaskDetailPage from "./pages/TaskDetailPage";
-import Progress from "./features/progress/ProgressPage";
+import LifetimePage from "./features/progress/LifetimePage";
+import PastWorkPage from "./features/progress/PastWorkPage";
+import ProgressIndexRedirect from "./features/progress/ProgressIndexRedirect";
+import ProgressLayout from "./features/progress/ProgressLayout";
+import ThisWeekPage from "./features/progress/ThisWeekPage";
 import BannerPage from "./features/rewards/BannerPage";
 import CollectionPage from "./features/rewards/CollectionPage";
 import EarningsPage from "./features/rewards/EarningsPage";
@@ -114,7 +118,12 @@ export default function App() {
             <Route path="/tasks/:taskId" element={<TaskDetailPage />} />
             <Route path="/interviews" element={<Interviews />} />
             <Route path="/interviews/:threadId" element={<InterviewWorkspace />} />
-            <Route path="/progress" element={<Progress />} />
+            <Route path="/progress" element={<ProgressLayout />}>
+              <Route index element={<ProgressIndexRedirect />} />
+              <Route path="week" element={<ThisWeekPage />} />
+              <Route path="past" element={<PastWorkPage />} />
+              <Route path="lifetime" element={<LifetimePage />} />
+            </Route>
             <Route path="/rewards" element={<RewardsLayout />}>
               <Route index element={<Navigate to="banner" replace />} />
               <Route path="banner" element={<BannerPage />} />

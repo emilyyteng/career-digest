@@ -1,7 +1,7 @@
 # M8-04: Past work surface
 
-**Status:** Blocked
-**Blocked by:** M8-02
+**Status:** Ready
+**Blocked by:** (none)
 **Implements:** R8.4, R8.7, R8.13 (from `../../spec.md`); kind filters kept (Q65)
 **Type:** build
 

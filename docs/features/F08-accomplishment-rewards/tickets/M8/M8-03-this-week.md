@@ -1,7 +1,7 @@
 # M8-03: This week surface
 
-**Status:** Blocked
-**Blocked by:** M8-02
+**Status:** Ready
+**Blocked by:** (none)
 **Implements:** R8.3, R8.10, R8.11 (from `../../spec.md`); keeps R5.3–R5.5, R5.27, R5.28, R5.32
 **Type:** build
 
