@@ -26,7 +26,7 @@ Prototype URL: `/prototype/f08/progress`
 - [x] Locked layouts recorded in spec; Q67–Q74 answered
 - [x] No Progress points / ledger framing
 - [x] No production imports of prototype code (Lifetime may import `ProgressHeatmap` for fidelity)
-- [x] Verdict recorded below; `f08-progress` kept until M8-02–M8-05 Done (RX.3)
+- [x] Verdict recorded below; `f08-progress` retained through M8 builds; delete in F08 cleanup (RX.3)
 
 ## Reuse notes
 
@@ -47,5 +47,5 @@ Shared `PrototypeSwitcher`; Rewards-style subnav mock; `ProgressHeatmap` on Life
 **Verdict (2026-10-14):** See spec R8.4, R8.10–R8.14, Q55, Q57, Q61, Q65, Q67–Q74, Q68.
 
 - Past work **A**; This week locked without heatmap peek; Lifetime chart **above** heatmaps; chart = seeds/day; heatmaps/calendar intensity = **apps + LC raw ∝ gradient**, no clamp to 3, no effort checkmarks.
-- Prototype kept as build reference: `/prototype/f08/progress`.
-- Closing commit: (this commit).
+- Prototype kept as build reference through M8; delete in F08 cleanup: `/prototype/f08/progress`.
+- Closing commit: `edfc631`.

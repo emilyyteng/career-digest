@@ -11,7 +11,7 @@ Personal internship digest and application tracker. Ingests public ATS job board
 | **Applications** | Application pipeline tracker (applied, interviewing, accepted, declined)                        |
 | **Tasks**        | Unified action backlog for to-do items — application, school, and personal tasks by category    |
 | **Interviews**   | Step-based pipelines with deadlines, scheduling, and workspace per application                  |
-| **Progress**     | Daily and weekly goals for applications and technical prep                                      |
+| **Progress**     | This week, Past work, and Lifetime: weekly goals, completions, heatmaps, achievements           |
 | **Rewards**      | Cat Cake Collection gacha: banner pulls, album, earnings, pull history, and rules (seeds)       |
 | **Home**         | Digest status, today and weekly progress, upcoming deadlines and targets, new and top job picks |
 | **Status**       | Ops dashboard — ingest, scrape, rank, and backup health                                         |
@@ -52,7 +52,7 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `/applications` | Application tracker          |
 | `/tasks`        | Action backlog               |
 | `/interviews`   | Interview pipelines          |
-| `/progress`     | Today log, heatmaps, history |
+| `/progress`     | This week (default); Past work; Lifetime |
 | `/rewards`      | Cat Cake banner (default); Collection, Earnings, Pull history, Rules |
 | `/status`       | Pipeline / ops dashboard     |
 

@@ -27,7 +27,7 @@ Shipped code is never a source. Where the plan and the shipped code disagree, th
 
 ## Milestones
 
-Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and 2026-10-13).
+Order for the remaining milestones: **M3, M6** (after M5, M7, M8; user 2026-10-12 and 2026-10-13).
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
@@ -39,7 +39,7 @@ Order for the remaining milestones: **M5, M7, M8, M3, M6** (user, 2026-10-12 and
 | M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | Done |
 | M6 | Board departures log | Not started |
 | M7 | Cat Cake Collection v1: spending seeds, the Rewards page | Done |
-| M8 | Progress redesign, LeetCode tier polish, information architecture | In progress |
+| M8 | Progress redesign, LeetCode tier polish, information architecture | Done |
 
 ## Requirements
 
@@ -310,7 +310,7 @@ M7 is devoted to the gacha and spending Seeds. Ledger storage may keep `points_*
 - **R7.9** (Established 2026-10-13) Rewards hosts a readable **Rules** reference: earning (Seed formula including bases, work time and reflections per R5.31, weekly scoring, streaks including that the weekly-goal streak earns nothing, achievements) and spending (gacha rates, friendship, refunds, Day/Night). It reads the same values the code uses so it can't drift.
 - **R7.10** (Established 2026-10-13; Q20; casing 2026-10-14) The currency display name is **seeds** / **seed** (lowercase) for now, but it must stay easy to rename: one shared constant (or small config module) supplies the user-facing singular/plural labels used by Rewards, Rules, banners, and other copy. UI code must not hard-code those strings in many places. Internal/API/storage names may remain `points` / `points_*` and need not match the display name.
 
-### M8: Progress redesign, LeetCode tier polish, information architecture (Design)
+### M8: Progress redesign, LeetCode tier polish, information architecture (Done)
 
 M8 follows M7, so Progress is redesigned knowing what Rewards covers. Design lock (2026-10-14): Progress stays the top-nav label and becomes a nested hub (Rewards-style routes) for weekly progress and lifetime work — not currency.
 
@@ -372,7 +372,7 @@ M8 follows M7, so Progress is redesigned knowing what Rewards covers. Design loc
 
 - **RX.1** (Established) Remove the Prototype nav tab (`App.tsx`). Prototypes are reached by URL only.
 - **RX.2** (Established) New F08 prototypes live under `apps/web/src/prototype/f08-<topic>/`, at routes `/prototype/f08/<topic>`, per `AGENTS.md`.
-- **RX.3** (Established; clarified 2026-10-13; M8 2026-10-14) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it. `f08-progress` (M8-01) stays until M8-02–M8-05 are Done. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
+- **RX.3** (Established; clarified 2026-10-13; M8 2026-10-14; updated 2026-10-15) Defunct prototypes (M1, M2, M4, and any superseded later ones) are deleted when their area is revisited, or together in a cleanup ticket before F08 closes. A prototype isn't defunct while an open ticket still references it. `f08-progress` (M8-01) has no open ticket references after M8; delete it in F08 cleanup. F08, not each milestone, waits on it. The shared prototype styles in `prototype/m4/` move or go with them.
 
 ## Behavior rules
 
@@ -487,10 +487,10 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Progress nested shell: `/progress` → week; subnav This week / Past work / Lifetime; old `?tab=`/`?view=` redirected (points → Earnings, ledger/history → past, achievements → lifetime) | [`ProgressLayout.tsx`](../../../apps/web/src/features/progress/ProgressLayout.tsx), [`ProgressIndexRedirect.tsx`](../../../apps/web/src/features/progress/ProgressIndexRedirect.tsx), [`App.tsx`](../../../apps/web/src/App.tsx) | Conforms R8.1, R8.8, R8.9 (shell); R8.2 | M8-02 |
 | This week: day streaks, week+month pulse (LC · apps · tasks · interviews · reflections / minutes), next-per-family achievements, weekly goals with streaks, LC (+pts) ⊥ compose, no heatmap | [`ThisWeekPage.tsx`](../../../apps/web/src/features/progress/ThisWeekPage.tsx), [`NextAchievements.tsx`](../../../apps/web/src/features/achievements/NextAchievements.tsx), completions diary week/month `leetcode` | Conforms R8.10, R8.11, R8.3 | M8-03 |
 | Past work A: calendar + always-editable day panel (LC misc, interviews above apps, reflections) \| 7-day completions; no weekly-goals filter tab; calendar intensity apps+LC raw unclamped | [`PastWorkPage.tsx`](../../../apps/web/src/features/progress/PastWorkPage.tsx), [`intensityScale.ts`](../../../apps/web/src/features/progress/intensityScale.ts), completions `endDate`/`days` | Conforms R8.4, R8.7, R8.13 | M8-04; shared scale for M8-05 |
-| Lifetime: accumulation header (incl. days worked), seeds/day chart with in-container range above side-by-side prep heatmaps (R8.13 raw), full achievements | [`LifetimePage.tsx`](../../../apps/web/src/features/progress/LifetimePage.tsx), [`lifetime.ts`](../../../apps/api/src/lifetime.ts) | Conforms R8.12–R8.14 | M8-05 |
+| Lifetime: accumulation header (incl. days worked), seeds/day chart with in-container range and axes above side-by-side prep heatmaps (R8.13 raw pastel scale), full achievements grouped by family | [`LifetimePage.tsx`](../../../apps/web/src/features/progress/LifetimePage.tsx), [`lifetime.ts`](../../../apps/api/src/lifetime.ts), [`AchievementsPanel.tsx`](../../../apps/web/src/features/achievements/AchievementsPanel.tsx) | Conforms R8.12–R8.14 | M8-05 |
 | Next-per-family on This week; full AchievementsPanel on Lifetime | `NextAchievements`, `AchievementsPanel` | Conforms R8.10 / R8.12 placement | |
-| LC stepper shows tier names and counts; point values are not shown on the control | [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conflicts R8.3 (polish) | Function conforms R5.20; visual polish is M8 |
-| Completions diary is an unpaginated day-grouped list with kind tabs including `weekly goals`; no calendar link | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R8.4 | Past work: calendar week window; drop `weekly goals` filter tab; keep rows in `all` |
+| LC stepper shows tier names, counts, and +20 / +30 / +50 on the control | [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conforms R8.3, R5.20 | M8-03 |
+| Past work completions: 7-day window ending on the calendar day; kind tabs without `weekly goals` (those rows stay under `all`) | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx), [`PastWorkPage.tsx`](../../../apps/web/src/features/progress/PastWorkPage.tsx) | Conforms R8.4 | M8-04 |
 
 ### Cross-cutting
 

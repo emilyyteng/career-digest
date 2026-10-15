@@ -310,6 +310,20 @@ Seeds become spendable on a dedicated Rewards area: a bakery gacha with collecti
 
 **Outcome:** Effort on Progress earns seeds; Rewards is where they are spent and accounted for, with collection and history that survive duplicate refunds.
 
+### M8: Progress redesign
+
+Progress becomes a nested hub for weekly pace and lifetime accumulation. Currency and the earn log stay on Rewards; Progress is about what you did.
+
+**Shell.** Nested routes under Progress: This week (default), Past work, and Lifetime. Old tab and query URLs redirect (points → Earnings, ledger history → Past work, achievements → Lifetime).
+
+**This week.** Day streaks; a week and month pulse (LC, apps, tasks, interviews, reflections / minutes); next achievement per family; weekly goals with weekly-goal streaks; LeetCode logging (tier names and +20 / +30 / +50) kept separate from reflection compose.
+
+**Past work.** A calendar with an always-editable day panel (interviews above apps); completions for the seven days ending on the selected day; calendar cells colored by raw apps + LC (no effort checkmarks, no clamp to three).
+
+**Lifetime.** An accumulation header (including days worked); a seeds-earned-per-day activity chart with an in-container range and labeled axes; side-by-side prep heatmaps on a pastel pink → purple → navy intensity scale; the full achievements list grouped by family in two columns.
+
+**Outcome:** Progress shows whether the week is on track and keeps a durable record of work done; Rewards remains where seeds are spent.
+
 ---
 
 ## Documentation & development process (F10)
