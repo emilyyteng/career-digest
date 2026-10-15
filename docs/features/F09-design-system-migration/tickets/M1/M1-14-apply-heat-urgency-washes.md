@@ -47,4 +47,4 @@ n/a
 - Catalogue rows for Heatmap / Deadline urgency updated in `design-system.md`
 - Also: M1-04 marked Ready for next pass
 - `npm run check` pass
-- Commit: (recorded after commit)
+- Commit: `7e7c335`
