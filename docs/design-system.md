@@ -110,14 +110,17 @@ Interaction / IA / layout patterns are **Pending M1** tickets (see F09 board):
 
 | Topic | Ticket | Notes |
 |-------|--------|-------|
-| Feature shell / nested tabs | F09 M1-06 | Q9 / Q15 |
+| Feature shell / nested tabs / filter placement | F09 M1-06 | Q9 / Q15 · prototype `/prototype/f09/nesting` |
 | **Paired panel height + in-panel overflow** | F09 M1-07 | Q16 — sibling columns share height; scroll inside panels (user lean 2026-10-15) |
 | Chrome budget / width | F09 M1-08 | Q16 remainder (shell width already 1100px) |
 | List pagination | F09 M1-09 | Q8 / R.7 |
 | EarnFlash placement | F09 M1-10 | Q10 / R.9 |
 | Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks migrate in M2 |
+| In-content link hover (app-wide) | F09 M1-16 | M1-15 lock exists; Home only — globals still blue/purple |
 
 Pilot surface for primitives: **Home** (F09 M1-05 + M1-15) — Ink desk titles, underline link hover, background-less last-digest, soft-ink `Segmented`, underline chrome-tabs; app shell uses flora.exe + 1100px.
+
+**Migration debt (do not invent new dialects):** Tasks / Progress / Rewards use `ChromeTab`. **Jobs, Applications, Interviews** still use legacy `.tabs` / `.tab.on` blue — migrate to `ChromeTab` + containerized title→tabs→content in the **M2** surface wave after M1-06 locks nesting/filter placement.
 
 ## Banner patterns
 

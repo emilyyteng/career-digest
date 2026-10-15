@@ -25,7 +25,8 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M1-06](./tickets/M1/M1-06-pattern-feature-shell-nested-tabs.md) | Pattern: feature shell / nested tabs (Q9/Q15) | docs | In progress | Prototype `/prototype/f09/nesting` |
+| [M1-06](./tickets/M1/M1-06-pattern-feature-shell-nested-tabs.md) | Pattern: feature shell / nested tabs (Q9/Q15) | docs | In progress | Prototype `/prototype/f09/nesting` + filter placement |
+| [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) | Apply in-content link hover app-wide | build | Ready | After M1-15 Home lock; prefer after M1-06 |
 | [M1-07](./tickets/M1/M1-07-pattern-paired-panel-height.md) | Pattern: paired panel height + in-panel overflow (Q16) | docs | Draft | Progress stress; parallel OK |
 | [M1-08](./tickets/M1/M1-08-pattern-chrome-budget.md) | Pattern: chrome budget / width (Q16 remainder) | docs | Draft | Height is M1-07 |
 | [M1-09](./tickets/M1/M1-09-pattern-list-pagination.md) | Pattern: list pagination (Q8/R.7) | docs | Draft | Parallel OK |
@@ -53,7 +54,7 @@ No open tickets.
 
 **Milestone status:** Not started
 
-Tickets after M1. Expected: Tasks compaction (R.10); Jobs / Applications / Interviews; Jobs banner → `OneTimeNotice` (R.6); Progress dual-column height apply (from M1-07).
+Tickets after M1. Expected: Tasks compaction (R.10); **Jobs / Applications / Interviews → `ChromeTab` + containerized page chrome** (legacy `.tab.on` blue; after M1-06 nesting/filter lock); Jobs banner → `OneTimeNotice` (R.6); Progress dual-column height apply (from M1-07); apply M1-16 links if not done in M1.
 
 <details>
 <summary>Done (0)</summary>
