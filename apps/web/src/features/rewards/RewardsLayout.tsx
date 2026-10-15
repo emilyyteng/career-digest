@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { getPointsSummary } from "../../api";
 import { CURRENCY_DISPLAY } from "../../currencyDisplay";
+import { ChromeTabLink } from "../../ui";
 import "./catCake.css";
 
 const SUBNAV = [
@@ -64,19 +65,11 @@ export default function RewardsLayout() {
             )}
           </div>
         </div>
-        <div className="rewards-subnav" role="navigation" aria-label="Rewards">
+        <div className="ui-chrome-tabs" role="navigation" aria-label="Rewards">
           {SUBNAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                isActive
-                  ? "rewards-subnav-link is-active"
-                  : "rewards-subnav-link"
-              }
-            >
+            <ChromeTabLink key={item.to} to={item.to} size="subnav">
               {item.label}
-            </NavLink>
+            </ChromeTabLink>
           ))}
         </div>
       </header>

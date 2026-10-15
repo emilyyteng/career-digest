@@ -1,10 +1,17 @@
 import type { TaskPriority } from "./api";
+import Badge from "./ui/Badge";
 
 const LABELS: Record<TaskPriority, string> = {
   0: "P0",
   1: "P1",
   2: "P2",
 };
+
+const TONE = {
+  0: "p0",
+  1: "p1",
+  2: "p2",
+} as const;
 
 export default function PriorityBadge({
   priority,
@@ -15,12 +22,14 @@ export default function PriorityBadge({
 }) {
   if (priority !== 0 && priority !== 1 && priority !== 2) return null;
   return (
-    <span
-      className={`priority-badge priority-p${priority}${className ? ` ${className}` : ""}`}
+    <Badge
+      tone={TONE[priority]}
+      size="compact"
+      className={className}
       title={`Priority ${LABELS[priority]}`}
     >
       {LABELS[priority]}
-    </span>
+    </Badge>
   );
 }
 

@@ -38,6 +38,7 @@ import ModalLayer from "../ModalLayer";
 import PriorityBadge from "../PriorityBadge";
 import { invalidateListCache, readListCache, writeListCache } from "../listCache";
 import StepActionConfirm from "../StepActionConfirm";
+import { ChromeTab } from "../ui";
 import AddTaskForm, { type AddTaskFormHandle } from "./AddTaskForm";
 import EditSubtasksModal from "./EditSubtasksModal";
 import EditTaskForm, { type EditTaskFormHandle } from "./EditTaskForm";
@@ -867,19 +868,19 @@ export default function Tasks() {
   return (
     <section>
       <div className="tabs-row">
-        <div className="tabs">
+        <div className="ui-chrome-tabs" role="tablist" aria-label="Tasks">
           {TABS.map((tab) => (
-            <button
+            <ChromeTab
               key={tab}
-              type="button"
-              className={tab === view ? "tab on" : "tab"}
+              size="page"
+              active={tab === view}
               aria-current={tab === view ? "page" : undefined}
               aria-label={`${tab}, ${counts[tab]} task${counts[tab] === 1 ? "" : "s"}`}
               onClick={() => setSearchParams(tab === "open" ? {} : { view: tab })}
             >
-              <span className="tab-label">{tab === "open" ? "open" : "completed"}</span>
-              <span className="tab-count">{counts[tab]}</span>
-            </button>
+              <span>{tab === "open" ? "open" : "completed"}</span>
+              <span className="ui-chrome-tab-count">{counts[tab]}</span>
+            </ChromeTab>
           ))}
         </div>
       </div>

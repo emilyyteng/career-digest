@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+import { ChromeTabLink } from "../../ui";
 
 const SUBNAV = [
   { to: "/progress/week", label: "This week" },
@@ -10,19 +11,11 @@ export default function ProgressLayout() {
   return (
     <section className="progress-shell">
       <header className="progress-chrome">
-        <div className="progress-subnav" role="navigation" aria-label="Progress">
+        <div className="ui-chrome-tabs" role="navigation" aria-label="Progress">
           {SUBNAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                isActive
-                  ? "progress-subnav-link is-active"
-                  : "progress-subnav-link"
-              }
-            >
+            <ChromeTabLink key={item.to} to={item.to} size="subnav">
               {item.label}
-            </NavLink>
+            </ChromeTabLink>
           ))}
         </div>
       </header>

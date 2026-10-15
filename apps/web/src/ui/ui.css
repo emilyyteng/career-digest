@@ -145,3 +145,206 @@ button.secondary.ui-button.ui-seg.is-active:not(:disabled):hover {
   color: var(--on-primary);
   font-weight: 600;
 }
+
+/* —— Chrome tabs (app nav, feature subnav, page tabs) ——
+   Active = gray wash + ink text + ink border. Flat. Display font. Squared. */
+a.ui-chrome-tab,
+nav a.ui-chrome-tab,
+button.secondary.ui-chrome-tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.3;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: pointer;
+  transition: none;
+}
+
+a.ui-chrome-tab:hover,
+nav a.ui-chrome-tab:hover,
+button.secondary.ui-chrome-tab:not(:disabled):hover {
+  color: var(--ink);
+  background: var(--hover);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+a.ui-chrome-tab.is-active,
+a.ui-chrome-tab.is-active:hover,
+nav a.ui-chrome-tab.is-active,
+nav a.ui-chrome-tab.is-active:hover,
+button.secondary.ui-chrome-tab.is-active,
+button.secondary.ui-chrome-tab.is-active:not(:disabled):hover {
+  background: var(--tab-active-bg);
+  border-color: var(--ink);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.ui-chrome-tab-nav {
+  font-size: 0.78rem;
+  padding: 0.32rem 0.65rem;
+}
+
+.ui-chrome-tab-subnav {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.7rem;
+}
+
+.ui-chrome-tab-page {
+  font-size: 0.84rem;
+  padding: 0.42rem 0.9rem;
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+button.secondary.ui-chrome-tab-page:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--ink) 35%, var(--border));
+}
+
+button.secondary.ui-chrome-tab-page.is-active,
+button.secondary.ui-chrome-tab-page.is-active:not(:disabled):hover {
+  border-color: var(--ink);
+  background: var(--tab-active-bg);
+}
+
+.ui-chrome-tab .ui-chrome-tab-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle);
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.ui-chrome-tab.is-active .ui-chrome-tab-count {
+  color: color-mix(in srgb, var(--ink) 70%, var(--text-muted));
+}
+
+.ui-chrome-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* —— Badges (role-mapped; no page-local hex) —— */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  padding: 0.12rem 0.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ui-badge-compact {
+  min-width: 1.55rem;
+  height: 1.15rem;
+  padding: 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.ui-badge-neutral {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.ui-badge-p0 {
+  background: color-mix(in srgb, var(--severity-p0) 18%, var(--surface));
+  color: color-mix(in srgb, var(--severity-p0) 90%, #000);
+  border-color: color-mix(in srgb, var(--severity-p0) 40%, var(--border));
+}
+
+.ui-badge-p1 {
+  background: color-mix(in srgb, var(--severity-p1) 20%, var(--surface));
+  color: color-mix(in srgb, var(--severity-p1) 80%, #000);
+  border-color: color-mix(in srgb, var(--severity-p1) 45%, var(--border));
+}
+
+.ui-badge-p2 {
+  background: color-mix(in srgb, var(--severity-p2) 16%, var(--surface));
+  color: color-mix(in srgb, var(--severity-p2) 85%, #000);
+  border-color: color-mix(in srgb, var(--severity-p2) 40%, var(--border));
+}
+
+.ui-badge-interview {
+  background: color-mix(in srgb, var(--domain-apps) 20%, var(--surface));
+  color: color-mix(in srgb, var(--domain-apps) 85%, #000);
+  border-color: color-mix(in srgb, var(--domain-apps) 40%, var(--border));
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.ui-badge-goal {
+  background: color-mix(in srgb, var(--domain-reward) 22%, var(--surface));
+  color: color-mix(in srgb, var(--domain-reward) 80%, #000);
+  border-color: color-mix(in srgb, var(--domain-reward) 45%, var(--border));
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.ui-badge-applied {
+  background: color-mix(in srgb, var(--domain-apps) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--domain-apps) 40%, var(--border));
+  color: color-mix(in srgb, var(--domain-apps) 80%, #000);
+}
+
+.ui-badge-interviewing {
+  background: color-mix(in srgb, var(--domain-tech) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--domain-tech) 40%, var(--border));
+  color: color-mix(in srgb, var(--domain-tech) 75%, #000);
+}
+
+.ui-badge-accepted,
+.ui-badge-ok {
+  background: color-mix(in srgb, var(--ok) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--ok) 40%, var(--border));
+  color: color-mix(in srgb, var(--ok) 85%, #000);
+}
+
+.ui-badge-declined,
+.ui-badge-danger {
+  background: color-mix(in srgb, var(--severity-p0) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--severity-p0) 35%, var(--border));
+  color: var(--severity-p0);
+}
+
+.ui-badge-score,
+.ui-badge-streak {
+  background: color-mix(in srgb, var(--domain-tech) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--domain-tech) 40%, var(--border));
+  color: color-mix(in srgb, var(--domain-tech) 75%, #000);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-badge-liked {
+  background: color-mix(in srgb, var(--warn) 18%, var(--surface));
+  border-color: color-mix(in srgb, var(--warn) 40%, var(--border));
+  color: color-mix(in srgb, var(--warn) 70%, #000);
+}
+
+.ui-badge-dates {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}

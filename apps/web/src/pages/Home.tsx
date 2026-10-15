@@ -22,6 +22,7 @@ import {
   greetingPeriodFromHour,
 } from "../pageTheme";
 import { listLinkState } from "../navigationReturn";
+import { Badge } from "../ui";
 
 function browserTz(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -81,7 +82,9 @@ function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
             )}
           </Link>
           {job.rankScore != null && (
-            <span className="badge home-rank-badge">{job.rankScore}</span>
+            <Badge tone="score" className="home-rank-badge">
+              {job.rankScore}
+            </Badge>
           )}
         </li>
       ))}
@@ -133,7 +136,7 @@ function UpcomingRow({
       <li className="home-job-row home-interview-row home-weekly-goal-row">
         <Link to="/progress" className="home-job-main">
           <span className="home-job-title home-upcoming-title task-title-line home-upcoming-title-oneline">
-            <span className="ledger-kind ledger-kind-goal">Goal</span>
+            <Badge tone="goal">Goal</Badge>
             <span className="task-title-text">{item.title}</span>
           </span>
           <span className="muted home-job-meta home-weekly-goal-meta">
@@ -176,7 +179,7 @@ function UpcomingRow({
               showSchedule ? "" : " home-upcoming-title-oneline"
             }`}
           >
-            <span className="ledger-kind ledger-kind-interview">Interview</span>
+            <Badge tone="interview">Interview</Badge>
             <span className="task-title-text">{title}</span>
             {estimate && <span className="task-estimate-inline">{estimate}</span>}
           </span>

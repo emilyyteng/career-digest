@@ -1,5 +1,6 @@
 import type { JobCard } from "../../api";
 import PostingDates from "../../PostingDates";
+import { Badge } from "../../ui";
 
 const LOCATION_LABEL: Record<string, string> = {
   la: "Los Angeles",
@@ -43,21 +44,21 @@ export function RankBadges({
   const hideRank = hideRankDisplay(view);
   const badges = (
     <>
-      <span className="badge">{job.source}</span>
+      <Badge tone="neutral">{job.source}</Badge>
       <PostingDates
         firstPublishedAt={job.firstPublishedAt}
         sourceUpdatedAt={job.sourceUpdatedAt}
       />
-      {unranked && !hideRank && <span className="badge unranked">unranked</span>}
-      {hideRank && <span className="badge no-description">no description</span>}
+      {unranked && !hideRank && <Badge tone="neutral">unranked</Badge>}
+      {hideRank && <Badge tone="neutral">no description</Badge>}
       {!hideRank && job.rankEligible === false && (
-        <span className="badge mismatch">mismatch</span>
+        <Badge tone="danger">mismatch</Badge>
       )}
       {!hideRank && job.rankScore != null && (
-        <span className="badge score">{job.rankScore}</span>
+        <Badge tone="score">{job.rankScore}</Badge>
       )}
       {!hideRank && job.feedbackKind === "like" && (
-        <span className="badge liked">liked</span>
+        <Badge tone="liked">liked</Badge>
       )}
     </>
   );

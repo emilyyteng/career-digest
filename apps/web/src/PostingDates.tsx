@@ -1,4 +1,5 @@
 import { formatShortDate } from "./formatDate";
+import { Badge } from "./ui";
 
 export default function PostingDates({
   firstPublishedAt,
@@ -24,8 +25,8 @@ export default function PostingDates({
         : "Updated";
 
   return (
-    <span className="badge dates" title={title}>
+    <Badge tone="dates" title={title}>
       {label}
-    </span>
+    </Badge>
   );
 }

@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
-import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import ApplicationDetail from "./features/applications/ApplicationDetailPage";
 import Applications from "./features/applications/ApplicationsPage";
 import Home from "./pages/Home";
@@ -25,6 +25,7 @@ import ThemeEmoji from "./ThemeEmoji";
 import { DemoModeProvider, useDemoMode } from "./demoMode";
 import { AchievementUnlockProvider } from "./features/achievements/AchievementUnlockHost";
 import { HEADER_BRAND_EMOJI } from "./pageTheme";
+import { ChromeTabLink } from "./ui";
 
 /** Dev-only prototype pages — dead-code eliminated from production builds. */
 const proto = import.meta.env.DEV
@@ -97,15 +98,15 @@ export default function App() {
               <ThemeEmoji emoji={HEADER_BRAND_EMOJI} />
             </h1>
           </Link>
-          <nav>
-            <NavLink to="/" end>Home</NavLink>
-            <NavLink to="/jobs">Jobs</NavLink>
-            <NavLink to="/applications">Applications</NavLink>
-            <NavLink to="/tasks">Tasks</NavLink>
-            <NavLink to="/interviews">Interviews</NavLink>
-            <NavLink to="/progress">Progress</NavLink>
-            <NavLink to="/rewards">Rewards</NavLink>
-            <NavLink to="/status">Status</NavLink>
+          <nav className="ui-chrome-tabs" aria-label="App">
+            <ChromeTabLink to="/" end size="nav">Home</ChromeTabLink>
+            <ChromeTabLink to="/jobs" size="nav">Jobs</ChromeTabLink>
+            <ChromeTabLink to="/applications" size="nav">Applications</ChromeTabLink>
+            <ChromeTabLink to="/tasks" size="nav">Tasks</ChromeTabLink>
+            <ChromeTabLink to="/interviews" size="nav">Interviews</ChromeTabLink>
+            <ChromeTabLink to="/progress" size="nav">Progress</ChromeTabLink>
+            <ChromeTabLink to="/rewards" size="nav">Rewards</ChromeTabLink>
+            <ChromeTabLink to="/status" size="nav">Status</ChromeTabLink>
           </nav>
         </header>
         <main>

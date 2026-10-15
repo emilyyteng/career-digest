@@ -2,7 +2,7 @@
 
 The source of truth for visual and interaction conventions in `apps/web`. **Read this before changing any `.tsx` or `.css` in the web app.** It overrides tickets and prototypes on anything visual (see `AGENTS.md` → Precedence). If a feature requirement conflicts with or is ambiguous against this file, surface that to the user before implementing (`AGENTS.md` → Feature requirements vs design system).
 
-**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented primitives live in `apps/web/src/ui/`** (F09 M1-02); remaining helpers, patterns, and page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
+**Status:** Visual foundations locked (F09 M0, 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02) and **ChromeTab / Badge** (M1-03) live in `apps/web/src/ui/`; patterns and page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
 
 **Migration approach:** comprehensive system + phased migration (F09). M1 builds primitives and interaction/IA patterns; M2–M3 restyle surfaces. Extend this doc when something new is needed—do not fork a feature-local look.
 
@@ -92,16 +92,16 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | **Button** | `Button` — classes `secondary ui-button` (+ `-primary` / `-ghost` / `-sm`) | `primary` · `secondary` · `ghost` × `sm` / `md` | Flat ink primary; always includes `.secondary` to escape the global blue `button` default until M1-04 removes it. Never add to the `:not(...)` chain |
 | **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = ink fill | Replaces interim `ui-btn` + `.ui-segmented` for new code |
 | **Fields** | `TextField` · `SelectField` · `TextAreaField` — `.ui-field` (+ `.ui-field-num`) | `md` · `num` (compact number) | Border-only hover; wash on focus |
-| **Tabs / nav / chips** | (M1-03) | Squared; gray wash + ink text/border | App nav, feature subnav, page tabs |
-| **Badge / chip** | (M1-03) + existing `PriorityBadge` | Role-mapped | No page-local hex |
+| **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = gray wash + ink text/border | App nav, feature subnav, page tabs. Button form includes `.secondary`. Flat; display font; squared (`--radius-control`) |
+| **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview`/`goal`, `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak` (domain tech), `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Role tokens only; no page-local hex for these meanings |
 | **Card** | `.card` | Soft shadow OK | All-carded |
 | **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
 | **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | Placement M1-10 |
 | **Heatmap** | `ProgressHeatmap` + tokens | 5-stop rose | Apply stops in M1-14 |
 | **Deadline urgency** | `DeadlineUrgency` | Severity-5 tokens | M1-14 |
-| **Priority** | `PriorityBadge` | P0–P2 RYG | |
+| **Priority** | `PriorityBadge` → `Badge` `p0`–`p2` compact | P0–P2 RYG | |
 
-Interim F08 `ui-btn*` / old `.ui-segmented` button pairing remains in `styles.css` for unmigrated call sites until those surfaces move to `ui/`. New UI must use `apps/web/src/ui`.
+Interim F08 `ui-btn*`, old `.tab.on` blue active, and legacy `.badge.*` hex classes remain in `styles.css` for unmigrated call sites. New UI must use `apps/web/src/ui`.
 
 ## Patterns
 
