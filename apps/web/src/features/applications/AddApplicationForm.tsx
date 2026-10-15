@@ -9,6 +9,7 @@ import { createApplication, getApplication, type ApplicationRow } from "../../ap
 import { toDateInputValue } from "../../formatDate";
 import LocationSuggest from "../../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../../RichTextField";
+import { Button } from "../../ui";
 
 type Props = {
   onCreated: (row: ApplicationRow) => void;
@@ -201,13 +202,13 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
         </label>
         <div className="form-actions">
           {onCancel && (
-            <button type="button" className="secondary" onClick={requestClose}>
+            <Button type="button" onClick={requestClose}>
               Cancel
-            </button>
+            </Button>
           )}
-          <button type="submit" disabled={saving}>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? "Saving…" : "Save"}
-          </button>
+          </Button>
         </div>
       </form>
     );

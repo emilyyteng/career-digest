@@ -10,6 +10,7 @@ import {
   type PointsEarnInfo,
 } from "../../api";
 import DeadlineUrgency from "../../DeadlineUrgency";
+import { Button } from "../../ui";
 import EarnFlash from "../completion/EarnFlash";
 import { useAchievementUnlocks } from "../achievements/AchievementUnlockHost";
 import {
@@ -411,17 +412,20 @@ export default function InterviewWorkspace() {
               <form className="interview-add-step-form" onSubmit={saveEditedStep}>
                 <InterviewStepFields values={editStepFields} onChange={setEditStepFields} />
                 <div className="save-inline-row">
-                  <button type="submit" disabled={savingStep || !editStepFields.title.trim()}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={savingStep || !editStepFields.title.trim()}
+                  >
                     {savingStep ? "Saving…" : "Save step"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="secondary"
                     disabled={savingStep}
                     onClick={() => setEditingStepId(null)}
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
             ) : (
@@ -489,17 +493,20 @@ export default function InterviewWorkspace() {
               <form className="interview-add-step-form" onSubmit={saveEditedStep}>
                 <InterviewStepFields values={editStepFields} onChange={setEditStepFields} />
                 <div className="save-inline-row">
-                  <button type="submit" disabled={savingStep || !editStepFields.title.trim()}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={savingStep || !editStepFields.title.trim()}
+                  >
                     {savingStep ? "Saving…" : "Save step"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="secondary"
                     disabled={savingStep}
                     onClick={() => setEditingStepId(null)}
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
             ) : (
@@ -588,12 +595,15 @@ export default function InterviewWorkspace() {
             <form className="interview-add-step-form" onSubmit={addStep}>
               <InterviewStepFields values={newStepFields} onChange={setNewStepFields} />
               <div className="save-inline-row">
-                <button type="submit" disabled={savingStep || !newStepFields.title.trim()}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={savingStep || !newStepFields.title.trim()}
+                >
                   {savingStep ? "Saving…" : "Add step"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="secondary"
                   disabled={savingStep}
                   onClick={() => {
                     setAddingStep(false);
@@ -601,7 +611,7 @@ export default function InterviewWorkspace() {
                   }}
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
           ) : canAddStep ? (

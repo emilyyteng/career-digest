@@ -10,7 +10,11 @@ type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> & {
   children: ReactNode;
 };
 
-/** Ink desk button. Always includes `.secondary` to escape the global blue button default. */
+/**
+ * Ink desk button. Includes `.secondary` so legacy `button.secondary` / card sizing
+ * rules still apply; product look comes from `.ui-button*` (F09 M1-04 removed the
+ * global filled-blue default and `:not(...)` chain).
+ */
 export default function Button({
   variant = "secondary",
   size = "md",

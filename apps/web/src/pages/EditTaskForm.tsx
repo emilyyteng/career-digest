@@ -15,6 +15,7 @@ import {
 import LocationSuggest from "../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 import { PrioritySelect } from "../PriorityBadge";
+import { Button } from "../ui";
 
 type Props = {
   task: TaskRow;
@@ -307,12 +308,12 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
           <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
         </label>
         <div className="form-actions">
-          <button type="button" className="secondary" onClick={requestClose} disabled={saving}>
+          <Button type="button" onClick={requestClose} disabled={saving}>
             Cancel
-          </button>
-          <button type="submit" disabled={saving || !title.trim()}>
+          </Button>
+          <Button type="submit" variant="primary" disabled={saving || !title.trim()}>
             {saving ? "Saving…" : "Save"}
-          </button>
+          </Button>
         </div>
       </form>
       {task.category === "application" && task.postingId && (

@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { Button } from "./ui";
 
 type Props = {
   children: ReactNode;
@@ -119,18 +120,19 @@ const ModalLayer = forwardRef<ModalLayerHandle, Props>(function ModalLayer(
             <h3>Discard edits?</h3>
             <p className="muted">Unsaved changes will be lost.</p>
             <div className="form-actions">
-              <button type="button" className="secondary" onClick={() => setConfirmDiscard(false)}>
+              <Button type="button" onClick={() => setConfirmDiscard(false)}>
                 Keep editing
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
                 onClick={() => {
                   setConfirmDiscard(false);
                   onCloseRef.current();
                 }}
               >
                 Discard
-              </button>
+              </Button>
             </div>
           </div>
         </div>

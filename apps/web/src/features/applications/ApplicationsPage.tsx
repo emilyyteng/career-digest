@@ -7,6 +7,7 @@ import ApplicationMetaBadges from "./ApplicationMetaBadges";
 import { invalidateListCache, readListCache, writeListCache } from "../../listCache";
 import { listLinkState } from "../../navigationReturn";
 import AddApplicationForm, { type AddApplicationFormHandle } from "./AddApplicationForm";
+import { Button } from "../../ui";
 
 const TABS = ["all", "applied", "interviewing", "accepted", "declined"] as const;
 
@@ -138,9 +139,9 @@ export default function Applications() {
             </button>
           ))}
         </div>
-        <button type="button" onClick={() => setAdding(true)}>
+        <Button type="button" variant="primary" onClick={() => setAdding(true)}>
           Add application +
-        </button>
+        </Button>
       </div>
       {error && <p className="error">{error}</p>}
       {!loaded && rows.length === 0 && <p className="muted">Loading…</p>}

@@ -25,7 +25,6 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M1-04](./tickets/M1/M1-04-neutralize-global-control-defaults.md) | Neutralize global button/field defaults | refactor | Ready | After M1-02 |
 | [M1-05](./tickets/M1/M1-05-pilot-home.md) | Pilot migrate Home + app shell | build | Draft | After M1-02–04 |
 | [M1-06](./tickets/M1/M1-06-pattern-feature-shell-nested-tabs.md) | Pattern: feature shell / nested tabs (Q9/Q15) | docs | Draft | Parallel OK |
 | [M1-07](./tickets/M1/M1-07-pattern-paired-panel-height.md) | Pattern: paired panel height + in-panel overflow (Q16) | docs | Draft | Progress stress; parallel OK |
@@ -37,7 +36,7 @@ No open tickets.
 | [M1-13](./tickets/M1/M1-13-enforcement-variant-lint.md) | Enforcement for variant-less controls (Q6) | build | Draft | After M1-05 |
 
 <details>
-<summary>Done (4)</summary>
+<summary>Done (5)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
@@ -45,6 +44,7 @@ No open tickets.
 | [M1-02](./tickets/M1/M1-02-button-field-segmented-primitives.md) | Button, field, segmented primitives | `caa0d3c` |
 | [M1-03](./tickets/M1/M1-03-tabs-and-badge-helpers.md) | Tabs / chrome-tab + badge helpers | `26329b2` |
 | [M1-14](./tickets/M1/M1-14-apply-heat-urgency-washes.md) | Apply heat, urgency, surface-2 washes | `7e7c335` |
+| [M1-04](./tickets/M1/M1-04-neutralize-global-control-defaults.md) | Neutralize global button/field defaults | (pending) |
 
 </details>
 

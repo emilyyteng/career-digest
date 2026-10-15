@@ -71,21 +71,23 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| A global `button` rule makes every button filled `--accent-blue-deep` with `--shadow-button`; buttons escape only via a `:not(...)` chain of 22 classes, repeated on hover with 21 (`.rank-batch-dismiss` is missing, so it still gets the blue hover) | `apps/web/src/styles.css` L367–375 | Conflicts R.1 | Most likely mechanism behind the blue-button and shadow complaints. Many `box-shadow: none` rules undo the default. New variants must be built on `.secondary` to escape it (checked by running, 2026-10-13) |
-| Global element rules style `a`, `input`, `textarea`, `select` | `styles.css` | Conflicts R.1 | |
-| `button.secondary` is the de facto second variant (about 120 uses) | across `apps/web/src` | Unspecified | Candidate starting point for explicit variants |
+| ~~A global `button` rule makes every button filled `--accent-blue-deep` with a `:not(...)` opt-out chain~~ | `styles.css` | Conforms R.1 / R1.1 (M1-04) | Bare `button` is a reset; product look from `Button` / `.ui-button*` / legacy `.secondary` / feature classes. Chain removed |
+| Global element rules still structure bare `input` / `textarea` / `select` (padding, border); focus is ink not blue | `styles.css` | Conflicts R.1 (shim) | Structural shim until forms move to `TextField` / `SelectField` (page waves / M1-05+). `a` still global |
+| `button.secondary` remains as legacy variant (~100+ uses); ink hover (M1-04) | across `apps/web/src` | Unspecified | Prefer `Button` for new UI; full call-site cleanup with surface waves |
+
 | `:root` tokens ("Sakura Terminal" palette): `--accent-{pink,blue,purple,mint,yellow}` + `-deep`, `--surface`, `--border`, `--text*`, `--danger*`, `--radius-*`, `--shadow-*` | `styles.css` | Conflicts (roles remapped in M0) | M0 locked ink-desk roles in `design-system.md`; prod token names/values migrate in M1+ |
 | `ModalLayer` provides the shared backdrop, Escape handling and dirty-discard guard; nearly every dialog renders inside it | `apps/web/src/ModalLayer.tsx` | Conforms R.4 (layer only) | Inner anatomy (header, body, footer, button order and size) unaudited; likely source of modal inconsistency |
 | Each prototype milestone has its own stylesheet (`prototype-m1.css`, `-m2`, `-m4`, `-m5`, F08 topic CSS, …) | `apps/web/src/prototype/` | Conflicts R.2 | F09 direction work must not live under F08 prototypes (R.13) |
 | All styles live in one ~6k-line file | `styles.css` | Unspecified | Splitting is Q7 |
-| Number inputs inherit the global `input` padding and size, so a small number field such as the Progress weekly LC target (`.weekly-goal-target-field input`, width 4.5rem) looks too large next to its label | `styles.css` | Conflicts R.1 | Form-field sizes are Q3/Q5 |
-| Interim button classes from F08 M5 (`ui-btn*`, purple primary / blue toggles), built on `.secondary` | [`styles.css`](../../../apps/web/src/styles.css), [`LeetcodeLogger.tsx`](../../../apps/web/src/features/progress/LeetcodeLogger.tsx) | Conflicts (M0 ink-desk) | F08 M5 interim superseded 2026-10-15; replace in M1 primitives / surface waves |
+| ~~Number inputs inherit global padding so LC target looks oversized~~ | Progress weekly goals | Conforms (M1-02) | Uses `TextField fieldSize="num"` |
+| Interim F08 M5 `ui-btn*` remain for some call sites; LC stepper uses `ui/Button` | [`styles.css`](../../../apps/web/src/styles.css) | Conflicts (cleanup) | Replace remaining `ui-btn*` in surface waves |
+
 | The Jobs ranking banner stays until dismissed with ×, remembering dismissals per batch in `sessionStorage` (per tab); a successful batch hides on its own after 30 minutes | [`JobsPage.tsx`](../../../apps/web/src/features/jobs/JobsPage.tsx) | Conflicts R.6 | Moves to the one-time notice in M2 |
 | Completions diary and similar logs are long unpaginated day-grouped lists | [`LedgerCompletionsPanel.tsx`](../../../apps/web/src/features/progress/LedgerCompletionsPanel.tsx) | Conflicts R.7 (Proposed) | F08 M8 paginates Past work only; F09 owns the default (M1) |
 | Rewards and Progress use nested routes + subnav shells; other pages vary | [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx), [`ProgressLayout.tsx`](../../../apps/web/src/features/progress/ProgressLayout.tsx) | Conflicts R.8 (Proposed) | App-wide rule in M1 |
 | `EarnFlash` is rendered near the top of the host page/section, not anchored to the control that earned | [`EarnFlash.tsx`](../../../apps/web/src/features/completion/EarnFlash.tsx), [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx), Progress week/past pages | Conflicts R.9 | Placement in M1 |
 | Tasks is a long, dense scroll surface; common actions often sit below the first viewport | [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx) | Conflicts R.10 | Tactics M1; migrate M2 |
-| Progress heatmaps color cells via a JS intensity scale (`workIntensityFill` / legend stops), not named design-system tokens; peak reads navy | [`intensityScale`](../../../apps/web/src/features/progress/intensityScale.ts), [`ProgressHeatmap.tsx`](../../../apps/web/src/features/progress/ProgressHeatmap.tsx) | Conflicts (M0 vivid-rose soft peak) | Scale locked in `design-system.md`; implement in M1+ Progress wave |
+| ~~Progress heatmaps used navy-peak JS RGB scale~~ | [`intensityScale`](../../../apps/web/src/features/progress/intensityScale.ts) | Conforms (M1-14) | Vivid-rose `--heat-*` stops |
 | Most workflow pages wrap content in raised `.card` panels; Rewards often open-canvas; Progress hybrid flat subnav + carded body | `.card` in `styles.css`; [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx); Progress shell + pages | Conflicts (M0 all-carded) | All features carded per M0; migrate Rewards open canvas in surface waves |
 
 ## Out of scope (for now)

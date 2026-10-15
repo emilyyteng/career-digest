@@ -14,6 +14,7 @@ import LocationSuggest from "../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../RichTextField";
 import { PrioritySelect } from "../PriorityBadge";
 import type { TaskPriority } from "../api";
+import { Button } from "../ui";
 
 type Props = {
   categoryId: string;
@@ -228,13 +229,13 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
           </label>
         </div>
         <div className="row-actions">
-          <button type="submit" disabled={saving}>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? "Saving…" : "Add task"}
-          </button>
+          </Button>
           {onCancel && (
-            <button type="button" className="secondary" onClick={requestClose}>
+            <Button type="button" onClick={requestClose}>
               Cancel
-            </button>
+            </Button>
           )}
         </div>
       </form>
@@ -244,16 +245,12 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
             <h2>Discard draft?</h2>
             <p className="muted">You have unsaved fields.</p>
             <div className="row-actions">
-              <button type="button" onClick={() => onCancel?.()}>
+              <Button type="button" variant="primary" onClick={() => onCancel?.()}>
                 Discard
-              </button>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setConfirmDiscard(false)}
-              >
+              </Button>
+              <Button type="button" onClick={() => setConfirmDiscard(false)}>
                 Keep editing
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import {
   type CompletionKind,
   type CompletionsDiary,
 } from "../../api";
+import { Button } from "../../ui";
 
 const ALL_TYPE_TABS: Array<{ key: CompletionKind | "all"; label: string }> = [
   { key: "all", label: "all" },
@@ -173,21 +174,21 @@ function CompletionRow({
                     onChange={(e) => setDraft(e.target.value)}
                   />
                   <div className="form-actions">
-                    <button
+                    <Button
                       type="button"
-                      className="secondary"
                       disabled={busy}
                       onClick={() => setEditingId(null)}
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="primary"
                       disabled={busy || !draft.trim()}
                       onClick={() => void saveReflection(r.id)}
                     >
                       Save
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (

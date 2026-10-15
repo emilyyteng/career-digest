@@ -12,6 +12,7 @@ import InterviewStepFields, {
   interviewStepFieldsToPayload,
   type InterviewStepFieldValues,
 } from "./InterviewStepFields";
+import { Button } from "../../ui";
 
 export type FinishStepOutcome = "waiting" | "round_done";
 
@@ -266,25 +267,25 @@ export default function FinishInterviewStepModal({
               editing.
             </p>
             <div className="form-actions">
-              <button
+              <Button
                 type="button"
-                className="secondary"
                 onClick={() => {
                   setReflectionOn(true);
                   setDiscardTarget(null);
                 }}
               >
                 Keep editing
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
                 onClick={() => {
                   setDiscardTarget(null);
                   void submitFinish(false);
                 }}
               >
                 Discard
-              </button>
+              </Button>
             </div>
           </div>
         </div>

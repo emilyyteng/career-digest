@@ -16,6 +16,7 @@ import {
 } from "../formatDate";
 import ModalLayer, { type ModalLayerHandle } from "../ModalLayer";
 import { PrioritySelect } from "../PriorityBadge";
+import { Button } from "../ui";
 
 type DraftRow = {
   key: string;
@@ -277,17 +278,16 @@ export default function EditSubtasksModal({ task, onSaved, onCancel }: Props) {
         </button>
 
         <div className="form-actions">
-          <button
+          <Button
             type="button"
-            className="secondary"
             disabled={saving}
             onClick={() => layerRef.current?.requestClose()}
           >
             Cancel
-          </button>
-          <button type="submit" disabled={saving}>
+          </Button>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? "Saving…" : "Save"}
-          </button>
+          </Button>
         </div>
       </form>
     </ModalLayer>

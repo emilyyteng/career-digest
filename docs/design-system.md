@@ -2,7 +2,7 @@
 
 The source of truth for visual and interaction conventions in `apps/web`. **Read this before changing any `.tsx` or `.css` in the web app.** It overrides tickets and prototypes on anything visual (see `AGENTS.md` → Precedence). If a feature requirement conflicts with or is ambiguous against this file, surface that to the user before implementing (`AGENTS.md` → Feature requirements vs design system).
 
-**Status:** Visual foundations locked (F09 M0, 2026-10-15; urgency revised to Severity-4 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02), **ChromeTab / Badge** (M1-03), and **heat / Severity-4 urgency / surface-2 description washes** (M1-14) are live; patterns and remaining page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
+**Status:** Visual foundations locked (F09 M0, 2026-10-15; urgency revised to Severity-4 2026-10-15). **Role tokens, Plex fonts, 1100px shell, and flora.exe mark are live** (F09 M1-01). **Button / Field / Segmented** (M1-02), **ChromeTab / Badge** (M1-03), **heat / Severity-4 urgency / surface-2 washes** (M1-14), and **neutralized global button/field defaults** (M1-04) are live; patterns and remaining page waves still migrate. Reference composition: `/prototype/f09/lab` (dev), verdict commit `548ba4e`.
 
 **Migration approach:** comprehensive system + phased migration (F09). M1 builds primitives and interaction/IA patterns; M2–M3 restyle surfaces. Extend this doc when something new is needed—do not fork a feature-local look.
 
@@ -89,7 +89,7 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 
 | Component | Implementation | Variants / sizes | Policy |
 |-----------|----------------|------------------|--------|
-| **Button** | `Button` — classes `secondary ui-button` (+ `-primary` / `-ghost` / `-sm`) | `primary` · `secondary` · `ghost` × `sm` / `md` | Flat ink primary; always includes `.secondary` to escape the global blue `button` default until M1-04 removes it. Never add to the `:not(...)` chain |
+| **Button** | `Button` — classes `secondary ui-button` (+ `-primary` / `-ghost` / `-sm`) | `primary` · `secondary` · `ghost` × `sm` / `md` | Flat ink primary. Global filled-blue `button` + `:not(...)` chain removed (M1-04). Legacy `button.secondary` / `modal-confirm-btn` restyled to ink |
 | **Segmented** | `Segmented` — `.ui-segmented` + `.ui-seg` | Active = ink fill | Replaces interim `ui-btn` + `.ui-segmented` for new code |
 | **Fields** | `TextField` · `SelectField` · `TextAreaField` — `.ui-field` (+ `.ui-field-num`) | `md` · `num` (compact number) | Border-only hover; wash on focus |
 | **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = gray wash + ink text/border | App nav, feature subnav, page tabs. Button form includes `.secondary`. Flat; display font; squared (`--radius-control`) |
@@ -101,7 +101,7 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | **Deadline urgency** | `DeadlineUrgency` + `.deadline-pie-*` / `.deadline-tone-*` in `styles.css` | `--urgency-overdue` · `--urgency-soon` · `--urgency-ahead` · `--urgency-ok` (Severity-4) | overdue=P0 · soon=pink (&lt;24h) · ahead=amber · ok=mint |
 | **Priority** | `PriorityBadge` → `Badge` `p0`–`p2` compact | P0–P2 RYG | |
 
-Interim F08 `ui-btn*`, old `.tab.on` blue active, and legacy `.badge.*` hex classes remain in `styles.css` for unmigrated call sites. New UI must use `apps/web/src/ui`.
+Interim F08 `ui-btn*`, old `.tab.on` blue active, legacy `.badge.*`, and bare `input`/`textarea`/`select` structural shim remain in `styles.css` for unmigrated call sites. New UI must use `apps/web/src/ui`. Do not reintroduce a global filled `button` default or a `:not(...)` opt-out chain.
 
 ## Patterns
 
@@ -155,8 +155,8 @@ The 2026-10-13 F08 M5 interim choices (tinted purple primary, blue toggles, flat
 
 Run before marking any UI ticket done:
 
-- [ ] No new bare-element CSS; no additions to the `button:not(...)` chain
-- [ ] Every button, tab and field uses a named variant
+- [ ] No new bare-element CSS; no global filled `button` default; no `:not(...)` opt-out chain
+- [ ] Every button, tab and field uses a named variant (`Button` / `TextField` / ChromeTab / …)
 - [ ] Only tokens / documented roles for color, radius and shadow
 - [ ] Dialogs use `ModalLayer`
 - [ ] Reused existing components where they fit (listed in the ticket)

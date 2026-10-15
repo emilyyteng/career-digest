@@ -14,6 +14,7 @@ import FinishInterviewStepModal, {
 import EarnFlash from "../completion/EarnFlash";
 import DeadlineUrgency from "../../DeadlineUrgency";
 import ModalLayer from "../../ModalLayer";
+import { Button } from "../../ui";
 import {
   formatLinkedRoles,
   stepDeadlineIso,
@@ -260,7 +261,9 @@ export default function Interviews() {
             </button>
           ))}
         </div>
-        <button type="button" onClick={() => setAdding(true)}>Add interview +</button>
+        <Button type="button" variant="primary" onClick={() => setAdding(true)}>
+          Add interview +
+        </Button>
       </div>
       {error && <p className="error">{error}</p>}
       {view === "active" && (

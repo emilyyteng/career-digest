@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { ProgressLane } from "../../api";
 import ModalLayer, { type ModalLayerHandle } from "../../ModalLayer";
+import { Button } from "../../ui";
 import OptionalPanel from "./OptionalPanel";
 import ReflectionDraftFields, {
   MinutesField,
@@ -231,16 +232,12 @@ export default function CompleteWorkModal({
                   : "Notes are collapsed but still have text. Discard them to continue, or keep editing."}
             </p>
             <div className="form-actions">
-              <button
-                type="button"
-                className="secondary"
-                onClick={keepEditingDiscard}
-              >
+              <Button type="button" onClick={keepEditingDiscard}>
                 Keep editing
-              </button>
-              <button type="button" onClick={confirmDiscardAndSubmit}>
+              </Button>
+              <Button type="button" variant="primary" onClick={confirmDiscardAndSubmit}>
                 Discard
-              </button>
+              </Button>
             </div>
           </div>
         </div>

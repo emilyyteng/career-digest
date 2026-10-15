@@ -17,6 +17,7 @@ import InterviewStepFields, {
   interviewStepFieldsToPayload,
   type InterviewStepFieldValues,
 } from "./InterviewStepFields";
+import { Button } from "../../ui";
 
 type FieldErrors = {
   applications?: string;
@@ -177,12 +178,12 @@ const AddInterviewModal = forwardRef<AddInterviewModalHandle, Props>(
           You have unsaved changes. Closing will throw them away.
         </p>
         <div className="form-actions">
-          <button type="button" className="secondary" onClick={() => setConfirmDiscard(false)}>
+          <Button type="button" onClick={() => setConfirmDiscard(false)}>
             Keep editing
-          </button>
-          <button type="button" onClick={() => onCancel?.()}>
+          </Button>
+          <Button type="button" variant="primary" onClick={() => onCancel?.()}>
             Discard
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -291,13 +292,13 @@ const AddInterviewModal = forwardRef<AddInterviewModalHandle, Props>(
       />
       <div className="form-actions">
         {onCancel && (
-          <button type="button" className="secondary" onClick={requestClose} disabled={saving}>
+          <Button type="button" onClick={requestClose} disabled={saving}>
             Cancel
-          </button>
+          </Button>
         )}
-        <button type="submit" disabled={saving || apps.length === 0}>
+        <Button type="submit" variant="primary" disabled={saving || apps.length === 0}>
           {saving ? "Saving…" : "Save interview"}
-        </button>
+        </Button>
       </div>
     </form>
   );

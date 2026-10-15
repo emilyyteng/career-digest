@@ -387,74 +387,78 @@ select.sort {
   to { transform: rotate(360deg); }
 }
 
-input, textarea, select, button {
+/*
+ * F09 M1-04 — controls get product look from named variants (.ui-button, .ui-field,
+ * .secondary, feature classes). Bare `button` is a reset only (no filled-blue default,
+ * no :not(...) opt-out chain). Bare fields keep a structural shim until forms move to
+ * TextField / SelectField (kill with page waves / M1-05+); focus is ink, not blue.
+ */
+input, textarea, select {
   font: inherit;
+  font-family: var(--font-body);
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-soft-box);
+  border-radius: var(--radius-control);
   background: var(--surface);
   color: var(--text);
 }
 textarea {
-  border-radius: var(--radius-soft-box);
+  border-radius: var(--radius-control);
 }
 input[type="date"],
 input[type="time"],
 .inline-date-form input {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-size: inherit;
-  border-radius: var(--radius-soft-box);
+  border-radius: var(--radius-control);
   padding: 0.45rem 0.65rem;
 }
 input:focus, textarea:focus, select:focus {
-  outline: 2px solid var(--accent-blue);
+  outline: 2px solid color-mix(in srgb, var(--ink) 35%, transparent);
   outline-offset: 1px;
 }
 button {
+  font: inherit;
+  font-family: var(--font-body);
   cursor: pointer;
-  background: var(--accent-blue-deep);
-  color: var(--on-primary);
-  border-color: var(--accent-blue-deep);
+  background: transparent;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   font-weight: 500;
-  font-family: var(--font-sans);
-}
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.rank-batch-dismiss):not(.hide-board-remove):not(.task-detail-week-star):not(.document-link):not(.document-remove-btn):not(.progress-lane-chip):not(.complete-optional-bar):not(.ledger-subtab):not(.ledger-nested-item):not(.earn-flash-dismiss) {
-  border-radius: var(--radius-soft);
-  box-shadow: var(--shadow-button);
-}
-button:not(.tab):not(.secondary):not(.suggest-option):not(.job-feedback-btn):not(.todo-remove-btn):not(.task-edit-btn):not(.task-duplicate-btn):not(.task-section-rename-btn):not(.task-subtask-move):not(.task-subtask-handle-btn):not(.modal-confirm-btn):not(.interview-cta-btn):not(.hide-board-remove):not(.task-detail-week-star):not(.document-link):not(.document-remove-btn):not(.progress-lane-chip):not(.complete-optional-bar):not(.ledger-subtab):not(.ledger-nested-item):not(.earn-flash-dismiss):not(:disabled):hover {
-  background: var(--accent-blue);
-  border-color: var(--accent-blue);
-  box-shadow: 0 3px 10px rgba(91, 124, 153, 0.28);
 }
 button.secondary {
   background: var(--surface);
-  color: var(--accent-blue-deep);
-  border-color: var(--border);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
   box-shadow: none;
   font-size: 0.8125rem;
   font-weight: 500;
   padding: 0.38rem 0.85rem;
 }
 button.secondary:not(:disabled):hover {
-  background: var(--surface-2);
-  border-color: var(--accent-pink);
-  color: var(--accent-purple-deep);
+  background: var(--hover);
+  border-color: color-mix(in srgb, var(--ink) 35%, var(--border));
+  color: var(--ink);
   box-shadow: none;
 }
 button.modal-confirm-btn {
-  border-radius: var(--radius-soft-box);
+  border-radius: var(--radius-control);
   box-shadow: none;
   font-size: 0.8125rem;
   font-weight: 500;
   padding: 0.38rem 0.85rem;
-  background: var(--accent-blue-deep);
+  background: var(--ink);
   color: var(--on-primary);
-  border: 1px solid var(--accent-blue);
+  border: 1px solid var(--ink);
 }
 button.modal-confirm-btn:not(:disabled):hover {
-  background: var(--accent-blue);
-  border-color: var(--accent-purple-deep);
+  background: #2e2a30;
+  border-color: #2e2a30;
+  color: var(--on-primary);
   box-shadow: none;
 }
 button.ghost {
@@ -482,7 +486,7 @@ button:disabled {
   padding: 0.32rem 0.7rem;
 }
 .card button.secondary:not(:disabled):hover {
-  border-color: var(--accent-pink);
+  border-color: color-mix(in srgb, var(--ink) 35%, var(--border));
 }
 .card .row-actions button.secondary .btn-icon {
   margin-left: 0.2rem;
@@ -1629,9 +1633,9 @@ button.hide-board-remove:hover:not(:disabled) {
 }
 .modal .form-actions button.modal-confirm-btn,
 .step-action-confirm .form-actions button.modal-confirm-btn,
-.modal .form-actions button:not(.secondary):not(.interview-cta-btn):not(.modal-confirm-btn),
-.step-action-confirm .form-actions button:not(.secondary):not(.modal-confirm-btn) {
-  border-radius: var(--radius-soft-box);
+.modal .form-actions button.ui-button-primary,
+.step-action-confirm .form-actions button.ui-button-primary {
+  border-radius: var(--radius-control);
   box-shadow: none;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -1639,20 +1643,15 @@ button.hide-board-remove:hover:not(:disabled) {
 }
 .modal .form-actions button.modal-confirm-btn,
 .step-action-confirm .form-actions button.modal-confirm-btn {
-  background: var(--accent-blue-deep);
+  background: var(--ink);
   color: var(--on-primary);
-  border: 1px solid var(--accent-blue);
-}
-.modal .form-actions button.modal-confirm-btn:not(:disabled):hover,
-.step-action-confirm .form-actions button.modal-confirm-btn:not(:disabled):hover,
-.modal .form-actions button:not(.secondary):not(.interview-cta-btn):not(.modal-confirm-btn):not(:disabled):hover,
-.step-action-confirm .form-actions button:not(.secondary):not(.modal-confirm-btn):not(:disabled):hover {
-  box-shadow: none;
+  border: 1px solid var(--ink);
 }
 .modal .form-actions button.modal-confirm-btn:not(:disabled):hover,
 .step-action-confirm .form-actions button.modal-confirm-btn:not(:disabled):hover {
-  background: var(--accent-blue);
-  border-color: var(--accent-purple-deep);
+  background: #2e2a30;
+  border-color: #2e2a30;
+  box-shadow: none;
 }
 
 .applied-date {
@@ -1842,8 +1841,7 @@ button.hide-board-remove:hover:not(:disabled) {
   font-size: 0.78rem;
 }
 
-/* Interim buttons (design-system.md → Interim decisions, F08 M5). Built on .secondary so the
-   global button:not(...) chain doesn't apply; F09 may replace them. */
+/* Interim F08 M5 ui-btn* (unmigrated call sites). Prefer apps/web/src/ui Button. */
 button.secondary.ui-btn {
   border: 1px solid var(--border);
   border-radius: var(--radius-soft-box);
@@ -2214,13 +2212,10 @@ button.secondary.ui-btn:disabled {
   flex-wrap: wrap;
 }
 .tabs-row .tabs { margin-bottom: 0; flex: 1 1 auto; }
-.tabs-row > button:not(.tab) {
-  font-family: var(--font-mono);
+.tabs-row > .ui-button {
+  font-family: var(--font-display);
   font-size: 0.8125rem;
   font-weight: 600;
-  padding: 0.42rem 0.9rem;
-  border-radius: var(--radius-soft);
-  box-shadow: var(--shadow-button);
 }
 
 .jobs-search-row {

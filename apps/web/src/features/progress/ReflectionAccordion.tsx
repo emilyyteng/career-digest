@@ -5,6 +5,7 @@ import {
   type ProgressLane,
   type ProgressReflection,
 } from "../../api";
+import { Button } from "../../ui";
 
 function truncate(body: string, max = 72): string {
   const oneLine = body.replace(/\s+/g, " ").trim();
@@ -185,16 +186,16 @@ export default function ReflectionAccordion({
                       />
                     </div>
                     <div className="progress-note-actions">
-                      <button
+                      <Button
                         type="button"
-                        className="secondary"
                         disabled={busy}
                         onClick={() => setEditingId(null)}
                       >
                         Cancel
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="primary"
                         disabled={busy || !draftBody.trim()}
                         onClick={() => {
                           void (async () => {
@@ -222,7 +223,7 @@ export default function ReflectionAccordion({
                         }}
                       >
                         Save
-                      </button>
+                      </Button>
                     </div>
                   </>
                 ) : (
