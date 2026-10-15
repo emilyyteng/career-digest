@@ -46,7 +46,7 @@ No open tickets.
 | [M1-04](./tickets/M1/M1-04-neutralize-global-control-defaults.md) | Neutralize global button/field defaults | `8af8ad0` |
 | [M1-05](./tickets/M1/M1-05-pilot-home.md) | Pilot migrate Home + app shell | `6ab5517` |
 | [M1-15](./tickets/M1/M1-15-prototype-home-chrome-refinements.md) | Prototype + lock Home chrome & urgency refinements | `518386b` |
-| [M1-06](./tickets/M1/M1-06-pattern-feature-shell-nested-tabs.md) | Pattern: feature shell / nested tabs (Q9/Q15) | (pending) |
+| [M1-06](./tickets/M1/M1-06-pattern-feature-shell-nested-tabs.md) | Pattern: feature shell / nested tabs (Q9/Q15) | `1d71980` |
 
 </details>
 
@@ -54,7 +54,7 @@ No open tickets.
 
 **Milestone status:** Not started
 
-Tickets after M1. Expected: Tasks compaction (R.10); **Jobs / Applications / Interviews → `ChromeTab` + containerized page chrome** (legacy `.tab.on` blue; after M1-06 nesting/filter lock); Jobs banner → `OneTimeNotice` (R.6); Progress dual-column height apply (from M1-07); apply M1-16 links if not done in M1.
+Tickets after M1. Expected: Tasks compaction (R.10); **Jobs / Applications / Interviews → `ChromeTab` + containerized title→tabs→squared filter chips** (legacy `.tab.on` blue; M1-06 locked); Jobs banner → `OneTimeNotice` (R.6); Progress dual-column height apply (from M1-07); apply M1-16 links if not done in M1.
 
 <details>
 <summary>Done (0)</summary>

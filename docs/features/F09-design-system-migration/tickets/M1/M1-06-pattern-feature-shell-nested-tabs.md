@@ -59,4 +59,4 @@ Prototype URL: `/prototype/f09/nesting` — keep as reference until no open tick
 R.8 → Established. Spec Q9/Q15 → Resolved. Prototype last commit before lock: `7d26feb` (control exploration); lock docs commit below.
 
 `npm run check` pass (docs).
-Commit: (filled on commit)
+Commit: `1d71980`
