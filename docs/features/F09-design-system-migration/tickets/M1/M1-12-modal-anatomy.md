@@ -38,4 +38,4 @@ n/a — appearance follows M0; structure is the M1 lock
 
 Helpers in `apps/web/src/ui/ModalChrome.tsx`. Documented under Patterns → Modal anatomy. Achievement unlock still bypasses ModalLayer (known debt, not fixed here).
 
-Commit below.
+Commit: `cbb2f5e`.
