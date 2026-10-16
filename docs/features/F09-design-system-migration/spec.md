@@ -106,12 +106,11 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | Q8 | Long-list pagination: default page sizes, control placement, and whether day-based windows (1 / 7) are a Progress-only idea or a reusable pattern? | M1 | (open) Deferred from M0 (2026-10-15); R.7 |
 | Q10 | How should `EarnFlash` stay in view: portal near the clicked control, sticky/toast in the viewport, scroll-into-view of a top flash, or something else? Does the same rule apply to `OneTimeNotice`? | M1 | (open) Deferred from M0 (2026-10-15); R.9 |
 | Q11 | What makes Tasks (and similar long pages) compact enough: tighter row density, collapsible sections, sticky compose/actions, pagination/virtualization, or a redesign of the list chrome? | M1 (tactics) / M2 (Tasks migrate) | (open) Deferred from M0 (2026-10-15); R.10 |
-| Q16 | **Layout / chrome budget** (remaining): wrap vs scroll vs truncate vs shortened labels; two-column mins; stack gap scale; breakpoint scale; paired panel heights? | M1 | (open) Shell width locked at 1100px in M0; nesting chrome rows locked in M1-06; rest deferred |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (16)</summary>
+<summary>Resolved questions (17)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -127,8 +126,9 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | Q12 | Theme / vibe | **Ink desk (V1×V4)** — sakura canvas + ink chrome/actions; all carded | `design-system.md` |
 | Q13 | Heatmap | Shared **vivid rose soft peak** (5 stops; peak = former step-3) | `design-system.md` |
 | Q14 | Typography | **IBM Plex** Mono display / Sans body; size ladder documented | `design-system.md` |
-| Q15 | Information depth | Containerized title→ChromeTab→squared chips (below, left)→content; max one tab row + one chip row; calendar = content; top nav kept; writes stay modals. Width/wrap/panel height remain Q16 / M1-07–08 | R.8, `design-system.md` |
-| Q16† | Shell width | **1100px** (remaining layout chrome budget open as Q16 above) | `design-system.md` |
+| Q15 | Information depth | Containerized title→ChromeTab→squared chips (below, left)→content; max one tab row + one chip row; calendar = content; top nav kept; writes stay modals | R.8, `design-system.md` |
+| Q16† | Shell width | **1100px** | `design-system.md` |
+| Q16 | Layout / chrome budget (height + width) | Dual peers **fixed 28rem** in-panel scroll; Tasks **section chips → one well** (counts = active tab); mini above large when density differs; chips **wrap**; dual stack **640**; gaps 1rem/0.85rem; breakpoints 640/860/1100. Progress This week page composition → M2 (2026-10-15, M1-07/08) | `design-system.md` |
 | Q17 | Brand | **flora.exe** (mark/voice); full string rename not required in M0 | `design-system.md` |
 | Q18 | Color meaning | Identity (apps/tech/reward) ≠ severity RYG ≠ urgency Severity-4; purple = domain tech only | `design-system.md` |
 
@@ -152,3 +152,4 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 - **2026-10-15 (urgency / kind badges):** Urgency revised to **Severity-4**: overdue=P0 · soon=pink (under 24h; merges former urgent+soon) · ahead=amber · ok=mint — drop gray ahead. Kind badges `interview` / `goal` render **INTERVIEW** / **GOAL** (uppercase). Recorded in `design-system.md`.
 - **2026-10-15 (M1-15):** Post–Home-pilot refinements locked via `/prototype/f09/refinements`: Segmented active = soft ink wash; ChromeTab active = underline ink; urgency ahead = P1 gold (soon keeps pink); countdown = mono + zero-padded units joined by `:`, larger gap after pies; pies = SVG; GOAL badge = domain tech; Home link hover = underline (text may stay dark). Last-digest stays background-less.
 - **2026-10-15 (M1-06):** Nesting / page chrome locked via `/prototype/f09/nesting`: containerized title → ChromeTab subnav/page tabs → squared filter chips (below tabs, left-aligned) → content. R.8 Established; Q9/Q15 resolved (width/panel height remain M1-07/08).
+- **2026-10-15 (M1-07 / M1-08):** Layout locked via `/prototype/f09/layout`: dual peers both fixed 28rem with in-panel scroll; Tasks section chips → one well (chip counts match active tab only); mini-containers stack above larger wells; chips wrap; dual stack 640; gaps 1rem/0.85rem; breakpoints 640/860/1100. Progress This week page composition (LC / daily / weekly goals; dual +/-) deferred to M2. Q16 resolved.

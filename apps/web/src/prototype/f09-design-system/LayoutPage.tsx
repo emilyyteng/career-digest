@@ -1,12 +1,12 @@
 /**
  * F09 M1-07 + M1-08 · Paired panel height + chrome/width budget.
  *
- * User lean (2026-10-15, continued):
- * - Asymmetric: calendar natural + ledger 28rem clamp (not viewport track)
- * - Chips wrap when shell width is fixed (M1-08)
- * - Tasks: section chips → one body (not multi-open accordion); counts across open/completed
- * - This week: side-by-side clamp fails when LC is short and weekly apps is tall;
- *   unequal-height / mini-container guidance on surface E; stacked +/- may be M2
+ * Locked 2026-10-15:
+ * - Dual-column peers: both panels fixed 28rem (equal height); overflow inside
+ * - Chips wrap (M1-08)
+ * - Tasks: section chips → one body; chip counts match the active tab only
+ * - Unequal density: stack mini-containers above larger wells (Progress page
+ *   specifics / dual +/- deferred to M2)
  *
  * Axes: ?height= · ?stack= · ?pair= · ?width= · ?frame=
  * Surfaces: A Past work · B Jobs · C Problem · D Tasks strategies · E Unequal pairs
@@ -26,10 +26,10 @@ const SURFACES = [
 ] as const;
 
 const HEIGHT_OPTS = [
-  { key: "asymmetric", name: "Lean · cal natural / ledger 28rem" },
-  { key: "clamp", name: "Both fixed 28rem (contrast)" },
-  { key: "current", name: "Current · independent grow" },
-  { key: "viewport", name: "Viewport track (clips calendar)" },
+  { key: "clamp", name: "Locked · both fixed 28rem" },
+  { key: "asymmetric", name: "Rejected · cal natural / ledger clamp" },
+  { key: "current", name: "Rejected · independent grow" },
+  { key: "viewport", name: "Rejected · viewport track" },
 ] as const;
 
 const STACK_OPTS = [
@@ -48,8 +48,8 @@ const PAIR_OPTS = [
 ] as const;
 
 const WIDTH_OPTS = [
-  { key: "wrap", name: "Chips wrap (agreed)" },
-  { key: "current", name: "Current · nowrap scroll" },
+  { key: "wrap", name: "Locked · chips wrap" },
+  { key: "current", name: "Rejected · nowrap scroll" },
 ] as const;
 
 const FRAME_OPTS = [
@@ -112,34 +112,31 @@ function ParamRow({
 function RuleCard({ surface }: { surface: string }) {
   return (
     <aside className="f09l-rule card">
-      <h2 className="f09l-rule-title">M1-07 · Height</h2>
+      <h2 className="f09l-rule-title">M1-07 · Height (locked)</h2>
       <p className="f09l-prose">
-        <strong>A · asymmetric (lean):</strong> calendar at natural height so the
-        whole grid stays visible; ledger gets a <strong>28rem</strong> in-panel
-        clamp. <strong>Both fixed 28rem</strong> forces the calendar into a tall
-        scroll well — contrast only. Viewport track still clips.
+        Dual-column peers share <strong>both fixed 28rem</strong> so containers
+        align; overflow scrolls inside each panel. Not a viewport track. Single
+        columns: no page min-height. When columns stack, drop equal-height.
       </p>
 
-      <h2 className="f09l-rule-title">Tasks stack</h2>
+      <h2 className="f09l-rule-title">Tasks stack (locked)</h2>
       <p className="f09l-prose">
-        <strong>D lean:</strong> category <em>section chips</em> → one scroll body
-        (not multi-open accordion). Chip counts can span Open + Completed tabs.
-        <strong> C</strong> is a static problem mock — no strategy toggles.
+        Category <em>section chips</em> → one scroll body. Chip counts follow the{" "}
+        <strong>active tab only</strong> (open counts on Open, done on Completed).
+        <strong> C</strong> stays a static problem mock.
       </p>
 
-      <h2 className="f09l-rule-title">Unequal columns / mini</h2>
+      <h2 className="f09l-rule-title">Unequal / mini (locked)</h2>
       <p className="f09l-prose">
-        Side-by-side peer cards fail when one well is a short control (LeetCode)
-        and the other is a long list (weekly apps). Clamp-both leaves dead space;
-        stretch-equal looks worse. Prefer: treat the short side as a{" "}
-        <strong>mini-container</strong> (instrument strip), stack it with the tall
-        well, or clamp only the tall list. Dual weekly/misc +/- stacked is an M2
-        content redesign — see <strong>E</strong>.
+        When density differs, stack <strong>mini-containers above larger wells</strong>
+        — do not force short controls into equal peer cards. Progress This week
+        page composition (LC vs daily vs weekly goals; dual +/-) deferred to M2.
       </p>
 
-      <h2 className="f09l-rule-title">M1-08 · Width</h2>
+      <h2 className="f09l-rule-title">M1-08 · Width (locked)</h2>
       <p className="f09l-prose">
-        Fixed shell → <strong>chips wrap</strong>. Agreed.
+        Fixed shell → <strong>chips wrap</strong>. Dual columns stack at 640px;
+        gaps 1rem / 0.85rem; breakpoints 640 / 860 / 1100.
       </p>
 
       {surface === "A" && (
@@ -270,10 +267,10 @@ function PastWorkSurface({
         <Panel
           title="Calendar · day"
           kicker={
-            height === "asymmetric"
-              ? "Natural · full grid visible"
-              : height === "clamp"
-                ? "Fixed 28rem · scrolls / empty"
+            height === "clamp"
+              ? "Fixed 28rem · equal peer"
+              : height === "asymmetric"
+                ? "Natural (rejected for peers)"
                 : "Left column"
           }
           bodyClass={calBody}
@@ -286,14 +283,14 @@ function PastWorkSurface({
           <div className="f09l-day-block">
             <p className="f09l-day-label">Tue · selected</p>
             <p className="muted f09l-small">
-              {height === "asymmetric" &&
-                "Lean: calendar stays natural. Only the ledger clamps."}
               {height === "clamp" &&
-                "Both panels forced to 28rem — calendar wastes space or scrolls."}
+                "Locked: both peers fixed 28rem so containers align; overflow inside."}
+              {height === "asymmetric" &&
+                "Rejected for equal peer columns — ragged bottoms."}
               {height === "viewport" &&
-                "Shared viewport track clips the calendar."}
+                "Rejected: shared viewport track clips the calendar."}
               {height === "current" &&
-                "Independent grow — ledger makes the page very tall."}
+                "Rejected: independent grow — ledger makes the page very tall."}
             </p>
             <div className={`f09l-compose f09l-chips-${width}`}>
               {["application", "technical", "other", "Add reflection"].map((label) => (
@@ -323,8 +320,7 @@ function PastWorkSurface({
         </Panel>
       </div>
       <p className="muted f09l-caption">
-        Asymmetric ≠ both-clamped: left height follows content; right scrolls at
-        28rem. Toggle Height to compare.
+        Locked default is both fixed 28rem. Other Height options are contrast only.
       </p>
     </section>
   );
@@ -545,21 +541,20 @@ function StackedStrategySurface({ stack }: { stack: StackKey }) {
           </ChromeTab>
         </div>
         <div className="f09l-chips f09l-chips-wrap" role="group" aria-label="Category">
-          {TASK_SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`f09l-chip${open === s.id ? " is-active" : ""}`}
-              onClick={() => setOpen(s.id)}
-            >
-              {s.name}
-              <span className="f09l-opt-count">
-                {s.open}
-                <span className="f09l-opt-sep">/</span>
-                {s.done}
-              </span>
-            </button>
-          ))}
+          {TASK_SECTIONS.map((s) => {
+            const count = tab === "open" ? s.open : s.done;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                className={`f09l-chip${open === s.id ? " is-active" : ""}`}
+                onClick={() => setOpen(s.id)}
+              >
+                {s.name}
+                <span className="f09l-opt-count">{count}</span>
+              </button>
+            );
+          })}
         </div>
         <Panel
           title={active.name}
@@ -569,8 +564,8 @@ function StackedStrategySurface({ stack }: { stack: StackKey }) {
           <TaskRows n={n} />
         </Panel>
         <p className="muted f09l-caption">
-          Counts on chips = open/done for that category (visible on both tabs).
-          Cleaner than multi-select accordion. Paginate inside the well (M1-09).
+          Chip counts match the active tab only (chips sit below the tab). Paginate
+          inside the well (M1-09).
         </p>
       </section>
     );
@@ -758,7 +753,7 @@ function UnequalPairSurface({ pair }: { pair: PairKey }) {
 export default function LayoutPage() {
   const [params, setParams] = useSearchParams();
   const variant = params.get("variant") ?? "A";
-  const height = useAxis("height", HEIGHT_OPTS, "asymmetric");
+  const height = useAxis("height", HEIGHT_OPTS, "clamp");
   const stack = useAxis("stack", STACK_OPTS, "switcher");
   const pair = useAxis("pair", PAIR_OPTS, "stack-mini");
   const width = useAxis("width", WIDTH_OPTS, "wrap");
@@ -769,7 +764,7 @@ export default function LayoutPage() {
     let changed = false;
     const seeds: Array<[string, string]> = [
       ["variant", "A"],
-      ["height", "asymmetric"],
+      ["height", "clamp"],
       ["stack", "switcher"],
       ["pair", "stack-mini"],
       ["width", "wrap"],
@@ -790,8 +785,8 @@ export default function LayoutPage() {
       <div className="f09l-banner" role="status">
         <strong>Experimental prototype</strong>
         {" · "}
-        F09 M1-07 / M1-08. A asymmetric lean · C problem (static) · D Tasks
-        section chips · E unequal / mini-container for This week.
+        F09 M1-07 / M1-08 locked. Both fixed 28rem · chips wrap · Tasks section
+        chips (tab-scoped counts) · mini above large. Progress page layout → M2.
       </div>
       <div className="f09l-layout">
         <RuleCard surface={variant} />

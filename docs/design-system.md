@@ -29,7 +29,7 @@ The source of truth for visual and interaction conventions in `apps/web`. **Read
 
 **Typography — IBM Plex:** Display / chrome / titles / tabs / badges / numbers → **IBM Plex Mono** (`--font-display`). Body → **IBM Plex Sans** (`--font-body`). Live in production (M1-01).
 
-**Shell width — 1100px:** `.shell` uses `--shell-max: 1100px`. Full chrome-budget / wrap rules remain M1 (Q15 / remaining Q16).
+**Shell width — 1100px:** `.shell` uses `--shell-max: 1100px`. Wrap, column stack, and paired-panel height: see Patterns (M1-07 / M1-08).
 
 **Brand mark — flora.exe:** Top chrome mark (M1-01). Full string rewrite across the app is not required in M1.
 
@@ -128,17 +128,43 @@ Locked via `/prototype/f09/nesting` (verdict 2026-10-15). Lives in this file (no
 
 **Conforming targets:** Progress and Rewards already use route shells + subnav; bring them (and Jobs location / Past work ledger type) onto title→tabs→chips anatomy in surface waves. Past work Completions/Points/Reflections demote from nested tabs to L2 chips.
 
-**Still open (not this pattern):** wrap/scroll/width details → M1-08; paired panel heights → M1-07; modal anatomy → M1-12.
+**Still open (not this pattern):** modal anatomy → M1-12.
+
+### Paired panel height + overflow (F09 M1-07 · Q16)
+
+Locked via `/prototype/f09/layout` (verdict 2026-10-15).
+
+**Equal peer columns:** sibling panels that are meant to read as a pair share a **fixed 28rem** body height (`height: 28rem; overflow: auto`). Content scrolls **inside** each panel. Do **not** use a shared `100dvh` viewport track. Stress case: Progress Past work (calendar + ledger).
+
+**When columns stack** (narrow breakpoint): turn equal-height **off**; each panel returns to natural document flow (list bodies may still clamp).
+
+**Single-column pages:** no forced page min-height.
+
+**Many list regions on one page (Tasks):** prefer **section chips → one scroll well** over several open clamped sections. Chip counts follow the **active page tab only** (chips sit below the tab — open counts on Open, done counts on Completed).
+
+**Unequal density:** when one region is a short control (“mini-container”) and another is a tall list, **stack the mini above the larger well** — do not force them into equal peer cards. Progress This week page composition (where LC / daily / weekly goals sit; dual weekly+misc +/-) is **M2 surface work**, not a second height dialect.
+
+### Chrome budget / width (F09 M1-08 · Q16 remainder)
+
+Locked via `/prototype/f09/layout` (verdict 2026-10-15). Shell stays **1100px**.
+
+| Rule | Lock |
+|------|------|
+| L2 filter chips | **Wrap** (no nowrap + horizontal scroll) |
+| Dual columns | `minmax(16rem, 1fr) minmax(0, 1.2fr)`; **stack at 640px** (same breakpoint for compose/action wrap) |
+| Gaps | Page stack **1rem**; dual-column gap **0.85rem** |
+| Breakpoints | **640 / 860 / 1100** (prefer these over one-off 520–900 values) |
+| Labels | Shorten only when a control cannot wrap; prefer wrap for chips |
+
+Stress cases: Jobs location chips; Past work compose + columns.
 
 ### Other M1 patterns (pending)
 
 | Topic | Ticket | Notes |
 |-------|--------|-------|
-| **Paired panel height + in-panel overflow** | F09 M1-07 | Q16 — sibling columns share height; scroll inside panels |
-| Chrome budget / width | F09 M1-08 | Q16 remainder (shell width already 1100px) |
 | List pagination | F09 M1-09 | Q8 / R.7 |
 | EarnFlash placement | F09 M1-10 | Q10 / R.9 |
-| Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks migrate in M2 |
+| Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks section chips already from M1-07; migrate in M2 |
 | In-content link hover (app-wide) | F09 M1-16 | M1-15 lock exists; Home only — globals still blue/purple |
 
 Pilot surface for primitives: **Home** (F09 M1-05 + M1-15). App shell: flora.exe + underline chrome-tabs + 1100px.
@@ -177,6 +203,10 @@ The 2026-10-13 F08 M5 interim choices (tinted purple primary, blue toggles, flat
 | Countdown | Proportional sans, space-separated, conic pies | **Mono + padded `:` units**; SVG pies; gap after circles |
 | Link hover (Home) | Purple-deep / invisible ink-only | **Underline** (text may stay dark) |
 | Nesting / filters | Route shells vs query tabs; location chips as fake tabs; rounded Segmented as L2 | **Containerized title → ChromeTab → squared chips (below, left)**; shells for Progress/Rewards (M1-06) |
+| Paired panel height | Independent grow · viewport track · asymmetric natural/clamp | **Both peers fixed 28rem**; overflow inside (M1-07) |
+| Stacked list regions | Many open 28rem clamps | **Section chips → one well**; counts match active tab (M1-07) |
+| Unequal density | Equal peer cards for short control + tall list | **Mini above larger well** (M1-07); Progress page layout in M2 |
+| Chip rows | Nowrap + overflow-x | **Wrap** (M1-08) |
 | Heatmap | Navy peak | **Vivid rose soft peak** |
 | Shell | 960px | **1100px** |
 | Fonts | JetBrains + DM Sans | **IBM Plex Mono + Sans** (roles) |
@@ -188,6 +218,9 @@ Run before marking any UI ticket done:
 - [ ] No new bare-element CSS; no global filled `button` default; no `:not(...)` opt-out chain
 - [ ] Every button, tab and field uses a named variant (`Button` / `TextField` / ChromeTab / …)
 - [ ] Page chrome follows title → tabs/subnav → optional squared filter chips (left, below) → content inside a card; no stacked ChromeTab rows
+- [ ] Peer dual columns use fixed 28rem bodies with in-panel scroll; stacked list regions use section chips → one well when applicable
+- [ ] Unequal-density regions stack mini above large (not equal peer cards for short controls)
+- [ ] Filter chips wrap; dual columns stack at 640px
 - [ ] Only tokens / documented roles for color, radius and shadow
 - [ ] Dialogs use `ModalLayer`
 - [ ] Reused existing components where they fit (listed in the ticket)

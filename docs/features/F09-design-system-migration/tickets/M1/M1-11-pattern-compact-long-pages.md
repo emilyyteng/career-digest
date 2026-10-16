@@ -23,6 +23,7 @@ n/a unless user requests a Tasks compaction prototype later
 ## Reuse notes
 
 - M0-01 Tasks notes; R.10; M2 owns implementation
+- M1-07 locked Tasks **section chips → one scroll well** (tab-scoped counts) — treat as an established compaction tactic here; do not contradict
 
 ## Definition of done
 
