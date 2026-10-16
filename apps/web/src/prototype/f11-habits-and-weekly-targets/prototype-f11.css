@@ -1,0 +1,600 @@
+/* F11 M0 prototypes — scoped under .f11-proto / strip classes */
+
+.f11-proto {
+  padding-bottom: 4.5rem;
+}
+
+.f11-page-head h2 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+}
+
+.f11-question {
+  margin: 0 0 0.75rem;
+  max-width: 52rem;
+}
+
+.f11-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.f11-param {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.f11-param-label {
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-right: 0.25rem;
+}
+
+.f11-param-btn.is-active {
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 8%, var(--surface));
+  color: var(--ink);
+}
+
+.f11-notes {
+  margin-top: 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  max-width: 52rem;
+  font-size: 0.88rem;
+}
+
+.f11-notes p {
+  margin: 0 0 0.5rem;
+}
+
+.f11-notes p:last-child {
+  margin-bottom: 0;
+}
+
+.f11-hub-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: default;
+}
+
+.f11-surfaces {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.f11-surface-label {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.f11-home-mock {
+  padding: 1rem 1.1rem;
+}
+
+.f11-progress-mock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.f11-pulse-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.f11-pulse-card {
+  flex: 1 1 14rem;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.f11-pulse-line {
+  font-size: 0.92rem;
+  font-family: var(--font-display);
+}
+
+.f11-pulse-min {
+  font-size: 0.8rem;
+}
+
+.f11-progress-aside-note {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+/* —— Habits strip —— */
+
+.f11-habits-strip {
+  padding: 0.75rem 0.9rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.f11-habits-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+
+.f11-habits-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: var(--font-display);
+}
+
+.f11-pencil-flip {
+  display: inline-block;
+  transform: scaleX(-1);
+  line-height: 1;
+}
+
+.f11-section-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+}
+
+.f11-add-reflection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-direction: row;
+}
+
+.f11-btn-danger {
+  color: var(--danger-deep) !important;
+  border-color: var(--danger) !important;
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface)) !important;
+}
+
+.f11-btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 22%, var(--surface)) !important;
+  border-color: var(--danger-deep) !important;
+}
+
+.f11-strip-msg {
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--warn) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--border));
+  font-size: 0.82rem;
+}
+
+.f11-habits-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.45rem 0.75rem;
+}
+
+.f11-habits-row {
+  display: flex;
+  flex-wrap: wrap;
+  /* Top-align so taller/shorter pills share the same content origin */
+  align-items: flex-start;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.f11-habits-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem 0.85rem;
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding-bottom: 0.1rem;
+}
+
+.f11-habits-foot-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.f11-habits-row-arch {
+  opacity: 0.95;
+}
+
+.f11-habits-arch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 auto;
+}
+
+/* Match production `.today-streak-pill` metrics exactly */
+.f11-habit-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  width: max-content;
+  max-width: 100%;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+button.f11-habit-pill {
+  cursor: pointer;
+}
+
+button.f11-habit-pill:hover {
+  border-color: var(--border-strong);
+}
+
+.f11-habit-pill.is-done {
+  border-color: color-mix(in srgb, var(--ok) 55%, var(--border));
+  background: color-mix(in srgb, var(--ok) 12%, var(--surface));
+}
+
+.f11-habit-pill.is-pending {
+  border-style: dashed;
+}
+
+.f11-habit-pill.is-expandable.is-expanded {
+  border-color: var(--domain-tech);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--domain-tech) 35%, transparent);
+}
+
+.f11-habit-pill-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.f11-habit-n {
+  font-size: 1.2rem;
+  line-height: 1.1;
+  font-family: var(--font-display);
+}
+
+/* Match `.today-streak-label` exactly */
+.f11-habit-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+/* Reserve room for the pencil without changing the text line box height */
+.f11-habit-label-edit {
+  position: relative;
+  display: block;
+  padding-right: 1em;
+  box-sizing: border-box;
+}
+
+.f11-habit-sub {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.f11-habit-pill.is-done .f11-habit-sub {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.f11-habit-mark {
+  font-weight: 700;
+  color: var(--domain-tech-deep, var(--accent-purple-deep));
+}
+
+.f11-habit-pill.is-done .f11-habit-mark {
+  color: var(--ok);
+}
+
+.f11-habit-expand-hint {
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.f11-habit-check-btn {
+  min-width: 1.75rem;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+
+/* Match `.f11-habit-mark` span metrics (inline text, not a flex control) */
+.f11-habit-mark-btn {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  color: var(--domain-tech-deep, var(--accent-purple-deep));
+  cursor: pointer;
+}
+
+.f11-habit-mark-btn:hover,
+.f11-habit-mark-btn:focus-visible {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink);
+}
+
+.f11-habit-pill.is-done .f11-habit-mark-btn {
+  color: var(--ok);
+}
+
+.f11-habit-pill.is-done .f11-habit-mark-btn:hover,
+.f11-habit-pill.is-done .f11-habit-mark-btn:focus-visible {
+  color: var(--ok);
+}
+
+/* Absolutely positioned in the label’s padding — does not affect gap/line-height */
+.f11-habit-pencil {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  box-sizing: border-box;
+  display: block;
+  width: 0.9em;
+  height: 0.9em;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-size: 0.95em;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.75;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  transform: translateY(-50%);
+}
+
+.f11-habit-pencil:hover,
+.f11-habit-pencil:focus-visible {
+  opacity: 1;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.f11-habit-pencil .f11-pencil-flip {
+  display: block;
+  line-height: 1;
+  transform: scaleX(-1);
+}
+
+.f11-habit-create {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 5.5rem;
+  min-height: 4.2rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-card);
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+}
+
+.f11-habit-create-plus {
+  font-size: 1.25rem;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+
+/* Archived looks (Q14) */
+
+.f11-habit-pill-archived.is-mute {
+  border-style: dashed;
+  opacity: 0.72;
+  background: var(--surface);
+  filter: grayscale(0.35);
+}
+
+.f11-habit-pill-archived.is-ghost {
+  position: relative;
+  opacity: 0.85;
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--text-muted) 35%, var(--border));
+}
+
+.f11-arch-stamp {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.4rem;
+  font-size: 0.62rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.05rem 0.3rem;
+  border-radius: var(--radius-pill);
+}
+
+.f11-arch-restore {
+  margin-top: 0.25rem;
+  align-self: flex-start;
+}
+
+.f11-arch-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.f11-arch-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.f11-update-progress {
+  font-size: 0.85rem;
+}
+
+/* Disclosure-style Log LC — border underline (not text-decoration) so the
+   flipped caret never carries an upside-down underline with it. */
+.f11-log-lc-disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.05rem 0.05rem;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.f11-log-lc-disclosure:hover,
+.f11-log-lc-disclosure:focus-visible {
+  text-decoration: none;
+  border-bottom-color: currentColor;
+}
+
+.f11-log-lc-disclosure:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+.f11-log-lc-label {
+  text-decoration: none;
+}
+
+.f11-log-lc-caret {
+  display: inline-block;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: transform 0.12s ease;
+  /* Transforms don't affect the parent's border-bottom */
+}
+
+.f11-log-lc-disclosure.is-open .f11-log-lc-caret {
+  transform: rotate(180deg);
+}
+
+/* Today LC panel */
+
+.f11-lc-today {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--domain-tech) 40%, var(--border));
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--domain-tech) 6%, var(--surface));
+}
+
+.f11-lc-today-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--domain-tech-deep, var(--accent-purple-deep));
+}
+
+.f11-lc-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.f11-lc-tier {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.f11-lc-tier-name {
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.f11-lc-count {
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+}
+
+.f11-lc-step {
+  min-width: 1.85rem;
+}
+
+/* Modals / fields */
+
+.f11-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.f11-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+}
+
+.f11-lane-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 0.25rem;
+}
+
+.f11-lane-fieldset legend {
+  margin-bottom: 0.35rem;
+}

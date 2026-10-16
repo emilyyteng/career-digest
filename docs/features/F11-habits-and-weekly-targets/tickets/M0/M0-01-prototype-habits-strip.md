@@ -1,6 +1,6 @@
 # M0-01: Prototype Habits strip (Home + Progress)
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R.0, R0.1; designs for R1.5–R1.14, R.5, R.7, open Q11–Q12, Q14 (from `../../spec.md`)
 **Type:** prototype
@@ -38,30 +38,48 @@ Strip page: `/prototype/f11/habits/strip`
 
 ## Acceptance criteria
 
-- [ ] Prototypes under `apps/web/src/prototype/f11-habits-and-weekly-targets/` with DEV-only routes in `App.tsx`
-- [ ] Home mock and Progress This week mock both show the Habits strip chrome
-- [ ] At least two variants for Q11 and for Q12 (A and B); Q14 explored across Active/Archived states
-- [ ] Variants switchable with `PrototypeSwitcher`; every variant obeys locked requirements above
-- [ ] Cap scenarios: create slot present under 3 customs, gone at 3; restore blocked at cap
-- [ ] Reflection pencil opens a `ModalLayer` mock modal (link, body, lane)
-- [ ] No production imports of prototype code; mock data only
-- [ ] User records a verdict per design question (variant chosen) in this ticket’s verification notes
+- [x] Prototypes under `apps/web/src/prototype/f11-habits-and-weekly-targets/` with DEV-only routes in `App.tsx`
+- [x] Home mock and Progress This week mock both show the Habits strip chrome
+- [x] At least two variants for Q11 and for Q12 (A and B); Q14 explored across Active/Archived states
+- [x] Variants switchable with `PrototypeSwitcher`; every variant obeys locked requirements above
+- [x] Cap scenarios: create slot present under 3 customs, gone at 3; restore blocked at cap
+- [x] Reflection pencil opens a `ModalLayer` mock modal (link, body, lane)
+- [x] No production imports of prototype code; mock data only
+- [x] User records a verdict per design question (variant chosen) in this ticket’s verification notes
 
 ## Reuse notes
 
 `PrototypeSwitcher`, F08 today-strip visual language ([`TodayStrip.tsx`](../../../../../apps/web/src/features/progress/TodayStrip.tsx) / `today-streak-*` styles) as a starting point — do not import production strip into the prototype if that forces production changes. `ModalLayer` for modals. `LeetcodeLogger` patterns for mock today-LC ± only inside the chosen A/B reveal.
 
+Built with: `PrototypeSwitcher`, `ModalLayer` + `ModalHeader`/`Body`/`Footer`, `Button` / `TextField` / `SelectField` / `TextAreaField` / `ChromeTab`, existing `progress-lane-chip` classes. Slim mock today-LC steppers (not production `LeetcodeLogger`). No production strip import.
+
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Ticket status `Done`; board updated; verdicts recorded
-- [ ] Committed as `F11 M0-01: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Ticket status `Done`; board updated; verdicts recorded
+- [x] Committed as `F11 M0-01: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including **Issues found**
 
 ## Verification notes
 
-Filled when done: verdict per Q11 / Q12 / Q14, chosen variants, last prototype commit hash (keep prototype until build tickets that reference it are Done).
+**Prototype:** `/prototype/f11/habits` → `/prototype/f11/habits/strip` (DEV). Keep until M2 build tickets that reference it are Done.
+
+| Variant | Q11 | Q12 |
+|---------|-----|-----|
+| A | Dedicated ✓/− button + pencil | Expand LC pill |
+| B | Dedicated ✓/− button + pencil | Strip **Log LC** |
+| C | Mark (✓/−) as hit-target + pencil | Expand LC pill |
+| **D (chosen)** | Mark (✓/−) as hit-target + pencil | Strip **Log LC** |
+
+**Verdicts (2026-10-16):**
+- **Q11:** mark hit-target — ✓/− top-right like Apps/LC; pencil absolutely beside `{name} daily streak`
+- **Q12:** Log LC disclosure (▾) right-aligned on the habits band with Add reflection; Update progress below; today-LC panel under the band (not expand-pill, not Past-work-only, not weekly column)
+- **Q14 (strip):** ghost stamp archived look; Active/Archived as ChromeTabs; last restore auto-returns to Active
+
+Locked chrome extras: flipped pencil on Add reflection (icon right of label); edit modal Cancel · Archive (danger + confirm) · Save name.
+
+Last prototype commit hash: _(follow-up)_

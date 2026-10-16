@@ -1,7 +1,7 @@
 # M0-02: Prototype weekly goals column + incrementer
 
-**Status:** Blocked
-**Blocked by:** M0-01 (strip / today-LC verdict first so this page does not re-litigate today-LC)
+**Status:** Ready
+**Blocked by:** (none — M0-01 Done; strip today-LC = Log LC disclosure, do not re-litigate)
 **Implements:** R.0, R0.2; designs for R3.1–R3.10, R.7, R.9, open Q13–Q14 (from `../../spec.md`)
 **Type:** prototype
 
