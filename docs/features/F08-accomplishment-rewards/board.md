@@ -84,7 +84,7 @@ Done (16)
 
 ## M6: Board departures log
 
-**Milestone status:** In progress
+**Milestone status:** Done
 
 No open tickets.
 

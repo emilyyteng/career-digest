@@ -288,6 +288,17 @@ Weekly goals become a closed loop: Progress edits the week, week close writes fi
 
 **Outcome:** Hitting a weekly target pays at week close, shows up on Home once, and leaves a durable record. Daily streaks and achievements add lighter celebration without inventing a third banner pattern.
 
+### M6: Board departures log
+
+When a posting leaves the open board (or a Simplify row is removed as a duplicate), Status can explain why an application task may have vanished.
+
+- Departures are snapshotted before delete: title, company, location, reason (`Left board` / `Duplicate`), and whether an open application task was actually removed (duplicate merges that only repoint a task do not count as removed).
+- Applied applications keep their postings and stay out of the log; filter-reject deletes are not logged. Records start when the feature ships — no backfill.
+- Retention is the recorded local day through the next local day; purge runs on ingest/merge day boundaries, not when the log is read.
+- Status shows per-day sections (today expanded), with task-removed rows highlighted and filterable, plus a per-day removed count when it is not zero.
+
+**Outcome:** Ops Status holds a short, low-scroll record of board churn that complements urgency cues on Tasks.
+
 ### M7: Cat Cake Collection v1 (Rewards)
 
 Seeds become spendable on a dedicated Rewards area: a bakery gacha with collection, earnings, pull history and an in-app rules reference. The old Progress points ledger moves to Rewards Earnings; completions stay on Progress.

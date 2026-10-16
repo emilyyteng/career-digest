@@ -14,7 +14,7 @@ Personal internship digest and application tracker (product mark **flora.exe**; 
 | **Progress**     | This week, Past work, and Lifetime: weekly goals, completions, heatmaps, achievements           |
 | **Rewards**      | Cat Cake Collection gacha: banner pulls, album, earnings, pull history, and rules (seeds)       |
 | **Home**         | Digest status, today and weekly progress, upcoming deadlines and targets, new and top job picks |
-| **Status**       | Ops dashboard — ingest, scrape, rank, and backup health                                         |
+| **Status**       | Ops dashboard — ingest, scrape, rank, backup health, and board departures                       |
 
 
 
@@ -54,7 +54,7 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `/interviews`   | Interview pipelines          |
 | `/progress`     | This week (default); Past work; Lifetime |
 | `/rewards`      | Cat Cake banner (default); Collection, Earnings, Pull history, Rules |
-| `/status`       | Pipeline / ops dashboard     |
+| `/status`       | Pipeline / ops dashboard; board departures log |
 
 
 

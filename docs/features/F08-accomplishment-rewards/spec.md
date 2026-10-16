@@ -27,7 +27,7 @@ Shipped code is never a source. Where the plan and the shipped code disagree, th
 
 ## Milestones
 
-Order for the remaining milestones: **M6, M3** (user 2026-10-15; was M3 then M6 after M5 / M7 / M8).
+Order for the remaining milestones: **M3** (after M5, M7, M8, M6).
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
@@ -37,7 +37,7 @@ Order for the remaining milestones: **M6, M3** (user 2026-10-15; was M3 then M6 
 | M3 | Recurring tasks | Not started |
 | M4 | Global points ledger | Done; M4-01, M4-02 and M4-03 done |
 | M5 | Weekly goals end to end; streaks and achievements; points rule adjustments; celebration | Done |
-| M6 | Board departures log | Not started |
+| M6 | Board departures log | Done |
 | M7 | Cat Cake Collection v1: spending seeds, the Rewards page | Done |
 | M8 | Progress redesign, LeetCode tier polish, information architecture | Done |
 
@@ -277,7 +277,7 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 - **R5.33** (Established 2026-10-13) The completion log gets a special `leetcode` tab, like the weekly tab: its count is all-time LeetCode, and it lists LeetCode by date, so past solving is visible, including days from before the points ledger. Untiered days count as medium. The `leetcode` tab counts total solves; LeetCode day rows also show in `all`, where each day counts as 1; each row reads `LC: 3 solved` with a tier line and the day's points (Q52–Q54). Ticket: M5-16.
 - **R5.34** (Established 2026-10-13) The completion log's `weekly` tab is renamed `weekly goals`. Ticket: M5-16.
 
-### M6: Board departures log (Not started)
+### M6: Board departures log (Done)
 
 - **R6.1** (Established; write paths 2026-10-15) A record view of postings that **left the board** or were **removed as duplicates**. This is separate from R0.2's deletion of open application tasks. **In scope write paths:** `reconcileRemovedFromBoard` deletes (board-gone) and duplicate-merge deletes of the Simplify row. **Out of scope:** filter rejects (`dropUntrackedRejected`), hide-from-board / mismatch, and applied+ postings retained with `removed_from_board_at` (those stay out of the log per R6.6).
 - **R6.2** (Established; fields 2026-10-15) Each row shows: title, company, location, **reason** (`Left board` / `Duplicate`), and whether an open application task was **actually removed** in that event. Company uses the same display rule as Jobs/Tasks (Simplify → `department` when set). Rows that removed a task also show the copy **task removed**.
@@ -466,7 +466,7 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 |----------|-------|--------|-------|
 | Board-gone and duplicate deletes snapshot into `board_departures` (reason, task_removed, company display); filter rejects and applied+ retentions unlogged; UTC day-boundary purge at ingest/merge start (not on read) | [`boardDepartures.ts`](../../../apps/api/src/boardDepartures.ts), [`041_board_departures.sql`](../../../apps/api/src/sql/041_board_departures.sql), [`ingest.ts`](../../../apps/api/src/ingest.ts), [`mergeDuplicatePostings.ts`](../../../apps/api/src/mergeDuplicatePostings.ts) | Conforms R6.1, R6.2 (storage), R6.5, R6.6 (write), R6.7 (purge) | Done by M6-01 |
 | `GET /api/ops/board-departures?tz=` returns browser-local day groups with reason labels, `taskRemoved`, and `taskRemovedCount`; no purge on read | [`boardDepartures.ts`](../../../apps/api/src/boardDepartures.ts) `getBoardDeparturesSnapshot`, [`routes.ts`](../../../apps/api/src/routes.ts) | Conforms R6.2, R6.6, R6.7 (read) | Done by M6-02 |
-| Status page has no board-departures section yet | [`Status.tsx`](../../../apps/web/src/pages/Status.tsx) | Conflicts R6.3 | M6-03 |
+| Status Board departures: per-day sections (today open), reason labels, task-removed highlight/filter/copy, day count when &gt; 0 | [`BoardDeparturesLog.tsx`](../../../apps/web/src/features/ops/BoardDeparturesLog.tsx), [`Status.tsx`](../../../apps/web/src/pages/Status.tsx) | Conforms R6.2–R6.4, R6.6, R6.7 (UI) | Done by M6-03 |
 
 ### M7
 
@@ -624,6 +624,7 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Prototype deletion may be batched before F08 closes.
 - **2026-10-13:** To-do-backed applications can't be edited as applications (R2.21). Departures retention first set to 14 days (R6.7); revised 2026-10-15.
 - **2026-10-15:** M6 before M3. Board departures lock: log **board-gone** and **duplicate** deletes only (not filter rejects), each with a reason label; exclude applied+; **task removed** only when an open application task was actually deleted (duplicate *repoints* do not count); highlight + optional filter + row copy **task removed**; per-day count of task-removed departures (hide when 0); company display matches Jobs/Tasks (Simplify `department`); browser TZ; retention until the **next local day**; **no purge-on-read** (purge on day boundary).
+- **2026-10-15 (later):** M6 shipped (M6-01–M6-03). Remaining F08 milestone: M3.
 - **2026-10-13:** LeetCode types are named weekly and misc. Difficulty tiers are built in M5 and polished in M8. Days store only an aggregate count; past solves count as medium.
 - **2026-10-13:** Ledger fixes ticketed under M4, worked with M5: category totals double-subtract reversals (M4-02); re-completing a reopened task earns by the actual-time change (M4-03). Duplicate merges must move reflections (M2-01).
 - **2026-10-13:** The points breakdown splits tasks by task category (R5.21, M5-03).
