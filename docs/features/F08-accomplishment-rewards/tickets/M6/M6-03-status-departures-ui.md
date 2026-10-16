@@ -46,4 +46,4 @@ No prototype required unless layout questions appear during build; locked requir
 - Empty state reviewed on `/status` (no departures yet; recording starts at ship per R6.5). Populated rows / filter / day counts to be spot-checked after the next ingest with board-gone or duplicate activity.
 - Today expands by default; other days use `<details>`; task-removed highlight + filter; day count omitted at 0.
 - `npm run check` green (356 tests). No new tests (UI-only).
-- Commit: (this commit).
+- Commit: `96139bd`.
