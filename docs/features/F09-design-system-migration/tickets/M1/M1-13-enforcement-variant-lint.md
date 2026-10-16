@@ -39,4 +39,4 @@ n/a
 
 **Q6:** `npm run check:ui` → `scripts/check-ui-variants.mjs`. Bare buttons fail everywhere under `apps/web/src` except `ui/` and `prototype/`. Unclassed fields enforced on Home only until M2 form waves.
 
-Commit below.
+Commit: `3afa0e1`.

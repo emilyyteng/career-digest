@@ -45,7 +45,7 @@ No open tickets.
 | [M1-11](./tickets/M1/M1-11-pattern-compact-long-pages.md) | Pattern: compact long-page tactics (Q11/R.10) | `62ed23a` |
 | [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) | Apply in-content link hover app-wide | `fd60056` |
 | [M1-12](./tickets/M1/M1-12-modal-anatomy.md) | Modal chrome anatomy | `cbb2f5e` |
-| [M1-13](./tickets/M1/M1-13-enforcement-variant-lint.md) | Enforcement for variant-less controls (Q6) | `PENDING` |
+| [M1-13](./tickets/M1/M1-13-enforcement-variant-lint.md) | Enforcement for variant-less controls (Q6) | `3afa0e1` |
 
 </details>
 
