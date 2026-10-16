@@ -1,6 +1,6 @@
 # M1-09: Pattern — long-list pagination defaults (Q8 / R.7)
 
-**Status:** In progress
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R.7, R1.2, Q8
 **Type:** docs
@@ -10,45 +10,40 @@
 
 Lock default pagination for long lists: page size, control placement, and whether calendar/day windows (Progress Past work) are a documented special case vs the general pattern. Promote R.7 from Proposed to Established when the user confirms the rule. No requirement to paginate every list in this ticket.
 
-## Proposed approach (for judgment)
-
-- **Default:** classic Prev / page / Next under the list (or inside a clamped well), page size **25**.
-- Optional duplicate pager above when the well is tall.
-- Reject infinite scroll / “load more” as the system default.
-- **Special case:** calendar-anchored time series (Past work) may use a day / **7-day window** instead of numbered pages — Progress-only, not the general rule.
-- Future migrate targets: completions diary; long boards inside 28rem wells (pairs with M1-07).
-
 ## Acceptance criteria
 
-- [ ] Q8 answered; R.7 Established (or explicitly left Proposed with reason)
-- [ ] `design-system.md` Patterns documents list pagination defaults + Past work exception if any
-- [ ] Completions diary / similar called out as future migrate targets
-- [ ] Prototype used: URL + verdict recorded
-- [ ] `npm run check` passes (docs-only OK)
+- [x] Q8 answered; R.7 Established
+- [x] `design-system.md` Patterns documents list pagination defaults + Past work exception; shared `Pager` contract (no select)
+- [x] Completions diary / Jobs pager debt called out as migrate targets
+- [x] Prototype used: URL + verdict recorded
+- [x] `npm run check` passes (docs-only OK)
 
 ## Design questions (prototype tickets only)
 
-1. Page size / control placement for the general list rule?
-2. Load more / infinite vs classic pager as default?
-3. Is Past work’s 7-day window a documented special case?
+1. Page size / control placement? → **bottom `Pager`, size 25**
+2. Load more / infinite vs classic pager? → **classic; reject load-more as default**
+3. Past work 7-day window? → **Progress special case**
+4. Jobs jump `<select>`? → **not in the standardized `Pager`**
 
-Prototype URL: `/prototype/f09/patterns` · surface **A** (`?page=`)
+Prototype URL: `/prototype/f09/patterns` · surface **A**
 
 ## Reuse notes
 
-- F08 M8 Past work 7-day window; F09 Current behavior row on ledger completions
-- API lists already use `pageSize` default 25 in places (`api.ts`)
+- F08 M8 Past work 7-day window; Jobs `.pager` + jump select is debt
+- API `pageSize` default 25 in `api.ts`
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F09 M1-09: …`
-- [ ] End-of-task report given
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F09 M1-09: …`
+- [x] End-of-task report given
 
 ## Verification notes
 
-(filled when done)
+**2026-10-15 verdicts:** bottom pager; standardize shared `Pager` (Prev / n/pages / Next; no page-jump or page-size select); size 25; Past work 7-day window = special case; reject load-more default.
+
+Prototype exploration: `dab1805`. Lock commit below.

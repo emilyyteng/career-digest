@@ -26,14 +26,13 @@ No open tickets.
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
 | [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) | Apply in-content link hover app-wide | build | Ready | After M1-15 Home lock |
-| [M1-09](./tickets/M1/M1-09-pattern-list-pagination.md) | Pattern: list pagination (Q8/R.7) | docs | In progress | Shared `/prototype/f09/patterns` A |
-| [M1-10](./tickets/M1/M1-10-pattern-earnflash-placement.md) | Pattern: EarnFlash placement (Q10/R.9) | docs | In progress | Shared `/prototype/f09/patterns` B |
-| [M1-11](./tickets/M1/M1-11-pattern-compact-long-pages.md) | Pattern: compact long-page tactics (Q11/R.10) | docs | In progress | Shared `/prototype/f09/patterns` C |
+| [M1-10](./tickets/M1/M1-10-pattern-earnflash-placement.md) | Pattern: EarnFlash placement (Q10/R.9) | docs | In progress | Locking · `/prototype/f09/patterns` B |
+| [M1-11](./tickets/M1/M1-11-pattern-compact-long-pages.md) | Pattern: compact long-page tactics (Q11/R.10) | docs | In progress | Locking · `/prototype/f09/patterns` C |
 | [M1-12](./tickets/M1/M1-12-modal-anatomy.md) | Modal chrome anatomy | build | Draft | After M1-02 |
 | [M1-13](./tickets/M1/M1-13-enforcement-variant-lint.md) | Enforcement for variant-less controls (Q6) | build | Draft | After M1-05 |
 
 <details>
-<summary>Done (10)</summary>
+<summary>Done (11)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
@@ -47,6 +46,7 @@ No open tickets.
 | [M1-06](./tickets/M1/M1-06-pattern-feature-shell-nested-tabs.md) | Pattern: feature shell / nested tabs (Q9/Q15) | `1d71980` |
 | [M1-07](./tickets/M1/M1-07-pattern-paired-panel-height.md) | Pattern: paired panel height + in-panel overflow (Q16) | `2a60bb0` |
 | [M1-08](./tickets/M1/M1-08-pattern-chrome-budget.md) | Pattern: chrome budget / width (Q16 remainder) | `9855852` |
+| [M1-09](./tickets/M1/M1-09-pattern-list-pagination.md) | Pattern: list pagination (Q8/R.7) | *(this commit)* |
 
 </details>
 
@@ -54,7 +54,7 @@ No open tickets.
 
 **Milestone status:** Not started
 
-Tickets after M1. Expected: Tasks compaction (R.10; section chips from M1-07); **Jobs / Applications / Interviews → `ChromeTab` + containerized title→tabs→squared filter chips** (legacy `.tab.on` blue; M1-06 locked); Jobs banner → `OneTimeNotice` (R.6); Progress apply M1-07 height + This week page composition (LC / daily / weekly; dual +/-); apply M1-16 links if not done in M1.
+Tickets after M1. Expected: Tasks compaction (R.10 / M1-11 tactics); **Jobs / Applications / Interviews → `ChromeTab` + containerized title→tabs→squared filter chips** + shared `Pager` (drop jump select); Jobs banner → `OneTimeNotice` (R.6); Progress apply M1-07 height + EarnFlash near-control (M1-10) + This week composition; apply M1-16 links if not done in M1.
 
 <details>
 <summary>Done (0)</summary>

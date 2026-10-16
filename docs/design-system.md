@@ -97,7 +97,8 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview` (apps) / `goal` (**domain tech**), `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak`, `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Kind labels rendered **INTERVIEW** / **GOAL** uppercase; role tokens only |
 | **Card** | `.card` | Soft shadow OK | All-carded |
 | **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
-| **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | Placement M1-10 |
+| **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | EarnFlash near control (toast fallback); OneTimeNotice stays section-top (M1-10) |
+| **Pager** | Shared `Pager` helper when first list migrates (M2+) | Prev · `page / pages` (mono text) · Next; default page size **25** | **No** page-jump `<select>`, **no** page-size selector. Jobs `.pager` + jump select is migration debt |
 | **Heatmap** | `ProgressHeatmap` / `HistoryCalendar` via [`intensityScale.ts`](../apps/web/src/features/progress/intensityScale.ts) | `--heat-0`…`--heat-4` (vivid rose soft peak); empty = `--surface-2` | RGB lerp mirrors tokens; legend uses CSS vars |
 | **Deadline urgency** | `DeadlineUrgency` + SVG pies + `.deadline-tone-*` | `--urgency-overdue` · `--urgency-soon` (pink) · `--urgency-ahead` (=P1) · `--urgency-ok` | Countdown: **Plex Mono**, zero-padded units joined by **`:`**; extra gap after pie cluster; SVG pies (no conic seam) |
 | **Priority** | `PriorityBadge` → `Badge` `p0`–`p2` compact | P0–P2 RYG | |
@@ -158,18 +159,54 @@ Locked via `/prototype/f09/layout` (verdict 2026-10-15). Shell stays **1100px**.
 
 Stress cases: Jobs location chips; Past work compose + columns.
 
+### List pagination (F09 M1-09 · R.7 / Q8)
+
+Locked via `/prototype/f09/patterns` surface A (verdict 2026-10-15).
+
+**Default:** long lists use a classic **bottom pager** — Prev · `page / pages` · Next — under the list (or under a clamped well). Default page size **25**. Optional duplicate pager above when the well is tall. Reject infinite scroll / “load more” as the system default.
+
+**Standardize as a shared `Pager` component** (build when the first list migrates; document the contract now). Anatomy is only Prev / current-page text / Next. **Do not** include a page-jump `<select>` (Jobs today) or a page-size selector.
+
+**Special case:** calendar-anchored time series (Progress Past work completions) may use a day / **7-day window** instead of numbered pages — Progress-only, not the general list rule.
+
+**Migrate later:** completions diary and similar logs; Jobs `.pager` → shared `Pager` (drop jump select); long boards inside 28rem wells (with M1-07).
+
+### EarnFlash / notice placement (F09 M1-10 · R.9 / Q10)
+
+Locked via `/prototype/f09/patterns` surface B (verdict 2026-10-15).
+
+| Banner | Placement |
+|--------|-----------|
+| **`EarnFlash`** | **Near the control that earned** (inline under the row / action cluster, or a small portal anchored to that control). Must appear in the current viewport without scrolling to the page top. **Fallback:** sticky viewport toast when the action has no stable anchor (e.g. after modal close). Reject page-top-only and scroll-into-view jerks as the default. |
+| **`OneTimeNotice`** | Does **not** share the near-control rule. Event/result chrome may stay at the **host section top** (preferably still in that section’s first viewport). |
+
+Apply near-control EarnFlash on Tasks / Progress hosts in a follow apply ticket or M2 wave; pattern is locked here.
+
+### Compact long pages (F09 M1-11 · R.10 / Q11)
+
+Locked via `/prototype/f09/patterns` surface C (verdict 2026-10-15). **Tasks** is the first migrate target (M2).
+
+Ordered tactics:
+
+1. **Section chips → one scroll well** (M1-07; tab-scoped counts)
+2. **Paginate inside the well** (M1-09 `Pager`, size 25)
+3. **28rem clamp** on the primary list body (M1-07)
+4. Slightly tighter row density only after 1–3
+5. Sticky compose / primary write only if actions still fall below the first viewport after 1–4
+
+Do not re-open multi-select accordion stacks as the Tasks standard.
+
 ### Other M1 patterns (pending)
 
 | Topic | Ticket | Notes |
 |-------|--------|-------|
-| List pagination | F09 M1-09 | Q8 / R.7 |
-| EarnFlash placement | F09 M1-10 | Q10 / R.9 |
-| Compact long pages | F09 M1-11 | Q11 / R.10 tactics; Tasks section chips already from M1-07; migrate in M2 |
 | In-content link hover (app-wide) | F09 M1-16 | M1-15 lock exists; Home only — globals still blue/purple |
+| Modal anatomy | F09 M1-12 | |
+| Enforcement | F09 M1-13 | Q6 |
 
 Pilot surface for primitives: **Home** (F09 M1-05 + M1-15). App shell: flora.exe + underline chrome-tabs + 1100px.
 
-**Migration debt (do not invent new dialects):** Tasks / Progress / Rewards use `ChromeTab`. **Jobs, Applications, Interviews** still use legacy `.tabs` / `.tab.on` blue — migrate to `ChromeTab` + **containerized title → tabs → filter chips → content** in the **M2** surface wave.
+**Migration debt (do not invent new dialects):** Tasks / Progress / Rewards use `ChromeTab`. **Jobs, Applications, Interviews** still use legacy `.tabs` / `.tab.on` blue — migrate to `ChromeTab` + **containerized title → tabs → filter chips → content** in the **M2** surface wave. Jobs `.pager` jump select → shared `Pager` (no select).
 
 ## Banner patterns
 
@@ -180,7 +217,9 @@ Two mint status banners. Pick one; don't invent a third.
 | **Transient flash** | [`EarnFlash`](../apps/web/src/features/completion/EarnFlash.tsx) | Immediate feedback after a points-earning action | Auto-hides after ~4s; × also dismisses | None |
 | **One-time notice** | [`OneTimeNotice`](../apps/web/src/features/notices/OneTimeNotice.tsx) | A result the user should see once per event | × hides for the current view | Marked seen in `localStorage` under a caller-supplied key **as soon as it is shown** |
 
-Visual base: mint border/background. Moving the Jobs ranking banner onto `OneTimeNotice` is F09 R.6 (M2). Viewport placement for `EarnFlash` is F09 R.9 / Q10 (M1).
+Visual base: mint border/background. Moving the Jobs ranking banner onto `OneTimeNotice` is F09 R.6 (M2).
+
+**Placement (M1-10):** `EarnFlash` near the earning control (viewport toast fallback). `OneTimeNotice` stays section-top — different job.
 
 ## Interim decisions (F08 M5) — superseded
 
@@ -207,6 +246,9 @@ The 2026-10-13 F08 M5 interim choices (tinted purple primary, blue toggles, flat
 | Stacked list regions | Many open 28rem clamps | **Section chips → one well**; counts match active tab (M1-07) |
 | Unequal density | Equal peer cards for short control + tall list | **Mini above larger well** (M1-07); Progress page layout in M2 |
 | Chip rows | Nowrap + overflow-x | **Wrap** (M1-08) |
+| Long lists | Unpaginated · load more · Jobs jump select | **Bottom `Pager`** (Prev / n/pages / Next), size 25; no select (M1-09) |
+| EarnFlash | Page-top only | **Near control**; toast fallback (M1-10) |
+| Long pages (Tasks) | Many open sections | **Chips → clamp → pager** (+ density / sticky only if needed) (M1-11) |
 | Heatmap | Navy peak | **Vivid rose soft peak** |
 | Shell | 960px | **1100px** |
 | Fonts | JetBrains + DM Sans | **IBM Plex Mono + Sans** (roles) |
@@ -221,6 +263,8 @@ Run before marking any UI ticket done:
 - [ ] Peer dual columns use fixed 28rem bodies with in-panel scroll; stacked list regions use section chips → one well when applicable
 - [ ] Unequal-density regions stack mini above large (not equal peer cards for short controls)
 - [ ] Filter chips wrap; dual columns stack at 640px
+- [ ] Long lists use bottom `Pager` (no jump/size select); EarnFlash near control (toast fallback); OneTimeNotice section-top
+- [ ] Long pages follow chips → clamp → pager before density/sticky compose
 - [ ] Only tokens / documented roles for color, radius and shadow
 - [ ] Dialogs use `ModalLayer`
 - [ ] Reused existing components where they fit (listed in the ticket)

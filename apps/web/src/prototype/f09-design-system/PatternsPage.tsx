@@ -1,13 +1,12 @@
 /**
- * F09 M1-09 + M1-10 + M1-11 · Parallel pattern exploration.
+ * F09 M1-09 + M1-10 + M1-11 · Parallel pattern exploration (LOCKED 2026-10-15).
  *
  * Surfaces (PrototypeSwitcher ?variant=):
- *   A — List pagination (Q8 / R.7)
- *   B — EarnFlash placement (Q10 / R.9)
- *   C — Compact long pages (Q11 / R.10)
+ *   A — List pagination (Q8 / R.7) — bottom Pager size 25; no select
+ *   B — EarnFlash placement (Q10 / R.9) — near control; toast fallback
+ *   C — Compact long pages (Q11 / R.10) — chips → clamp → pager …
  *
- * Per-surface approach axis: ?page= · ?flash= · ?compact=
- * Recommendations are labeled in the rule card; lock after judgment.
+ * Per-surface approach axis: ?page= · ?flash= · ?compact= (contrast retained)
  */
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -96,28 +95,27 @@ function RuleCard({ surface }: { surface: string }) {
     <aside className="f09p-rule card">
       {surface === "A" && (
         <>
-          <h2 className="f09p-rule-title">M1-09 · Recommendation</h2>
+          <h2 className="f09p-rule-title">M1-09 · Locked</h2>
           <p className="f09p-prose">
-            <strong>Default:</strong> classic <em>Prev / page / Next</em> under the
-            list (or inside a clamped well), page size <strong>25</strong>. Optional
-            duplicate pager above when the well is tall. Reject infinite scroll / “load
-            more” as the system default.
+            Shared bottom <strong>Pager</strong>: Prev · <em>page / pages</em> · Next;
+            size <strong>25</strong>. Optional top duplicate when the well is tall.
+            <strong> No page-jump select</strong> (Jobs debt) and no page-size
+            selector. Reject load-more as default.
           </p>
           <p className="f09p-prose">
-            <strong>Special case:</strong> calendar-anchored time series (Past work
-            completions) may use a <em>day / 7-day window</em> instead of numbered
-            pages — document as Progress-only, not the general list rule.
+            <strong>Special case:</strong> Past work day / 7-day window —
+            Progress-only.
           </p>
           <p className="f09p-prose muted">
-            Migrate targets later: completions diary, Jobs lists if unpaginated,
-            any long board inside a 28rem well (pairs with M1-07).
+            Migrate: completions diary; Jobs `.pager` → shared Pager; boards in
+            28rem wells.
           </p>
           <ParamRow name="page" label="Approach" options={PAGE_OPTS} />
         </>
       )}
       {surface === "B" && (
         <>
-          <h2 className="f09p-rule-title">M1-10 · Recommendation</h2>
+          <h2 className="f09p-rule-title">M1-10 · Locked</h2>
           <p className="f09p-prose">
             <strong>EarnFlash:</strong> render <em>near the control that earned</em>{" "}
             (inline under the row / action cluster, or a small portal anchored to that
@@ -139,7 +137,7 @@ function RuleCard({ surface }: { surface: string }) {
       )}
       {surface === "C" && (
         <>
-          <h2 className="f09p-rule-title">M1-11 · Recommendation</h2>
+          <h2 className="f09p-rule-title">M1-11 · Locked</h2>
           <p className="f09p-prose">
             Ordered tactics for long scroll pages (Tasks first, M2 apply):
           </p>
@@ -559,8 +557,8 @@ export default function PatternsPage() {
       <div className="f09p-banner" role="status">
         <strong>Experimental prototype</strong>
         {" · "}
-        F09 M1-09 / M1-10 / M1-11. Flip surfaces A–C; each rule card states the
-        recommendation. Lock per ticket after judgment.
+        F09 M1-09 / M1-10 / M1-11 locked. Bottom Pager (no select) · EarnFlash
+        near control · compact chips→clamp→pager. Contrast axes retained.
       </div>
       <div className="f09p-layout">
         <RuleCard surface={variant} />
