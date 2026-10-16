@@ -25,7 +25,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M1-03](./tickets/M1/M1-03-custom-habits-api.md) | Custom habits HTTP API + today payload | build | Draft | Blocked by M1-02 |
+| [M1-03](./tickets/M1/M1-03-custom-habits-api.md) | Custom habits HTTP API + today payload | build | Draft | Ready to start (M1-02 Done) |
 
 <details>
 <summary>Done (2)</summary>
