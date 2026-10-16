@@ -2,7 +2,7 @@
 
 **ID:** F08 (folder `docs/features/F08-accomplishment-rewards/`; tickets on the [board](./board.md))
 **Status:** Active
-**Last updated:** 2026-10-14
+**Last updated:** 2026-10-15
 
 ## Problem
 
@@ -27,7 +27,7 @@ Shipped code is never a source. Where the plan and the shipped code disagree, th
 
 ## Milestones
 
-Order for the remaining milestones: **M3, M6** (after M5, M7, M8; user 2026-10-12 and 2026-10-13).
+Order for the remaining milestones: **M6, M3** (user 2026-10-15; was M3 then M6 after M5 / M7 / M8).
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
@@ -279,13 +279,13 @@ Tags: **Established** means stated or confirmed by the user, and only these may 
 
 ### M6: Board departures log (Not started)
 
-- **R6.1** (Established) A record view of postings that left the board or were removed as duplicates. This is separate from R0.2's deletion of open application tasks.
-- **R6.2** (Established) Fields: title, company, location, and whether the posting had an open application task when it left.
-- **R6.3** (Established) The log lives on the Status page and is designed for low scroll cost, for example per-day or per-week sections.
+- **R6.1** (Established; write paths 2026-10-15) A record view of postings that **left the board** or were **removed as duplicates**. This is separate from R0.2's deletion of open application tasks. **In scope write paths:** `reconcileRemovedFromBoard` deletes (board-gone) and duplicate-merge deletes of the Simplify row. **Out of scope:** filter rejects (`dropUntrackedRejected`), hide-from-board / mismatch, and applied+ postings retained with `removed_from_board_at` (those stay out of the log per R6.6).
+- **R6.2** (Established; fields 2026-10-15) Each row shows: title, company, location, **reason** (`Left board` / `Duplicate`), and whether an open application task was **actually removed** in that event. Company uses the same display rule as Jobs/Tasks (Simplify → `department` when set). Rows that removed a task also show the copy **task removed**.
+- **R6.3** (Established; refined 2026-10-15) The log lives on the Status page and is designed for low scroll cost: **per-day sections** (R6.7), not a flat endless list.
 - **R6.4** (Established) Its purpose is to explain why an application task disappeared, complementing the urgency cues.
 - **R6.5** (Established) Records start when M6 ships; past departures were never recorded.
-- **R6.6** (Established) The log shows every departed posting except those already applied to. The subset that had an open application task is easy to pick out, by filter or highlight.
-- **R6.7** (Established 2026-10-13) Entries are kept for 14 days, in per-day sections, with today expanded by default.
+- **R6.6** (Established; pick-out 2026-10-15) The log shows every in-scope departure except postings **already applied to** (applied+). **Task removed** is true only when an open application task was deleted in that event — not when a duplicate merge *repoints* the task to the surviving posting. Those rows are **highlighted** and labeled **task removed**; an optional filter shows only them. Each day section shows a count of how many that day's departures had a task removed (**omit the count when 0**).
+- **R6.7** (Established 2026-10-13; retention revised 2026-10-15) Entries are kept through the **local calendar day they were recorded and until the next local day**, then purged. Grouped in **per-day sections**, with **today expanded** by default. **Timezone** for “today” / section keys is the **browser timezone** (same spirit as Progress). **Do not purge on read** of the Status/log API; purge on a **day boundary** (e.g. next ingest or a day-rollover cleanup), so a row does not vanish mid-session just because the client opened the page.
 
 ### M7: Cat Cake Collection v1 (Done)
 
@@ -464,7 +464,8 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| Departed postings with no application are deleted outright; duplicate merges delete the Simplify row. No record is kept | [`ingest.ts` L141–169](../../../apps/api/src/ingest.ts), [`mergeDuplicatePostings.ts`](../../../apps/api/src/mergeDuplicatePostings.ts) | Unspecified | M6 writes a record before deletion |
+| Departed postings with no application are deleted outright; duplicate merges delete the Simplify row. No departure log is kept | [`ingest.ts` L141–169](../../../apps/api/src/ingest.ts), [`mergeDuplicatePostings.ts`](../../../apps/api/src/mergeDuplicatePostings.ts) | Conflicts R6.1–R6.7 | M6 writes a snapshot before delete (board-gone + duplicate only); filter rejects stay unlogged |
+| Status page has no board-departures section | [`Status.tsx`](../../../apps/web/src/pages/Status.tsx) | Conflicts R6.3 | |
 
 ### M7
 
@@ -538,7 +539,7 @@ Nothing that depends on an open question may be implemented.
 | Q13 | When should points reverse? | Applications never (they only move forward). Interview step reopen: no reverse and no re-grant. Weekly bonus: awarded at week close, so it never needs reversing. LC decrements reverse (verified) (2026-10-13) | R4.10–R4.12, R5.9 |
 | Q14 | Negative balance | Allowed; clamping removed in M7 (2026-10-13) | R7.2, R7.3 |
 | Q16 | Recurring instances stay overdue? | Yes; each instance has its own due date (2026-10-13) | R3.6 |
-| Q17 | Departures log retention | 14 days, per-day sections, today expanded (2026-10-13) | R6.7 |
+| Q17 | Departures log retention | First: 14 days (2026-10-13). **Revised 2026-10-15:** keep through the recorded local day until the next local day; per-day sections; today expanded; browser TZ; no purge-on-read | R6.7 |
 | Q18 | Rewards scope | M7 is Cat Cake Collection v1; later updates go to a future feature (2026-10-13) | R7.5 |
 | Q19 | Self-care shop | Dropped; gacha only (2026-10-13) | R7.1 |
 | Q20 | Currency name | **seeds** / **seed** (lowercase) in the UI; one shared display-name constant so it can be renamed later without a copy hunt; storage may stay `points_*` (2026-10-13; casing 2026-10-14) | R7.10 |
@@ -620,7 +621,8 @@ Nothing that depends on an open question may be implemented.
 - **2026-10-13:** Points never reverse for applications or interview steps; those items never earn twice. Editing reflection minutes adjusts points. Mark applied from Jobs must match Tasks (M4-01).
 - **2026-10-13:** M5 covers weekly goals, streaks and achievements, and points rule changes. M8 (after M7) redesigns Progress and adds LC difficulty tiers. Order: M5, M7, M8, M3, M6.
 - **2026-10-13:** Prototype deletion may be batched before F08 closes.
-- **2026-10-13:** To-do-backed applications can't be edited as applications (R2.21). Departures are kept 14 days (R6.7).
+- **2026-10-13:** To-do-backed applications can't be edited as applications (R2.21). Departures retention first set to 14 days (R6.7); revised 2026-10-15.
+- **2026-10-15:** M6 before M3. Board departures lock: log **board-gone** and **duplicate** deletes only (not filter rejects), each with a reason label; exclude applied+; **task removed** only when an open application task was actually deleted (duplicate *repoints* do not count); highlight + optional filter + row copy **task removed**; per-day count of task-removed departures (hide when 0); company display matches Jobs/Tasks (Simplify `department`); browser TZ; retention until the **next local day**; **no purge-on-read** (purge on day boundary).
 - **2026-10-13:** LeetCode types are named weekly and misc. Difficulty tiers are built in M5 and polished in M8. Days store only an aggregate count; past solves count as medium.
 - **2026-10-13:** Ledger fixes ticketed under M4, worked with M5: category totals double-subtract reversals (M4-02); re-completing a reopened task earns by the actual-time change (M4-03). Duplicate merges must move reflections (M2-01).
 - **2026-10-13:** The points breakdown splits tasks by task category (R5.21, M5-03).
