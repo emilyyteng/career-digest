@@ -26,6 +26,14 @@ The end-to-end behavior this ticket makes work, from the user's perspective. For
 
 - [ ] …
 
+## Edge cases
+
+Behaviors at boundaries and failure modes the implementation must handle (or explicitly defer). Bullet list.
+
+## Tests
+
+- [ ] … (unit / integration / manual — what each covers)
+
 ## Design questions (prototype tickets only)
 
 The only axes prototype variants may differ on. Every variant must satisfy every locked requirement.
