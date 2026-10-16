@@ -46,6 +46,7 @@ No open tickets.
 | [M1-09](./tickets/M1/M1-09-pattern-list-pagination.md) | Pattern: list pagination (Q8/R.7) | `b700154` |
 | [M1-10](./tickets/M1/M1-10-pattern-earnflash-placement.md) | Pattern: EarnFlash placement (Q10/R.9) | `e25943c` |
 | [M1-11](./tickets/M1/M1-11-pattern-compact-long-pages.md) | Pattern: compact long-page tactics (Q11/R.10) | `62ed23a` |
+| [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) | Apply in-content link hover app-wide | `fd60056` |
 
 </details>
 
@@ -53,7 +54,7 @@ No open tickets.
 
 **Milestone status:** Not started
 
-Tickets after M1. Expected: Tasks compaction (R.10 / M1-11 tactics); **Jobs / Applications / Interviews → `ChromeTab` + containerized title→tabs→squared filter chips** + shared `Pager` (drop jump select); Jobs banner → `OneTimeNotice` (R.6); Progress apply M1-07 height + EarnFlash near-control (M1-10) + This week composition; apply M1-16 links if not done in M1.
+Tickets after M1. Expected: Tasks compaction (R.10 / M1-11 tactics); **Jobs / Applications / Interviews → `ChromeTab` + containerized title→tabs→squared filter chips** + shared `Pager` (drop jump select); Jobs banner → `OneTimeNotice` (R.6); Progress apply M1-07 height + EarnFlash near-control (M1-10) + This week composition.
 
 <details>
 <summary>Done (0)</summary>
