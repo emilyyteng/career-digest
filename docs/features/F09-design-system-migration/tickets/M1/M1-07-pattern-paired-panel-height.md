@@ -8,34 +8,42 @@
 
 ## What to build
 
-Lock the **vertical height policy** for multi-column layouts: sibling panels share a defined height; extra content scrolls **inside** the panel so columns end on one baseline. Progress Past work is the stress case. Single-column pages: decide explicitly whether a page min-height applies.
+Lock the **vertical height policy** for multi-column and stacked list layouts: when a panel holds a long list, content scrolls **inside** a clamped body; self-contained widgets (calendar) stay fully visible at natural height. Progress Past work is the dual-column stress case; Tasks + This week stacked clamps are the page-scroll stress case. Single-column pages: decide explicitly whether a page min-height applies.
+
+## User lean (2026-10-15) — awaiting lock
+
+- Prefer a **fixed 28rem clamp** for scrollable list panels (ledger, task category wells).
+- Self-contained widgets (calendar) stay at **natural height** so the whole calendar stays visible — no viewport-track equal-height that clips the grid or forces page/column scroll over it.
+- Dual-column Past work: lean **asymmetric** (calendar natural / ledger clamp), not shared viewport track.
+- In-panel scrolling for long lists (ledger) is wanted.
+- **Stacked clamps** are a separate problem: Tasks categories + Progress This week cards all open at 28rem recreate a long page scroll. Surfaces **C** (problem) and **D** (strategies: accordion · section chips · shorter clamps) explore that; overlaps M1-09 pagination inside a well, but the stack itself is height/page composition (M1-07 / M1-11).
 
 ## Proposed approach (for judgment)
 
-- Dual-column rows use a **shared track height** from the viewport: roughly `calc(100dvh − chrome)` with a sensible floor.
-- Each panel is a flex column; the body is `flex: 1; min-height: 0; overflow: auto`.
-- **Both** columns may scroll independently when content exceeds the track.
-- When columns **stack**, turn equal-height **off** (natural document flow).
-- Single-column pages: **no** forced page min-height. Tasks’ `max-height: 28rem` section clamp is a **legacy compaction** tactic (reconcile under M1-11), not the dual-column standard.
+- List panels: `max-height: 28rem; overflow: auto` (not a shared `100dvh` track).
+- Calendar / day chrome: natural height; do not put it in the same equal-height track as the ledger.
+- When columns **stack**, keep natural flow; clamp only the list body.
+- Single-column pages: **no** forced page min-height.
+- Stacked wells: prefer **one primary scroll well** per region (section chips or accordion) over many open 28rem clamps; paginate inside the well under M1-09.
 
-**Alternatives in the prototype:** current independent grow · stretch-to-taller sibling (cap scroll) · fixed 28rem clamp per panel.
+**Contrast in the prototype:** current independent grow · viewport track (clips calendar) · both-panels 28rem clamp · asymmetric lean.
 
 ## Acceptance criteria
 
 - [ ] Q16 paired-panel height answered in the F09 spec Resolved section (or remaining Q16 narrowed)
-- [ ] `docs/design-system.md` Patterns states: shared height source, overflow-inside rule, breakpoints when columns stack, and whether single-column pages use a min-height
-- [ ] Progress Past work cited as the primary stress case; Tasks `max-height: 28rem` clamp noted as legacy alternate to reconcile or supersede
+- [ ] `docs/design-system.md` Patterns states: height source (28rem list clamp vs natural widgets), overflow-inside rule, breakpoints when columns stack, and whether single-column pages use a min-height
+- [ ] Progress Past work cited as the primary dual-column stress case; Tasks / This week stacked clamps cited for page-scroll risk
 - [ ] Prototype used: URL + verdict recorded
 - [ ] No requirement to migrate Progress in this ticket (apply in M2 or a later apply ticket)
 - [ ] `npm run check` passes (docs-only OK)
 
 ## Design questions (prototype tickets only)
 
-1. Height comes from viewport track vs stretch-to-taller vs fixed clamp?
-2. Both columns always scroll independently inside the shared track?
-3. Stacked (single-column) breakpoint: equal-height rule off?
+1. List clamp 28rem + calendar natural (asymmetric) vs shared viewport track vs both clamped?
+2. Stacked wells (Tasks / This week): accordion · section chips · shorter clamps · leave all open?
+3. Stacked (single-column) breakpoint: equal-height rule off? (lean: yes — never used with asymmetric)
 
-Prototype URL: `/prototype/f09/layout` (shared with M1-08; `?height=` · `?frame=`)
+Prototype URL: `/prototype/f09/layout` (shared with M1-08; `?height=` · `?stack=` · `?frame=`; surfaces A–D)
 
 ## Reuse notes
 

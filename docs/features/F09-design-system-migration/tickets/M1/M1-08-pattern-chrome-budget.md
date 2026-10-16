@@ -10,6 +10,11 @@
 
 Lock remaining layout/chrome-budget rules now that shell width is 1100px: wrap vs scroll for chip/tab rows; two-column minimums / when to stack; gap scale; breakpoint scale. Record in `docs/design-system.md`. Paired **heights** are owned by M1-07.
 
+## User lean (2026-10-15) — awaiting lock
+
+- With a fixed shell width, **chips wrap**. Agreed direction (surface B).
+- Contrast still available: nowrap + horizontal overflow (current Jobs / Past work).
+
 ## Proposed approach (for judgment)
 
 - Shell stays **1100px**.
@@ -37,7 +42,7 @@ Stress cases: Past work compose + columns; Jobs many location chips.
 2. Dual-column stack breakpoint: 640 (proposed, aligned with compose wrap) vs keep 900?
 3. Breakpoint scale: collapse to 640 / 860 / 1100?
 
-Prototype URL: `/prototype/f09/layout` (`?width=` · `?frame=`)
+Prototype URL: `/prototype/f09/layout` (`?width=` · `?frame=`; surface B for chips; A shares frame)
 
 ## Reuse notes
 

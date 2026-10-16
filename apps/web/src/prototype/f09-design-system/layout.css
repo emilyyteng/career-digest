@@ -1,7 +1,9 @@
-/* F09 M1-07 / M1-08 · layout height + width stress prototype */
+/* F09 M1-07 / M1-08 · layout height + width + stacked-well stress prototype */
 
 .f09l-page {
   --f09l-track: min(32rem, calc(100dvh - 14rem));
+  --f09l-clamp: 28rem;
+  --f09l-clamp-sm: 16rem;
   padding-bottom: 5rem;
 }
 
@@ -54,6 +56,12 @@
   line-height: 1.45;
 }
 
+.f09l-prose.muted,
+.f09l-note,
+.f09l-caption {
+  color: var(--text-muted);
+}
+
 .f09l-prose code {
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -100,6 +108,13 @@
   background: var(--tab-active-bg);
   color: var(--ink);
   font-weight: 600;
+}
+
+.f09l-opt-count {
+  margin-left: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  opacity: 0.75;
 }
 
 .f09l-preview {
@@ -165,12 +180,10 @@
   max-width: 100%;
 }
 
-/* proposed wrap */
 .f09l-chips-wrap {
   flex-wrap: wrap;
 }
 
-/* current / scroll: nowrap + overflow */
 .f09l-chips-current,
 .f09l-chips-scroll {
   flex-wrap: nowrap;
@@ -201,39 +214,20 @@
   min-width: 0;
 }
 
-/* Width strategies: column templates + stack */
-.f09l-w-current {
-  grid-template-columns: minmax(280px, 1fr) minmax(0, 1.25fr);
+.f09l-w-current,
+.f09l-w-wrap {
+  grid-template-columns: minmax(16rem, 1fr) minmax(0, 1.2fr);
   align-items: start;
 }
 
-.f09l-w-wrap {
-  grid-template-columns: minmax(16rem, 1fr) minmax(0, 1.2fr);
-}
-
-.f09l-w-scroll {
-  grid-template-columns: minmax(280px, 1fr) minmax(0, 1.25fr);
-}
-
-/* Stack when frame is narrow — driven by data-frame on ancestor via container queries-ish:
-   we use max-width on .f09l-frame and media is wrong; use :has / data attributes on frame */
-
 .f09l-frame[data-frame="560"] .f09l-w-wrap,
 .f09l-frame[data-frame="560"] .f09l-w-current,
-.f09l-frame[data-frame="560"] .f09l-w-scroll,
 .f09l-frame[data-frame="720"] .f09l-w-wrap {
   grid-template-columns: 1fr;
 }
 
-/* current stacks later — only at 560 in this fake frame set for contrast at 720 */
-.f09l-frame[data-frame="720"] .f09l-w-current,
-.f09l-frame[data-frame="720"] .f09l-w-scroll {
+.f09l-frame[data-frame="720"] .f09l-w-current {
   grid-template-columns: minmax(12rem, 1fr) minmax(0, 1.25fr);
-}
-
-.f09l-frame[data-frame="560"] .f09l-w-current,
-.f09l-frame[data-frame="560"] .f09l-w-scroll {
-  grid-template-columns: 1fr;
 }
 
 /* Height: current — independent grow */
@@ -245,7 +239,7 @@
   overflow: visible;
 }
 
-/* Proposed: viewport track, both scroll */
+/* Viewport track — clips calendar; contrast only */
 .f09l-h-viewport {
   align-items: stretch;
   height: var(--f09l-track);
@@ -266,7 +260,6 @@
   overflow: auto;
 }
 
-/* When stacked, turn equal-height off */
 .f09l-frame[data-frame="560"] .f09l-h-viewport,
 .f09l-frame[data-frame="720"] .f09l-w-wrap.f09l-h-viewport {
   height: auto;
@@ -286,28 +279,37 @@
   flex: none;
 }
 
-/* Alt: stretch to taller — grid stretch without fixed height; short side grows */
-.f09l-h-stretch {
-  align-items: stretch;
+/* Preferred: both panels use 28rem body clamp (calendar still clipped if tall) */
+.f09l-h-clamp {
+  align-items: start;
 }
 
-.f09l-h-stretch .f09l-panel {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+/* Asymmetric lean: calendar natural; ledger clamps */
+.f09l-h-asymmetric,
+.f09l-h-clamp {
+  align-items: start;
 }
 
-.f09l-h-stretch .f09l-panel-body {
-  flex: 1 1 auto;
-  min-height: 0;
+/* Body modifiers (applied per Panel) */
+.f09l-panel-body.is-natural {
+  max-height: none;
+  overflow: visible;
+}
+
+.f09l-panel-body.is-clamp {
+  max-height: var(--f09l-clamp);
   overflow: auto;
-  max-height: var(--f09l-track);
 }
 
-/* Alt: Tasks-like clamp */
-.f09l-h-clamp .f09l-panel-body {
-  max-height: 28rem;
+.f09l-panel-body.is-clamp-sm {
+  max-height: var(--f09l-clamp-sm);
   overflow: auto;
+}
+
+.f09l-panel-body.is-viewport-scroll {
+  max-height: none;
+  overflow: auto;
+  min-height: 0;
 }
 
 .f09l-panel {
@@ -390,6 +392,60 @@
   margin: 0.15rem 0 0;
   font-size: 0.78rem;
   line-height: 1.4;
+}
+
+/* —— Stacked wells (Tasks / This week) —— */
+.f09l-stack-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.f09l-week-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.f09l-frame[data-frame="560"] .f09l-week-grid,
+.f09l-frame[data-frame="720"] .f09l-week-grid {
+  grid-template-columns: 1fr;
+}
+
+.f09l-acc {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.f09l-acc + .f09l-acc {
+  margin-top: 0.45rem;
+}
+
+.f09l-acc-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.f09l-acc-head:hover {
+  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+}
+
+.f09l-acc .f09l-panel-body {
+  padding: 0 0.7rem 0.65rem;
+  border-top: 1px solid var(--border);
 }
 
 .f09l-page .prototype-switcher {
