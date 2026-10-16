@@ -86,15 +86,14 @@ Done (16)
 
 **Milestone status:** In progress
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
-| [M6-03](./tickets/M6/M6-03-status-departures-ui.md) | Status page departures UI | build | Ready | |
+No open tickets.
 
 <details>
-<summary>Done (2)</summary>
+<summary>Done (3)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M6-03](./tickets/M6/M6-03-status-departures-ui.md) | Status page departures UI | |
 | [M6-02](./tickets/M6/M6-02-departures-api.md) | Departure log API | `ec258aa` |
 | [M6-01](./tickets/M6/M6-01-departures-schema-and-writes.md) | Departure log schema and write paths | `0326405` |
 

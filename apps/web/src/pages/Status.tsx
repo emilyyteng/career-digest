@@ -8,6 +8,7 @@ import {
   type OpsStatus,
 } from "../api";
 import { demoGatedTitle, useDemoMode } from "../demoMode";
+import BoardDeparturesLog from "../features/ops/BoardDeparturesLog";
 import { formatStepWhen } from "../formatDate";
 
 function StatusBadge({ tone, children }: { tone: string; children: string }) {
@@ -379,6 +380,8 @@ export default function Status() {
             </button>
           </div>
         </article>
+
+        <BoardDeparturesLog />
 
         <article className="card ops-card ops-card-wide">
           <h3 className="ops-card-heading">Empty descriptions</h3>

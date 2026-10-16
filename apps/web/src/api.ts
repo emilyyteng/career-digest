@@ -210,6 +210,36 @@ export type OpsStatus = {
 
 export const getOpsStatus = () => parse<OpsStatus>(api("/api/ops"));
 
+export type BoardDepartureReason = "left_board" | "duplicate";
+
+export type BoardDepartureRow = {
+  id: string;
+  title: string;
+  company: string;
+  location: string | null;
+  reason: BoardDepartureReason;
+  reasonLabel: string;
+  taskRemoved: boolean;
+  departedAt: string;
+};
+
+export type BoardDepartureDay = {
+  date: string;
+  taskRemovedCount: number;
+  rows: BoardDepartureRow[];
+};
+
+export type BoardDeparturesSnapshot = {
+  tz: string;
+  localDate: string;
+  days: BoardDepartureDay[];
+};
+
+export const getBoardDepartures = (tz: string) => {
+  const params = new URLSearchParams({ tz });
+  return parse<BoardDeparturesSnapshot>(api(`/api/ops/board-departures?${params}`));
+};
+
 export const startBackup = async () => {
   const response = await api("/api/backup", { method: "POST" });
   const body = (await response.json().catch(() => ({}))) as OpsStatus["backupJob"] & {
