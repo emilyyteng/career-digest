@@ -41,4 +41,4 @@ Expose the departure log for the Status page.
 - Retention filter: local today + yesterday in `tz` (no purge on read).
 - Labels: `Left board` / `Duplicate`.
 - Tests: `boardDepartures.api.test.ts` (4). `npm run check` green (356 tests).
-- Commit: (this commit).
+- Commit: `ec258aa`.

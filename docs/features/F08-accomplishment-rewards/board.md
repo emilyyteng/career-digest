@@ -95,7 +95,7 @@ Done (16)
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M6-02](./tickets/M6/M6-02-departures-api.md) | Departure log API | |
+| [M6-02](./tickets/M6/M6-02-departures-api.md) | Departure log API | `ec258aa` |
 | [M6-01](./tickets/M6/M6-01-departures-schema-and-writes.md) | Departure log schema and write paths | `0326405` |
 
 </details>
