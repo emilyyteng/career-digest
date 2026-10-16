@@ -14,9 +14,11 @@ Lock the **vertical height policy** for multi-column and stacked list layouts: w
 
 - Prefer a **fixed 28rem clamp** for scrollable list panels (ledger, task category wells).
 - Self-contained widgets (calendar) stay at **natural height** so the whole calendar stays visible — no viewport-track equal-height that clips the grid or forces page/column scroll over it.
-- Dual-column Past work: lean **asymmetric** (calendar natural / ledger clamp), not shared viewport track.
+- Dual-column Past work: lean **asymmetric** (calendar natural / ledger clamp), not shared viewport track. “Both fixed 28rem” is contrast only (wastes space under calendar).
 - In-panel scrolling for long lists (ledger) is wanted.
-- **Stacked clamps** are a separate problem: Tasks categories + Progress This week cards all open at 28rem recreate a long page scroll. Surfaces **C** (problem) and **D** (strategies: accordion · section chips · shorter clamps) explore that; overlaps M1-09 pagination inside a well, but the stack itself is height/page composition (M1-07 / M1-11).
+- **Tasks stack (lean):** category **section chips → one body** (not multi-select accordion). Chip counts can show open/done per category across both Open and Completed tabs. Surface **D**.
+- **Unequal columns / mini-containers (guidance, surface E):** when one well is a short control (LeetCode) and the other is a tall list (weekly apps), do not treat them as equal peer cards. Prefer demoting the short side to a **mini-container** (instrument strip) above a full-width clamped list, or clamp only the tall side. Equal 28rem clamps leave dead air — reject. Stacked weekly+misc +/- (drop the type selector) is a possible **M2 content redesign**, not M1 height CSS alone.
+- Surface **C** is a static problem mock (stacked task clamps + unequal This week columns); strategy toggles live on D/E only.
 
 ## Proposed approach (for judgment)
 
@@ -39,11 +41,12 @@ Lock the **vertical height policy** for multi-column and stacked list layouts: w
 
 ## Design questions (prototype tickets only)
 
-1. List clamp 28rem + calendar natural (asymmetric) vs shared viewport track vs both clamped?
-2. Stacked wells (Tasks / This week): accordion · section chips · shorter clamps · leave all open?
-3. Stacked (single-column) breakpoint: equal-height rule off? (lean: yes — never used with asymmetric)
+1. List clamp 28rem + calendar natural (asymmetric) vs shared viewport track vs both clamped? *(lean: asymmetric)*
+2. Tasks stacked wells: section chips · accordion · shorter clamps · leave all open? *(lean: section chips)*
+3. Unequal-density peers (This week LC vs weekly apps): mini-strip + tall well · asymmetric clamp · M2 dual +/- ?
+4. Stacked (single-column) breakpoint: equal-height rule off? (lean: yes — never used with asymmetric)
 
-Prototype URL: `/prototype/f09/layout` (shared with M1-08; `?height=` · `?stack=` · `?frame=`; surfaces A–D)
+Prototype URL: `/prototype/f09/layout` (shared with M1-08; `?height=` · `?stack=` · `?pair=` · `?frame=`; surfaces A–E)
 
 ## Reuse notes
 

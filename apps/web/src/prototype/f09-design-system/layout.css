@@ -301,6 +301,13 @@
   overflow: auto;
 }
 
+/* Fixed height (not max) — makes short content visibly waste space */
+.f09l-panel-body.is-clamp-fixed {
+  height: var(--f09l-clamp);
+  max-height: var(--f09l-clamp);
+  overflow: auto;
+}
+
 .f09l-panel-body.is-clamp-sm {
   max-height: var(--f09l-clamp-sm);
   overflow: auto;
@@ -310,6 +317,77 @@
   max-height: none;
   overflow: auto;
   min-height: 0;
+}
+
+.f09l-panel-short {
+  align-self: start;
+}
+
+.f09l-opt-sep {
+  margin: 0 0.15rem;
+  opacity: 0.45;
+}
+
+.f09l-day-extra {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.f09l-lc-compact,
+.f09l-lc-dual {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.f09l-lc-tiers,
+.f09l-lc-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.f09l-lc-kind {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  min-width: 3.5rem;
+  color: var(--ink);
+}
+
+.f09l-lc-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.f09l-lc-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  min-width: 3.2rem;
+  text-align: center;
+}
+
+.f09l-mini {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--surface) 85%, var(--bg));
+}
+
+.f09l-mini-dual {
+  gap: 0.55rem;
+}
+
+.f09l-mini-label {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-subtle);
 }
 
 .f09l-panel {
