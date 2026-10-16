@@ -46,4 +46,4 @@ Persist board departures before the posting row is deleted, so Status can explai
 - Writes: `recordLeftBoardDepartures` before todo cleanup; `recordDuplicateDeparture` before Simplify delete (skips applied+; `task_removed` always false on duplicate).
 - Purge: `purgeExpiredBoardDepartures` at start of `runIngest` and `runMergeDuplicatePostings` (UTC keep today+yesterday); no read path.
 - Tests: `boardDepartures.integration.test.ts` (7). `npm run check` green (352 tests).
-- Commit: (this commit).
+- Commit: `0326405`.
