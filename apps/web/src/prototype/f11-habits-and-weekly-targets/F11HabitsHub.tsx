@@ -1,5 +1,5 @@
 /**
- * F11 M0 hub — Habits strip first (M0-01), then weekly + incrementer (M0-02).
+ * F11 M0 hub — Habits strip (M0-01 Done), weekly + incrementer (M0-02).
  */
 import { Link } from "react-router-dom";
 import { HUB_PATH } from "./F11Shell";
@@ -9,14 +9,15 @@ import "./prototype-f11.css";
 const SURFACES = [
   {
     path: "strip",
-    title: "M0-01 · Habits strip (Home + Progress)",
+    title: "M0-01 · Habits strip (Home + Progress) · Done",
     blurb:
-      "Q11 checkoff vs edit · Q12 today-LC A expand / B Log LC · Q14 archived looks. Cap scenarios + reflection pencil modal.",
+      "Locked: Q11 mark hit-target · Q12 Log LC disclosure · Q14 ghost stamp. Keep as M2 reference.",
   },
   {
-    path: null,
-    title: "M0-02 · Weekly goals + incrementer (next)",
-    blurb: "Blocked until M0-01 verdicts. Progress weekly column, multi-goal ±, Home Targets.",
+    path: "weekly",
+    title: "M0-02 · Weekly goals + incrementer + Home Targets",
+    blurb:
+      "Q13 ± chrome (stepper / field± / field) · Q14 weekly archived look. Cap, pencil vs target stepper, no today-LC / no apps ±.",
   },
 ] as const;
 
@@ -29,22 +30,15 @@ export default function F11HabitsHub() {
       </p>
       <h2>F11 · Habits & weekly targets</h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        Sequence: lock the Habits strip, then weekly column + incrementer. Spec:{" "}
+        M0-01 strip locked. Next: weekly column + incrementer (Q13 / weekly Q14). Spec:{" "}
         <code>docs/features/F11-habits-and-weekly-targets/spec.md</code>.
       </p>
-      {SURFACES.map((s) =>
-        s.path ? (
-          <Link key={s.title} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}`}>
-            <strong>{s.title}</strong>
-            <span className="muted">{s.blurb}</span>
-          </Link>
-        ) : (
-          <div key={s.title} className="prototype-hub-card f11-hub-disabled" aria-disabled="true">
-            <strong>{s.title}</strong>
-            <span className="muted">{s.blurb}</span>
-          </div>
-        ),
-      )}
+      {SURFACES.map((s) => (
+        <Link key={s.path} className="prototype-hub-card" to={`${HUB_PATH}/${s.path}`}>
+          <strong>{s.title}</strong>
+          <span className="muted">{s.blurb}</span>
+        </Link>
+      ))}
     </section>
   );
 }

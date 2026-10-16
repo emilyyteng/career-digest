@@ -598,3 +598,317 @@ button.f11-habit-pill:hover {
 .f11-lane-fieldset legend {
   margin-bottom: 0.35rem;
 }
+
+/* —— M0-02 weekly goals + incrementer —— */
+
+.f11w-page {
+  gap: 0.85rem;
+}
+
+.f11w-strip-standin {
+  padding: 0.65rem 0.85rem;
+}
+
+.f11w-standin-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+}
+
+.f11w-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(14rem, 0.85fr);
+  gap: 0.75rem;
+  align-items: stretch;
+  min-height: 22rem;
+}
+
+@media (max-width: 800px) {
+  .f11w-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.f11w-column,
+.f11w-incrementer,
+.f11w-home-targets {
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 0;
+}
+
+.f11w-column {
+  /* Fixed-height-ish containerization (R.9) — scrolls inside if needed */
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.f11w-column-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.f11w-column-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin-left: auto;
+}
+
+.f11w-column-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: var(--font-display);
+}
+
+.f11w-add {
+  min-width: 2rem;
+  padding-inline: 0.45rem;
+  font-family: var(--font-display);
+}
+
+.f11w-goal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.f11w-goal-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.f11w-goal-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
+.f11w-goal-row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
+}
+
+.f11w-goal-name {
+  font-size: 0.9rem;
+}
+
+.f11w-row-pencil {
+  /* Override strip absolute pencil — sit inline in the weekly row */
+  position: static;
+  display: inline-flex;
+  transform: none;
+  width: 0.9em;
+  height: 0.9em;
+  vertical-align: baseline;
+}
+
+.f11w-fraction,
+.f11w-pace {
+  font-size: 0.8rem;
+}
+
+.f11w-flame {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.f11w-label-target-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
+.f11w-lc-label-hint {
+  font-size: 0.78rem;
+}
+
+.f11w-target-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+}
+
+.f11w-target-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.f11w-target-n,
+.f11w-plus-count {
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+
+.f11w-tiny {
+  min-width: 1.65rem;
+  padding-inline: 0.25rem;
+}
+
+.f11w-goal-bar {
+  height: 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.f11w-goal-bar > span {
+  display: block;
+  height: 100%;
+  background: color-mix(in srgb, var(--domain-tech) 55%, var(--ok));
+}
+
+.f11w-apps-note {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.f11w-inc-hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.f11w-inc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.f11w-inc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.f11w-inc-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.f11w-inc-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.f11w-plus-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.f11w-plus-field {
+  width: 3.25rem;
+  text-align: center;
+}
+
+.f11w-plus-field-only {
+  display: inline-flex;
+}
+
+.f11w-arch-list {
+  gap: 0.45rem;
+}
+
+.f11w-arch-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.f11w-arch-row.is-ghost {
+  opacity: 0.85;
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  border-color: color-mix(in srgb, var(--text-muted) 35%, var(--border));
+}
+
+.f11w-arch-row.is-mute {
+  border-style: dashed;
+  opacity: 0.72;
+  filter: grayscale(0.35);
+}
+
+.f11w-arch-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  padding-right: 0.5rem;
+}
+
+.f11w-target-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.f11w-target-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.f11w-target-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.f11w-target-row strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.f11w-target-meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+}
+
+.f11w-target-day {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}

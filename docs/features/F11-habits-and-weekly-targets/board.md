@@ -8,14 +8,14 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M0-02](./tickets/M0/M0-02-prototype-weekly-goals-incrementer.md) | Prototype weekly goals column + incrementer | prototype | Ready | R0.2; Q13, Q14 weekly · `/prototype/f11/habits/weekly` |
+| [M0-02](./tickets/M0/M0-02-prototype-weekly-goals-incrementer.md) | Prototype weekly goals column + incrementer | prototype | In progress | R0.2; Q13, Q14 weekly · `/prototype/f11/habits/weekly` |
 
 <details>
 <summary>Done (1)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M0-01](./tickets/M0/M0-01-prototype-habits-strip.md) | Prototype Habits strip (Home + Progress) | (this commit) |
+| [M0-01](./tickets/M0/M0-01-prototype-habits-strip.md) | Prototype Habits strip (Home + Progress) | fe2e9ec |
 
 </details>
 

@@ -78,6 +78,10 @@ const proto = import.meta.env.DEV
         () =>
           import("./prototype/f11-habits-and-weekly-targets/HabitsStripPrototypePage"),
       ),
+      F11HabitsWeekly: lazy(
+        () =>
+          import("./prototype/f11-habits-and-weekly-targets/WeeklyGoalsPrototypePage"),
+      ),
     }
   : null;
 
@@ -272,6 +276,10 @@ export default function App() {
                 <Route
                   path="/prototype/f11/habits/strip"
                   element={<ProtoPage page={proto.F11HabitsStrip} />}
+                />
+                <Route
+                  path="/prototype/f11/habits/weekly"
+                  element={<ProtoPage page={proto.F11HabitsWeekly} />}
                 />
               </>
             ) : (

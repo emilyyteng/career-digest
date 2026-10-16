@@ -82,4 +82,4 @@ Built with: `PrototypeSwitcher`, `ModalLayer` + `ModalHeader`/`Body`/`Footer`, `
 
 Locked chrome extras: flipped pencil on Add reflection (icon right of label); edit modal Cancel · Archive (danger + confirm) · Save name.
 
-Last prototype commit hash: _(follow-up)_
+Last prototype commit hash: `fe2e9ec`

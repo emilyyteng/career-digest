@@ -1,6 +1,6 @@
 # M0-02: Prototype weekly goals column + incrementer
 
-**Status:** Ready
+**Status:** In progress
 **Blocked by:** (none — M0-01 Done; strip today-LC = Log LC disclosure, do not re-litigate)
 **Implements:** R.0, R0.2; designs for R3.1–R3.10, R.7, R.9, open Q13–Q14 (from `../../spec.md`)
 **Type:** prototype
@@ -38,30 +38,46 @@ Prototype page: `/prototype/f11/habits/weekly`
 
 ## Acceptance criteria
 
-- [ ] Prototypes under `apps/web/src/prototype/f11-habits-and-weekly-targets/` with DEV-only routes
-- [ ] Progress This week mock: weekly goals column + weekly incrementer side by side (or the locked split once chosen); no today-LC in the incrementer; no apps ±
-- [ ] Home Targets mock includes at least one custom weekly goal alongside apps/LC-style target rows
-- [ ] At least two variants for Q13; Q14 covered for weekly Active/Archived
-- [ ] Cap scenarios: + disabled or blocked at 3 customs; restore blocked at cap
-- [ ] Pencil vs near-label target stepper are distinct (rename/archive vs goal size)
-- [ ] No production imports of prototype code; mock data only
+- [x] Prototypes under `apps/web/src/prototype/f11-habits-and-weekly-targets/` with DEV-only routes
+- [x] Progress This week mock: weekly goals column + weekly incrementer side by side (or the locked split once chosen); no today-LC in the incrementer; no apps ±
+- [x] Home Targets mock includes at least one custom weekly goal alongside apps/LC-style target rows
+- [x] At least two variants for Q13; Q14 covered for weekly Active/Archived
+- [x] Cap scenarios: + disabled or blocked at 3 customs; restore blocked at cap
+- [x] Pencil vs near-label target stepper are distinct (rename/archive vs goal size)
+- [x] No production imports of prototype code; mock data only
 - [ ] User records a verdict per design question in this ticket’s verification notes
 
 ## Reuse notes
 
 `PrototypeSwitcher`; [`WeeklyGoalsBlock.tsx`](../../../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) / Home Targets row patterns as visual reference (copy into prototype — do not wire production weekly API). M0-01 strip fixtures if still present. `ModalLayer` for create / pencil mocks.
 
+Built with: `PrototypeSwitcher`, `ChromeTab`, `ModalLayer`, `Button` / `TextField`, M0-01 ghost/mute archived language, strip stand-in (no production weekly API).
+
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
+- [ ] Acceptance criteria met and checked (awaiting user verdicts)
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
+- [x] Reuse check done
+- [x] No production imports of prototype code
 - [ ] Ticket status `Done`; board updated; verdicts recorded
 - [ ] Committed as `F11 M0-02: …`
 - [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including **Issues found**
 
 ## Verification notes
 
-Filled when done: verdict per Q13 / Q14, chosen variants, last prototype commit hash (keep until build tickets that reference these pages are Done).
+**Open for review:** `/prototype/f11/habits/weekly` (DEV). ← / → cycles Q13 variants.
+
+| Variant | Q13 |
+|---------|-----|
+| A | Classic stepper (− N +) |
+| B | Number field flanked by ± |
+| C | Field-only (blur / Enter commit) |
+
+Orthogonal: `?cap=under|full` · `?arch=ghost|mute` (Q14 weekly; ghost = M0-01 strip language).
+
+**Verdicts (user):**
+- Q13: _(pending)_
+- Q14 (weekly): _(pending — ghost adapted from strip is the default)_
+
+Last prototype commit hash: _(after commit)_
