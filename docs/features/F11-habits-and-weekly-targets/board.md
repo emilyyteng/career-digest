@@ -33,7 +33,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 |--------|-------|--------|
 | [M1-01](./tickets/M1/M1-01-custom-habits-schema.md) | Custom daily habits schema | 88005f0 |
 | [M1-02](./tickets/M1/M1-02-custom-habit-streaks-points.md) | Custom habit streaks + points | fce567b |
-| [M1-03](./tickets/M1/M1-03-custom-habits-api.md) | Custom habits HTTP API + today payload | (this commit) |
+| [M1-03](./tickets/M1/M1-03-custom-habits-api.md) | Custom habits HTTP API + today payload | 6a9ee91 |
 
 </details>
 
