@@ -28,6 +28,7 @@ import { normalizeUpcomingWindowDays } from "./homeUpcoming.js";
 import { DemoGatedError, assertDemoAllowsMutation, isDemoMode } from "./demoMode.js";
 import { markDemoResetDone } from "./demoScheduler.js";
 import { resetDemoDatabase } from "./demoSeed.js";
+import { getBoardDeparturesSnapshot } from "./boardDepartures.js";
 import { getOpsStatus } from "./opsStatus.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
 import {
@@ -255,6 +256,15 @@ api.get("/rank/batch", async (_req, res) => {
 
 api.get("/ops", async (_req, res) => {
   res.json(await getOpsStatus());
+});
+
+api.get("/ops/board-departures", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  res.json(await getBoardDeparturesSnapshot(pool, tz));
 });
 
 api.post("/demo/reset", async (_req, res) => {

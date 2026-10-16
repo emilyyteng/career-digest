@@ -465,7 +465,8 @@ Checked by reading code on 2026-10-12 and 2026-10-13, unless the notes say "per 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
 | Board-gone and duplicate deletes snapshot into `board_departures` (reason, task_removed, company display); filter rejects and applied+ retentions unlogged; UTC day-boundary purge at ingest/merge start (not on read) | [`boardDepartures.ts`](../../../apps/api/src/boardDepartures.ts), [`041_board_departures.sql`](../../../apps/api/src/sql/041_board_departures.sql), [`ingest.ts`](../../../apps/api/src/ingest.ts), [`mergeDuplicatePostings.ts`](../../../apps/api/src/mergeDuplicatePostings.ts) | Conforms R6.1, R6.2 (storage), R6.5, R6.6 (write), R6.7 (purge) | Done by M6-01 |
-| Status page has no board-departures section; no GET API yet | [`Status.tsx`](../../../apps/web/src/pages/Status.tsx) | Conflicts R6.3 | M6-02 / M6-03 |
+| `GET /api/ops/board-departures?tz=` returns browser-local day groups with reason labels, `taskRemoved`, and `taskRemovedCount`; no purge on read | [`boardDepartures.ts`](../../../apps/api/src/boardDepartures.ts) `getBoardDeparturesSnapshot`, [`routes.ts`](../../../apps/api/src/routes.ts) | Conforms R6.2, R6.6, R6.7 (read) | Done by M6-02 |
+| Status page has no board-departures section yet | [`Status.tsx`](../../../apps/web/src/pages/Status.tsx) | Conflicts R6.3 | M6-03 |
 
 ### M7
 

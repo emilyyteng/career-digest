@@ -1,7 +1,7 @@
 # M6-03: Status page departures UI
 
 **Status:** Ready
-**Blocked by:** M6-02
+**Blocked by:** (none)
 **Implements:** R6.2, R6.3, R6.4, R6.6, R6.7 (from `../../spec.md`)
 **Type:** build
 

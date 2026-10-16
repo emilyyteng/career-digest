@@ -1,6 +1,6 @@
 # M6-02: Departure log API
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R6.2, R6.6, R6.7 (read model) (from `../../spec.md`)
 **Type:** build
@@ -17,24 +17,28 @@ Expose the departure log for the Status page.
 
 ## Acceptance criteria
 
-- [ ] GET returns only non-purged rows, sectioned (or keyed) by browser-local day.
-- [ ] Row payload includes title, company, location, reason, `taskRemoved`.
-- [ ] Each day exposes `taskRemovedCount` (0 when none).
-- [ ] Calling GET does not delete rows.
-- [ ] Integration tests cover empty log, mixed reasons, `taskRemoved` flags, and TZ day boundaries.
+- [x] GET returns only non-purged rows, sectioned (or keyed) by browser-local day.
+- [x] Row payload includes title, company, location, reason, `taskRemoved`.
+- [x] Each day exposes `taskRemovedCount` (0 when none).
+- [x] Calling GET does not delete rows.
+- [x] Integration tests cover empty log, mixed reasons, `taskRemoved` flags, and TZ day boundaries.
 
 ## Reuse notes
 
-M6-01 table + helpers; Progress TZ query pattern (`tz` on progress routes); [`opsStatus.ts`](../../../../../apps/api/src/opsStatus.ts) / [`routes.ts`](../../../../../apps/api/src/routes.ts) for ops route placement.
+[`boardDepartures.ts`](../../../../../apps/api/src/boardDepartures.ts) `getBoardDeparturesSnapshot`; Progress `resolveTimezone` / `localDateInTimezone`; [`routes.ts`](../../../../../apps/api/src/routes.ts) `/api/ops/board-departures`. Reason labels on the API (`reason` + `reasonLabel`) for M6-03.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Reuse check done
-- [ ] Committed as `F08 M6-02: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Reuse check done
+- [x] Committed as `F08 M6-02: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-(filled when done)
+- `GET /api/ops/board-departures?tz=` → `{ tz, localDate, days: [{ date, taskRemovedCount, rows }] }`.
+- Retention filter: local today + yesterday in `tz` (no purge on read).
+- Labels: `Left board` / `Duplicate`.
+- Tests: `boardDepartures.api.test.ts` (4). `npm run check` green (356 tests).
+- Commit: (this commit).
