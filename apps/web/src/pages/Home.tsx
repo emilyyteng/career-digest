@@ -12,7 +12,7 @@ import {
 import DeadlineUrgency, { DeadlineUrgencyPiesOnly } from "../DeadlineUrgency";
 import { endOfLocalCivilDayIso } from "../formatDate";
 import WeeklyCongratsBanner from "../features/home/WeeklyCongratsBanner";
-import TodayStrip from "../features/progress/TodayStrip";
+import HabitsStrip from "../features/progress/HabitsStrip";
 import PriorityBadge from "../PriorityBadge";
 import ThemeEmoji from "../ThemeEmoji";
 import { formatEstimateMinutes, formatStepWhen } from "../formatDate";
@@ -307,11 +307,17 @@ export default function Home() {
               <span className="progress-kicker">
                 Today · {formatShort(progress.localDate)}
               </span>
-              <Link to="/progress" className="home-section-link">
-                Update progress →
-              </Link>
             </div>
-            <TodayStrip today={progress} className="home-progress-strip" />
+            <HabitsStrip
+              today={progress}
+              tz={browserTz()}
+              surface="home"
+              className="home-progress-strip"
+              onRefresh={async () => {
+                const next = await getProgressToday(browserTz());
+                setProgress(next);
+              }}
+            />
           </div>
         )}
       </header>

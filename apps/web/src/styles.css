@@ -3213,6 +3213,262 @@ textarea { min-height: 10rem; width: 100%; }
   color: #3f6b5c;
 }
 
+/* F11 M2-01 · Habits strip (Home + Progress) — extends today-streak metrics */
+.habits-strip {
+  padding: 0.75rem 0.9rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.habits-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+.habits-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: var(--font-display);
+}
+.habits-section-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+}
+.habits-section-tabs .ui-chrome-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.habits-strip-msg {
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--warn) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--border));
+  font-size: 0.82rem;
+}
+.habits-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.45rem 0.75rem;
+}
+.habits-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.habits-row-arch {
+  opacity: 0.95;
+}
+.habits-foot-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+.habits-update-progress {
+  font-size: 0.85rem;
+}
+.habits-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  width: max-content;
+  max-width: 100%;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+}
+.habits-pill.is-done {
+  border-color: color-mix(in srgb, var(--accent-mint) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-mint) 12%, var(--surface));
+}
+.habits-pill.is-pending {
+  border-style: dashed;
+}
+.habits-pill-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+.habits-n {
+  font-size: 1.2rem;
+  line-height: 1.1;
+  font-family: var(--font-display);
+}
+.habits-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+.habits-label-edit {
+  position: relative;
+  display: block;
+  padding-right: 1em;
+  box-sizing: border-box;
+}
+.habits-sub {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+.habits-pill.is-done .habits-sub {
+  color: var(--accent-mint-deep);
+  font-weight: 600;
+}
+.habits-mark {
+  font-weight: 700;
+  color: var(--accent-purple-deep);
+}
+.habits-pill.is-done .habits-mark {
+  color: #3f6b5c;
+}
+.habits-mark-btn {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  color: var(--accent-purple-deep);
+  cursor: pointer;
+}
+.habits-mark-btn:hover,
+.habits-mark-btn:focus-visible {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink);
+}
+.habits-pill.is-done .habits-mark-btn {
+  color: #3f6b5c;
+}
+.habits-mark-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.habits-pencil {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  box-sizing: border-box;
+  display: block;
+  width: 0.9em;
+  height: 0.9em;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-size: 0.95em;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.75;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  transform: translateY(-50%);
+}
+.habits-pencil:hover,
+.habits-pencil:focus-visible {
+  opacity: 1;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+.habits-pencil:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.habits-pencil-flip {
+  display: block;
+  line-height: 1;
+  transform: scaleX(-1);
+}
+.habits-create {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 5.5rem;
+  min-height: 4.2rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-card);
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+}
+.habits-create-plus {
+  font-size: 1.25rem;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+.habits-pill-archived.is-ghost {
+  position: relative;
+  opacity: 0.85;
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--text-muted) 35%, var(--border));
+}
+.habits-arch-stamp {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.4rem;
+  font-size: 0.62rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.05rem 0.3rem;
+  border-radius: var(--radius-pill);
+}
+.habits-arch-restore {
+  margin-top: 0.25rem;
+  align-self: flex-start;
+}
+.habits-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.habits-hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.85rem;
+}
+.habits-btn-danger {
+  color: var(--danger-deep) !important;
+  border-color: var(--danger) !important;
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface)) !important;
+}
+.habits-btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 22%, var(--surface)) !important;
+  border-color: var(--danger-deep) !important;
+}
+
 /* M5-11 · achievements tab + unlock modal */
 .achievements-panel {
   width: 100%;

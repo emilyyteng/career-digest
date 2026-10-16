@@ -1049,6 +1049,56 @@ const progressTz = (tz: string) =>
 export const getProgressToday = (tz: string) =>
   parse<ProgressToday>(api(`/api/progress/today?${progressTz(tz)}`));
 
+/** Custom daily habit row (F11); `archived` only on mutation responses. */
+export type CustomHabitView = {
+  id: string;
+  name: string;
+  length: number;
+  todayCounts: boolean;
+  archived?: boolean;
+};
+
+export const createCustomHabit = (tz: string, name: string) =>
+  parse<CustomHabitView>(
+    api(`/api/habits?${progressTz(tz)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  );
+
+export const renameCustomHabit = (tz: string, id: string, name: string) =>
+  parse<CustomHabitView>(
+    api(`/api/habits/${encodeURIComponent(id)}?${progressTz(tz)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  );
+
+export const archiveCustomHabit = (tz: string, id: string) =>
+  parse<CustomHabitView>(
+    api(`/api/habits/${encodeURIComponent(id)}/archive?${progressTz(tz)}`, {
+      method: "POST",
+    }),
+  );
+
+export const restoreCustomHabit = (tz: string, id: string) =>
+  parse<CustomHabitView>(
+    api(`/api/habits/${encodeURIComponent(id)}/restore?${progressTz(tz)}`, {
+      method: "POST",
+    }),
+  );
+
+export const setCustomHabitCheckoff = (tz: string, id: string, checked: boolean) =>
+  parse<CustomHabitView>(
+    api(`/api/habits/${encodeURIComponent(id)}/checkoff?${progressTz(tz)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ checked }),
+    }),
+  );
+
 export const getWeeklyGoals = (tz: string) =>
   parse<WeeklyGoalsSnapshot>(api(`/api/weekly-goals?${progressTz(tz)}`));
 

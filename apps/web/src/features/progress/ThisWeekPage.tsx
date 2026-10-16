@@ -35,7 +35,7 @@ import ReflectionAccordion, {
   ReflectionCompose,
   type ReflectionLinkOption,
 } from "./ReflectionAccordion";
-import TodayStrip from "./TodayStrip";
+import HabitsStrip from "./HabitsStrip";
 import WeeklyGoalsBlock from "./WeeklyGoalsBlock";
 
 function browserTz(): string {
@@ -316,10 +316,18 @@ export default function ThisWeekPage() {
       {error && <p className="error">{error}</p>}
       <EarnFlash earn={earn} onDismiss={dismissEarn} />
 
-      <header className="card progress-today-head">
+      <div className="progress-today-head">
         <span className="progress-kicker">Today · {formatShort(today.localDate)}</span>
-        <TodayStrip today={today} />
-      </header>
+        <HabitsStrip
+          today={today}
+          tz={tz}
+          surface="progress"
+          onRefresh={async () => {
+            const next = await getProgressToday(tz);
+            setToday(next);
+          }}
+        />
+      </div>
 
       <div className="progress-outcome-row">
         <div className="card progress-outcome-card">
