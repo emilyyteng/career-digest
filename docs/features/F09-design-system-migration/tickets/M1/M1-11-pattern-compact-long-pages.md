@@ -1,6 +1,6 @@
 # M1-11: Pattern — compact long-page tactics (Q11 / R.10)
 
-**Status:** In progress
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R.10, R1.2, Q11
 **Type:** docs
@@ -8,50 +8,40 @@
 
 ## What to build
 
-Lock **tactics** for compacting long scroll-heavy pages (density, collapsible sections, sticky compose/actions, etc.) so M2 Tasks migration has a written standard. This ticket does **not** redesign Tasks — only documents the chosen approach in `design-system.md`.
-
-## Proposed approach (for judgment)
-
-Ordered tactics (Tasks first migrate target in M2):
-
-1. **Section chips → one scroll well** (locked M1-07; tab-scoped counts)
-2. **Paginate inside the well** (M1-09 defaults)
-3. **28rem clamp** on the primary list body (M1-07)
-4. Slightly tighter row density only after 1–3
-5. Sticky compose / primary write only if actions still fall below the first viewport after 1–4
-
-Do not re-open multi-select accordion stacks as the Tasks standard.
+Lock **tactics** for compacting long scroll-heavy pages so M2 Tasks migration has a written standard. This ticket does **not** redesign Tasks — only documents the chosen approach in `design-system.md`.
 
 ## Acceptance criteria
 
-- [ ] Q11 answered with an ordered tactic set (what to try / require)
-- [ ] Patterns section documents the standard; Tasks named as first migrate target (M2)
-- [ ] Relates to M1-07 height policy where relevant (do not contradict)
-- [ ] Prototype used: URL + verdict recorded
-- [ ] `npm run check` passes (docs-only OK)
+- [x] Q11 answered with an ordered tactic set
+- [x] Patterns section documents the standard; Tasks named as first migrate target (M2)
+- [x] Relates to M1-07 height policy (chips / 28rem clamp) — no contradiction
+- [x] Prototype used: URL + verdict recorded
+- [x] `npm run check` passes (docs-only OK)
 
 ## Design questions (prototype tickets only)
 
-1. Ordered tactic set for compact long pages?
-2. Anything beyond chips + clamp + pager required in M1 docs (sticky compose, density)?
+1. Ordered tactic set? → **chips → one well → pager → 28rem clamp → density → sticky compose if needed**
+2. Beyond chips + clamp + pager in M1 docs? → density and sticky compose only as later steps in the ordered list
 
-Prototype URL: `/prototype/f09/patterns` · surface **C** (`?compact=`)
+Prototype URL: `/prototype/f09/patterns` · surface **C**
 
 ## Reuse notes
 
 - M0-01 Tasks notes; R.10; M2 owns implementation
-- M1-07 locked Tasks **section chips → one scroll well** (tab-scoped counts) — treat as an established compaction tactic here; do not contradict
+- M1-07 section chips; M1-09 `Pager`
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F09 M1-11: …`
-- [ ] End-of-task report given
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F09 M1-11: …`
+- [x] End-of-task report given
 
 ## Verification notes
 
-(filled when done)
+**2026-10-15 verdicts:** ordered tactics as recommended; Tasks first migrate in M2.
+
+Prototype exploration: `dab1805`. Lock commit below.
