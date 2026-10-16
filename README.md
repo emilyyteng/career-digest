@@ -2,8 +2,9 @@
 
 A personal hub for life and career management — job search, prep, and day-to-day follow-through in one local app. Pull and rank internship boards when you need them, keep applications and interviews moving, organize tasks across work and personal life, and stay honest with weekly goals, progress, and small rewards.
 
-## What it does
+Development history can be found in the [changelog](./docs/CHANGELOG.md).
 
+## What it does
 
 | Area             | What you get                                                                                    |
 | ---------------- | ----------------------------------------------------------------------------------------------- |
@@ -16,17 +17,12 @@ A personal hub for life and career management — job search, prep, and day-to-d
 | **Rewards**      | Cat Cake Collection gacha: banner pulls, album, earnings, pull history, and rules (seeds)       |
 | **Status**       | Ops dashboard — ingest, scrape, rank, backup health, and board departures                       |
 
-
-
-
 ## Stack
 
 - **Backend:** Node.js, TypeScript, Express, PostgreSQL
 - **Frontend:** React (Vite), local only
 - **Ingest:** Greenhouse, Lever, Ashby, Simplify (+ SmartRecruiters boards in config)
 - **Ranking:** OpenAI API (`gpt-4o-mini` by default; batch + live)
-
-
 
 ## Quickstart
 
@@ -44,7 +40,6 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 
 ## Routes
 
-
 | Route           | Purpose                      |
 | --------------- | ---------------------------- |
 | `/`             | Home                         |
@@ -56,11 +51,7 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `/rewards`      | Cat Cake banner (default); Collection, Earnings, Pull history, Rules |
 | `/status`       | Pipeline / ops dashboard; board departures log |
 
-
-
-
 ## Commands
-
 
 | Command                              | Purpose                                                           |
 | ------------------------------------ | ----------------------------------------------------------------- |
@@ -79,7 +70,6 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `npm run discover-boards`            | Diff Simplify ATS URLs vs `tracked_boards` (`--write` to upsert)  |
 | `npm run merge-postings`             | Collapse duplicate postings across sources                        |
 
-
 Cron helpers (`npm run cron:install`, `cron:install-backup`) target macOS launchd.
 
 ## Testing
@@ -95,14 +85,11 @@ npm run test
 
 Before committing, run `npm run check` (UI check, typecheck, build, tests).
 
-
-
 ## Docs
 
 - [docs/SETUP.md](./docs/SETUP.md) — cold-clone setup and verification checklist
 - [docs/CHANGELOG.md](./docs/CHANGELOG.md) — milestone development history
-
-
+- [docs/features/README.md](./docs/features/README.md) — complete feature roadmap
 
 ## License
 
