@@ -102,9 +102,9 @@ Verified by reading code (2026-10-15). No F11 requirements are implemented yet.
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| Only two daily streak kinds, `lc` and `apps`, hardcoded | [`streaks.ts`](../../../apps/api/src/streaks.ts) `StreakKind` | Conflicts R1.1 (absent) | |
-| Qualifying days derived from `leetcode_daily` / `applications.applied_at`; no checkoff table | [`streaks.ts`](../../../apps/api/src/streaks.ts) | Conflicts R1.5 (absent) | |
-| Streak points: daily `min(20, 2×length)`, milestones `5×length`, today-only award/reverse, category `streak` | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts) | Conforms R.3 (formula exists for LC/apps) | Reuse for habits |
+| Only two daily streak kinds on today payload, `lc` and `apps` | [`streaks.ts`](../../../apps/api/src/streaks.ts) `getStreaks` | Conflicts R1.1 (HTTP/list still M1-03) | Domain has per-habit streaks via `getHabitStreak` / `setHabitCheckoff` (M1-02) |
+| Customs: qualifying days in `custom_habit_days`; LC/apps still derived | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`042_custom_daily_habits.sql`](../../../apps/api/src/sql/042_custom_daily_habits.sql) | Conforms R1.5 (domain); Conflicts until M1-03 exposes checkoff API | |
+| Streak points: daily `min(20, 2×length)`, milestones `5×length`, today-only award/reverse, category `streak` | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts) | Conforms R.3 | Habits use `habit:<id>:<date>` source ids (M1-02) |
 | `GET /progress/today` returns `streaks.lc` / `streaks.apps` only | [`progress.ts`](../../../apps/api/src/progress.ts) | Conflicts R1.8 (absent) | |
 | Today strip: two read-only Apps/LC pills; subtitle `N completed today` | [`TodayStrip.tsx`](../../../apps/web/src/features/progress/TodayStrip.tsx) | Conflicts R1.8 (absent); Conforms R1.9 for apps/LC copy | F08 R5.27 aligned 2026-10-15 |
 | This week: strip, week/month pulse, weekly goals, Next achievements, LC logger, Daily progress (compose/notes/apps) | [`ThisWeekPage.tsx`](../../../apps/web/src/features/progress/ThisWeekPage.tsx) | Conflicts R1.12, R3.8 (absent) | |

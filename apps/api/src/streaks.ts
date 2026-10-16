@@ -33,6 +33,19 @@ export type StreaksSnapshot = {
 
 const KIND_LABEL: Record<StreakKind, string> = { lc: "LC", apps: "Apps" };
 
+/** Ledger source_id prefix for custom daily habits (distinct from `lc:` / `apps:`). */
+export function habitDailySourceId(habitId: string, localDate: string): string {
+  return `habit:${habitId}:${localDate}`;
+}
+
+export function habitMilestoneSourceId(
+  habitId: string,
+  streakStart: string,
+  length: number,
+): string {
+  return `habit:${habitId}:${streakStart}:${length}`;
+}
+
 /**
  * Current streak ending on `today`. If today isn't qualifying yet, the run
  * through yesterday still counts (today doesn't break the streak until it ends).
@@ -90,6 +103,17 @@ async function qualifyingDays(
   return kind === "lc" ? lcQualifyingDays(db) : appsQualifyingDays(db, tz);
 }
 
+export async function habitQualifyingDays(
+  db: Queryable,
+  habitId: string,
+): Promise<Set<string>> {
+  const { rows } = await db.query<{ d: string }>(
+    `SELECT local_date::text AS d FROM custom_habit_days WHERE habit_id = $1::uuid`,
+    [habitId],
+  );
+  return new Set(rows.map((r) => r.d));
+}
+
 function signedPoints(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`;
 }
@@ -122,28 +146,28 @@ async function ensureEarn(
   }
 }
 
-/**
- * Award or reverse today's streak points after a qualifying day flips on or off.
- * Past-day edits (History) only change the displayed streak — no points (R5.25).
- */
-export async function syncStreakForDay(
+async function syncStreakPointsForDay(
   db: Queryable,
-  kind: StreakKind,
-  tz: string,
-  localDate: string,
-  qualifies: boolean,
-  now = new Date(),
+  opts: {
+    label: string;
+    dailySourceId: string;
+    milestoneSourceId: (streakStart: string, length: number) => string;
+    days: Set<string>;
+    localDate: string;
+    qualifies: boolean;
+    today: string;
+  },
 ): Promise<void> {
-  const today = localDateInTimezone(now, tz);
-  if (localDate !== today) return;
-
-  const launchDate = await ensureStreakLaunch(db, today);
-  if (localDate < launchDate) return;
-
-  const days = await qualifyingDays(db, kind, tz);
-  const label = KIND_LABEL[kind];
+  const {
+    label,
+    dailySourceId,
+    milestoneSourceId,
+    days,
+    localDate,
+    qualifies,
+    today,
+  } = opts;
   const dailySourceType = "streak_daily";
-  const dailySourceId = `${kind}:${localDate}`;
   const milestoneSourceType = "streak_milestone";
 
   if (qualifies) {
@@ -164,7 +188,7 @@ export async function syncStreakForDay(
       await ensureEarn(
         db,
         milestoneSourceType,
-        `${kind}:${streakStart}:${length}`,
+        milestoneSourceId(streakStart, length),
         milestone,
         `${label} streak ${length}-day milestone`,
       );
@@ -188,11 +212,138 @@ export async function syncStreakForDay(
       await reverseEarn(
         db,
         milestoneSourceType,
-        `${kind}:${streakStart}:${lengthWas}`,
+        milestoneSourceId(streakStart, lengthWas),
         `${label} streak ${lengthWas}-day milestone cleared · −${POINTS.streakMilestonePerLength * lengthWas} points`,
       );
     }
   }
+}
+
+/**
+ * Award or reverse today's streak points after a qualifying day flips on or off.
+ * Past-day edits (History) only change the displayed streak — no points (R5.25).
+ */
+export async function syncStreakForDay(
+  db: Queryable,
+  kind: StreakKind,
+  tz: string,
+  localDate: string,
+  qualifies: boolean,
+  now = new Date(),
+): Promise<void> {
+  const today = localDateInTimezone(now, tz);
+  if (localDate !== today) return;
+
+  const launchDate = await ensureStreakLaunch(db, today);
+  if (localDate < launchDate) return;
+
+  const days = await qualifyingDays(db, kind, tz);
+  await syncStreakPointsForDay(db, {
+    label: KIND_LABEL[kind],
+    dailySourceId: `${kind}:${localDate}`,
+    milestoneSourceId: (streakStart, length) => `${kind}:${streakStart}:${length}`,
+    days,
+    localDate,
+    qualifies,
+    today,
+  });
+}
+
+type HabitRow = { name: string; archived: boolean };
+
+async function loadHabit(
+  db: Queryable,
+  habitId: string,
+): Promise<HabitRow | null> {
+  const { rows } = await db.query<{ name: string; archived_at: Date | null }>(
+    `SELECT name, archived_at FROM custom_habits WHERE id = $1::uuid`,
+    [habitId],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return { name: row.name, archived: row.archived_at != null };
+}
+
+/**
+ * Award or reverse today's streak points for a custom habit checkoff.
+ * Past local dates: no points (R1.7). Archived habits: no award/reverse —
+ * ledger stays as paid if archived mid-day after a checkoff (R1.6).
+ */
+export async function syncHabitStreakForDay(
+  db: Queryable,
+  habitId: string,
+  tz: string,
+  localDate: string,
+  qualifies: boolean,
+  now = new Date(),
+): Promise<void> {
+  const today = localDateInTimezone(now, tz);
+  if (localDate !== today) return;
+
+  const habit = await loadHabit(db, habitId);
+  if (!habit || habit.archived) return;
+
+  const launchDate = await ensureStreakLaunch(db, today);
+  if (localDate < launchDate) return;
+
+  const days = await habitQualifyingDays(db, habitId);
+  await syncStreakPointsForDay(db, {
+    label: habit.name,
+    dailySourceId: habitDailySourceId(habitId, localDate),
+    milestoneSourceId: (streakStart, length) =>
+      habitMilestoneSourceId(habitId, streakStart, length),
+    days,
+    localDate,
+    qualifies,
+    today,
+  });
+}
+
+/**
+ * Insert or remove a habit checkoff day, then sync streak points when the date
+ * is today and the habit is active. Past dates update history only (no points).
+ */
+export async function setHabitCheckoff(
+  db: Queryable,
+  habitId: string,
+  tz: string,
+  localDate: string,
+  checked: boolean,
+  now = new Date(),
+): Promise<StreakView> {
+  const habit = await loadHabit(db, habitId);
+  if (!habit) {
+    throw new Error(`custom habit not found: ${habitId}`);
+  }
+
+  if (checked) {
+    await db.query(
+      `INSERT INTO custom_habit_days (habit_id, local_date)
+       VALUES ($1::uuid, $2::date)
+       ON CONFLICT (habit_id, local_date) DO NOTHING`,
+      [habitId, localDate],
+    );
+  } else {
+    await db.query(
+      `DELETE FROM custom_habit_days
+       WHERE habit_id = $1::uuid AND local_date = $2::date`,
+      [habitId, localDate],
+    );
+  }
+
+  await syncHabitStreakForDay(db, habitId, tz, localDate, checked, now);
+  return getHabitStreak(db, habitId, tz, now);
+}
+
+export async function getHabitStreak(
+  db: Queryable,
+  habitId: string,
+  tz: string,
+  now = new Date(),
+): Promise<StreakView> {
+  const localDate = localDateInTimezone(now, tz);
+  const days = await habitQualifyingDays(db, habitId);
+  return currentStreak(days, localDate);
 }
 
 export async function getStreaks(

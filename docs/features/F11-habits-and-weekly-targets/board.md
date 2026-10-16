@@ -25,15 +25,15 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M1-02](./tickets/M1/M1-02-custom-habit-streaks-points.md) | Custom habit streaks + points | build | Draft | Blocked by M1-01; derive + ledger |
 | [M1-03](./tickets/M1/M1-03-custom-habits-api.md) | Custom habits HTTP API + today payload | build | Draft | Blocked by M1-02 |
 
 <details>
-<summary>Done (1)</summary>
+<summary>Done (2)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
 | [M1-01](./tickets/M1/M1-01-custom-habits-schema.md) | Custom daily habits schema | 88005f0 |
+| [M1-02](./tickets/M1/M1-02-custom-habit-streaks-points.md) | Custom habit streaks + points | (this commit) |
 
 </details>
 

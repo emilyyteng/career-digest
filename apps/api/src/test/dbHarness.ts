@@ -59,6 +59,8 @@ export async function truncateAll(client?: PoolClient): Promise<void> {
       board_departures,
       points_events,
       reflection_logs,
+      custom_habit_days,
+      custom_habits,
       leetcode_daily,
       tasks,
       application_steps,
@@ -369,6 +371,33 @@ export async function seedLeetcodeDaily(
     `INSERT INTO leetcode_daily (local_date, count) VALUES ($1::date, $2)
      ON CONFLICT (local_date) DO UPDATE SET count = EXCLUDED.count`,
     [localDate, count],
+  );
+}
+
+export async function seedCustomHabit(input: {
+  name?: string;
+  archivedAt?: Date | null;
+  createdAt?: Date;
+}): Promise<{ id: string; name: string }> {
+  const name = input.name ?? "Test habit";
+  const { rows } = await pool.query<{ id: string; name: string }>(
+    `INSERT INTO custom_habits (name, archived_at, created_at)
+     VALUES ($1, $2, COALESCE($3, now()))
+     RETURNING id, name`,
+    [name, input.archivedAt ?? null, input.createdAt ?? null],
+  );
+  return rows[0]!;
+}
+
+export async function seedCustomHabitDay(
+  habitId: string,
+  localDate: string,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO custom_habit_days (habit_id, local_date)
+     VALUES ($1::uuid, $2::date)
+     ON CONFLICT (habit_id, local_date) DO NOTHING`,
+    [habitId, localDate],
   );
 }
 

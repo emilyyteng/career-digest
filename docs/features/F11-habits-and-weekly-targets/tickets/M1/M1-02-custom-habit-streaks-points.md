@@ -1,7 +1,7 @@
 # M1-02: Custom habit streaks + points
 
-**Status:** Draft
-**Blocked by:** M1-01
+**Status:** Done
+**Blocked by:** (none — M1-01 Done)
 **Implements:** R.3, R.4, R1.5–R1.7, R.6, B1, B5 (from `../../spec.md`)
 **Type:** build
 
@@ -11,15 +11,15 @@ Domain logic that treats each custom habit’s checkoff dates as qualifying days
 
 ## Acceptance criteria
 
-- [ ] Load qualifying days for a habit from the checkoff table; compute view with `currentStreak` (or shared equivalent) from [`streaks.ts`](../../../../../apps/api/src/streaks.ts).
-- [ ] Today does not break the streak until the day ends (if today unchecked, length is the run through yesterday when that run exists).
-- [ ] On today checkoff: award daily `min(20, 2×length)` and milestone `5×length` at 5/10/20/30/50/100 when applicable — same helpers as LC/apps (`streakDailyPoints` / `streakMilestonePoints`); category `streak`.
-- [ ] On today undo: reverse today’s daily earn and any milestone that day completed (same reinstate/reverse pattern as `syncStreakForDay`).
-- [ ] Past local dates: changing checkoffs (if ever exposed) must **not** award or reverse points (R1.7 / R5.25 timing). F11 API may only expose today checkoff; domain still guards `localDate === today`.
-- [ ] Archived habits: no points while archived; days still exist for history; Active computation ignores archived habits (or callers pass only active).
-- [ ] Custom habits never alter LC/apps qualifying days or weekly LC/apps membership (B5).
-- [ ] Ledger `source_id` space is distinct per habit (e.g. `habit:<uuid>:<date>` / milestone keys including habit id) so LC/apps and habits do not collide.
-- [ ] Respect `streak_state.launch_date` the same way LC/apps do (no awards before launch).
+- [x] Load qualifying days for a habit from the checkoff table; compute view with `currentStreak` (or shared equivalent) from [`streaks.ts`](../../../../../apps/api/src/streaks.ts).
+- [x] Today does not break the streak until the day ends (if today unchecked, length is the run through yesterday when that run exists).
+- [x] On today checkoff: award daily `min(20, 2×length)` and milestone `5×length` at 5/10/20/30/50/100 when applicable — same helpers as LC/apps (`streakDailyPoints` / `streakMilestonePoints`); category `streak`.
+- [x] On today undo: reverse today’s daily earn and any milestone that day completed (same reinstate/reverse pattern as `syncStreakForDay`).
+- [x] Past local dates: changing checkoffs (if ever exposed) must **not** award or reverse points (R1.7 / R5.25 timing). F11 API may only expose today checkoff; domain still guards `localDate === today`.
+- [x] Archived habits: no points while archived; days still exist for history; Active computation ignores archived habits (or callers pass only active).
+- [x] Custom habits never alter LC/apps qualifying days or weekly LC/apps membership (B5).
+- [x] Ledger `source_id` space is distinct per habit (e.g. `habit:<uuid>:<date>` / milestone keys including habit id) so LC/apps and habits do not collide.
+- [x] Respect `streak_state.launch_date` the same way LC/apps do (no awards before launch).
 
 ## Edge cases
 
@@ -32,26 +32,28 @@ Domain logic that treats each custom habit’s checkoff dates as qualifying days
 
 ## Tests
 
-- [ ] **Unit:** `currentStreak` over habit day sets (today counts / not; gap breaks; yesterday-only run).
-- [ ] **Unit or integration:** today checkoff awards expected daily amount; undo reverses; milestone at length 5; no points when `localDate !== today`.
-- [ ] **Unit or integration:** second habit’s earns do not collide with first or with `lc:` / `apps:` source ids.
-- [ ] Existing LC/apps streak tests still pass unchanged.
+- [x] **Unit:** `currentStreak` over habit day sets (today counts / not; gap breaks; yesterday-only run) — shared `streaks.test.ts` + habit integration coverage of day loading.
+- [x] **Unit or integration:** today checkoff awards expected daily amount; undo reverses; milestone at length 5; no points when `localDate !== today`.
+- [x] **Unit or integration:** second habit’s earns do not collide with first or with `lc:` / `apps:` source ids.
+- [x] Existing LC/apps streak tests still pass unchanged.
 
 ## Reuse notes
 
-[`streaks.ts`](../../../../../apps/api/src/streaks.ts) `currentStreak`, `syncStreakForDay`, `ensureStreakLaunch`; [`pointsFormulas.ts`](../../../../../apps/api/src/pointsFormulas.ts); [`pointsLedger.ts`](../../../../../apps/api/src/pointsLedger.ts). Prefer extending streaks module with a habit kind/id rather than duplicating formula math.
+[`streaks.ts`](../../../../../apps/api/src/streaks.ts) `currentStreak`, shared `syncStreakPointsForDay`, `ensureStreakLaunch`; [`pointsFormulas.ts`](../../../../../apps/api/src/pointsFormulas.ts); [`pointsLedger.ts`](../../../../../apps/api/src/pointsLedger.ts).
+
+Added: `habitQualifyingDays`, `getHabitStreak`, `syncHabitStreakForDay`, `setHabitCheckoff`, `habitDailySourceId` / `habitMilestoneSourceId`. Mid-day archive: sync is a no-op (no award, no reverse) so prior earns stay.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md` (N/A — API)
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Ticket status `Done`; board updated
-- [ ] Committed as `F11 M1-02: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md` (N/A — API)
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Ticket status `Done`; board updated
+- [x] Committed as `F11 M1-02: …`
+- [x] End-of-task report given, including **Issues found**
 
 ## Verification notes
 
-_(filled when done)_
+`npm run check` passed (365 tests). Habit integration: `streaks.habits.api.test.ts` (9). Archived mid-day: leave ledger as-is (sync no-op while archived). Commit hash in board follow-up.
