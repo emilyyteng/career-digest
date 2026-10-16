@@ -44,3 +44,5 @@ Prototype URL: `/prototype/f09/patterns` · surface **B**
 **2026-10-15 verdicts:** EarnFlash near control; sticky viewport toast as fallback; OneTimeNotice does not share the rule.
 
 Prototype exploration: `dab1805`. Lock commit below.
+
+Commit: `e25943c`
