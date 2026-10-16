@@ -55,4 +55,4 @@ Shared prototype with M1-07; exploration commit `82a4fdd`; lock commit below.
 
 Typecheck + web build pass. API tests: unrelated failures in `workTime.api.test.ts` / `demo.api.test.ts` (reported; not this ticket).
 
-Commit: `0c1f48c`
+Commit: `ec258aa`
