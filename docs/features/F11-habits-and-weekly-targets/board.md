@@ -51,7 +51,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
-| [M2-01](./tickets/M2/M2-01-habits-strip-ui.md) | Habits strip on Home + Progress | (this commit) |
+| [M2-01](./tickets/M2/M2-01-habits-strip-ui.md) | Habits strip on Home + Progress | 95cb2b5 |
 
 </details>
 
