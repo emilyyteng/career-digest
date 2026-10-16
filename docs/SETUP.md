@@ -14,8 +14,8 @@ Cold-clone checklist for **flora.exe**. The README summarizes routes and command
 ## 1. Clone and install
 
 ```bash
-git clone https://github.com/emilyyteng/career-digest.git
-cd career-digest
+git clone https://github.com/emilyyteng/flora-exe.git
+cd flora-exe
 npm install
 ```
 
@@ -31,7 +31,7 @@ Edit `.env`:
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `DATABASE_URL` | Yes | Main Postgres database |
-| `TEST_DATABASE_URL` | For tests | Separate `*_test` DB — **never** point at `career_digest` |
+| `TEST_DATABASE_URL` | For tests | Separate `*_test` DB — **never** point at the main app database |
 | `OPENAI_API_KEY` | For ranking | Batch/live rank and board refresh light-rank |
 | `DIGEST_GREETING_NAME` | No | Home greeting name (omit for generic “Good morning”) |
 | `RANK_PROFILE_PATH` | No | Override path to rank system prompt (default: `config/rank-profile.md`) |

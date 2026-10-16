@@ -1,6 +1,6 @@
 # Changelog
 
-**flora.exe** is a single-user internship-search app (repo: career-digest). It pulls postings from company job boards, ranks them against the user's preferences, and tracks applications, interviews, tasks and daily progress. This changelog records what has shipped, feature by feature: why each piece was built, the product and technical decisions behind it, and what it changed.
+**flora.exe** is a personal hub for life and career management: job boards and ranking when you need them, plus applications, interviews, tasks, weekly goals, progress, and rewards in one local app. This changelog records what has shipped, feature by feature: why each piece was built, the product and technical decisions behind it, and what it changed.
 
 Planned work isn't listed here. It lives in the [roadmap](./features/README.md) and the feature specs. For setup, see [SETUP.md](./SETUP.md).
 

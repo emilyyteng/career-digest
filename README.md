@@ -1,19 +1,19 @@
 # flora.exe
 
-Personal internship digest and application tracker (product mark **flora.exe**; repo package still `career-digest`). Ingests public ATS job boards, ranks roles with OpenAI against your private profile, and tracks applications, interviews, tasks, and daily prep progress in a local React UI.
+A personal hub for life and career management — job search, prep, and day-to-day follow-through in one local app. Pull and rank internship boards when you need them, keep applications and interviews moving, organize tasks across work and personal life, and stay honest with weekly goals, progress, and small rewards.
 
 ## What it does
 
 
 | Area             | What you get                                                                                    |
 | ---------------- | ----------------------------------------------------------------------------------------------- |
+| **Home**         | Today and weekly progress, upcoming deadlines and targets, digest status, new and top job picks |
 | **Jobs**         | Ranked digest board of relevant internship postings                                             |
 | **Applications** | Application pipeline tracker (applied, interviewing, accepted, declined)                        |
-| **Tasks**        | Unified action backlog for to-do items — application, school, and personal tasks by category    |
+| **Tasks**        | Unified action backlog — application, school, and personal tasks by category                    |
 | **Interviews**   | Step-based pipelines with deadlines, scheduling, and workspace per application                  |
 | **Progress**     | This week, Past work, and Lifetime: weekly goals, completions, heatmaps, achievements           |
 | **Rewards**      | Cat Cake Collection gacha: banner pulls, album, earnings, pull history, and rules (seeds)       |
-| **Home**         | Digest status, today and weekly progress, upcoming deadlines and targets, new and top job picks |
 | **Status**       | Ops dashboard — ingest, scrape, rank, backup health, and board departures                       |
 
 
@@ -33,8 +33,8 @@ Personal internship digest and application tracker (product mark **flora.exe**; 
 **Prerequisites:** Node 20+, PostgreSQL, and (for ranking) an OpenAI API key.
 
 ```bash
-git clone https://github.com/emilyyteng/career-digest.git
-cd career-digest && npm install
+git clone https://github.com/emilyyteng/flora-exe.git
+cd flora-exe && npm install
 cp .env.example .env && cp config/rank-profile.example.md config/rank-profile.md
 # Create DBs, set DATABASE_URL + TEST_DATABASE_URL, then:
 npm run migrate && npm run dev:api & npm run dev:web
@@ -74,7 +74,7 @@ Full cold-clone steps (Postgres.app vs Docker, UI-only vs digest pipeline, verif
 | `npm start`                          | Serve API + built UI on `PORT` (default 3000)                     |
 | `npm run test`                       | API unit + integration tests                                      |
 | `npm run typecheck`                  | Typecheck the API                                                 |
-| `npm run check`                      | Typecheck, build, then test; stops at the first failure           |
+| `npm run check`                      | UI variant check, typecheck, build, then test; stops at first failure |
 | `npm run backup` / `npm run restore` | Logical DB backup to `backups/` (stop dev servers before restore) |
 | `npm run discover-boards`            | Diff Simplify ATS URLs vs `tracked_boards` (`--write` to upsert)  |
 | `npm run merge-postings`             | Collapse duplicate postings across sources                        |
@@ -84,14 +84,16 @@ Cron helpers (`npm run cron:install`, `cron:install-backup`) target macOS launch
 
 ## Testing
 
-Integration and unit tests both require `TEST_DATABASE_URL` pointing at a **separate** `*_test` database — never `career_digest`. GitHub Actions runs `npm run check` (API typecheck, web build, full API suite) on every push to `main` and on pull requests.
+Integration and unit tests both require `TEST_DATABASE_URL` pointing at a **separate** `*_test` database — never the main app database. GitHub Actions runs `npm run check` on every push to `main` and on pull requests.
 
 ```bash
 export TEST_DATABASE_URL=postgres://YOUR_USER@localhost:5432/career_digest_test
 npm run test
 ```
 
-Before committing, run `npm run check` (typecheck, build, tests).
+(Postgres database names still use the legacy `career_digest` / `career_digest_test` identifiers.)
+
+Before committing, run `npm run check` (UI check, typecheck, build, tests).
 
 
 
