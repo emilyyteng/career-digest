@@ -1,0 +1,359 @@
+/* F09 M1-09 / M1-10 / M1-11 · parallel pattern exploration */
+
+.f09p-page {
+  --f09p-clamp: 28rem;
+  padding-bottom: 5rem;
+}
+
+.f09p-banner {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font-size: 0.85rem;
+}
+
+.f09p-layout {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .f09p-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.f09p-rule {
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.65rem;
+  position: sticky;
+  top: 0.75rem;
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+}
+
+.f09p-rule-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.f09p-prose {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.f09p-prose.muted,
+.f09p-note,
+.f09p-caption {
+  color: var(--text-muted);
+}
+
+.f09p-olist {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.f09p-note {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.f09p-param {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.f09p-param-label {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.f09p-param-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.f09p-chip {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  padding: 0.28rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.f09p-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.f09p-chip.is-active {
+  border-color: var(--ink);
+  background: var(--tab-active-bg);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.f09p-count {
+  margin-left: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+.f09p-preview {
+  min-width: 0;
+}
+
+.f09p-surface {
+  padding: 1rem 1.1rem 1.15rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.f09p-surface-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.f09p-kicker {
+  margin: 0 0 0.15rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-subtle);
+}
+
+.f09p-surface-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.f09p-tabs {
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.f09p-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.f09p-well {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 0.45rem 0.65rem;
+  background: var(--surface);
+}
+
+.f09p-well.is-clamp {
+  max-height: var(--f09p-clamp);
+  overflow: auto;
+}
+
+.f09p-well.is-tall {
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.f09p-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.f09p-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.f09p-row.is-dense {
+  padding: 0.22rem 0;
+  font-size: 0.8rem;
+}
+
+.f09p-pager {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.f09p-page-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.f09p-load-more {
+  justify-self: center;
+}
+
+.f09p-window-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.f09p-caption {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.f09p-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.f09p-flash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  margin: 0.35rem 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-control);
+  border: 1px solid color-mix(in srgb, var(--accent-mint) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-mint) 14%, var(--surface));
+  color: var(--accent-mint-deep);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.f09p-flash-bal {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.f09p-flash-x {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.1rem 0.35rem;
+}
+
+.f09p-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 4.5rem;
+  transform: translateX(-50%);
+  z-index: 45;
+  width: min(28rem, calc(100vw - 2rem));
+}
+
+.f09p-flash.is-toast {
+  margin: 0;
+  box-shadow: 0 4px 18px var(--shadow-strong);
+}
+
+.f09p-panel {
+  padding: 0.7rem 0.8rem;
+}
+
+.f09p-panel-title {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.f09p-panel-body.is-clamp {
+  max-height: var(--f09p-clamp);
+  overflow: auto;
+}
+
+.f09p-flash-page {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.f09p-page .prototype-switcher {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--ink);
+  color: var(--on-primary);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  box-shadow: 0 4px 18px var(--shadow-strong);
+}
+
+.f09p-page .prototype-switcher-surface {
+  opacity: 0.7;
+  padding-right: 0.35rem;
+  border-right: 1px solid color-mix(in srgb, var(--on-primary) 30%, transparent);
+}
+
+.f09p-page .prototype-switcher-label {
+  min-width: 14rem;
+  text-align: center;
+}
+
+.f09p-page .prototype-switcher-btn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.f09p-page .prototype-switcher-btn:hover {
+  color: var(--brand);
+}
