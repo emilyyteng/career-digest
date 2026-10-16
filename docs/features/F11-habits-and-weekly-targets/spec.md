@@ -2,7 +2,7 @@
 
 **ID:** F11
 **Status:** Active
-**Last updated:** 2026-10-16
+**Last updated:** 2026-10-16 (M0 closed; M1–M3 tickets drafted)
 
 ## Problem
 
@@ -22,7 +22,7 @@ Daily streaks today only cover career prep (applications and LeetCode). Life foc
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
-| M0 | Lock requirements (done in grilling); **prototypes** for contested UX (habits strip → weekly column + incrementer) | In progress |
+| M0 | Lock requirements (done in grilling); **prototypes** for contested UX (habits strip → weekly column + incrementer) | Done |
 | M1 | Daily custom habits: data, API, points hooks | Not started |
 | M2 | Daily habits UI + This week / Home strip remodel (checkoff, archive, reflection pencil, today-LC home from prototype verdict) | Not started |
 | M3 | Custom weekly targets: data/API/UI (Progress weekly column, incrementer, Home Targets) | Not started |
@@ -125,23 +125,20 @@ Verified by reading code (2026-10-15). No F11 requirements are implemented yet.
 
 ## Open questions
 
-Prototype-owned only. Nothing blocked by these may ship in production until answered.
-
-| # | Question | Blocks | Due by |
-|---|----------|--------|--------|
-| Q13 | Weekly ± control: increment/decrement field vs current stepper styling (same place as LC weekly today) | R3.3, R0.2 | M0 prototype (2) |
-| Q14 | Active vs archived visual language — **weekly column** (strip locked ghost stamp 2026-10-16; adapt or confirm here) | R3.7, R0.2 | M0 prototype (2) |
+None. Prototype questions Q11–Q14 are resolved (2026-10-16).
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (40)</summary>
+<summary>Resolved questions (42)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
 | Q11 | Checkoff vs edit chrome? | Mark hit-target top-right like Apps/LC; pencil beside `{name} daily streak` (variant D, 2026-10-16) | R1.10 |
 | Q12 | Today-LC home A vs B? | **B** Log LC disclosure on Habits strip band with Add reflection; Update progress below (2026-10-16) | R1.13 |
-| Q14a | Active vs archived on daily strip? | Ghost stamp; ChromeTabs; restore-last → Active (2026-10-16). Weekly still open as Q14. | R1.8 |
+| Q13 | Weekly ± control chrome? | Classic stepper (− N +) (variant A, 2026-10-16) | R3.3 |
+| Q14 | Active vs archived look (strip + weekly)? | Ghost stamp both surfaces; ChromeTabs; restore-last → Active (2026-10-16) | R1.8, R3.7 |
+| Q14a | (superseded by Q14) Active vs archived on daily strip? | Ghost stamp; ChromeTabs; restore-last → Active (2026-10-16) | R1.8 |
 | Q0a | One custom streak vs many? | Multiple daily habits (2026-10-15) | R1.1 |
 | Q0b | Points for daily customs? | Same as LC/apps R5.25 (2026-10-15) | R.3 |
 | Q0c | Cap (first pass)? | Revised to 3 custom / 5 total (2026-10-15) | R.7 |
@@ -191,3 +188,4 @@ Prototype-owned only. Nothing blocked by these may ship in production until answ
 - **2026-10-15:** M0 includes prototypes (R.0).
 - **2026-10-15 (grilling):** Cap is **3 custom / 5 total** (apps+LC+customs) for both daily and weekly. Progress → This week is the habits hub; remove Next achievements and Daily progress from that page; Past work owns day lists; Habits strip pencil opens a lightweight today-reflection modal (link, body, lane). Full strip chrome on Home and Progress. Weekly: + / Active/Archived / pencil (rename+archive); near-label target stepper; multi-goal weekly incrementer (no apps ±, no today-LC); Home Targets for customs; same week-close Seeds; weeks-in-a-row flame; default target 3. Archive breaks streaks (no freeze). Today-LC placement and checkoff/edit chrome deferred to M0 prototypes A/B. F08 R5.27 corrected to match intentional `N completed today` copy.
 - **2026-10-16 (M0-01):** Strip verdicts — Q11 mark hit-target; Q12 Log LC disclosure on band; Q14 strip = ghost stamp. Prototype at `/prototype/f11/habits/strip`.
+- **2026-10-16 (M0-02):** Weekly verdicts — Q13 classic stepper; Q14 weekly = ghost stamp (same as strip). Prototype at `/prototype/f11/habits/weekly`. M0 Done. Streak lengths stay **derived** from qualifying days / checkoffs (no stored counter); same pattern as LC/apps and weekly met-weeks.

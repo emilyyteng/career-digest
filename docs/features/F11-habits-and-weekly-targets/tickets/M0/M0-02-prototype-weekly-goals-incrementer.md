@@ -1,8 +1,8 @@
 # M0-02: Prototype weekly goals column + incrementer
 
-**Status:** In progress
-**Blocked by:** (none — M0-01 Done; strip today-LC = Log LC disclosure, do not re-litigate)
-**Implements:** R.0, R0.2; designs for R3.1–R3.10, R.7, R.9, open Q13–Q14 (from `../../spec.md`)
+**Status:** Done
+**Blocked by:** (none)
+**Implements:** R.0, R0.2; designs for R3.1–R3.10, R.7, R.9, Q13–Q14 (from `../../spec.md`)
 **Type:** prototype
 
 ## What to build
@@ -45,7 +45,7 @@ Prototype page: `/prototype/f11/habits/weekly`
 - [x] Cap scenarios: + disabled or blocked at 3 customs; restore blocked at cap
 - [x] Pencil vs near-label target stepper are distinct (rename/archive vs goal size)
 - [x] No production imports of prototype code; mock data only
-- [ ] User records a verdict per design question in this ticket’s verification notes
+- [x] User records a verdict per design question in this ticket’s verification notes
 
 ## Reuse notes
 
@@ -55,29 +55,27 @@ Built with: `PrototypeSwitcher`, `ChromeTab`, `ModalLayer`, `Button` / `TextFiel
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked (awaiting user verdicts)
+- [x] Acceptance criteria met and checked
 - [x] `npm run check` passes
 - [x] Follows `docs/design-system.md` (variants only, no global CSS, shared modal)
 - [x] Reuse check done
 - [x] No production imports of prototype code
-- [ ] Ticket status `Done`; board updated; verdicts recorded
-- [ ] Committed as `F11 M0-02: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including **Issues found**
+- [x] Ticket status `Done`; board updated; verdicts recorded
+- [x] Committed as `F11 M0-02: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including **Issues found**
 
 ## Verification notes
 
-**Open for review:** `/prototype/f11/habits/weekly` (DEV). ← / → cycles Q13 variants.
+**Prototype:** `/prototype/f11/habits/weekly` (DEV). Keep until M3 build tickets that reference it are Done.
 
 | Variant | Q13 |
 |---------|-----|
-| A | Classic stepper (− N +) |
+| **A (chosen)** | Classic stepper (− N +) |
 | B | Number field flanked by ± |
 | C | Field-only (blur / Enter commit) |
 
-Orthogonal: `?cap=under|full` · `?arch=ghost|mute` (Q14 weekly; ghost = M0-01 strip language).
+**Verdicts (2026-10-16):**
+- **Q13:** classic stepper (− N +) — variant A
+- **Q14 (weekly):** ghost stamp (same as strip)
 
-**Verdicts (user):**
-- Q13: _(pending)_
-- Q14 (weekly): _(pending — ghost adapted from strip is the default)_
-
-Last prototype commit hash: _(after commit)_
+Last prototype commit hash: `6363801` (prototype add); close-out commit recorded on board.
