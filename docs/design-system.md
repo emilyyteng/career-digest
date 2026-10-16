@@ -102,7 +102,7 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | **Heatmap** | `ProgressHeatmap` / `HistoryCalendar` via [`intensityScale.ts`](../apps/web/src/features/progress/intensityScale.ts) | `--heat-0`…`--heat-4` (vivid rose soft peak); empty = `--surface-2` | RGB lerp mirrors tokens; legend uses CSS vars |
 | **Deadline urgency** | `DeadlineUrgency` + SVG pies + `.deadline-tone-*` | `--urgency-overdue` · `--urgency-soon` (pink) · `--urgency-ahead` (=P1) · `--urgency-ok` | Countdown: **Plex Mono**, zero-padded units joined by **`:`**; extra gap after pie cluster; SVG pies (no conic seam) |
 | **Priority** | `PriorityBadge` → `Badge` `p0`–`p2` compact | P0–P2 RYG | |
-| **In-content links (Home)** | `.home-section-link` / `.home-job-main` titles | Hover = **underline**; text may stay dark/ink (no purple required) | Underline is the hover signal (M1-15) |
+| **In-content links** | Global `a` (M1-16); Home `.home-section-link` / title wrappers | Resting + hover text = **ink**; hover = **underline** (no blue/purple) | See Patterns → In-content links for exceptions |
 
 Interim F08 `ui-btn*`, old `.tab.on` blue active, legacy `.badge.*`, and bare `input`/`textarea`/`select` structural shim remain in `styles.css` for unmigrated call sites. New UI must use `apps/web/src/ui`. Do not reintroduce a global filled `button` default or a `:not(...)` opt-out chain.
 
@@ -196,11 +196,28 @@ Ordered tactics:
 
 Do not re-open multi-select accordion stacks as the Tasks standard.
 
+### In-content links (F09 M1-16 · M1-15 verdict)
+
+Locked via Home pilot + app-wide apply (2026-10-15).
+
+**Default:** `a` uses **ink** text at rest and on hover; **underline on hover** (`text-underline-offset: 0.14em`). No blue resting color and no purple hover.
+
+**Exceptions (do not use the content-link hover dialect):**
+
+| Surface | Behavior |
+|---------|----------|
+| **`ChromeTab` / `ChromeTabLink`** | Hover = ink text only; underline only when **active** (ui.css) |
+| **Brand mark** (`.top-brand`) | No underline; ink title |
+| **Block card hits** (`.card-hit`, `.application-card-*`, `.home-job-main`, …) | No underline on the wrapper; underline the **title child** on hover |
+| **`a.external`** | Same ink + underline hover; class is layout/mono only (not a color dialect) |
+| **Rich text / JD body** (`.description a`, `.rich-text-editor a`) | Always underlined in prose; ink color |
+
+Buttons styled as links (e.g. `.document-link`) follow the same ink + underline language.
+
 ### Other M1 patterns (pending)
 
 | Topic | Ticket | Notes |
 |-------|--------|-------|
-| In-content link hover (app-wide) | F09 M1-16 | M1-15 lock exists; Home only — globals still blue/purple |
 | Modal anatomy | F09 M1-12 | |
 | Enforcement | F09 M1-13 | Q6 |
 
@@ -240,7 +257,7 @@ The 2026-10-13 F08 M5 interim choices (tinted purple primary, blue toggles, flat
 | Urgency | Prod pink/purple/blue/mint 5; then amber ahead | **Severity 4** (P0 → pink soon → **P1 gold ahead** → mint) |
 | Priority | Mixed | **RYG traffic** |
 | Countdown | Proportional sans, space-separated, conic pies | **Mono + padded `:` units**; SVG pies; gap after circles |
-| Link hover (Home) | Purple-deep / invisible ink-only | **Underline** (text may stay dark) |
+| Link hover | Global blue + purple hover; mixed page locals | **Ink + underline on hover** (M1-16); ChromeTab / brand / card-hit / rich-text exceptions |
 | Nesting / filters | Route shells vs query tabs; location chips as fake tabs; rounded Segmented as L2 | **Containerized title → ChromeTab → squared chips (below, left)**; shells for Progress/Rewards (M1-06) |
 | Paired panel height | Independent grow · viewport track · asymmetric natural/clamp | **Both peers fixed 28rem**; overflow inside (M1-07) |
 | Stacked list regions | Many open 28rem clamps | **Section chips → one well**; counts match active tab (M1-07) |
@@ -265,6 +282,7 @@ Run before marking any UI ticket done:
 - [ ] Filter chips wrap; dual columns stack at 640px
 - [ ] Long lists use bottom `Pager` (no jump/size select); EarnFlash near control (toast fallback); OneTimeNotice section-top
 - [ ] Long pages follow chips → clamp → pager before density/sticky compose
+- [ ] In-content links: ink + underline on hover; ChromeTab/brand/card-hit/rich-text exceptions respected
 - [ ] Only tokens / documented roles for color, radius and shadow
 - [ ] Dialogs use `ModalLayer`
 - [ ] Reused existing components where they fit (listed in the ticket)

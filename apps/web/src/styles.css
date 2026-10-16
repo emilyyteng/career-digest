@@ -100,8 +100,18 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; min-height: 100vh; }
-a { color: var(--accent-blue-deep); }
-a:hover { color: var(--accent-purple-deep); }
+/* In-content links (M1-16 / M1-15): ink text; underline on hover. Exceptions:
+   ChromeTab (ui.css), .top-brand, block card-hits (underline title child only),
+   a.external (layout helper; same hover), .rich-text-editor / .description a. */
+a {
+  color: var(--ink);
+  text-decoration: none;
+  text-underline-offset: 0.14em;
+}
+a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
 
 .shell { max-width: var(--shell-max); margin: 0 auto; padding: 1.5rem; }
 
@@ -126,6 +136,10 @@ a:hover { color: var(--accent-purple-deep); }
   border-bottom: 1px solid var(--border);
 }
 .top-brand {
+  text-decoration: none;
+  color: inherit;
+}
+.top-brand:hover {
   text-decoration: none;
   color: inherit;
 }
@@ -158,17 +172,20 @@ nav a {
   border: 1px solid transparent;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
+/* Legacy nav pills (pre-ChromeTab). App shell uses .ui-chrome-tab (ui.css). */
 nav a:hover {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   background: var(--surface);
   border-color: var(--border);
+  text-decoration: none;
 }
 nav a.active {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   font-weight: 600;
   background: var(--surface);
   border-color: var(--accent-pink);
   box-shadow: 0 1px 0 var(--accent-pink);
+  text-decoration: none;
 }
 
 .theme-emoji {
@@ -528,8 +545,9 @@ button:disabled {
 .card h2 a { color: inherit; text-decoration: none; }
 .card h2 a:hover,
 .card-hit:hover h2 {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 
 .meta {
@@ -628,11 +646,11 @@ a.external {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   white-space: nowrap;
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   text-decoration: none;
 }
 a.external:hover {
-  color: var(--accent-purple-deep);
+  color: var(--ink);
   text-decoration: underline;
 }
 a.external .ext-icon { font-size: 0.75rem; }
@@ -656,6 +674,10 @@ a.external .ext-icon { font-size: 0.75rem; }
   color: inherit;
   min-width: 0;
 }
+.application-card-hit:hover {
+  text-decoration: none;
+  color: inherit;
+}
 .application-card-layout {
   display: flex;
   flex-direction: column;
@@ -676,12 +698,21 @@ a.external .ext-icon { font-size: 0.75rem; }
   text-decoration: none;
   color: inherit;
 }
+.application-card-title-link:hover {
+  text-decoration: none;
+  color: inherit;
+}
 .application-card-title-link:hover h2 {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 .application-card-meta-link {
   display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.application-card-meta-link:hover {
   text-decoration: none;
   color: inherit;
 }
@@ -1106,10 +1137,11 @@ a.external .ext-icon { font-size: 0.75rem; }
   border-top: 1px solid var(--border);
 }
 .task-linked-posting a {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   text-decoration: none;
 }
 .task-linked-posting a:hover {
+  color: var(--ink);
   text-decoration: underline;
 }
 .modal-backdrop-nested {
@@ -1494,10 +1526,16 @@ button.hide-board-remove:hover:not(:disabled) {
   min-height: 0;
 }
 .description img { max-width: 100%; height: auto; }
+/* Rich-text / JD body: always underlined (exception — readable in dense prose). */
 .description a,
 .rich-text-editor a {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+.description a:hover,
+.rich-text-editor a:hover {
+  color: var(--ink);
 }
 
 .rich-text { display: grid; gap: 0.45rem; }
@@ -2112,7 +2150,7 @@ button.secondary.ui-btn:disabled {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   cursor: pointer;
   text-align: left;
   text-decoration: underline;
@@ -2124,7 +2162,7 @@ button.secondary.ui-btn:disabled {
   background: none;
   border: none;
   box-shadow: none;
-  color: var(--accent-purple-deep);
+  color: var(--ink);
 }
 .document-remove-btn {
   flex: 0 0 auto;
@@ -2254,6 +2292,10 @@ button.secondary.ui-btn:disabled {
   color: inherit;
   text-decoration: none;
   display: block;
+}
+.card-hit:hover {
+  text-decoration: none;
+  color: inherit;
 }
 .card-hit h2 { margin: 0 0 0.35rem; }
 
@@ -2853,10 +2895,11 @@ textarea { min-height: 10rem; width: 100%; }
   font-size: 0.8rem;
 }
 .ops-meta-counts dt a {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   text-decoration: none;
 }
 .ops-meta-counts dt a:hover {
+  color: var(--ink);
   text-decoration: underline;
 }
 .ops-card-hint {
@@ -3747,6 +3790,10 @@ a.home-section-link:hover,
   color: inherit;
   display: grid;
   gap: 0.15rem;
+}
+.home-job-main:hover {
+  text-decoration: none;
+  color: inherit;
 }
 .home-job-main:hover .home-job-title:not(.task-title-line) {
   text-decoration: underline;
@@ -5098,8 +5145,9 @@ button.progress-cal-cell.effort::after {
   text-decoration: none;
 }
 .task-title-link:hover {
-  color: var(--accent-purple-deep);
+  color: var(--ink);
   text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 
 .deadline-urgency-inline {
@@ -5762,8 +5810,9 @@ button.progress-cal-cell.effort::after {
   text-decoration: none;
 }
 .ledger-row-title-link:hover {
-  color: var(--accent-blue-deep);
+  color: var(--ink);
   text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 .ledger-row-meta {
   font-size: 0.8rem;

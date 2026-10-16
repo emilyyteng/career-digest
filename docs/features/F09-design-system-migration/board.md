@@ -25,12 +25,11 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) | Apply in-content link hover app-wide | build | Ready | After M1-15 Home lock |
 | [M1-12](./tickets/M1/M1-12-modal-anatomy.md) | Modal chrome anatomy | build | Draft | After M1-02 |
 | [M1-13](./tickets/M1/M1-13-enforcement-variant-lint.md) | Enforcement for variant-less controls (Q6) | build | Draft | After M1-05 |
 
 <details>
-<summary>Done (13)</summary>
+<summary>Done (14)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|

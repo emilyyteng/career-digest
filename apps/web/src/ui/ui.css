@@ -176,6 +176,7 @@ button.secondary.ui-chrome-tab:not(:disabled):hover {
   background: transparent;
   border-bottom-color: transparent;
   box-shadow: none;
+  text-decoration: none; /* M1-16: not an in-content link */
 }
 
 a.ui-chrome-tab.is-active,
@@ -189,6 +190,7 @@ button.secondary.ui-chrome-tab.is-active:not(:disabled):hover {
   color: var(--ink);
   font-weight: 600;
   box-shadow: none;
+  text-decoration: none;
 }
 
 .ui-chrome-tab-nav {
