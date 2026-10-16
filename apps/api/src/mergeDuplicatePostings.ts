@@ -2,6 +2,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PoolClient } from "pg";
 import { mergeApplicationInto } from "./applicationMerge.js";
+import {
+  purgeExpiredBoardDepartures,
+  recordDuplicateDeparture,
+} from "./boardDepartures.js";
 import { migrate, pool } from "./db.js";
 
 export {
@@ -246,6 +250,8 @@ async function mergePairs(
 
     try {
       await client.query("BEGIN");
+      // Snapshot before repoint/delete (M6-01). Skips applied+; task_removed always false.
+      await recordDuplicateDeparture(client, pair.simplify_id);
       const appResult = await repointApplication(
         client,
         pair.simplify_id,
@@ -277,6 +283,8 @@ async function mergePairs(
 
 export async function runMergeDuplicatePostings(): Promise<MergeDuplicateResult> {
   await migrate();
+  // Day-boundary purge (R6.7); also runs at ingest start.
+  await purgeExpiredBoardDepartures(pool);
   const client = await pool.connect();
   const greenhouse: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };
   const lever: MergeSourceStats = { pairs: 0, deletedSimplify: 0 };

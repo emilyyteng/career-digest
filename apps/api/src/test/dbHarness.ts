@@ -56,6 +56,7 @@ export async function truncateAll(client?: PoolClient): Promise<void> {
       cat_cake_ce_look,
       cat_cake_owned,
       cat_cake_pity,
+      board_departures,
       points_events,
       reflection_logs,
       leetcode_daily,

@@ -1,6 +1,6 @@
 # M6-01: Departure log schema and write paths
 
-**Status:** Ready
+**Status:** Done
 **Blocked by:** (none)
 **Implements:** R6.1, R6.2 (storage), R6.5, R6.6 (task-removed semantics), R6.7 (retention / purge) (from `../../spec.md`)
 **Type:** build
@@ -20,26 +20,30 @@ Persist board departures before the posting row is deleted, so Status can explai
 
 ## Acceptance criteria
 
-- [ ] Migration creates the table; `migrate()` applies cleanly on a fresh DB.
-- [ ] Board-gone delete inserts a `left_board` row with correct fields and `task_removed` when an open app task was deleted.
-- [ ] Applied+ retained postings produce **no** departure row.
-- [ ] Duplicate Simplify delete inserts a `duplicate` row; `task_removed` is false when the task was only repointed.
-- [ ] Filter-reject deletes produce **no** departure row.
-- [ ] Purge removes expired rows without being invoked from the log GET (GET may land in M6-02; if this ticket adds a temporary GET for tests, it still must not purge-on-read).
-- [ ] API/integration tests cover the write and purge rules above.
+- [x] Migration creates the table; `migrate()` applies cleanly on a fresh DB.
+- [x] Board-gone delete inserts a `left_board` row with correct fields and `task_removed` when an open app task was deleted.
+- [x] Applied+ retained postings produce **no** departure row.
+- [x] Duplicate Simplify delete inserts a `duplicate` row; `task_removed` is false when the task was only repointed.
+- [x] Filter-reject deletes produce **no** departure row.
+- [x] Purge removes expired rows without being invoked from the log GET (GET may land in M6-02; if this ticket adds a temporary GET for tests, it still must not purge-on-read).
+- [x] API/integration tests cover the write and purge rules above.
 
 ## Reuse notes
 
-[`ingest.ts`](../../../../../apps/api/src/ingest.ts) `reconcileRemovedFromBoard` / `clearTodoPipelineForGonePostings`; [`mergeDuplicatePostings.ts`](../../../../../apps/api/src/mergeDuplicatePostings.ts); employer display pattern in [`tasks.ts`](../../../../../apps/api/src/tasks.ts) / [`jobs.ts`](../../../../../apps/api/src/jobs.ts) (`CASE WHEN source = 'simplify' THEN department…`).
+[`boardDepartures.ts`](../../../../../apps/api/src/boardDepartures.ts); [`ingest.ts`](../../../../../apps/api/src/ingest.ts) `reconcileRemovedFromBoard`; [`mergeDuplicatePostings.ts`](../../../../../apps/api/src/mergeDuplicatePostings.ts); Jobs/Tasks company display SQL.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Reuse check done
-- [ ] Committed as `F08 M6-01: …`
-- [ ] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Reuse check done
+- [x] Committed as `F08 M6-01: …`
+- [x] End-of-task report given (`AGENTS.md` → End-of-task report), including tests added and **Issues found**
 
 ## Verification notes
 
-(filled when done)
+- Migration `041_board_departures.sql`: `board_departures` with reason check, `departed_on` UTC date for purge.
+- Writes: `recordLeftBoardDepartures` before todo cleanup; `recordDuplicateDeparture` before Simplify delete (skips applied+; `task_removed` always false on duplicate).
+- Purge: `purgeExpiredBoardDepartures` at start of `runIngest` and `runMergeDuplicatePostings` (UTC keep today+yesterday); no read path.
+- Tests: `boardDepartures.integration.test.ts` (7). `npm run check` green (352 tests).
+- Commit: (this commit).

@@ -10,6 +10,10 @@ import {
 } from "./filter.js";
 import { isAllowedUsLocation } from "./location.js";
 import type { CompanyConfig, NormalizedPosting } from "./types.js";
+import {
+  purgeExpiredBoardDepartures,
+  recordLeftBoardDepartures,
+} from "./boardDepartures.js";
 import { runMergeDuplicatePostings } from "./mergeDuplicatePostings.js";
 import {
   listActiveTrackedBoards,
@@ -143,6 +147,8 @@ export async function reconcileRemovedFromBoard(
   companyId: string,
   seenExternalIds: string[],
 ): Promise<{ deleted: number; retained: number }> {
+  // Snapshot before todo cleanup deletes open tasks (M6-01 / R6.1, R6.6).
+  await recordLeftBoardDepartures(pool, companyId, seenExternalIds);
   await clearTodoPipelineForGonePostings(companyId, seenExternalIds);
 
   const retained = await pool.query(
@@ -221,6 +227,8 @@ export type IngestStats = {
 
 export async function runIngest(): Promise<IngestStats> {
   await migrate();
+  // Day-boundary purge (R6.7): not on read; UTC today + yesterday kept.
+  await purgeExpiredBoardDepartures(pool);
 
   let listed = 0;
   let internships = 0;

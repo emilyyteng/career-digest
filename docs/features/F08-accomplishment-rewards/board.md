@@ -84,19 +84,19 @@ Done (16)
 
 ## M6: Board departures log
 
-**Milestone status:** Not started
+**Milestone status:** In progress
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M6-01](./tickets/M6/M6-01-departures-schema-and-writes.md) | Departure log schema and write paths | build | Ready | |
-| [M6-02](./tickets/M6/M6-02-departures-api.md) | Departure log API | build | Ready | Blocked by M6-01 |
+| [M6-02](./tickets/M6/M6-02-departures-api.md) | Departure log API | build | Ready | |
 | [M6-03](./tickets/M6/M6-03-status-departures-ui.md) | Status page departures UI | build | Ready | Blocked by M6-02 |
 
 <details>
-<summary>Done (0)</summary>
+<summary>Done (1)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M6-01](./tickets/M6/M6-01-departures-schema-and-writes.md) | Departure log schema and write paths | |
 
 </details>
 

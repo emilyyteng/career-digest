@@ -1,7 +1,7 @@
 # M6-02: Departure log API
 
 **Status:** Ready
-**Blocked by:** M6-01
+**Blocked by:** (none)
 **Implements:** R6.2, R6.6, R6.7 (read model) (from `../../spec.md`)
 **Type:** build
 
