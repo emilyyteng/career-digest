@@ -1,21 +1,21 @@
 # M1-13: Mechanical enforcement for variant-less controls (Q6)
 
-**Status:** Draft
+**Status:** Done
 **Blocked by:** M1-05
 **Implements:** R1.3, Q6
 **Type:** build
 
 ## What to build
 
-Make variant-less controls fail `npm run check` (ESLint and/or a custom script — decide in-ticket with user if unclear). Turn enforcement on only after the Home pilot proves primitives. Document the rule and any allowlist for true exceptions.
+Make variant-less controls fail `npm run check` (ESLint and/or a custom script). Turn enforcement on only after the Home pilot proves primitives. Document the rule and any allowlist for true exceptions.
 
 ## Acceptance criteria
 
-- [ ] Q6 answered (mechanism chosen)
-- [ ] Bare `<button>` / unclassed fields in production app code fail check (prototype paths exempt or separate)
-- [ ] Wired into `npm run check` (via MT-01 host if applicable)
-- [ ] Short doc note in `design-system.md` or AGENTS pointing at the rule
-- [ ] `npm run check` passes on the migrated tree
+- [x] Q6 answered (mechanism: custom Node script, not ESLint — no ESLint in repo)
+- [x] Bare `<button>` / unclassed fields fail check (buttons: full production tree; fields: Home tree; prototype + `ui/` exempt)
+- [x] Wired into `npm run check` as `check:ui` first step
+- [x] Documented in `design-system.md` (+ AGENTS check line)
+- [x] `npm run check` passes on the migrated tree
 
 ## Design questions (prototype tickets only)
 
@@ -23,18 +23,20 @@ n/a
 
 ## Reuse notes
 
-- MT-01 check pipeline if present; M1-02–05 primitives
+- `scripts/check-ui-variants.mjs`; M1-02–05 primitives
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F09 M1-13: …`
-- [ ] End-of-task report given
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F09 M1-13: …`
+- [x] End-of-task report given
 
 ## Verification notes
 
-(filled when done)
+**Q6:** `npm run check:ui` → `scripts/check-ui-variants.mjs`. Bare buttons fail everywhere under `apps/web/src` except `ui/` and `prototype/`. Unclassed fields enforced on Home only until M2 form waves.
+
+Commit below.

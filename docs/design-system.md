@@ -229,11 +229,17 @@ Reference migrations: `CompleteWorkModal`, `ModalLayer` discard dialog, Add-appl
 
 **Still out of scope here:** Achievement unlock modal still bypasses `ModalLayer` (known debt — fix in a follow / maintenance ticket).
 
-### Other M1 patterns (pending)
+### Enforcement (F09 M1-13 · Q6 / R1.3)
 
-| Topic | Ticket | Notes |
-|-------|--------|-------|
-| Enforcement | F09 M1-13 | Q6 |
+`npm run check` runs **`npm run check:ui`** → `scripts/check-ui-variants.mjs`.
+
+| Rule | Scope |
+|------|--------|
+| Bare `<button>` (no `className`) | All `apps/web/src/**` except `ui/` and `prototype/` |
+| Unclassed `<input>` / `<textarea>` / `<select>` | **Home tree only** (`pages/Home.tsx`, `features/home/`); expand with M2 form waves |
+| Exempt | `apps/web/src/ui/*` (primitives), `prototype/**` |
+
+Allowed buttons use `Button` or a named feature class (`.secondary`, `.todo-remove-btn`, `.tab`, …). Prefer `Button` / `TextField` for new UI. Matches are case-sensitive HTML tags (React `<Button>` is not flagged).
 
 Pilot surface for primitives: **Home** (F09 M1-05 + M1-15). App shell: flora.exe + underline chrome-tabs + 1100px.
 

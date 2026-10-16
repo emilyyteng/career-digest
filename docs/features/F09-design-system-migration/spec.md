@@ -102,13 +102,12 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 
 | # | Question | Blocks | Answer |
 |---|----------|--------|--------|
-| Q6 | How will UI rules be enforced mechanically (e.g. a lint rule against variant-less `<button>`)? A single `npm run check` command comes from maintenance ticket MT-01 and can host it. | M1 | (open) |
 | Q7 | Should `styles.css` be split (per component or per feature), and when? | M1 / M3 | (open) Prefer after primitives exist |
 
 ## Resolved questions
 
 <details>
-<summary>Resolved questions (20)</summary>
+<summary>Resolved questions (21)</summary>
 
 | # | Question | Answer (date) | Now in |
 |---|----------|---------------|--------|
@@ -127,6 +126,7 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | Q15 | Information depth | Containerized title→ChromeTab→squared chips (below, left)→content; max one tab row + one chip row; calendar = content; top nav kept; writes stay modals | R.8, `design-system.md` |
 | Q16† | Shell width | **1100px** | `design-system.md` |
 | Q16 | Layout / chrome budget (height + width) | Dual peers **fixed 28rem** in-panel scroll; Tasks **section chips → one well** (counts = active tab); mini above large when density differs; chips **wrap**; dual stack **640**; gaps 1rem/0.85rem; breakpoints 640/860/1100. Progress This week page composition → M2 (2026-10-15, M1-07/08) | `design-system.md` |
+| Q6 | Mechanical UI enforcement | `npm run check:ui` → `scripts/check-ui-variants.mjs`: bare `<button>` fails in production web; unclassed fields enforced on Home tree; `ui/` + prototype exempt (2026-10-15, M1-13) | R1.3, `design-system.md` |
 | Q8 | Long-list pagination | Bottom shared **`Pager`** (Prev / n/pages / Next), size **25**, no jump/size select; Past work 7-day window = Progress special case; reject load-more default (2026-10-15, M1-09) | R.7, `design-system.md` |
 | Q10 | EarnFlash / notice placement | EarnFlash **near control** (toast fallback); OneTimeNotice **section-top**, does not share rule (2026-10-15, M1-10) | R.9, `design-system.md` |
 | Q11 | Compact long pages | Ordered: chips → one well → pager → 28rem clamp → density → sticky compose if needed; Tasks first (M2) (2026-10-15, M1-11) | R.10, `design-system.md` |
@@ -157,3 +157,4 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 - **2026-10-15 (M1-09 / M1-10 / M1-11):** Patterns locked via `/prototype/f09/patterns`: R.7 Established — bottom shared `Pager` (size 25, no select; Past work 7-day window special); EarnFlash near control + toast fallback, OneTimeNotice section-top; compact tactics chips → clamp → pager (+ density/sticky only if needed). Q8 / Q10 / Q11 resolved.
 - **2026-10-15 (M1-16):** In-content link hover applied app-wide: ink text + underline on hover; exceptions for ChromeTab, brand, block card-hits, rich-text body links.
 - **2026-10-15 (M1-12):** Modal inner anatomy locked (`ModalHeader` / `ModalBody` / `ModalFooter`; secondary then primary). Achievement unlock still bypasses ModalLayer (known debt).
+- **2026-10-15 (M1-13):** Q6 answered — `check:ui` script in `npm run check` for bare buttons (full tree) and unclassed fields (Home tree); `ui/` + prototype exempt.

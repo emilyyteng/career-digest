@@ -94,7 +94,7 @@ Surface everything; fix nothing outside the ticket's scope; create tickets only 
 ## Definition of done (every ticket)
 
 - [ ] Every acceptance criterion is met and checked, not assumed
-- [ ] `npm run check` passes: API typecheck (0 errors), web build, then API tests. It stops at the first failure.
+- [ ] `npm run check` passes: `check:ui` (variant-less controls), API typecheck (0 errors), web build, then API tests. It stops at the first failure.
 - [ ] UI changes follow `docs/design-system.md`: component variants only, no new global or element-level CSS, no one-off modal
 - [ ] Reuse check done: searched for existing components/helpers first; reused pieces listed in the ticket
 - [ ] No prototype code imported by production code
