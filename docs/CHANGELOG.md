@@ -339,7 +339,7 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 
 ## Design system migration (F09)
 
-*Built 2026-10-15 (M0).* Spec: [F09](./features/F09-design-system-migration/spec.md).
+*Built 2026-10-15 (M0–M1).* Spec: [F09](./features/F09-design-system-migration/spec.md).
 
 **Why:** The app accumulated conflicting visual dialects (filled blue buttons, purple interim controls, open-canvas Rewards, overloaded accent meanings). New UI needed an authoritative foundation before primitives and surface migrations.
 
@@ -352,6 +352,15 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 - Documented in [`docs/design-system.md`](./design-system.md). F08 M5 interim visuals superseded. Production CSS migrates in later milestones.
 
 **Outcome:** New UI and F09 waves have a single visual standard to follow; interaction/IA patterns remain for M1.
+
+### M1: Primitives, patterns, enforcement, Home pilot
+
+- Shared primitives: `Button`, fields, `Segmented`, `ChromeTab`, `Badge`; heat/urgency washes; global filled-blue button default and `:not(...)` chain removed.
+- Pilot-migrated **Home** and the app shell (flora.exe, underline chrome-tabs, 1100px).
+- Locked IA patterns in the design system: feature shell / nested tabs; dual-panel **28rem** height with in-panel scroll; chrome budget; shared **`Pager`** contract (size 25, no jump select); EarnFlash near-control; compact long-page tactics (chips → well → pager → clamp); modal header→body→footer; in-content link hover (ink + underline).
+- Mechanical enforcement: `npm run check:ui` fails bare `<button>` app-wide and unclassed fields on the Home tree.
+
+**Outcome:** The design system is authoritative for new UI. Core surfaces (Tasks, Jobs, Applications, Interviews, Progress polish) migrate in M2.
 
 ---
 
