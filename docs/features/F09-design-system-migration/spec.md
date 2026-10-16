@@ -20,7 +20,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | Milestone | Scope | Status |
 |-----------|-------|--------|
 | M0 | Purely visual + brand framing. Inventory production UI; explore direction broadly in **F09-owned** prototypes (not F08) — vibe packs, font switcher, color-meaning schemes, containment — then lock foundations in `docs/design-system.md`. Includes discussing product identity / possible rebrand as it ties to vibe | Done |
-| M1 | Build primitives; remove the global inheritance trap; document interaction/IA patterns (lists, feature shell, paired panel heights, banner placement, compact long pages); enforce mechanically; pilot-migrate **Home** | Design |
+| M1 | Build primitives; remove the global inheritance trap; document interaction/IA patterns (lists, feature shell, paired panel heights, banner placement, compact long pages); enforce mechanically; pilot-migrate **Home** | Done |
 | M2 | Wave migration of core surfaces (Tasks compaction first; then Jobs / Applications / Interviews, including R.6); list pagination defaults as implemented convention | Not started |
 | M3 | Remaining pages; CSS organization if still needed; retire dead opt-out and obsolete prototype styles; feature close-out | Not started |
 
@@ -76,7 +76,8 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | `button.secondary` remains as legacy variant (~100+ uses); ink hover (M1-04) | across `apps/web/src` | Unspecified | Prefer `Button` for new UI; full call-site cleanup with surface waves |
 
 | `:root` tokens ("Sakura Terminal" palette): `--accent-{pink,blue,purple,mint,yellow}` + `-deep`, `--surface`, `--border`, `--text*`, `--danger*`, `--radius-*`, `--shadow-*` | `styles.css` | Conflicts (roles remapped in M0) | M0 locked ink-desk roles in `design-system.md`; prod token names/values migrate in M1+ |
-| `ModalLayer` provides the shared backdrop, Escape handling and dirty-discard guard; inner chrome helpers exist | `ModalLayer.tsx`, `ui/ModalChrome.tsx` | Conforms R.4 (M1-12) | New modals use header→body→footer; legacy modals migrate in waves. Achievement unlock still bypasses ModalLayer |
+| `ModalLayer` provides the shared backdrop, Escape handling and dirty-discard guard; inner chrome helpers exist | `ModalLayer.tsx`, `ui/ModalChrome.tsx` | Conforms R.4 (M1-12) | New modals use header→body→footer; legacy modals migrate in waves |
+| Achievement unlock uses a hand-rolled overlay, not `ModalLayer` | `AchievementUnlockModal.tsx`, `AchievementUnlockHost.tsx` | Conflicts R.4 | Ticketed **M3-01** |
 | Each prototype milestone has its own stylesheet (`prototype-m1.css`, `-m2`, `-m4`, `-m5`, F08 topic CSS, …) | `apps/web/src/prototype/` | Conflicts R.2 | F09 direction work must not live under F08 prototypes (R.13) |
 | All styles live in one ~6k-line file | `styles.css` | Unspecified | Splitting is Q7 |
 | ~~Number inputs inherit global padding so LC target looks oversized~~ | Progress weekly goals | Conforms (M1-02) | Uses `TextField fieldSize="num"` |
@@ -158,3 +159,4 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 - **2026-10-15 (M1-16):** In-content link hover applied app-wide: ink text + underline on hover; exceptions for ChromeTab, brand, block card-hits, rich-text body links.
 - **2026-10-15 (M1-12):** Modal inner anatomy locked (`ModalHeader` / `ModalBody` / `ModalFooter`; secondary then primary). Achievement unlock still bypasses ModalLayer (known debt).
 - **2026-10-15 (M1-13):** Q6 answered — `check:ui` script in `npm run check` for bare buttons (full tree) and unclassed fields (Home tree); `ui/` + prototype exempt.
+- **2026-10-15 (M1 close):** M1 Done — primitives, patterns, Home pilot, `check:ui` enforcement. Achievement unlock ModalLayer debt → **M3-01**. Next: M2 surface waves.

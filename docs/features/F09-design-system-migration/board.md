@@ -21,7 +21,7 @@ No open tickets.
 
 ## M1: Primitives, patterns, enforcement, pilot migrate
 
-**Milestone status:** Design
+**Milestone status:** Done
 
 No open tickets.
 
@@ -67,7 +67,11 @@ Tickets after M1. Expected: Tasks compaction (R.10 / M1-11 tactics); **Jobs / Ap
 
 **Milestone status:** Not started
 
-Tickets after M2. Expected: remaining pages; CSS split if still warranted (Q7); retire dead opt-outs / obsolete prototype styles; feature close-out.
+Tickets after M2. Expected: remaining pages; CSS split if still warranted (Q7); retire dead opt-outs / obsolete prototype styles; feature close-out. Achievement unlock → `ModalLayer` is already ticketed (surfaced in M1-12).
+
+| Ticket | Title | Type | Status | Notes |
+|--------|-------|------|--------|-------|
+| [M3-01](./tickets/M3/M3-01-achievement-unlock-modallayer.md) | Achievement unlock → ModalLayer | bug | Ready | From M1-12; R.4 |
 
 <details>
 <summary>Done (0)</summary>

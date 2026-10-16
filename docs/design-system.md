@@ -227,7 +227,7 @@ Sizes: `Button` `md` default; `sm` only when density requires it. Footer buttons
 
 Reference migrations: `CompleteWorkModal`, `ModalLayer` discard dialog, Add-application discard confirm. Other modals may keep raw `h2` + `.form-actions` until their surface wave; new modals should use the helpers.
 
-**Still out of scope here:** Achievement unlock modal still bypasses `ModalLayer` (known debt — fix in a follow / maintenance ticket).
+**Known debt:** Achievement unlock still bypasses `ModalLayer` — ticketed as [F09 M3-01](./features/F09-design-system-migration/tickets/M3/M3-01-achievement-unlock-modallayer.md).
 
 ### Enforcement (F09 M1-13 · Q6 / R1.3)
 
