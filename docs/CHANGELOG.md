@@ -364,6 +364,28 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 
 ---
 
+## Custom habits & weekly targets (F11)
+
+*Spec:* [features/F11-habits-and-weekly-targets/spec.md](./features/F11-habits-and-weekly-targets/spec.md). *Built from 2026-10-15.*
+
+**Why:** Daily streaks only covered career prep (applications and LeetCode). Named personal habits needed the same streak-points rules, plus a place for non-daily quotas as weekly targets rather than alternate streak schedules.
+
+### M0: Requirements lock & prototypes
+
+Grilled requirements for multi-habit daily tracking and custom weekly targets (3 custom / 5 total with apps+LC each). DEV-only prototypes locked strip and weekly chrome: mark hit-target checkoff, Log LC disclosure, classic weekly stepper, ghost-stamp Archived views.
+
+**Outcome:** Build tickets could follow locked UX without inventing strip or weekly chrome.
+
+### M1: Daily custom habits — data & API
+
+- Schema for habit identity and per-day checkoffs; streak length stays derived (same idea as LC/apps).
+- Today-only streak points reuse the shared daily/milestone formulas; ledger source ids are `habit:<id>:…` so they never collide with `lc:` / `apps:`.
+- HTTP under `/api/habits` (create, rename, archive, restore, today checkoff) with an active-cap of 3. `GET /progress/today` adds `habits.active` / `habits.archived` beside unchanged LC/apps streaks.
+
+**Outcome:** The API can drive a Habits strip; UI is M2.
+
+---
+
 ## Documentation & development process (F10)
 
 *Built 2026-08-31 and 2026-10-12 to 2026-10-13.*

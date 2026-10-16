@@ -2,7 +2,7 @@
 
 **ID:** F11
 **Status:** Active
-**Last updated:** 2026-10-16 (M0 closed; M1–M3 tickets drafted)
+**Last updated:** 2026-10-16 (M1 Done — customs schema, streaks/points, HTTP + today payload)
 
 ## Problem
 
@@ -23,7 +23,7 @@ Daily streaks today only cover career prep (applications and LeetCode). Life foc
 | Milestone | Scope | Status |
 |-----------|-------|--------|
 | M0 | Lock requirements (done in grilling); **prototypes** for contested UX (habits strip → weekly column + incrementer) | Done |
-| M1 | Daily custom habits: data, API, points hooks | Not started |
+| M1 | Daily custom habits: data, API, points hooks | Done |
 | M2 | Daily habits UI + This week / Home strip remodel (checkoff, archive, reflection pencil, today-LC home from prototype verdict) | Not started |
 | M3 | Custom weekly targets: data/API/UI (Progress weekly column, incrementer, Home Targets) | Not started |
 

@@ -21,7 +21,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 ## M1: Daily custom habits — data & API
 
-**Milestone status:** In progress
+**Milestone status:** Done
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
