@@ -116,6 +116,14 @@ import {
   patchLcGoal,
   setAppTargetMembership,
 } from "./weeklyGoals.js";
+import {
+  archiveCustomHabit,
+  createCustomHabit,
+  listCustomHabits,
+  renameCustomHabit,
+  restoreCustomHabit,
+  setCustomHabitTodayCheckoff,
+} from "./customHabits.js";
 import { isLeetcodeTier } from "./pointsFormulas.js";
 import {
   adjustApplicationActual,
@@ -1583,6 +1591,109 @@ api.get("/progress/today", async (req, res) => {
     return;
   }
   res.json(await getProgressToday(pool, tz));
+});
+
+function habitErrStatus(err: unknown): number {
+  return typeof (err as { status?: number }).status === "number"
+    ? (err as { status: number }).status
+    : 400;
+}
+
+api.get("/habits", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  res.json(await listCustomHabits(pool, tz));
+});
+
+api.post("/habits", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    const habit = await createCustomHabit(pool, tz, (req.body as { name?: unknown }).name);
+    res.status(201).json(habit);
+  } catch (err) {
+    res.status(habitErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.patch("/habits/:id", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    const habit = await renameCustomHabit(
+      pool,
+      req.params.id,
+      tz,
+      (req.body as { name?: unknown }).name,
+    );
+    res.json(habit);
+  } catch (err) {
+    res.status(habitErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.post("/habits/:id/archive", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    res.json(await archiveCustomHabit(pool, req.params.id, tz));
+  } catch (err) {
+    res.status(habitErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.post("/habits/:id/restore", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    res.json(await restoreCustomHabit(pool, req.params.id, tz));
+  } catch (err) {
+    res.status(habitErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.put("/habits/:id/checkoff", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    const habit = await setCustomHabitTodayCheckoff(
+      pool,
+      req.params.id,
+      tz,
+      (req.body as { checked?: unknown }).checked,
+    );
+    res.json(habit);
+  } catch (err) {
+    res.status(habitErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
 });
 
 api.get("/progress/completions", async (req, res) => {

@@ -38,6 +38,21 @@ export type ProgressToday = {
     lc: { length: number; todayCounts: boolean };
     apps: { length: number; todayCounts: boolean };
   };
+  /** Custom daily habits (F11); Active creation order + Archived for the strip. */
+  habits: {
+    active: Array<{
+      id: string;
+      name: string;
+      length: number;
+      todayCounts: boolean;
+    }>;
+    archived: Array<{
+      id: string;
+      name: string;
+      length: number;
+      todayCounts: boolean;
+    }>;
+  };
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
@@ -355,12 +370,25 @@ async function shiftLocalDate(
 
 export async function getProgressToday(pool: Pool, tz: string): Promise<ProgressToday> {
   const { getStreaks } = await import("./streaks.js");
+  const { listCustomHabits } = await import("./customHabits.js");
   const localDate = localDateInTimezone(new Date(), tz);
   const appRaw = await countApplicationsInRange(pool, tz, localDate, localDate);
   const { tiers: lcTiers, weeklyTiers: lcWeeklyTiers } = await readLeetcodeDay(pool, localDate);
   const lcRaw = lcTiers.easy + lcTiers.medium + lcTiers.hard;
   const lcWeekTiers = await readLeetcodeWeekTiers(pool, localDate);
   const streaks = await getStreaks(pool, tz);
+  const habitsSnap = await listCustomHabits(pool, tz);
+  const stripHabit = (h: {
+    id: string;
+    name: string;
+    length: number;
+    todayCounts: boolean;
+  }) => ({
+    id: h.id,
+    name: h.name,
+    length: h.length,
+    todayCounts: h.todayCounts,
+  });
   const effortApp = await effortDaysByLane(pool, tz, "application", localDate, localDate);
   const effortTech = await effortDaysByLane(pool, tz, "technical", localDate, localDate);
   const effortOther = await effortDaysByLane(pool, tz, "other", localDate, localDate);
@@ -374,6 +402,10 @@ export async function getProgressToday(pool: Pool, tz: string): Promise<Progress
     leetcodeWeeklyTiers: lcWeeklyTiers,
     leetcodeWeekTiers: lcWeekTiers,
     streaks: { lc: streaks.lc, apps: streaks.apps },
+    habits: {
+      active: habitsSnap.active.map(stripHabit),
+      archived: habitsSnap.archived.map(stripHabit),
+    },
     effortApplication: effortApp.size > 0,
     effortTechnical: effortTech.size > 0,
     effortOther: effortOther.size > 0,

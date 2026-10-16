@@ -957,6 +957,21 @@ export type ProgressToday = {
     lc: { length: number; todayCounts: boolean };
     apps: { length: number; todayCounts: boolean };
   };
+  /** Custom daily habits (F11); Active creation order + Archived for the strip. */
+  habits: {
+    active: Array<{
+      id: string;
+      name: string;
+      length: number;
+      todayCounts: boolean;
+    }>;
+    archived: Array<{
+      id: string;
+      name: string;
+      length: number;
+      todayCounts: boolean;
+    }>;
+  };
   effortApplication: boolean;
   effortTechnical: boolean;
   effortOther: boolean;
