@@ -25,11 +25,10 @@ No open tickets.
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M1-12](./tickets/M1/M1-12-modal-anatomy.md) | Modal chrome anatomy | build | Draft | After M1-02 |
 | [M1-13](./tickets/M1/M1-13-enforcement-variant-lint.md) | Enforcement for variant-less controls (Q6) | build | Draft | After M1-05 |
 
 <details>
-<summary>Done (14)</summary>
+<summary>Done (15)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
@@ -47,6 +46,7 @@ No open tickets.
 | [M1-10](./tickets/M1/M1-10-pattern-earnflash-placement.md) | Pattern: EarnFlash placement (Q10/R.9) | `e25943c` |
 | [M1-11](./tickets/M1/M1-11-pattern-compact-long-pages.md) | Pattern: compact long-page tactics (Q11/R.10) | `62ed23a` |
 | [M1-16](./tickets/M1/M1-16-in-content-link-hover.md) | Apply in-content link hover app-wide | `fd60056` |
+| [M1-12](./tickets/M1/M1-12-modal-anatomy.md) | Modal chrome anatomy | `PENDING` |
 
 </details>
 

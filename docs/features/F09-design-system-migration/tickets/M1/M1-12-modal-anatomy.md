@@ -1,6 +1,6 @@
 # M1-12: Modal chrome anatomy
 
-**Status:** Draft
+**Status:** Done
 **Blocked by:** M1-02
 **Implements:** R.4, R1.1
 **Type:** build
@@ -11,10 +11,10 @@ Standardize modal **inner anatomy** on top of `ModalLayer`: header, body, footer
 
 ## Acceptance criteria
 
-- [ ] Anatomy documented (structure + button order + which Button variants)
-- [ ] At least one production modal updated as reference (or a shared modal chrome helper)
-- [ ] Still uses `ModalLayer` only — no hand-rolled backdrops
-- [ ] `npm run check` passes
+- [x] Anatomy documented (structure + button order + which Button variants)
+- [x] Shared `ModalHeader` / `ModalBody` / `ModalFooter` helpers; CompleteWorkModal + ModalLayer discard (+ Add-app discard) as references
+- [x] Still uses `ModalLayer` only — no hand-rolled backdrops
+- [x] `npm run check` passes
 
 ## Design questions (prototype tickets only)
 
@@ -22,18 +22,20 @@ n/a — appearance follows M0; structure is the M1 lock
 
 ## Reuse notes
 
-- `ModalLayer.tsx`; M1-02 Button primitives; lab modal sample
+- `ModalLayer.tsx`; M1-02 `Button`; new `ui/ModalChrome.tsx`
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Committed as `F09 M1-12: …`
-- [ ] End-of-task report given
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Committed as `F09 M1-12: …`
+- [x] End-of-task report given
 
 ## Verification notes
 
-(filled when done)
+Helpers in `apps/web/src/ui/ModalChrome.tsx`. Documented under Patterns → Modal anatomy. Achievement unlock still bypasses ModalLayer (known debt, not fixed here).
+
+Commit below.

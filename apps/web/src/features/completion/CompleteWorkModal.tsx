@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { ProgressLane } from "../../api";
 import ModalLayer, { type ModalLayerHandle } from "../../ModalLayer";
-import { Button } from "../../ui";
+import { Button, ModalBody, ModalFooter, ModalHeader } from "../../ui";
 import OptionalPanel from "./OptionalPanel";
 import ReflectionDraftFields, {
   MinutesField,
@@ -148,66 +148,69 @@ export default function CompleteWorkModal({
           trySubmit();
         }}
       >
-        <h2 id="complete-work-title">{title}</h2>
-        {contextLabel && <p className="muted complete-work-context">{contextLabel}</p>}
-        <p className="muted lede">{description}</p>
+        <ModalHeader id="complete-work-title" title={title}>
+          {contextLabel && (
+            <p className="muted complete-work-context">{contextLabel}</p>
+          )}
+        </ModalHeader>
+        <ModalBody>
+          <p className="muted lede">{description}</p>
 
-        {showReflection && (
-          <OptionalPanel
-            label="Reflection"
-            enabled={reflectionOn}
-            onEnabledChange={setReflectionOn}
-            disabled={pending}
-          >
-            <ReflectionDraftFields
-              value={reflection}
-              onChange={setReflection}
+          {showReflection && (
+            <OptionalPanel
+              label="Reflection"
+              enabled={reflectionOn}
+              onEnabledChange={setReflectionOn}
               disabled={pending}
-            />
-          </OptionalPanel>
-        )}
+            >
+              <ReflectionDraftFields
+                value={reflection}
+                onChange={setReflection}
+                disabled={pending}
+              />
+            </OptionalPanel>
+          )}
 
-        {showNotes && (
-          <OptionalPanel
-            label="Notes"
-            enabled={notesOn}
-            onEnabledChange={setNotesOn}
-            disabled={pending}
-          >
-            <textarea
-              rows={4}
-              value={notes}
+          {showNotes && (
+            <OptionalPanel
+              label="Notes"
+              enabled={notesOn}
+              onEnabledChange={setNotesOn}
               disabled={pending}
-              placeholder="Anything to remember on this application or task…"
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </OptionalPanel>
-        )}
+            >
+              <textarea
+                rows={4}
+                value={notes}
+                disabled={pending}
+                placeholder="Anything to remember on this application or task…"
+                onChange={(event) => setNotes(event.target.value)}
+              />
+            </OptionalPanel>
+          )}
 
-        {actualTimeMode === "task" && (
-          <MinutesField value={taskActual} onChange={setTaskActual} disabled={pending} />
-        )}
-
-        <div className="form-actions">
-          <button
+          {actualTimeMode === "task" && (
+            <MinutesField value={taskActual} onChange={setTaskActual} disabled={pending} />
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button
             type="button"
-            className="secondary"
             disabled={pending}
             onClick={() => layerRef.current?.requestClose()}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="modal-confirm-btn"
+            variant="primary"
             disabled={
               pending ||
               (showReflection && reflectionOn && reflection.body.trim() === "")
             }
           >
             {pending ? "Saving…" : confirmLabel}
-          </button>
-        </div>
+          </Button>
+        </ModalFooter>
       </form>
 
       {discardTarget && (
@@ -217,28 +220,32 @@ export default function CompleteWorkModal({
           onPointerUp={(event) => event.stopPropagation()}
         >
           <div className="modal modal-compact" role="alertdialog" aria-modal="true">
-            <h3>
-              {discardTarget === "both"
-                ? "Discard reflection/notes?"
-                : discardTarget === "reflection"
-                  ? "Discard reflection?"
-                  : "Discard notes?"}
-            </h3>
-            <p className="muted">
-              {discardTarget === "both"
-                ? "Reflection and notes are collapsed but still have text. Discard them to continue, or keep editing."
-                : discardTarget === "reflection"
-                  ? "Reflection is collapsed but still has text. Discard it to continue, or keep editing."
-                  : "Notes are collapsed but still have text. Discard them to continue, or keep editing."}
-            </p>
-            <div className="form-actions">
+            <ModalHeader>
+              <h3>
+                {discardTarget === "both"
+                  ? "Discard reflection/notes?"
+                  : discardTarget === "reflection"
+                    ? "Discard reflection?"
+                    : "Discard notes?"}
+              </h3>
+            </ModalHeader>
+            <ModalBody>
+              <p className="muted">
+                {discardTarget === "both"
+                  ? "Reflection and notes are collapsed but still have text. Discard them to continue, or keep editing."
+                  : discardTarget === "reflection"
+                    ? "Reflection is collapsed but still has text. Discard it to continue, or keep editing."
+                    : "Notes are collapsed but still have text. Discard them to continue, or keep editing."}
+              </p>
+            </ModalBody>
+            <ModalFooter>
               <Button type="button" onClick={keepEditingDiscard}>
                 Keep editing
               </Button>
               <Button type="button" variant="primary" onClick={confirmDiscardAndSubmit}>
                 Discard
               </Button>
-            </div>
+            </ModalFooter>
           </div>
         </div>
       )}

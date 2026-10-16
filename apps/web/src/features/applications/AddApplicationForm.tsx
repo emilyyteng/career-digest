@@ -9,7 +9,7 @@ import { createApplication, getApplication, type ApplicationRow } from "../../ap
 import { toDateInputValue } from "../../formatDate";
 import LocationSuggest from "../../LocationSuggest";
 import RichTextField, { isEmptyRichHtml } from "../../RichTextField";
-import { Button } from "../../ui";
+import { Button, ModalBody, ModalFooter, ModalHeader } from "../../ui";
 
 type Props = {
   onCreated: (row: ApplicationRow) => void;
@@ -99,18 +99,20 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
     if (confirmDiscard) {
       return (
         <div className="discard-confirm" role="alertdialog" aria-labelledby="add-app-title" aria-describedby="discard-desc">
-          <h2 id="add-app-title">Discard this application?</h2>
-          <p id="discard-desc" className="muted lede">
-            You have unsaved changes. Closing will throw them away.
-          </p>
-          <div className="form-actions">
-            <button type="button" className="secondary" onClick={() => setConfirmDiscard(false)}>
+          <ModalHeader id="add-app-title" title="Discard this application?" />
+          <ModalBody>
+            <p id="discard-desc" className="muted lede">
+              You have unsaved changes. Closing will throw them away.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button type="button" onClick={() => setConfirmDiscard(false)}>
               Keep editing
-            </button>
-            <button type="button" className="modal-confirm-btn" onClick={() => onCancel?.()}>
+            </Button>
+            <Button type="button" variant="primary" onClick={() => onCancel?.()}>
               Discard
-            </button>
-          </div>
+            </Button>
+          </ModalFooter>
         </div>
       );
     }

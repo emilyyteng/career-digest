@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "./ui";
+import { Button, ModalBody, ModalFooter, ModalHeader } from "./ui";
 
 type Props = {
   children: ReactNode;
@@ -117,9 +117,13 @@ const ModalLayer = forwardRef<ModalLayerHandle, Props>(function ModalLayer(
           }}
         >
           <div className="modal modal-compact" role="alertdialog" aria-modal="true">
-            <h3>Discard edits?</h3>
-            <p className="muted">Unsaved changes will be lost.</p>
-            <div className="form-actions">
+            <ModalHeader>
+              <h3>Discard edits?</h3>
+            </ModalHeader>
+            <ModalBody>
+              <p className="muted">Unsaved changes will be lost.</p>
+            </ModalBody>
+            <ModalFooter>
               <Button type="button" onClick={() => setConfirmDiscard(false)}>
                 Keep editing
               </Button>
@@ -133,7 +137,7 @@ const ModalLayer = forwardRef<ModalLayerHandle, Props>(function ModalLayer(
               >
                 Discard
               </Button>
-            </div>
+            </ModalFooter>
           </div>
         </div>
       )}

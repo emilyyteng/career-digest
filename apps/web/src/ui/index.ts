@@ -7,3 +7,4 @@ export { ChromeTab, ChromeTabLink, chromeTabClass } from "./ChromeTab";
 export type { ChromeTabSize } from "./ChromeTab";
 export { default as Badge, badgeClass } from "./Badge";
 export type { BadgeTone, BadgeSize } from "./Badge";
+export { ModalHeader, ModalBody, ModalFooter } from "./ModalChrome";

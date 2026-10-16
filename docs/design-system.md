@@ -11,7 +11,7 @@ The source of truth for visual and interaction conventions in `apps/web`. **Read
 1. **Explicit variants, not global defaults.** Every interactive element gets its look from a named variant class or component. Never rely on bare element styling (`button`, `input`, `a`, ...).
 2. **No new global or element-level CSS.** Don't add rules targeting bare elements, and don't add classes to the global `button:not(...)` opt-out chain in `styles.css`. That chain is legacy and is being removed.
 3. **Use tokens.** Colors, radii and shadows come from `:root` variables (or the named roles below until production tokens are renamed). No raw hex values or ad-hoc `box-shadow` in new code except when introducing a documented token in the same change.
-4. **One modal standard.** Every dialog renders inside `ModalLayer` (`apps/web/src/ModalLayer.tsx`). Don't build a backdrop, Escape handling or a discard guard yourself.
+4. **One modal standard.** Every dialog renders inside `ModalLayer` (`apps/web/src/ModalLayer.tsx`). Don't build a backdrop, Escape handling or a discard guard yourself. Inner chrome: header → body → footer (see Patterns → Modal anatomy).
 5. **Reuse before adding.** Check the component catalogue below and existing `features/*` components before creating a new visual pattern.
 6. **Unknowns go to the user.** If a needed decision isn't covered here, ask, then record the answer in this file.
 7. **Log styling issues in F09; don't fix them in place.** An inconsistency found while doing other work goes into the Current behavior table of `docs/features/F09-design-system-migration/spec.md`, for F09's app-wide pass. Fix it now only if the ticket can't work without the fix.
@@ -96,7 +96,7 @@ Visual appearance locked (M0). Shared React primitives live in [`apps/web/src/ui
 | **ChromeTab** | `ChromeTab` (button) · `ChromeTabLink` (NavLink) — `.ui-chrome-tab` (+ `-nav` / `-subnav` / `-page`) | Active = **underline ink**; hover = ink text only | App nav (`nav`), feature subnav (`subnav`), page tabs (`page`). Same language, quieter at smaller sizes |
 | **Badge** | `Badge` — `.ui-badge` + `.ui-badge-<tone>` | Tones: `p0`–`p2`, `interview` (apps) / `goal` (**domain tech**), `applied`/`interviewing`/`accepted`/`declined`, `score`/`streak`, `liked` (warn), `danger`/`ok`/`dates`/`neutral` · sizes `md` / `compact` | Kind labels rendered **INTERVIEW** / **GOAL** uppercase; role tokens only |
 | **Card** | `.card` | Soft shadow OK | All-carded |
-| **Modal** | `ModalLayer` | Anatomy M1-12 | Secondary then primary |
+| **Modal** | `ModalLayer` + `ModalHeader` / `ModalBody` / `ModalFooter` | Shell + inner anatomy (M1-12) | Footer: **secondary then primary** `Button`; flat (no shadow) |
 | **Banner** | `EarnFlash` / `OneTimeNotice` | Mint base | EarnFlash near control (toast fallback); OneTimeNotice stays section-top (M1-10) |
 | **Pager** | Shared `Pager` helper when first list migrates (M2+) | Prev · `page / pages` (mono text) · Next; default page size **25** | **No** page-jump `<select>`, **no** page-size selector. Jobs `.pager` + jump select is migration debt |
 | **Heatmap** | `ProgressHeatmap` / `HistoryCalendar` via [`intensityScale.ts`](../apps/web/src/features/progress/intensityScale.ts) | `--heat-0`…`--heat-4` (vivid rose soft peak); empty = `--surface-2` | RGB lerp mirrors tokens; legend uses CSS vars |
@@ -129,7 +129,6 @@ Locked via `/prototype/f09/nesting` (verdict 2026-10-15). Lives in this file (no
 
 **Conforming targets:** Progress and Rewards already use route shells + subnav; bring them (and Jobs location / Past work ledger type) onto title→tabs→chips anatomy in surface waves. Past work Completions/Points/Reflections demote from nested tabs to L2 chips.
 
-**Still open (not this pattern):** modal anatomy → M1-12.
 
 ### Paired panel height + overflow (F09 M1-07 · Q16)
 
@@ -214,11 +213,26 @@ Locked via Home pilot + app-wide apply (2026-10-15).
 
 Buttons styled as links (e.g. `.document-link`) follow the same ink + underline language.
 
+### Modal anatomy (F09 M1-12 · R.4)
+
+Locked 2026-10-15. Shell stays **`ModalLayer`** only (backdrop, Escape, optional dirty discard).
+
+**Inner structure** (helpers in `apps/web/src/ui/ModalChrome.tsx`):
+
+1. **`ModalHeader`** — title (`h2` via `title`+`id`, or custom heading children); optional muted context under the title
+2. **`ModalBody`** — fields, copy, optional panels
+3. **`ModalFooter`** — action row (also has `.form-actions` for legacy CSS). **Secondary / Cancel first, then primary / Confirm** using `Button` (`secondary` default, `variant="primary"`)
+
+Sizes: `Button` `md` default; `sm` only when density requires it. Footer buttons stay **flat** (no shadow). Compact nested confirms (discard) use the same anatomy inside `.modal.modal-compact`.
+
+Reference migrations: `CompleteWorkModal`, `ModalLayer` discard dialog, Add-application discard confirm. Other modals may keep raw `h2` + `.form-actions` until their surface wave; new modals should use the helpers.
+
+**Still out of scope here:** Achievement unlock modal still bypasses `ModalLayer` (known debt — fix in a follow / maintenance ticket).
+
 ### Other M1 patterns (pending)
 
 | Topic | Ticket | Notes |
 |-------|--------|-------|
-| Modal anatomy | F09 M1-12 | |
 | Enforcement | F09 M1-13 | Q6 |
 
 Pilot surface for primitives: **Home** (F09 M1-05 + M1-15). App shell: flora.exe + underline chrome-tabs + 1100px.
@@ -284,7 +298,7 @@ Run before marking any UI ticket done:
 - [ ] Long pages follow chips → clamp → pager before density/sticky compose
 - [ ] In-content links: ink + underline on hover; ChromeTab/brand/card-hit/rich-text exceptions respected
 - [ ] Only tokens / documented roles for color, radius and shadow
-- [ ] Dialogs use `ModalLayer`
+- [ ] Dialogs use `ModalLayer`; new modals use header → body → footer with secondary then primary `Button`
 - [ ] Reused existing components where they fit (listed in the ticket)
 - [ ] Compared against neighboring surfaces for size and spacing consistency
 - [ ] Color roles respected (identity ≠ severity ≠ urgency; purple = tech only)

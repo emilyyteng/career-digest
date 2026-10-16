@@ -2069,6 +2069,25 @@ button.secondary.ui-btn:disabled {
   overflow: auto;
   box-shadow: 0 16px 40px var(--shadow-strong);
 }
+/* M1-12 inner anatomy (optional helpers; form-actions remains valid footer alias) */
+.modal-header {
+  margin: 0 0 0.35rem;
+}
+.modal-header h2,
+.modal-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.modal-body {
+  display: grid;
+  gap: 0.85rem;
+}
+.modal-footer.form-actions {
+  margin-top: 1rem;
+}
 .modal.modal-wide {
   width: min(56rem, 100%);
 }
