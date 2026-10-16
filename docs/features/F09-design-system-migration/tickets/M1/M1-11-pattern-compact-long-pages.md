@@ -45,3 +45,5 @@ Prototype URL: `/prototype/f09/patterns` · surface **C**
 **2026-10-15 verdicts:** ordered tactics as recommended; Tasks first migrate in M2.
 
 Prototype exploration: `dab1805`. Lock commit below.
+
+Commit: `62ed23a`
