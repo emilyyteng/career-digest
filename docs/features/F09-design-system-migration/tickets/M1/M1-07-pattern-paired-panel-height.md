@@ -58,6 +58,6 @@ Prototype URL: `/prototype/f09/layout` (shared with M1-08; keep as reference whi
 
 Prototype last commit before lock docs: `82a4fdd` (exploration); lock commit below.
 
-`npm run check` pass.
+Typecheck + web build pass. API tests: unrelated failures in `workTime.api.test.ts` / `demo.api.test.ts` (reported; not this ticket).
 
-Commit: `47579a4`
+Commit: `2a60bb0`
