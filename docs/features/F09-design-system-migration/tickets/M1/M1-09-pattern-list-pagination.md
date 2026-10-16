@@ -47,3 +47,5 @@ Prototype URL: `/prototype/f09/patterns` · surface **A**
 **2026-10-15 verdicts:** bottom pager; standardize shared `Pager` (Prev / n/pages / Next; no page-jump or page-size select); size 25; Past work 7-day window = special case; reject load-more default.
 
 Prototype exploration: `dab1805`. Lock commit below.
+
+Commit: `b700154`
