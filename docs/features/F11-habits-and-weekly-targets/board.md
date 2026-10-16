@@ -6,7 +6,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 **Milestone status:** Design
 
-No tickets yet. Open questions, grilling, and prototype tickets live in the [spec](./spec.md) until M0 closes.
+Requirements locked (2026-10-15 grilling). Next: prototype tickets for R0.1 (Habits strip) then R0.2 (weekly column + incrementer). Open prototype questions: spec Q11–Q14.
 
 <details>
 <summary>Done (0)</summary>
