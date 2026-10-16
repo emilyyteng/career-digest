@@ -43,7 +43,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M2-01](./tickets/M2/M2-01-habits-strip-ui.md) | Habits strip on Home + Progress | build | Draft | Blocked by M1-03; verdict D |
+| [M2-01](./tickets/M2/M2-01-habits-strip-ui.md) | Habits strip on Home + Progress | build | Draft | Ready after M1; verdict D |
 | [M2-02](./tickets/M2/M2-02-strip-reflection-and-log-lc.md) | Strip Add reflection + Log LC | build | Draft | Blocked by M2-01 |
 | [M2-03](./tickets/M2/M2-03-this-week-remodel.md) | This week remodel around Habits strip | build | Draft | Blocked by M2-01 |
 
