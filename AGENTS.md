@@ -154,7 +154,9 @@ Prototypes are exploratory and throwaway. They answer design questions listed in
 
 ## Ticket board
 
-Each feature folder has a `board.md` (from `_templates/board.md`): one section per milestone, with the milestone's status, a table of open tickets, and a collapsed list of done tickets. `docs/features/maintenance/board.md` is the same without milestones: one open table and one done list. The ticket file's `Status:` line is the source of truth; the board mirrors it and is updated in the same commit (status and row move). The Done table's Commit hash is filled afterward in a follow-up commit once the ticket commit exists (see Git). Ticket files never move between folders when their status changes.
+Each feature folder has a `board.md` (from `_templates/board.md`): one section per milestone, with the milestone's status, open tickets, and a collapsed list of done tickets. `docs/features/maintenance/board.md` is the same without milestones: one open table and one done list. The ticket file's `Status:` line is the source of truth; the board mirrors it and is updated in the same commit (status and row move). The Done table's Commit hash is filled afterward in a follow-up commit once the ticket commit exists (see Git). Ticket files never move between folders when their status changes.
+
+**Empty open lists:** When a milestone (or maintenance Open) has no open tickets, write `No open tickets.` as plain prose under the heading — do not leave an empty markdown table with only the header row.
 
 ## Skills
 

@@ -1,8 +1,8 @@
 # Spec: Custom habits & weekly targets (F11)
 
 **ID:** F11
-**Status:** Active
-**Last updated:** 2026-10-16 (M1 Done — customs schema, streaks/points, HTTP + today payload)
+**Status:** Shipped
+**Last updated:** 2026-10-16 (feature closed — M0–M3 Done; prototypes deleted)
 
 ## Problem
 
@@ -25,9 +25,9 @@ Daily streaks today only cover career prep (applications and LeetCode). Life foc
 | M0 | Lock requirements (done in grilling); **prototypes** for contested UX (habits strip → weekly column + incrementer) | Done |
 | M1 | Daily custom habits: data, API, points hooks | Done |
 | M2 | Daily habits UI + This week / Home strip remodel (checkoff, archive, reflection pencil, today-LC home from prototype verdict) | Done |
-| M3 | Custom weekly targets: data/API/UI (Progress weekly column, incrementer, Home Targets) | Not started |
+| M3 | Custom weekly targets: data/API/UI (Progress weekly column, incrementer, Home Targets); prototype cleanup | Done |
 
-M0 prototypes live under `apps/web/src/prototype/f11-habits-and-weekly-targets/` (DEV-only routes), per `AGENTS.md` Prototypes. Sequence: **(1)** Habits strip (Home + Progress), **(2)** weekly goals column + multi-goal incrementer + Home Targets mock. M3 follows daily habits so weekly design can learn from that surface.
+M0 prototypes (Habits strip, then weekly column + incrementer + Home Targets) lived under `apps/web/src/prototype/f11-habits-and-weekly-targets/` and were deleted in M3-06 before feature close.
 
 ## Requirements
 
@@ -94,24 +94,25 @@ M0 prototypes live under `apps/web/src/prototype/f11-habits-and-weekly-targets/`
 - **B3** (Established) Non-daily quotas are weekly targets, not daily streaks with custom schedules.
 - **B4** (Established) Archived customs (daily or weekly) do not consume the custom cap.
 - **B5** (Established) Custom daily habits never affect LC/apps qualifying days or weekly LC/apps goal membership.
-- **B6** (Established) Apps and LC always count toward the total-of-5; they cannot be archived out of the Active set.
+- **B6** (Established) Apps and LC always stay in the Active set; they cannot be archived. Custom caps (R.7) apply only to customs.
 
 ## Current behavior
 
-Verified by reading code (2026-10-15). No F11 requirements are implemented yet.
+Verified by reading code (2026-10-16). Feature shipped (M0–M3).
 
 | Behavior | Where | Status | Notes |
 |----------|-------|--------|-------|
-| Today payload: `streaks.lc` / `streaks.apps` plus `habits.active` / `habits.archived` | [`progress.ts`](../../../apps/api/src/progress.ts), [`customHabits.ts`](../../../apps/api/src/customHabits.ts) | Conforms R1.1 / R1.5 / R1.9 (payload); Conflicts R1.8 (UI strip still M2) | HTTP: `/api/habits` CRUD + today checkoff (M1-03) |
+| Today payload: `streaks.lc` / `streaks.apps` plus `habits.active` / `habits.archived` | [`progress.ts`](../../../apps/api/src/progress.ts), [`customHabits.ts`](../../../apps/api/src/customHabits.ts) | Conforms R1.1 / R1.5 / R1.9 | HTTP: `/api/habits` CRUD + today checkoff |
 | Customs: qualifying days in `custom_habit_days`; LC/apps still derived | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`042_custom_daily_habits.sql`](../../../apps/api/src/sql/042_custom_daily_habits.sql) | Conforms R1.5 | |
-| Streak points: daily `min(20, 2×length)`, milestones `5×length`, today-only award/reverse, category `streak` | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts) | Conforms R.3 | Habits use `habit:<id>:<date>` source ids (M1-02) |
-| Habits strip on Home + Progress: Active/Archived, Apps/LC derived, customs checkoff/pencil, ghost archived, create slot, Add reflection + Log LC | [`HabitsStrip.tsx`](../../../apps/web/src/features/progress/HabitsStrip.tsx) | Conforms R1.8–R1.11, R1.13–R1.14, R1.5, R1.9, Q11–Q12, Q14 (strip) | M2-01 / M2-02 |
-| This week: pulse → Habits strip → weekly column + Check in (no Next achievements / Daily progress) | [`ThisWeekPage.tsx`](../../../apps/web/src/features/progress/ThisWeekPage.tsx), [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx), [`WeeklyCheckIn.tsx`](../../../apps/web/src/features/progress/WeeklyCheckIn.tsx) | Conforms R1.12 (M2-03), R3.3, R3.6–R3.9, R1.13, R.7, Q13–Q14 (M3-03/04) | Check in = customs only; LC via Log LC; Today/week tier lines under Weekly LC |
-| Home “Update progress →” bottom-right of Habits strip → `/progress` | [`HabitsStrip.tsx`](../../../apps/web/src/features/progress/HabitsStrip.tsx) | Conforms R1.8 (placement) | M2-01 |
-| Weekly goals snapshot: apps + LC + `customs.active` / `customs.archived`; `/api/weekly-customs` CRUD/±/archive; week-close Seeds for customs | [`customWeeklyGoals.ts`](../../../apps/api/src/customWeeklyGoals.ts), [`weeklyGoals.ts`](../../../apps/api/src/weeklyGoals.ts), [`043_custom_weekly_goals.sql`](../../../apps/api/src/sql/043_custom_weekly_goals.sql) | API Conforms R3.1, R3.3–R3.6, R3.4, R3.9–R3.10, R.7 (M3-02); column + Check in + Home Targets Conforms R3.2 / R3.7–R3.8 (M3-03–05) | |
-| Home Targets Sunday rows for unmet apps/LC + active customs | [`homeUpcoming.ts`](../../../apps/api/src/homeUpcoming.ts) `loadWeeklyGoalTargetItems` | Conforms R3.2 (M3-05) | |
-| Weekly-goal streak flame for apps/LC + customs when ≥2 | F08 R5.28, [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) | Conforms R3.9 | |
-| Past work day panel includes reflection compose for the selected day (including today) | [`PastWorkPage.tsx`](../../../apps/web/src/features/progress/PastWorkPage.tsx) | Conforms R1.11 (list ownership) | Strip reflection pencil still absent |
+| Streak points: daily `min(20, 2×length)`, milestones `5×length`, today-only award/reverse, category `streak` | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts) | Conforms R.3 | Habits use `habit:<id>:<date>` source ids |
+| Habits strip on Home + Progress: Active/Archived, Apps/LC derived, customs checkoff/pencil, ghost archived, create slot, Add reflection + Log LC | [`HabitsStrip.tsx`](../../../apps/web/src/features/progress/HabitsStrip.tsx) | Conforms R1.8–R1.11, R1.13–R1.14, R1.5, R1.9, Q11–Q12, Q14 | Archived subtitle notes missed days break the streak |
+| This week: pulse → Habits strip → weekly column + Check in (no Next achievements / Daily progress) | [`ThisWeekPage.tsx`](../../../apps/web/src/features/progress/ThisWeekPage.tsx), [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx), [`WeeklyCheckIn.tsx`](../../../apps/web/src/features/progress/WeeklyCheckIn.tsx) | Conforms R1.12, R3.3, R3.6–R3.9, R1.13, R.7, Q13–Q14 | Check in = customs only; LC via Log LC; Today/week tier lines under Weekly LC |
+| Home “Update progress →” bottom-right of Habits strip → `/progress` | [`HabitsStrip.tsx`](../../../apps/web/src/features/progress/HabitsStrip.tsx) | Conforms R1.8 | |
+| Weekly goals snapshot: apps + LC + `customs.active` / `customs.archived`; `/api/weekly-customs` CRUD/±/archive; week-close Seeds for customs | [`customWeeklyGoals.ts`](../../../apps/api/src/customWeeklyGoals.ts), [`weeklyGoals.ts`](../../../apps/api/src/weeklyGoals.ts), [`043_custom_weekly_goals.sql`](../../../apps/api/src/sql/043_custom_weekly_goals.sql) | Conforms R3.1–R3.10, R.7 | Column + Check in + Home Targets |
+| Home Targets Sunday rows for unmet apps/LC + active customs | [`homeUpcoming.ts`](../../../apps/api/src/homeUpcoming.ts) `loadWeeklyGoalTargetItems` | Conforms R3.2 | |
+| Weekly-goal streak flame for apps/LC + customs when ≥2 | F08 R5.28, [`WeeklyGoalsBlock.tsx`](../../../apps/web/src/features/progress/WeeklyGoalsBlock.tsx) | Conforms R3.9 | Archived copy notes weeks-in-a-row breaks if a week closes unmet |
+| Past work day panel includes reflection compose for the selected day (including today) | [`PastWorkPage.tsx`](../../../apps/web/src/features/progress/PastWorkPage.tsx) | Conforms R1.11 (list ownership) | Strip pencil opens standalone today-reflection modal |
+| F11 M0 prototypes deleted (routes included) | — | Conforms R.0 cleanup | M3-06 |
 
 ## Out of scope
 
@@ -193,3 +194,4 @@ None. Prototype questions Q11–Q14 are resolved (2026-10-16).
 - **2026-10-16 (M2-03):** This week remodeled — pulse above Habits strip; Next achievements and Daily progress aside removed; apps/LC `WeeklyGoalsBlock` stays full-width until M3.
 - **2026-10-16 (M3-01):** Custom weekly schema — `custom_weekly_goals` identity (name, target_count default 3, soft archive), `custom_weekly_goal_weeks` open progress, `custom_weekly_goal_records` closed snapshots (parallel to apps/LC records).
 - **2026-10-16 (M3-04 follow-up):** Check in is customs-only ±. LC has no Check in stepper; Weekly LC shows restored Today / This week tier count lines; Weekly goals + Check in cards share fixed 28rem height.
+- **2026-10-16 (feature close):** M3 Done (including M3-06 prototype cleanup). Archived daily/weekly copy clarifies that archive does not pause streaks. Feature status Shipped.

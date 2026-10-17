@@ -10,7 +10,6 @@ Each feature has a permanent ID (`F<NN>`) and, once it has a spec, a folder `F<N
 |----|---------|---------|------|
 | F08 | Accomplishment, detail pages & rewards | Task/application detail pages, reflections on real work, points ledger, weekly goals, celebration, Cat Cake Collection v1 (seeds), Progress redesign, board departures log, recurring tasks. M0–M2, M4–M8 shipped; then M3 | [spec](./F08-accomplishment-rewards/spec.md) · [board](./F08-accomplishment-rewards/board.md) |
 | F09 | Design system migration | Comprehensive visual system + phased migration: M0–M1 Done; next M2 surface waves; M4 cleanup & extensions (heatmap, negative-points spike) | [spec](./F09-design-system-migration/spec.md) · [board](./F09-design-system-migration/board.md) |
-| F11 | Custom habits & weekly targets | Multi-habit daily tracker + custom weekly targets (≤6 customs beside apps+LC each); This week habits hub. M0–M2 Done; next M3 (weekly customs) | [spec](./F11-habits-and-weekly-targets/spec.md) · [board](./F11-habits-and-weekly-targets/board.md) |
 
 ## Planned
 
@@ -33,6 +32,7 @@ None right now.
 | F05 | Progress tracker | Activity / Effort / Outcome for application and technical prep | Legacy |
 | F07 | Home: Upcoming & weekly goals | Upcoming deadlines vs targets, weekly LC and app goals | Legacy |
 | F10 | Documentation & development process | Public-facing repo docs; `AGENTS.md`, specs, tickets, triage, rewritten changelog | None: the process itself lives in [`AGENTS.md`](../../AGENTS.md) |
+| F11 | Custom habits & weekly targets | Multi-habit daily tracker + custom weekly targets (≤6 customs beside apps+LC); This week habits hub; Home Targets for customs | [spec](./F11-habits-and-weekly-targets/spec.md) · [board](./F11-habits-and-weekly-targets/board.md) |
 
 "Legacy" means the feature shipped before this process: its requirements live only in older local docs and the changelog. It gets a folder (keeping its ID) only if reopened.
 
