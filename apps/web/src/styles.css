@@ -4330,6 +4330,13 @@ a.home-section-link:hover,
 .progress-past-work .card {
   margin-bottom: 0;
 }
+/* F11 M2-03: weekly goals sit full-width under the Habits strip until M3 column+incrementer. */
+.progress-week-goals-slot {
+  min-width: 0;
+}
+.progress-week-goals-slot .weekly-goals-card {
+  margin-top: 0;
+}
 .progress-week-split {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);

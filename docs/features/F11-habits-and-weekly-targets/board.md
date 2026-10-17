@@ -39,19 +39,19 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 ## M2: Daily habits UI + This week / Home strip
 
-**Milestone status:** In progress
+**Milestone status:** Done
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M2-03](./tickets/M2/M2-03-this-week-remodel.md) | This week remodel around Habits strip | build | Draft | Ready after M2-01 |
 
 <details>
-<summary>Done (2)</summary>
+<summary>Done (3)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
 | [M2-01](./tickets/M2/M2-01-habits-strip-ui.md) | Habits strip on Home + Progress | 95cb2b5 |
 | [M2-02](./tickets/M2/M2-02-strip-reflection-and-log-lc.md) | Strip Add reflection + Log LC | 67cd4f5 |
+| [M2-03](./tickets/M2/M2-03-this-week-remodel.md) | This week remodel around Habits strip | (this commit) |
 
 </details>
 
