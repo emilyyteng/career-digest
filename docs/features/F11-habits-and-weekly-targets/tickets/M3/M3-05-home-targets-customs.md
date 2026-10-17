@@ -1,7 +1,7 @@
 # M3-05: Home Targets for custom weeklies
 
-**Status:** Draft
-**Blocked by:** M3-02
+**Status:** Done
+**Blocked by:** —
 **Implements:** R3.2 (from `../../spec.md`)
 **Type:** build
 
@@ -13,11 +13,11 @@ Prototype reference: `/prototype/f11/habits/weekly` Home Targets mock.
 
 ## Acceptance criteria
 
-- [ ] When Home shows weekly Targets (existing Sunday / unmet rules), each unmet **active** custom weekly appears with the same family of row treatment as apps/LC targets (R3.2).
-- [ ] Met customs (done ≥ target) do not appear.
-- [ ] Archived customs do not appear.
-- [ ] Row links or copy navigate toward Progress This week where sensible (match apps/LC target row behavior).
-- [ ] No change to apps/LC target membership rules beyond adding customs to the feed.
+- [x] When Home shows weekly Targets (existing Sunday / unmet rules), each unmet **active** custom weekly appears with the same family of row treatment as apps/LC targets (R3.2).
+- [x] Met customs (done ≥ target) do not appear.
+- [x] Archived customs do not appear.
+- [x] Row links or copy navigate toward Progress This week where sensible (match apps/LC target row behavior).
+- [x] No change to apps/LC target membership rules beyond adding customs to the feed.
 
 ## Edge cases
 
@@ -27,24 +27,25 @@ Prototype reference: `/prototype/f11/habits/weekly` Home Targets mock.
 
 ## Tests
 
-- [ ] API/unit if Home upcoming builder is extended: customs included/excluded correctly.
-- [ ] Manual: seed unmet custom → visible on Targets when apps/LC targets would show; mark met → gone.
-- [ ] `npm run check` passes.
+- [x] API/unit if Home upcoming builder is extended: customs included/excluded correctly.
+- [x] Manual: seed unmet custom → visible on Targets when apps/LC targets would show; mark met → gone.
+- [x] `npm run check` passes.
 
 ## Reuse notes
 
-[`homeUpcoming.ts`](../../../../../apps/api/src/homeUpcoming.ts) / Home Targets UI from F08; M3-02 snapshot fields.
+[`homeUpcoming.ts`](../../../../../apps/api/src/homeUpcoming.ts) `loadWeeklyGoalTargetItems`; Home weekly_goal row UI unchanged (title `Weekly · {name}`, `slot: "custom"` + `customGoalId`).
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] Ticket status `Done`; board updated
-- [ ] Committed as `F11 M3-05: …`
-- [ ] End-of-task report given, including **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] Ticket status `Done`; board updated
+- [x] Committed as `F11 M3-05: …`
+- [x] End-of-task report given, including **Issues found**
 
 ## Verification notes
 
-_(filled when done)_
+- Integration test in `homeWeeklyGoals.api.test.ts`: unmet active custom on Sunday; met + archived omitted.
+- `npm run check` clean (390 tests).

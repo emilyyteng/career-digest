@@ -61,11 +61,10 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M3-05](./tickets/M3/M3-05-home-targets-customs.md) | Home Targets for custom weeklies | build | Draft | Blocked by M3-02 |
 | [M3-06](./tickets/M3/M3-06-prototype-cleanup.md) | Delete F11 M0 prototypes | build | Draft | After M2-01/02 + M3-03/04/05 |
 
 <details>
-<summary>Done (4)</summary>
+<summary>Done (5)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
@@ -73,5 +72,6 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 | [M3-02](./tickets/M3/M3-02-custom-weekly-api-seeds.md) | Custom weekly API + week-close Seeds | `f9baa39` |
 | [M3-03](./tickets/M3/M3-03-weekly-column-ui.md) | Progress weekly goals column UI | `60099eb` |
 | [M3-04](./tickets/M3/M3-04-weekly-incrementer-ui.md) | Multi-goal weekly incrementer UI | `76926bf` |
+| [M3-05](./tickets/M3/M3-05-home-targets-customs.md) | Home Targets for custom weeklies | (this commit) |
 
 </details>

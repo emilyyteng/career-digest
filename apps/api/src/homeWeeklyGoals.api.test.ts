@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { pool } from "./db.js";
-import { addCivilDays, getUpcomingThisWeek, thisWeekSunday } from "./homeUpcoming.js";
+import {
+  createCustomWeeklyGoal,
+  stepCustomWeeklyProgress,
+} from "./customWeeklyGoals.js";
+import { getUpcomingThisWeek, thisWeekSunday } from "./homeUpcoming.js";
 import { truncateAll, seedTask } from "./test/dbHarness.js";
 import { integrationReady } from "./test/integrationSetup.js";
 import { mondayOfLocalWeek } from "./weeklyGoals.js";
@@ -111,4 +115,52 @@ describe.skipIf(!integrationReady)("home weekly goals (M5-09)", () => {
     ).toBe(true);
   });
 
+  it("includes unmet active customs on Sunday Targets; omits met and archived (F11 M3-05)", async () => {
+    const now = new Date("2026-03-11T19:00:00Z");
+    const weekStart = mondayOfLocalWeek(now, TZ);
+    const sunday = thisWeekSunday(now, TZ);
+    await pool.query(`INSERT INTO weekly_close_state (start_week) VALUES ($1::date)`, [weekStart]);
+    await pool.query(
+      `INSERT INTO weekly_goals (week_start, slot, kind, target_count, progress_count)
+       VALUES ($1::date, 'lc', 'count', 10, 10)`,
+      [weekStart],
+    );
+    await pool.query(
+      `INSERT INTO weekly_goals (week_start, slot, kind, target_count, progress_count)
+       VALUES ($1::date, 'apps', 'task_set', NULL, 0)`,
+      [weekStart],
+    );
+
+    const gym = await createCustomWeeklyGoal(pool, TZ, { name: "Gym", targetCount: 3 }, now);
+    const met = await createCustomWeeklyGoal(pool, TZ, { name: "Met", targetCount: 2 }, now);
+    await stepCustomWeeklyProgress(pool, met.id, TZ, 1, now);
+    await stepCustomWeeklyProgress(pool, met.id, TZ, 1, now);
+    const archived = await createCustomWeeklyGoal(
+      pool,
+      TZ,
+      { name: "Archived", targetCount: 3 },
+      now,
+    );
+    await pool.query(`UPDATE custom_weekly_goals SET archived_at = now() WHERE id = $1::uuid`, [
+      archived.id,
+    ]);
+
+    const upcoming = await getUpcomingThisWeek(pool, TZ, now, 7);
+    const goals = upcoming.sections
+      .find((s) => s.key === "targets")!
+      .dayGroups.find((g) => g.key === sunday)!
+      .items.filter((i) => i.kind === "weekly_goal");
+
+    expect(goals.map((g) => ({ slot: g.slot, title: g.title, done: g.done, total: g.total }))).toEqual([
+      {
+        slot: "custom",
+        title: "Weekly · Gym",
+        done: 0,
+        total: 3,
+      },
+    ]);
+    expect(goals[0]).toMatchObject({ customGoalId: gym.id });
+    expect(goals.some((g) => (g.title ?? "").includes("Met"))).toBe(false);
+    expect(goals.some((g) => (g.title ?? "").includes("Archived"))).toBe(false);
+  });
 });

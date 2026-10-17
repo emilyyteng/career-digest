@@ -36,8 +36,10 @@ export type HomeUpcomingItem = {
   parentId?: string;
   parentTitle?: string;
   subtaskId?: string;
-  // weekly_goal (R5.6 / M5-09)
-  slot?: WeeklyGoalSlot;
+  // weekly_goal (R5.6 / M5-09); F11 customs use slot "custom" + customGoalId
+  slot?: WeeklyGoalSlot | "custom";
+  /** Present when slot is "custom" (F11 M3-05). */
+  customGoalId?: string;
   done?: number;
   total?: number;
   pace?: { label: WeeklyPaceLabel; amount: number };
@@ -480,6 +482,26 @@ export async function loadWeeklyGoalTargetItems(
       done: goal.done,
       total: goal.total,
       pace: { label: goal.pace.label, amount: goal.pace.amount },
+      sundayDate: sunday,
+      at,
+      dueKind: "target",
+      deadlineLabel: label,
+      priority: null,
+      estimateMinutes: null,
+    });
+  }
+
+  // F11 M3-05: unmet active customs (archived never in snap.customs.active).
+  for (const custom of snap.customs?.active ?? []) {
+    if (custom.total <= 0 || custom.done >= custom.total) continue;
+    items.push({
+      kind: "weekly_goal",
+      slot: "custom",
+      customGoalId: custom.id,
+      title: `Weekly · ${custom.name}`,
+      done: custom.done,
+      total: custom.total,
+      pace: { label: custom.pace.label, amount: custom.pace.amount },
       sundayDate: sunday,
       at,
       dueKind: "target",

@@ -95,7 +95,11 @@ function PickList({ items, empty }: { items: HomeJobPick[]; empty: string }) {
 function upcomingItemKey(item: HomeUpcomingItem): string {
   if (item.kind === "interview") return `interview:${item.stepId}`;
   if (item.kind === "subtask") return `subtask:${item.subtaskId}`;
-  if (item.kind === "weekly_goal") return `weekly_goal:${item.slot}`;
+  if (item.kind === "weekly_goal") {
+    return item.slot === "custom"
+      ? `weekly_goal:custom:${item.customGoalId ?? item.title}`
+      : `weekly_goal:${item.slot}`;
+  }
   return `task:${item.id}`;
 }
 

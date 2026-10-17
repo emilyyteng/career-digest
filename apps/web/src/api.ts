@@ -334,7 +334,9 @@ export type HomeUpcomingItem =
       dueKind: TaskDueKind;
       priority: TaskPriority | null;
       estimateMinutes: number | null;
-      slot: "lc" | "apps";
+      slot: "lc" | "apps" | "custom";
+      /** Present when slot is "custom" (F11). */
+      customGoalId?: string;
       title: string;
       done: number;
       total: number;
