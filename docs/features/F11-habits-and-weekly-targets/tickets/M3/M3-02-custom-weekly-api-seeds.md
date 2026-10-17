@@ -26,7 +26,7 @@ API and domain for custom weekly targets: CRUD/archive/restore, mid-week target 
 - ± when done = 0: decrement no-op or 400 — pick consistent with LC weekly.
 - Target lowered below current done: allow (overflow display like LC) or clamp — match LC weekly behavior.
 - Week boundary: after close, new week done = 0; streak updates from closed mets.
-- Create/restore race at cap: never exceed 3 active.
+- Create/restore race at cap: never exceed 6 active.
 - Archived goal: no ±; not in Active snapshot list.
 
 ## Tests

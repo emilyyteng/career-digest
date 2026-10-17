@@ -57,21 +57,21 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 ## M3: Custom weekly targets
 
-**Milestone status:** Not started
+**Milestone status:** In progress
 
 | Ticket | Title | Type | Status | Notes |
 |--------|-------|------|--------|-------|
-| [M3-01](./tickets/M3/M3-01-custom-weekly-schema.md) | Custom weekly targets schema | build | Draft | After M1-03 OK; UI waits M2-03 |
-| [M3-02](./tickets/M3/M3-02-custom-weekly-api-seeds.md) | Custom weekly API + week-close Seeds | build | Draft | Blocked by M3-01 |
+| [M3-02](./tickets/M3/M3-02-custom-weekly-api-seeds.md) | Custom weekly API + week-close Seeds | build | Draft | Ready after M3-01 |
 | [M3-03](./tickets/M3/M3-03-weekly-column-ui.md) | Progress weekly goals column UI | build | Draft | Blocked by M3-02, M2-03 |
 | [M3-04](./tickets/M3/M3-04-weekly-incrementer-ui.md) | Multi-goal weekly incrementer UI | build | Draft | Blocked by M3-02, M2-03; Q13 stepper |
 | [M3-05](./tickets/M3/M3-05-home-targets-customs.md) | Home Targets for custom weeklies | build | Draft | Blocked by M3-02 |
 | [M3-06](./tickets/M3/M3-06-prototype-cleanup.md) | Delete F11 M0 prototypes | build | Draft | After M2-01/02 + M3-03/04/05 |
 
 <details>
-<summary>Done (0)</summary>
+<summary>Done (1)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M3-01](./tickets/M3/M3-01-custom-weekly-schema.md) | Custom weekly targets schema | (this commit) |
 
 </details>
