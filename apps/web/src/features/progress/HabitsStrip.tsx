@@ -165,7 +165,7 @@ function ArchivedCustom({
       </div>
       <span className="habits-label">{habit.name}</span>
       <span className="habits-sub muted">
-        missed days while archived break the streak
+        missed days break the streak!
       </span>
       <Button
         size="sm"
