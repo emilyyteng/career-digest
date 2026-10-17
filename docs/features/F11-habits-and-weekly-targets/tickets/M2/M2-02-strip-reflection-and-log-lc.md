@@ -1,7 +1,7 @@
 # M2-02: Strip Add reflection + Log LC
 
-**Status:** Draft
-**Blocked by:** M2-01
+**Status:** Done
+**Blocked by:** (none — M2-01 Done)
 **Implements:** R1.11–R1.14, R1.13, Q12 (from `../../spec.md`)
 **Type:** build
 
@@ -13,14 +13,14 @@ Prototype reference: `/prototype/f11/habits/strip` foot band.
 
 ## Acceptance criteria
 
-- [ ] **Add reflection** button (label + flipped pencil icon to the right) on the habits band, right-aligned with Log LC (when shown), above Update progress on Home.
-- [ ] Opens `ModalLayer` with **link** (same option set as Progress reflection compose), **body**, **lane**; no notes list, no apps list (R1.11).
-- [ ] Successful submit creates a reflection for **today** via existing reflection APIs; modal closes; Past work remains the full day list.
-- [ ] **Log LC** disclosure (text + bottom caret; underline stays under whole control when open): expands/collapses today’s tiered ± (weekly/misc as today’s logger already does).
-- [ ] Label toggles Log LC ↔ Hide LC; panel sits under the habits band (not in weekly column).
-- [ ] Logging LC updates derived LC streak / today counts on the strip (existing leetcode + streak sync).
-- [ ] No today-LC controls added beside weekly LC / incrementer (R1.13).
-- [ ] Progress strip gets the same Add reflection + Log LC foot actions (Update progress remains Home-only).
+- [x] **Add reflection** button (label + flipped pencil icon to the right) on the habits band, right-aligned with Log LC (when shown), above Update progress on Home.
+- [x] Opens `ModalLayer` with **link** (same option set as Progress reflection compose), **body**, **lane**; no notes list, no apps list (R1.11).
+- [x] Successful submit creates a reflection for **today** via existing reflection APIs; modal closes; Past work remains the full day list.
+- [x] **Log LC** disclosure (text + bottom caret; underline stays under whole control when open): expands/collapses today’s tiered ± (weekly/misc as today’s logger already does).
+- [x] Label toggles Log LC ↔ Hide LC; panel sits under the habits band (not in weekly column).
+- [x] Logging LC updates derived LC streak / today counts on the strip (existing leetcode + streak sync).
+- [x] No today-LC controls added beside weekly LC / incrementer (R1.13).
+- [x] Progress strip gets the same Add reflection + Log LC foot actions (Update progress remains Home-only).
 
 ## Edge cases
 
@@ -31,26 +31,26 @@ Prototype reference: `/prototype/f11/habits/strip` foot band.
 
 ## Tests
 
-- [ ] Manual or UI test: open reflection modal, submit, see reflection on Past work today.
-- [ ] Manual: Log LC +/− updates LC pill completed-today / streak.
-- [ ] Confirm weekly goals / This week aside (pre-M3) does not gain today-LC.
-- [ ] `npm run check` passes.
+- [x] Manual or UI test: open reflection modal, submit, see reflection on Past work today.
+- [x] Manual: Log LC +/− updates LC pill completed-today / streak.
+- [x] Confirm weekly goals / This week aside (pre-M3) does not gain today-LC.
+- [x] `npm run check` passes.
 
 ## Reuse notes
 
-[`LeetcodeLogger`](../../../../../apps/web/src/features/progress/LeetcodeLogger.tsx) or shared tier steppers; [`ReflectionCompose`](../../../../../apps/web/src/features/progress/ReflectionAccordion.tsx) / link options loaders from This week or Past work; `ModalLayer`, `LaneChips` / lane controls.
+[`LeetcodeLogger`](../../../../../apps/web/src/features/progress/LeetcodeLogger.tsx); [`WorkLinkFields`](../../../../../apps/web/src/features/progress/ReflectionAccordion.tsx) / `LaneChips`; `ModalLayer`, `TextAreaField`. Log LC hides when switching to Archived.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Ticket status `Done`; board updated
-- [ ] Committed as `F11 M2-02: …`
-- [ ] End-of-task report given, including **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Ticket status `Done`; board updated
+- [x] Committed as `F11 M2-02: …`
+- [x] End-of-task report given, including **Issues found**
 
 ## Verification notes
 
-_(filled when done)_
+`npm run check` / API tests passed (371). Manual checklist: Add reflection modal → Past work; Log LC ± updates strip; panel hides on Archived; weekly column unchanged. Related: MT-11 for negative-points flash standard. Commit hash in board follow-up.

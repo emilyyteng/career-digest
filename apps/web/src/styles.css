@@ -3267,6 +3267,65 @@ textarea { min-height: 10rem; width: 100%; }
 .habits-row-arch {
   opacity: 0.95;
 }
+.habits-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem 0.85rem;
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding-bottom: 0.1rem;
+}
+.habits-add-reflection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-direction: row;
+}
+.habits-log-lc-disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.05rem 0.05rem;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  text-decoration: none;
+}
+.habits-log-lc-disclosure:hover,
+.habits-log-lc-disclosure:focus-visible {
+  text-decoration: none;
+  border-bottom-color: currentColor;
+}
+.habits-log-lc-disclosure:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+.habits-log-lc-label {
+  line-height: 1.2;
+}
+.habits-log-lc-caret {
+  display: inline-block;
+  line-height: 1;
+  transform: scaleY(-1);
+  transition: transform 0.12s ease;
+}
+.habits-log-lc-disclosure.is-open .habits-log-lc-caret {
+  transform: none;
+}
+.habits-lc-panel {
+  margin-top: 0.15rem;
+}
+.habits-reflect-lane {
+  margin-top: 0.65rem;
+}
 .habits-foot-link {
   display: flex;
   justify-content: flex-end;

@@ -1,26 +1,42 @@
 /**
- * F11 M2-01 · Habits strip (Home + Progress). Verdict D: mark hit-target
- * checkoff, ghost archived, ChromeTabs. Add reflection / Log LC land in M2-02.
+ * F11 M2-01 / M2-02 · Habits strip (Home + Progress). Verdict D chrome +
+ * Add reflection modal and Log LC disclosure (Q12).
  */
 import { useCallback, useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   archiveCustomHabit,
   createCustomHabit,
+  createProgressReflection,
+  getApplications,
+  getTasks,
+  getWeeklyGoals,
+  patchProgressLeetcode,
   renameCustomHabit,
   restoreCustomHabit,
   setCustomHabitCheckoff,
+  type LeetcodeTier,
+  type LeetcodeType,
   type PointsEarnInfo,
+  type ProgressLane,
   type ProgressToday,
 } from "../../api";
 import ModalLayer from "../../ModalLayer";
 import EarnFlash from "../completion/EarnFlash";
+import { useAchievementUnlocks } from "../achievements/AchievementUnlockHost";
+import LeetcodeLogger from "./LeetcodeLogger";
+import {
+  LaneChips,
+  WorkLinkFields,
+  type ReflectionLinkOption,
+} from "./ReflectionAccordion";
 import {
   Button,
   ChromeTab,
   ModalBody,
   ModalFooter,
   ModalHeader,
+  TextAreaField,
   TextField,
 } from "../../ui";
 
@@ -177,6 +193,58 @@ function CreateSlot({ disabled, onCreate }: { disabled: boolean; onCreate: () =>
   );
 }
 
+async function loadReflectionLinkOptions(): Promise<ReflectionLinkOption[]> {
+  const [openTasks, completedTasks, apps] = await Promise.all([
+    getTasks("open"),
+    getTasks("completed", { includeApplicationCompleted: true }),
+    getApplications("all"),
+  ]);
+  const seenTasks = new Set<string>();
+  const taskOpts: ReflectionLinkOption[] = [];
+  for (const t of openTasks.tasks) {
+    if (seenTasks.has(t.id)) continue;
+    seenTasks.add(t.id);
+    const org = t.organization?.trim();
+    const display = org ? `${org} · ${t.title}` : t.title;
+    taskOpts.push({
+      key: `task:${t.id}`,
+      kind: "task",
+      taskId: t.id,
+      label: display,
+      searchText: `${display} task open`.toLowerCase(),
+    });
+  }
+  for (const t of completedTasks.tasks) {
+    if (seenTasks.has(t.id)) continue;
+    seenTasks.add(t.id);
+    const org = t.organization?.trim();
+    const base = org ? `${org} · ${t.title}` : t.title;
+    const display = `${base} · done`;
+    taskOpts.push({
+      key: `task:${t.id}`,
+      kind: "task",
+      taskId: t.id,
+      label: display,
+      searchText: `${base} task done completed`.toLowerCase(),
+    });
+  }
+  const appOpts: ReflectionLinkOption[] = apps.applications
+    .filter((a) => a.status !== "todo")
+    .map((a) => {
+      const company = a.company ?? "Unknown";
+      const title = a.title ?? "Untitled";
+      const label = `${company} · ${title}`;
+      return {
+        key: `app:${a.id}`,
+        kind: "application" as const,
+        applicationId: a.id,
+        label,
+        searchText: `${label} app ${a.status}`.toLowerCase(),
+      };
+    });
+  return [...taskOpts, ...appOpts];
+}
+
 export default function HabitsStrip({
   today,
   tz,
@@ -192,6 +260,7 @@ export default function HabitsStrip({
   className?: string;
 }) {
   const titleId = useId();
+  const { pushUnlocks } = useAchievementUnlocks();
   const [section, setSection] = useState<Section>("active");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -203,6 +272,16 @@ export default function HabitsStrip({
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
 
+  const [lcOpen, setLcOpen] = useState(false);
+  const [weeklyLcProgress, setWeeklyLcProgress] = useState(0);
+  const [reflectOpen, setReflectOpen] = useState(false);
+  const [reflectBody, setReflectBody] = useState("");
+  const [reflectLane, setReflectLane] = useState<ProgressLane>("technical");
+  const [reflectLinkKey, setReflectLinkKey] = useState("");
+  const [reflectStepId, setReflectStepId] = useState("");
+  const [linkOptions, setLinkOptions] = useState<ReflectionLinkOption[]>([]);
+  const [reflectBusy, setReflectBusy] = useState(false);
+
   const habits = today.habits ?? { active: [], archived: [] };
   const active = habits.active;
   const archived = habits.archived;
@@ -212,6 +291,19 @@ export default function HabitsStrip({
   useEffect(() => {
     if (!hasArchived && section === "archived") setSection("active");
   }, [hasArchived, section]);
+
+  useEffect(() => {
+    if (section === "archived") setLcOpen(false);
+  }, [section]);
+
+  useEffect(() => {
+    void getWeeklyGoals(tz)
+      .then((snap) => {
+        const lc = snap.goals.find((g) => g.slot === "lc");
+        setWeeklyLcProgress(lc?.progressCount ?? 0);
+      })
+      .catch(() => setWeeklyLcProgress(0));
+  }, [tz, today.localDate, today.leetcode.raw]);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -226,6 +318,33 @@ export default function HabitsStrip({
     }
   }
 
+  async function openReflect() {
+    setMessage(null);
+    setReflectBody("");
+    setReflectLane("technical");
+    setReflectLinkKey("");
+    setReflectStepId("");
+    setReflectOpen(true);
+    try {
+      setLinkOptions(await loadReflectionLinkOptions());
+    } catch {
+      setLinkOptions([]);
+    }
+  }
+
+  async function changeLeetcode(tier: LeetcodeTier, delta: 1 | -1, type: LeetcodeType) {
+    setMessage(null);
+    try {
+      const result = await patchProgressLeetcode(tz, { tier, delta, type });
+      if (result.points) setEarn(result.points);
+      pushUnlocks(result.achievementUnlocks);
+      if (result.weeklyProgress != null) setWeeklyLcProgress(result.weeklyProgress);
+      await onRefresh();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "LeetCode update failed");
+    }
+  }
+
   const editing =
     editId != null
       ? active.find((h) => h.id === editId) ?? archived.find((h) => h.id === editId)
@@ -235,6 +354,35 @@ export default function HabitsStrip({
       ? active.find((h) => h.id === archiveConfirmId) ??
         archived.find((h) => h.id === archiveConfirmId)
       : null;
+
+  const inlineActions = (
+    <div className="habits-inline-actions">
+      <Button
+        size="sm"
+        variant="secondary"
+        className="habits-add-reflection"
+        onClick={() => void openReflect()}
+      >
+        Add reflection
+        <span className="habits-pencil-flip" aria-hidden="true">
+          ✎
+        </span>
+      </Button>
+      {section === "active" && (
+        <button
+          type="button"
+          className={`habits-log-lc-disclosure${lcOpen ? " is-open" : ""}`}
+          aria-expanded={lcOpen}
+          onClick={() => setLcOpen((o) => !o)}
+        >
+          <span className="habits-log-lc-label">{lcOpen ? "Hide LC" : "Log LC"}</span>
+          <span className="habits-log-lc-caret" aria-hidden="true">
+            ▾
+          </span>
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <section
@@ -275,54 +423,67 @@ export default function HabitsStrip({
       )}
 
       {section === "active" ? (
-        <div className="habits-band">
-          <div className="habits-row">
-            <DerivedPill
-              label="Applications"
-              length={today.streaks.apps.length}
-              todayCounts={today.streaks.apps.todayCounts}
-              completedToday={today.applications.raw}
-            />
-            <DerivedPill
-              label="LeetCode"
-              length={today.streaks.lc.length}
-              todayCounts={today.streaks.lc.todayCounts}
-              completedToday={today.leetcode.raw}
-            />
-            {active.map((h) => (
-              <CustomActivePill
-                key={h.id}
-                habit={h}
-                busy={busy}
-                onToggle={() =>
-                  void run(async () => {
-                    const result = await setCustomHabitCheckoff(
-                      tz,
-                      h.id,
-                      !h.todayCounts,
-                    );
-                    if (result.points) setEarn(result.points);
-                  })
-                }
-                onEdit={() => {
-                  setEditId(h.id);
-                  setRenameDraft(h.name);
-                  setMessage(null);
-                }}
+        <>
+          <div className="habits-band">
+            <div className="habits-row">
+              <DerivedPill
+                label="Applications"
+                length={today.streaks.apps.length}
+                todayCounts={today.streaks.apps.todayCounts}
+                completedToday={today.applications.raw}
               />
-            ))}
-            {!atCustomCap && (
-              <CreateSlot
-                disabled={busy}
-                onCreate={() => {
-                  setCreateOpen(true);
-                  setCreateName("");
-                  setMessage(null);
-                }}
+              <DerivedPill
+                label="LeetCode"
+                length={today.streaks.lc.length}
+                todayCounts={today.streaks.lc.todayCounts}
+                completedToday={today.leetcode.raw}
               />
-            )}
+              {active.map((h) => (
+                <CustomActivePill
+                  key={h.id}
+                  habit={h}
+                  busy={busy}
+                  onToggle={() =>
+                    void run(async () => {
+                      const result = await setCustomHabitCheckoff(
+                        tz,
+                        h.id,
+                        !h.todayCounts,
+                      );
+                      if (result.points) setEarn(result.points);
+                    })
+                  }
+                  onEdit={() => {
+                    setEditId(h.id);
+                    setRenameDraft(h.name);
+                    setMessage(null);
+                  }}
+                />
+              ))}
+              {!atCustomCap && (
+                <CreateSlot
+                  disabled={busy}
+                  onCreate={() => {
+                    setCreateOpen(true);
+                    setCreateName("");
+                    setMessage(null);
+                  }}
+                />
+              )}
+            </div>
+            {inlineActions}
           </div>
-        </div>
+          {lcOpen && (
+            <div className="habits-lc-panel">
+              <LeetcodeLogger
+                tiers={today.leetcodeTiers}
+                weeklyTiers={today.leetcodeWeeklyTiers}
+                weeklyProgress={weeklyLcProgress}
+                onChange={changeLeetcode}
+              />
+            </div>
+          )}
+        </>
       ) : (
         <div className="habits-band">
           <div className="habits-row habits-row-arch">
@@ -340,6 +501,7 @@ export default function HabitsStrip({
               />
             ))}
           </div>
+          {inlineActions}
         </div>
       )}
 
@@ -471,6 +633,90 @@ export default function HabitsStrip({
               }
             >
               Create
+            </Button>
+          </ModalFooter>
+        </ModalLayer>
+      )}
+
+      {reflectOpen && (
+        <ModalLayer
+          className="modal modal-compact"
+          labelledBy="habits-reflect-title"
+          onClose={() => setReflectOpen(false)}
+          dirty={reflectBody.trim().length > 0}
+        >
+          <ModalHeader id="habits-reflect-title" title="Today’s reflection" />
+          <ModalBody>
+            <p className="muted habits-hint" style={{ marginTop: 0 }}>
+              Standalone add for today — no notes list, no apps list. Full day list stays in Past
+              work.
+            </p>
+            <WorkLinkFields
+              linkKey={reflectLinkKey}
+              onLinkKeyChange={(key) => {
+                setReflectLinkKey(key);
+                setReflectStepId("");
+              }}
+              linkOptions={linkOptions}
+              interviewStepId={reflectStepId}
+              onInterviewStepIdChange={setReflectStepId}
+              disabled={reflectBusy}
+            />
+            <label className="habits-field-label">
+              Body
+              <TextAreaField
+                rows={4}
+                value={reflectBody}
+                disabled={reflectBusy}
+                onChange={(e) => setReflectBody(e.target.value)}
+              />
+            </label>
+            <div className="habits-reflect-lane">
+              <LaneChips
+                value={reflectLane}
+                onChange={setReflectLane}
+                disabled={reflectBusy}
+              />
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="secondary" onClick={() => setReflectOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!reflectBody.trim() || reflectBusy}
+              onClick={() => {
+                if (!reflectBody.trim() || reflectBusy) return;
+                const opt = linkOptions.find((o) => o.key === reflectLinkKey);
+                void (async () => {
+                  setReflectBusy(true);
+                  setMessage(null);
+                  try {
+                    await createProgressReflection({
+                      lane: reflectLane,
+                      body: reflectBody.trim(),
+                      taskId: opt?.taskId ?? null,
+                      applicationId: opt?.applicationId ?? null,
+                      interviewStepId:
+                        opt?.applicationId && reflectStepId ? reflectStepId : null,
+                      localDate: today.localDate,
+                      tz,
+                    });
+                    setReflectOpen(false);
+                    setReflectBody("");
+                    await onRefresh();
+                  } catch (err) {
+                    setMessage(
+                      err instanceof Error ? err.message : "Could not add reflection",
+                    );
+                  } finally {
+                    setReflectBusy(false);
+                  }
+                })();
+              }}
+            >
+              Add reflection
             </Button>
           </ModalFooter>
         </ModalLayer>
