@@ -1,9 +1,11 @@
-import { access, readFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { getDemoStatus } from "./demoMode.js";
 import { getBackupStatus } from "./backupStatus.js";
 import { getBackupJob } from "./backupJob.js";
+import {
+  formatLocalTime,
+  nextDailyLocalTime,
+  readDailyBoardSchedule,
+} from "./dailyBoardSchedule.js";
 import { pool } from "./db.js";
 import { getBoardRefresh } from "./boardRefresh.js";
 import { HYBRID_SCRAPE_URL_SQL, SCRAPE_DUE_NOW_SQL } from "./scrape.js";
@@ -11,10 +13,6 @@ import { getLiveRankBacklogJob } from "./liveRankBacklogJob.js";
 import { getRankBatchStatus } from "./rankBatchStatus.js";
 import { RANK_PROMPT_VERSION } from "./rankPrompt.js";
 import { getRerankQueueSnapshot } from "./rankRerankQueue.js";
-
-const CRON_LABEL = "com.career-digest.daily-board";
-const DEFAULT_CRON_HOUR = 17;
-const DEFAULT_CRON_MINUTE = 0;
 
 const JOBS_LIST_BASE = `
   p.removed_from_board_at IS NULL
@@ -31,48 +29,6 @@ function boardRankLimit(): number {
 
 function defaultRankingModel(): string {
   return process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
-}
-
-function nextDailyLocalTime(hour: number, minute: number): Date {
-  const now = new Date();
-  const next = new Date(now);
-  next.setHours(hour, minute, 0, 0);
-  if (next.getTime() <= now.getTime()) {
-    next.setDate(next.getDate() + 1);
-  }
-  return next;
-}
-
-async function readCronSchedule(): Promise<{
-  installed: boolean;
-  hour: number;
-  minute: number;
-}> {
-  const plistPath = path.join(
-    os.homedir(),
-    "Library/LaunchAgents",
-    `${CRON_LABEL}.plist`,
-  );
-  try {
-    await access(plistPath);
-    const raw = await readFile(plistPath, "utf8");
-    const hourMatch = raw.match(/<key>Hour<\/key>\s*<integer>(\d+)<\/integer>/);
-    const minuteMatch = raw.match(/<key>Minute<\/key>\s*<integer>(\d+)<\/integer>/);
-    const hour = hourMatch ? Number(hourMatch[1]) : DEFAULT_CRON_HOUR;
-    const minute = minuteMatch ? Number(minuteMatch[1]) : DEFAULT_CRON_MINUTE;
-    return { installed: true, hour, minute };
-  } catch {
-    return { installed: false, hour: DEFAULT_CRON_HOUR, minute: DEFAULT_CRON_MINUTE };
-  }
-}
-
-function formatLocalTime(hour: number, minute: number): string {
-  const date = new Date();
-  date.setHours(hour, minute, 0, 0);
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
 }
 
 export type OpsStatusSnapshot = {
@@ -257,7 +213,7 @@ export async function getOpsStatus(): Promise<OpsStatusSnapshot> {
      ) NULLS LAST`,
   );
 
-  const cron = await readCronSchedule();
+  const cron = await readDailyBoardSchedule();
   const nextBoard = nextDailyLocalTime(cron.hour, cron.minute);
   const limit = boardRankLimit();
   const backup = await getBackupStatus();

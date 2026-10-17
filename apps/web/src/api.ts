@@ -114,7 +114,13 @@ export type BoardRefreshStatus = {
   lastOkAt: string | null;
   error: string | null;
   lastRun: BoardRefreshLastRun | null;
+  runnerPid?: number | null;
+  catchUpOn?: string | null;
 };
+
+/** Matches API `INTERRUPTED_REFRESH_MESSAGE` when a runner dies mid-refresh. */
+export const BOARD_REFRESH_INTERRUPTED_MESSAGE =
+  "Refresh interrupted by API restart";
 
 export type RankBatchStatus = {
   status: "idle" | "running" | "ready" | "ok" | "error";

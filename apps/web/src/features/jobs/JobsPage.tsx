@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   addPostingToTasks,
+  BOARD_REFRESH_INTERRUPTED_MESSAGE,
   clearJobFeedback,
   createApplication,
   getBoardRefresh,
@@ -384,23 +385,38 @@ export default function Jobs() {
   }, [rerankQueue]);
 
   useEffect(() => {
-    if (refresh?.status !== "running") return;
-    wasRefreshing.current = true;
+    const active = refresh?.status === "running";
+    if (active) wasRefreshing.current = true;
+    // Poll while running; also periodically when idle/error so an API-side
+    // catch-up after an interrupted refresh appears without a full reload.
+    const ms = active ? 2000 : 12_000;
     const timer = window.setInterval(() => {
       getBoardRefresh()
         .then((status) => setRefresh(status))
         .catch(() => undefined);
-    }, 2000);
+    }, ms);
     return () => window.clearInterval(timer);
   }, [refresh?.status]);
 
   useEffect(() => {
-    if (!refresh || refresh.status === "running") return;
+    if (!refresh) return;
+    if (refresh.status === "running") {
+      // Clear a prior interrupt banner once a new run (manual or catch-up) is live.
+      setError((current) =>
+        current === BOARD_REFRESH_INTERRUPTED_MESSAGE ||
+        current === "Board refresh failed"
+          ? null
+          : current,
+      );
+      return;
+    }
+    // Surface a failed/interrupted refresh even if this tab didn't watch it start
+    // (e.g. API restarted mid-ingest and left status=error on disk).
+    if (refresh.status === "error" && refresh.error) {
+      setError(refresh.error);
+    }
     if (!wasRefreshing.current) return;
     wasRefreshing.current = false;
-    if (refresh.status === "error") {
-      setError(refresh.error || "Board refresh failed");
-    }
     invalidateListCache("jobs:");
     setLoading(jobs.length === 0);
     reload()

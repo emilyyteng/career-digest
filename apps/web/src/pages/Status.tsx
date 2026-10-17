@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  BOARD_REFRESH_INTERRUPTED_MESSAGE,
   getOpsStatus,
   startBoardRefresh,
   startBackup,
@@ -136,6 +137,8 @@ export default function Status() {
   const rankModel = rank.model ?? ops.rankingModel;
   const rankFinished = rank.finishedAt ?? board.lastOkAt;
   const rankLastOk = rank.lastOkAt ?? board.lastOkAt;
+  const boardInterrupted =
+    board.status === "error" && board.error === BOARD_REFRESH_INTERRUPTED_MESSAGE;
 
   return (
     <section className="ops-page">
@@ -164,7 +167,9 @@ export default function Status() {
               >
                 {board.status === "running"
                   ? `Running · ${board.phase ?? "…"}`
-                  : board.status}
+                  : boardInterrupted
+                    ? "Interrupted"
+                    : board.status}
               </StatusBadge>
             </p>
             <dl className="ops-meta">

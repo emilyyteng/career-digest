@@ -2,13 +2,21 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  localCivilDate,
+  readDailyBoardSchedule,
+  shouldCatchUpInterruptedBoardRefresh,
+} from "./dailyBoardSchedule.js";
+import { isDemoMode } from "./demoMode.js";
+import {
   blankBoardRefresh,
+  INTERRUPTED_REFRESH_MESSAGE,
   snapshotFromDisk,
   type BoardRefreshLastRun,
   type BoardRefreshPhase,
   type BoardRefreshSnapshot,
 } from "./boardRefreshState.js";
 import { DailyCapError } from "./openaiRateLimit.js";
+import { isProcessAlive } from "./processAlive.js";
 import { hasPendingRankBatch, runLiveRank } from "./rank.js";
 import { recordRankBatchSuccess } from "./rankBatchStatus.js";
 import { runDiscoverBoards } from "./discoverBoards.js";
@@ -16,6 +24,7 @@ import { runIngest } from "./ingest.js";
 import { runScrape } from "./scrape.js";
 
 export type { BoardRefreshLastRun, BoardRefreshPhase, BoardRefreshSnapshot };
+export { INTERRUPTED_REFRESH_MESSAGE };
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const STATE_PATH = path.join(root, "data/board-refresh.json");
@@ -37,10 +46,17 @@ async function persist(): Promise<void> {
 async function readDisk(): Promise<BoardRefreshSnapshot> {
   try {
     const raw = JSON.parse(await readFile(STATE_PATH, "utf8")) as Partial<BoardRefreshSnapshot>;
-    const { snapshot, persistStaleRunning } = snapshotFromDisk(raw);
-    if (persistStaleRunning) {
+    const { snapshot, shouldPersist, markedInterrupted } = snapshotFromDisk(
+      raw,
+      Date.now(),
+      isProcessAlive,
+    );
+    if (shouldPersist) {
       state = snapshot;
       await persist();
+      if (markedInterrupted) {
+        console.warn(`board refresh: ${INTERRUPTED_REFRESH_MESSAGE}`);
+      }
     }
     return snapshot;
   } catch {
@@ -50,7 +66,7 @@ async function readDisk(): Promise<BoardRefreshSnapshot> {
 
 async function executeBoardRefresh(): Promise<void> {
   console.log("board refresh: discover boards starting");
-  state = { ...state, phase: "discover" };
+  state = { ...state, phase: "discover", runnerPid: process.pid };
   await persist();
   const discovered = await runDiscoverBoards({ write: true, quiet: false });
   console.log(
@@ -58,12 +74,12 @@ async function executeBoardRefresh(): Promise<void> {
   );
 
   console.log("board refresh: ingest starting");
-  state = { ...state, phase: "ingest" };
+  state = { ...state, phase: "ingest", runnerPid: process.pid };
   await persist();
   const ingest = await runIngest();
 
   console.log("board refresh: scrape starting");
-  state = { ...state, phase: "scrape" };
+  state = { ...state, phase: "scrape", runnerPid: process.pid };
   await persist();
   await runScrape();
 
@@ -74,7 +90,7 @@ async function executeBoardRefresh(): Promise<void> {
     console.log("board refresh: skipping light rank (OPENAI_API_KEY not set)");
   } else {
     console.log("board refresh: light rank starting (unranked only)");
-    state = { ...state, phase: "rank" };
+    state = { ...state, phase: "rank", runnerPid: process.pid };
     await persist();
     try {
       const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
@@ -109,6 +125,8 @@ async function executeBoardRefresh(): Promise<void> {
       mergeDeduped: ingest.mergeDeduped,
       rankedProcessed,
     },
+    runnerPid: null,
+    catchUpOn: null,
   };
   console.log("board refresh: done");
 }
@@ -119,7 +137,14 @@ export async function getBoardRefresh(): Promise<BoardRefreshSnapshot> {
   return { ...state };
 }
 
-export async function startBoardRefresh(): Promise<{
+export type StartBoardRefreshOptions = {
+  /** Mark today's automatic catch-up so we only attempt it once per local day. */
+  catchUp?: boolean;
+};
+
+export async function startBoardRefresh(
+  options: StartBoardRefreshOptions = {},
+): Promise<{
   started: boolean;
   snapshot: BoardRefreshSnapshot;
 }> {
@@ -140,6 +165,8 @@ export async function startBoardRefresh(): Promise<{
     lastOkAt: state.lastOkAt,
     error: null,
     lastRun: state.lastRun,
+    runnerPid: process.pid,
+    catchUpOn: options.catchUp ? localCivilDate() : state.catchUpOn,
   };
   await persist();
 
@@ -156,6 +183,8 @@ export async function startBoardRefresh(): Promise<{
         lastOkAt: state.lastOkAt,
         error: message,
         lastRun: state.lastRun,
+        runnerPid: null,
+        catchUpOn: state.catchUpOn,
       };
       console.error(`board refresh failed: ${message}`);
     } finally {
@@ -165,6 +194,41 @@ export async function startBoardRefresh(): Promise<{
   })();
 
   return { started: true, snapshot: { ...state } };
+}
+
+/**
+ * If a prior refresh was interrupted and today's scheduled time has passed
+ * without a success, start one catch-up run.
+ */
+export async function maybeCatchUpInterruptedBoardRefresh(): Promise<{
+  started: boolean;
+  snapshot: BoardRefreshSnapshot;
+}> {
+  if (isDemoMode()) {
+    return { started: false, snapshot: await getBoardRefresh() };
+  }
+  const snapshot = await getBoardRefresh();
+  if (running || snapshot.status === "running") {
+    return { started: false, snapshot };
+  }
+  const schedule = await readDailyBoardSchedule();
+  if (
+    !shouldCatchUpInterruptedBoardRefresh({
+      status: snapshot.status,
+      error: snapshot.error,
+      lastOkAt: snapshot.lastOkAt,
+      catchUpOn: snapshot.catchUpOn,
+      interruptedMessage: INTERRUPTED_REFRESH_MESSAGE,
+      hour: schedule.hour,
+      minute: schedule.minute,
+    })
+  ) {
+    return { started: false, snapshot };
+  }
+  console.log(
+    "board refresh: catching up after interrupted run (past daily schedule, no success today)",
+  );
+  return startBoardRefresh({ catchUp: true });
 }
 
 export async function waitForBoardRefresh(): Promise<BoardRefreshSnapshot> {

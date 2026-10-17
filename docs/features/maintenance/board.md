@@ -15,10 +15,11 @@ Maintenance has no milestones, so the board has one open table and one done list
 | [MT-10](./tickets/MT-10-npm-audit-review.md) | Review `npm audit` warnings | spike | Draft | Not scheduled |
 
 <details>
-<summary>Done (5)</summary>
+<summary>Done (6)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [MT-11](./tickets/MT-11-board-refresh-interrupt-recovery.md) | Detect interrupted board refresh and catch up | (this commit) |
 | [MT-01](./tickets/MT-01-api-typecheck-errors.md) | Fix all 17 API typecheck errors; add `npm run typecheck` and `npm run check` | `858febf` |
 | [MT-03](./tickets/MT-03-flaky-api-tests.md) | Make API integration tests deterministic | `2c5f514` |
 | [MT-06](./tickets/MT-06-migration-tracking.md) | Track applied migrations so each runs once | `7e1604c` |
