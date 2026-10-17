@@ -70,6 +70,6 @@ No open tickets.
 | [M3-03](./tickets/M3/M3-03-weekly-column-ui.md) | Progress weekly goals column UI | `60099eb` |
 | [M3-04](./tickets/M3/M3-04-weekly-incrementer-ui.md) | Multi-goal weekly incrementer UI | `76926bf` |
 | [M3-05](./tickets/M3/M3-05-home-targets-customs.md) | Home Targets for custom weeklies | `ad69fdf` |
-| [M3-06](./tickets/M3/M3-06-prototype-cleanup.md) | Delete F11 M0 prototypes | (this commit) |
+| [M3-06](./tickets/M3/M3-06-prototype-cleanup.md) | Delete F11 M0 prototypes | `cea5248` |
 
 </details>
