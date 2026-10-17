@@ -69,6 +69,11 @@ export type WeeklyGoalsSnapshot = {
   weekStart: string;
   weekEnd: string;
   goals: WeeklyGoalView[];
+  /** F11 custom weekly targets (active + archived). */
+  customs: {
+    active: import("./customWeeklyGoals.js").CustomWeeklyGoalView[];
+    archived: import("./customWeeklyGoals.js").CustomWeeklyGoalView[];
+  };
 };
 
 const DEFAULT_LC_TARGET = 10;
@@ -492,6 +497,11 @@ async function closeWeek(db: Queryable, weekStart: string, tz: string): Promise<
       [fromId, toId, weekEnd],
     );
   }
+
+  // F11 M3-02: close custom weekly targets for the same week (Seeds at close only).
+  const { closeCustomWeeklyWeek } = await import("./customWeeklyGoals.js");
+  await closeCustomWeeklyWeek(db, weekStart);
+
   return records;
 }
 
@@ -573,7 +583,9 @@ export async function getWeeklyGoalsSnapshot(
     const members = row.kind === "task_set" ? await loadMembers(db, row.id) : [];
     goals.push(toView(row, members, fraction, streaks[row.slot]));
   }
-  return { tz, weekStart, weekEnd, goals };
+  const { listCustomWeeklyGoals } = await import("./customWeeklyGoals.js");
+  const customs = await listCustomWeeklyGoals(db, tz, now);
+  return { tz, weekStart, weekEnd, goals, customs };
 }
 
 /**

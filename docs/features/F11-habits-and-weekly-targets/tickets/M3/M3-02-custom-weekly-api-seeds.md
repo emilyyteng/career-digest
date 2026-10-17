@@ -1,7 +1,7 @@
 # M3-02: Custom weekly API + week-close Seeds
 
-**Status:** Draft
-**Blocked by:** M3-01
+**Status:** Done
+**Blocked by:** —
 **Implements:** R3.1–R3.6, R3.9–R3.10, R3.4, R.7, B3–B4 (from `../../spec.md`)
 **Type:** build
 
@@ -11,15 +11,15 @@ API and domain for custom weekly targets: CRUD/archive/restore, mid-week target 
 
 ## Acceptance criteria
 
-- [ ] **Create:** name + target (default **3**); reject at 6 active customs with clear message.
-- [ ] **Rename** / **archive** / **restore** (restore blocked at cap with message); archived do not consume cap.
-- [ ] **Patch target** mid-week (near-label stepper data); target ≥ 1; does not go through pencil semantics.
-- [ ] **± progress** for the current week only (done never &lt; 0); apps weekly progress remains task-derived only (no apps ± API here).
-- [ ] Weekly snapshot includes apps, LC, and active customs (creation order among customs); archived available for Archived UI.
-- [ ] Name + target **carry** into new weeks; **done resets** each week (R3.5).
-- [ ] Week close: customs pay same schedule as apps/LC — +20 per unit toward target, +100 flat when met (R3.4); points at close only.
-- [ ] `metWeeksStreak` (or equivalent) for customs from closed records; UI shows flame when ≥ 2 (R3.9).
-- [ ] No today-LC endpoints mixed into this surface.
+- [x] **Create:** name + target (default **3**); reject at 6 active customs with clear message.
+- [x] **Rename** / **archive** / **restore** (restore blocked at cap with message); archived do not consume cap.
+- [x] **Patch target** mid-week (near-label stepper data); target ≥ 1; does not go through pencil semantics.
+- [x] **± progress** for the current week only (done never &lt; 0); apps weekly progress remains task-derived only (no apps ± API here).
+- [x] Weekly snapshot includes apps, LC, and active customs (creation order among customs); archived available for Archived UI.
+- [x] Name + target **carry** into new weeks; **done resets** each week (R3.5).
+- [x] Week close: customs pay same schedule as apps/LC — +20 per unit toward target, +100 flat when met (R3.4); points at close only.
+- [x] `metWeeksStreak` (or equivalent) for customs from closed records; UI shows flame when ≥ 2 (R3.9).
+- [x] No today-LC endpoints mixed into this surface.
 
 ## Edge cases
 
@@ -31,25 +31,27 @@ API and domain for custom weekly targets: CRUD/archive/restore, mid-week target 
 
 ## Tests
 
-- [ ] **Integration:** create → in snapshot; ± updates done; rename; archive/restore; restore at cap fails.
-- [ ] **Integration:** target patch persists across week boundary with done reset (simulate week start).
-- [ ] **Integration:** week close awards +20×units and +100 when met for a custom; unmet pays units only (align with existing week-close tests for LC/apps).
-- [ ] **Unit/integration:** consecutive met weeks → streak count; broken week resets streak.
-- [ ] Regression: apps/LC weekly snapshot and close behavior unchanged.
+- [x] **Integration:** create → in snapshot; ± updates done; rename; archive/restore; restore at cap fails.
+- [x] **Integration:** target patch persists across week boundary with done reset (simulate week start).
+- [x] **Integration:** week close awards +20×units and +100 when met for a custom; unmet pays units only (align with existing week-close tests for LC/apps).
+- [x] **Unit/integration:** consecutive met weeks → streak count; broken week resets streak.
+- [x] Regression: apps/LC weekly snapshot and close behavior unchanged.
 
 ## Reuse notes
 
-[`weeklyGoals.ts`](../../../../../apps/api/src/weeklyGoals.ts) close/ensure/pace/`metWeeksStreaks`; week-close Seeds paths used by LC/apps; extend rather than fork formulas.
+[`weeklyGoals.ts`](../../../../../apps/api/src/weeklyGoals.ts) close/ensure/pace/`metWeeksStreaks`; week-close Seeds paths used by LC/apps; extend rather than fork formulas. Reused `weeklyRecordPoints` / `POINTS`, `computePace`, `closeDueWeeks` hook; new source id `weeklyGoalSourceIdCustom`.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Reuse check done
-- [ ] Ticket status `Done`; board updated
-- [ ] Committed as `F11 M3-02: …`
-- [ ] End-of-task report given, including tests added and **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Reuse check done
+- [x] Ticket status `Done`; board updated
+- [x] Committed as `F11 M3-02: …`
+- [x] End-of-task report given, including tests added and **Issues found**
 
 ## Verification notes
 
-_(filled when done)_
+- `npm run check` clean (389 tests), including `customWeeklyGoals.api.test.ts`.
+- − at done 0 → 409 (same idea as LC weekly).
+- Overflow past target allowed; points at week close only via `closeCustomWeeklyWeek` from `closeWeek`.

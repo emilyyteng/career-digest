@@ -43,6 +43,11 @@ export function weeklyGoalSourceId(weekStart: string, slot: "lc" | "apps"): stri
   return `${weekStart}:${slot}`;
 }
 
+/** F11 custom weekly target close / ledger source id. */
+export function weeklyGoalSourceIdCustom(weekStart: string, goalId: string): string {
+  return `${weekStart}:custom:${goalId}`;
+}
+
 /**
  * R5.21: the task's category at completion, kept on the earn. The name is kept too,
  * so the breakdown still has a label after the category is deleted.

@@ -387,11 +387,34 @@ export type WeeklyGoalView = {
   metWeeksStreak: number;
 };
 
+/** F11 custom weekly target row (Active / Archived). */
+export type CustomWeeklyGoalView = {
+  id: string;
+  name: string;
+  targetCount: number;
+  progressCount: number;
+  done: number;
+  total: number;
+  pace: {
+    label: "on_track" | "ahead" | "behind";
+    amount: number;
+    expected: number;
+    fractionElapsed: number;
+  };
+  metWeeksStreak: number;
+  archived: boolean;
+};
+
 export type WeeklyGoalsSnapshot = {
   tz: string;
   weekStart: string;
   weekEnd: string;
   goals: WeeklyGoalView[];
+  /** F11 custom weekly targets. */
+  customs: {
+    active: CustomWeeklyGoalView[];
+    archived: CustomWeeklyGoalView[];
+  };
 };
 
 export type HomeDashboard = {
@@ -1109,6 +1132,59 @@ export const setCustomHabitCheckoff = (tz: string, id: string, checked: boolean)
 
 export const getWeeklyGoals = (tz: string) =>
   parse<WeeklyGoalsSnapshot>(api(`/api/weekly-goals?${progressTz(tz)}`));
+
+export const createCustomWeeklyGoal = (
+  tz: string,
+  body: { name: string; targetCount?: number },
+) =>
+  parse<CustomWeeklyGoalView>(
+    api(`/api/weekly-customs?${progressTz(tz)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+
+export const renameCustomWeeklyGoal = (tz: string, id: string, name: string) =>
+  parse<CustomWeeklyGoalView>(
+    api(`/api/weekly-customs/${encodeURIComponent(id)}?${progressTz(tz)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  );
+
+export const patchCustomWeeklyTarget = (tz: string, id: string, targetCount: number) =>
+  parse<CustomWeeklyGoalView>(
+    api(`/api/weekly-customs/${encodeURIComponent(id)}/target?${progressTz(tz)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targetCount }),
+    }),
+  );
+
+export const stepCustomWeeklyProgress = (tz: string, id: string, delta: 1 | -1) =>
+  parse<CustomWeeklyGoalView>(
+    api(`/api/weekly-customs/${encodeURIComponent(id)}/progress?${progressTz(tz)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ delta }),
+    }),
+  );
+
+export const archiveCustomWeeklyGoal = (tz: string, id: string) =>
+  parse<CustomWeeklyGoalView>(
+    api(`/api/weekly-customs/${encodeURIComponent(id)}/archive?${progressTz(tz)}`, {
+      method: "POST",
+    }),
+  );
+
+export const restoreCustomWeeklyGoal = (tz: string, id: string) =>
+  parse<CustomWeeklyGoalView>(
+    api(`/api/weekly-customs/${encodeURIComponent(id)}/restore?${progressTz(tz)}`, {
+      method: "POST",
+    }),
+  );
 
 export const patchWeeklyLcGoal = (
   tz: string,

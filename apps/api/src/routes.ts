@@ -124,6 +124,14 @@ import {
   restoreCustomHabit,
   setCustomHabitTodayCheckoff,
 } from "./customHabits.js";
+import {
+  archiveCustomWeeklyGoal,
+  createCustomWeeklyGoal,
+  patchCustomWeeklyTarget,
+  renameCustomWeeklyGoal,
+  restoreCustomWeeklyGoal,
+  stepCustomWeeklyProgress,
+} from "./customWeeklyGoals.js";
 import { isLeetcodeTier } from "./pointsFormulas.js";
 import {
   adjustApplicationActual,
@@ -1842,6 +1850,122 @@ api.put("/weekly-goals/apps/members/:taskId", async (req, res) => {
         ? (err as { status: number }).status
         : 400;
     res.status(status).json({ error: message });
+  }
+});
+
+function weeklyCustomErrStatus(err: unknown): number {
+  return typeof (err as { status?: number }).status === "number"
+    ? (err as { status: number }).status
+    : 400;
+}
+
+api.post("/weekly-customs", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    const body = req.body as { name?: unknown; targetCount?: unknown };
+    const goal = await createCustomWeeklyGoal(pool, tz, body);
+    res.status(201).json(goal);
+  } catch (err) {
+    res.status(weeklyCustomErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.patch("/weekly-customs/:id", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    const goal = await renameCustomWeeklyGoal(
+      pool,
+      req.params.id,
+      tz,
+      (req.body as { name?: unknown }).name,
+    );
+    res.json(goal);
+  } catch (err) {
+    res.status(weeklyCustomErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.patch("/weekly-customs/:id/target", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    const goal = await patchCustomWeeklyTarget(
+      pool,
+      req.params.id,
+      tz,
+      (req.body as { targetCount?: unknown }).targetCount,
+    );
+    res.json(goal);
+  } catch (err) {
+    res.status(weeklyCustomErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.patch("/weekly-customs/:id/progress", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    const goal = await stepCustomWeeklyProgress(
+      pool,
+      req.params.id,
+      tz,
+      (req.body as { delta?: unknown }).delta,
+    );
+    res.json(goal);
+  } catch (err) {
+    res.status(weeklyCustomErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.post("/weekly-customs/:id/archive", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    res.json(await archiveCustomWeeklyGoal(pool, req.params.id, tz));
+  } catch (err) {
+    res.status(weeklyCustomErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
+  }
+});
+
+api.post("/weekly-customs/:id/restore", async (req, res) => {
+  const tz = resolveTimezone(String(req.query.tz ?? ""));
+  if (!tz) {
+    res.status(400).json({ error: "Invalid or missing tz (IANA timezone)" });
+    return;
+  }
+  try {
+    res.json(await restoreCustomWeeklyGoal(pool, req.params.id, tz));
+  } catch (err) {
+    res.status(weeklyCustomErrStatus(err)).json({
+      error: err instanceof Error ? err.message : "Bad request",
+    });
   }
 });
 
