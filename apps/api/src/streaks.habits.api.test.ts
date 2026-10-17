@@ -58,8 +58,14 @@ describe.skipIf(!integrationReady)("custom habit streaks + points (F11 M1-02)", 
       todayCounts: false,
     });
 
-    const view = await setHabitCheckoff(pool, habit.id, TZ, today, true);
-    expect(view).toEqual({ length: 1, todayCounts: true });
+    const { streak, points } = await setHabitCheckoff(pool, habit.id, TZ, today, true);
+    expect(streak).toEqual({ length: 1, todayCounts: true });
+    expect(points).toEqual(
+      expect.objectContaining({
+        amount: 2,
+        message: expect.stringContaining("Gym streak day 1"),
+      }),
+    );
     expect((await streakEvents()).filter((e) => e.kind === "earn")).toEqual([
       expect.objectContaining({
         amount: 2,

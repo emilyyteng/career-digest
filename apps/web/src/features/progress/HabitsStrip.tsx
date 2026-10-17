@@ -2,7 +2,7 @@
  * F11 M2-01 · Habits strip (Home + Progress). Verdict D: mark hit-target
  * checkoff, ghost archived, ChromeTabs. Add reflection / Log LC land in M2-02.
  */
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   archiveCustomHabit,
@@ -10,9 +10,11 @@ import {
   renameCustomHabit,
   restoreCustomHabit,
   setCustomHabitCheckoff,
+  type PointsEarnInfo,
   type ProgressToday,
 } from "../../api";
 import ModalLayer from "../../ModalLayer";
+import EarnFlash from "../completion/EarnFlash";
 import {
   Button,
   ChromeTab,
@@ -53,12 +55,15 @@ function DerivedPill({
       aria-label={`${label} ${length}-day daily streak${todayCounts ? ", done today" : ", not yet today"}, ${n} completed today`}
     >
       <div className="habits-pill-top">
-        <strong className="habits-n">{length}</strong>
+        <span className="habits-pill-top-lead">
+          <strong className="habits-n">{length}</strong>
+          <span className="habits-kind">daily streak</span>
+        </span>
         <span className="habits-mark" aria-hidden="true">
           {todayCounts ? "✓" : "−"}
         </span>
       </div>
-      <span className="habits-label">{label} daily streak</span>
+      <span className="habits-label">{label}</span>
       <span className="habits-sub">{n} completed today</span>
     </div>
   );
@@ -86,7 +91,10 @@ function CustomActivePill({
       aria-label={`${habit.name} ${habit.length}-day daily streak, ${sub}`}
     >
       <div className="habits-pill-top">
-        <strong className="habits-n">{habit.length}</strong>
+        <span className="habits-pill-top-lead">
+          <strong className="habits-n">{habit.length}</strong>
+          <span className="habits-kind">daily streak</span>
+        </span>
         <button
           type="button"
           className="habits-mark-btn"
@@ -103,7 +111,7 @@ function CustomActivePill({
         </button>
       </div>
       <span className="habits-label habits-label-edit">
-        {habit.name} daily streak
+        {habit.name}
         <button
           type="button"
           className="habits-pencil"
@@ -133,7 +141,12 @@ function ArchivedCustom({
   return (
     <div className="habits-pill habits-pill-archived is-ghost">
       <span className="habits-arch-stamp">Archived</span>
-      <strong className="habits-n">{habit.length}</strong>
+      <div className="habits-pill-top">
+        <span className="habits-pill-top-lead">
+          <strong className="habits-n">{habit.length}</strong>
+          <span className="habits-kind">daily streak</span>
+        </span>
+      </div>
       <span className="habits-label">{habit.name}</span>
       <span className="habits-sub muted">streak paused from Active</span>
       <Button
@@ -182,6 +195,8 @@ export default function HabitsStrip({
   const [section, setSection] = useState<Section>("active");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [earn, setEarn] = useState<PointsEarnInfo | null>(null);
+  const dismissEarn = useCallback(() => setEarn(null), []);
   const [editId, setEditId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [archiveConfirmId, setArchiveConfirmId] = useState<string | null>(null);
@@ -226,6 +241,7 @@ export default function HabitsStrip({
       className={["habits-strip", "card", className].filter(Boolean).join(" ")}
       aria-labelledby={titleId}
     >
+      <EarnFlash earn={earn} onDismiss={dismissEarn} />
       <div className="habits-head">
         <h3 id={titleId} className="habits-title">
           Habits
@@ -262,13 +278,13 @@ export default function HabitsStrip({
         <div className="habits-band">
           <div className="habits-row">
             <DerivedPill
-              label="Apps"
+              label="Applications"
               length={today.streaks.apps.length}
               todayCounts={today.streaks.apps.todayCounts}
               completedToday={today.applications.raw}
             />
             <DerivedPill
-              label="LC"
+              label="LeetCode"
               length={today.streaks.lc.length}
               todayCounts={today.streaks.lc.todayCounts}
               completedToday={today.leetcode.raw}
@@ -279,7 +295,14 @@ export default function HabitsStrip({
                 habit={h}
                 busy={busy}
                 onToggle={() =>
-                  void run(() => setCustomHabitCheckoff(tz, h.id, !h.todayCounts).then(() => {}))
+                  void run(async () => {
+                    const result = await setCustomHabitCheckoff(
+                      tz,
+                      h.id,
+                      !h.todayCounts,
+                    );
+                    if (result.points) setEarn(result.points);
+                  })
                 }
                 onEdit={() => {
                   setEditId(h.id);

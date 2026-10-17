@@ -3302,12 +3302,26 @@ textarea { min-height: 10rem; width: 100%; }
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.4rem;
+  gap: 0.7rem;
+}
+.habits-pill-top-lead {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
 }
 .habits-n {
   font-size: 1.2rem;
   line-height: 1.1;
   font-family: var(--font-display);
+}
+.habits-kind {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text-subtle);
+  white-space: nowrap;
 }
 .habits-label {
   font-size: 0.72rem;
@@ -3317,9 +3331,10 @@ textarea { min-height: 10rem; width: 100%; }
   color: var(--text-muted);
 }
 .habits-label-edit {
-  position: relative;
-  display: block;
-  padding-right: 1em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  max-width: 100%;
   box-sizing: border-box;
 }
 .habits-sub {
@@ -3366,13 +3381,9 @@ textarea { min-height: 10rem; width: 100%; }
   cursor: default;
 }
 .habits-pencil {
-  position: absolute;
-  right: 0;
-  top: 50%;
   box-sizing: border-box;
-  display: block;
-  width: 0.9em;
-  height: 0.9em;
+  display: inline-block;
+  flex-shrink: 0;
   margin: 0;
   padding: 0;
   border: none;
@@ -3387,7 +3398,6 @@ textarea { min-height: 10rem; width: 100%; }
   cursor: pointer;
   text-transform: none;
   letter-spacing: 0;
-  transform: translateY(-50%);
 }
 .habits-pencil:hover,
 .habits-pencil:focus-visible {
@@ -4182,8 +4192,12 @@ a.home-section-link:hover,
 .progress-today-head {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.2rem;
+}
+.progress-today-head .habits-strip {
+  width: 100%;
+  box-sizing: border-box;
 }
 .progress-today-label {
   margin: 0;

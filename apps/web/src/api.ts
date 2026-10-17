@@ -1056,6 +1056,8 @@ export type CustomHabitView = {
   length: number;
   todayCounts: boolean;
   archived?: boolean;
+  /** Present on checkoff responses when streak points were paid. */
+  points?: PointsEarnInfo | null;
 };
 
 export const createCustomHabit = (tz: string, name: string) =>

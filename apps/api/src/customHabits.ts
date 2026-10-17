@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import type { PointsEarnInfo } from "./pointsLedger.js";
 import { localDateInTimezone } from "./progress.js";
 import {
   currentStreak,
@@ -19,6 +20,11 @@ export type CustomHabitView = {
   length: number;
   todayCounts: boolean;
   archived: boolean;
+};
+
+export type CustomHabitCheckoffResult = CustomHabitView & {
+  /** Streak earn flash payload when today was checked off and points paid. */
+  points: PointsEarnInfo | null;
 };
 
 export type CustomHabitsSnapshot = {
@@ -260,7 +266,7 @@ export async function setCustomHabitTodayCheckoff(
   tz: string,
   checked: unknown,
   now = new Date(),
-): Promise<CustomHabitView> {
+): Promise<CustomHabitCheckoffResult> {
   if (typeof checked !== "boolean") {
     throw Object.assign(new Error("checked must be a boolean"), { status: 400 });
   }
@@ -269,12 +275,20 @@ export async function setCustomHabitTodayCheckoff(
     throw Object.assign(new Error("Archived habits cannot be checked off"), { status: 400 });
   }
   const today = localDateInTimezone(now, tz);
-  const streak = await setHabitCheckoff(pool, habitId, tz, today, checked, now);
+  const { streak, points } = await setHabitCheckoff(
+    pool,
+    habitId,
+    tz,
+    today,
+    checked,
+    now,
+  );
   return {
     id: habit.id,
     name: habit.name,
     length: streak.length,
     todayCounts: streak.todayCounts,
     archived: habit.archived,
+    points,
   };
 }

@@ -84,6 +84,12 @@ describe.skipIf(!integrationReady)("custom habits API (F11 M1-03)", () => {
       .expect(200);
     expect(on.body.todayCounts).toBe(true);
     expect(on.body.length).toBeGreaterThanOrEqual(1);
+    expect(on.body.points).toEqual(
+      expect.objectContaining({
+        amount: 2,
+        message: expect.stringContaining("Gym streak day 1"),
+      }),
+    );
 
     const earns = await streakEarnsFor(id, today);
     expect(earns.filter((e) => e.kind === "earn")).toEqual([

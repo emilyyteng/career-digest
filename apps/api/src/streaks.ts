@@ -10,6 +10,9 @@ import {
   recordEarn,
   reinstateEarn,
   reverseEarn,
+  serializePointsEarn,
+  type PointsEarnInfo,
+  type PointsEventRow,
 } from "./pointsLedger.js";
 import { localDateInTimezone } from "./progress.js";
 
@@ -31,7 +34,10 @@ export type StreaksSnapshot = {
   apps: StreakView;
 };
 
-const KIND_LABEL: Record<StreakKind, string> = { lc: "LC", apps: "Apps" };
+const KIND_LABEL: Record<StreakKind, string> = {
+  lc: "LeetCode",
+  apps: "Applications",
+};
 
 /** Ledger source_id prefix for custom daily habits (distinct from `lc:` / `apps:`). */
 export function habitDailySourceId(habitId: string, localDate: string): string {
@@ -118,17 +124,18 @@ function signedPoints(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`;
 }
 
+/** Returns the ledger row for a newly paid (or reinstated) earn; null if no-op. */
 async function ensureEarn(
   db: Queryable,
   sourceType: string,
   sourceId: string,
   amount: number,
   label: string,
-): Promise<void> {
+): Promise<PointsEventRow | null> {
   const existing = await findEarnEvent(db, sourceType, sourceId);
   if (!existing) {
-    if (amount <= 0) return;
-    await recordEarn(db, {
+    if (amount <= 0) return null;
+    const { event } = await recordEarn(db, {
       category: "streak",
       amount,
       message: `${label} · +${amount} points`,
@@ -136,14 +143,29 @@ async function ensureEarn(
       sourceId,
       breakdown: [{ category: "streak", amount, label: "streak" }],
     });
-    return;
+    return event;
   }
   if (existing.meta.superseded === true) {
-    if (amount <= 0) return;
-    await reinstateEarn(db, sourceType, sourceId, amount, (delta) =>
+    if (amount <= 0) return null;
+    const { adjust } = await reinstateEarn(db, sourceType, sourceId, amount, (delta) =>
       `${label} · ${signedPoints(delta)} points`,
     );
+    return adjust;
   }
+  return null;
+}
+
+function flashFromEarns(events: Array<PointsEventRow | null>): PointsEarnInfo | null {
+  const paid = events.filter((e): e is PointsEventRow => e != null && e.amount !== 0);
+  if (paid.length === 0) return null;
+  if (paid.length === 1) return serializePointsEarn(paid[0]);
+  const amount = paid.reduce((sum, e) => sum + e.amount, 0);
+  const last = paid[paid.length - 1]!;
+  return {
+    amount,
+    message: paid.map((e) => e.message).join(" · "),
+    balanceAfter: last.balanceAfter,
+  };
 }
 
 async function syncStreakPointsForDay(
@@ -157,7 +179,7 @@ async function syncStreakPointsForDay(
     qualifies: boolean;
     today: string;
   },
-): Promise<void> {
+): Promise<PointsEarnInfo | null> {
   const {
     label,
     dailySourceId,
@@ -174,26 +196,27 @@ async function syncStreakPointsForDay(
     // Count with today (already in `days` when the write committed first).
     days.add(localDate);
     const { length } = currentStreak(days, today);
-    if (length <= 0) return;
+    if (length <= 0) return null;
     const streakStart = addCivilDays(today, -(length - 1));
-    await ensureEarn(
+    const daily = await ensureEarn(
       db,
       dailySourceType,
       dailySourceId,
       streakDailyPoints(length),
       `${label} streak day ${length}`,
     );
-    const milestone = streakMilestonePoints(length);
-    if (milestone != null) {
-      await ensureEarn(
-        db,
-        milestoneSourceType,
-        milestoneSourceId(streakStart, length),
-        milestone,
-        `${label} streak ${length}-day milestone`,
-      );
-    }
-    return;
+    const milestoneAmt = streakMilestonePoints(length);
+    const milestone =
+      milestoneAmt != null
+        ? await ensureEarn(
+            db,
+            milestoneSourceType,
+            milestoneSourceId(streakStart, length),
+            milestoneAmt,
+            `${label} streak ${length}-day milestone`,
+          )
+        : null;
+    return flashFromEarns([daily, milestone]);
   }
 
   // Undo today: reverse today's daily, and the milestone this day completed, if any.
@@ -217,6 +240,7 @@ async function syncStreakPointsForDay(
       );
     }
   }
+  return null;
 }
 
 /**
@@ -276,18 +300,18 @@ export async function syncHabitStreakForDay(
   localDate: string,
   qualifies: boolean,
   now = new Date(),
-): Promise<void> {
+): Promise<PointsEarnInfo | null> {
   const today = localDateInTimezone(now, tz);
-  if (localDate !== today) return;
+  if (localDate !== today) return null;
 
   const habit = await loadHabit(db, habitId);
-  if (!habit || habit.archived) return;
+  if (!habit || habit.archived) return null;
 
   const launchDate = await ensureStreakLaunch(db, today);
-  if (localDate < launchDate) return;
+  if (localDate < launchDate) return null;
 
   const days = await habitQualifyingDays(db, habitId);
-  await syncStreakPointsForDay(db, {
+  return syncStreakPointsForDay(db, {
     label: habit.name,
     dailySourceId: habitDailySourceId(habitId, localDate),
     milestoneSourceId: (streakStart, length) =>
@@ -298,6 +322,11 @@ export async function syncHabitStreakForDay(
     today,
   });
 }
+
+export type HabitCheckoffResult = {
+  streak: StreakView;
+  points: PointsEarnInfo | null;
+};
 
 /**
  * Insert or remove a habit checkoff day, then sync streak points when the date
@@ -310,7 +339,7 @@ export async function setHabitCheckoff(
   localDate: string,
   checked: boolean,
   now = new Date(),
-): Promise<StreakView> {
+): Promise<HabitCheckoffResult> {
   const habit = await loadHabit(db, habitId);
   if (!habit) {
     throw new Error(`custom habit not found: ${habitId}`);
@@ -331,8 +360,8 @@ export async function setHabitCheckoff(
     );
   }
 
-  await syncHabitStreakForDay(db, habitId, tz, localDate, checked, now);
-  return getHabitStreak(db, habitId, tz, now);
+  const points = await syncHabitStreakForDay(db, habitId, tz, localDate, checked, now);
+  return { streak: await getHabitStreak(db, habitId, tz, now), points };
 }
 
 export async function getHabitStreak(
