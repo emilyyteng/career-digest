@@ -8,19 +8,20 @@
 
 ## What to build
 
-Replace the LeetCode-only This week aside with a **Check in** section: classic stepper (− N +) for **LC and each active custom** weekly progress. No apps ±. No today-LC.
+Replace the LeetCode-only This week aside with a **Check in** section: classic stepper (− N +) for **each active custom** weekly progress. LC progress is logged only via Habits strip Log LC (daily control). No apps ±. No today-LC in Check in.
 
-Prototype reference: `/prototype/f11/habits/weekly` incrementer (variant A).
+Prototype reference: `/prototype/f11/habits/weekly` incrementer (variant A), refined: LC ± removed from Check in; Today / This week tier lines live under Weekly LC in the column.
 
 ## Acceptance criteria
 
-- [x] Adjacent (or stacked on narrow) incrementer lists LC + active customs with classic stepper chrome (Q13).
+- [x] Adjacent (or stacked on narrow) incrementer lists active customs with classic stepper chrome (Q13).
 - [x] ± calls M3-02 progress API; UI updates done/target and column bars without full page reload.
 - [x] **No apps** row in the incrementer (R3.8).
-- [x] **No today-LC** tier controls here — today-LC stays on Habits strip Log LC (R1.13).
+- [x] **No LC ±** in Check in — LC updates via Log LC only; Weekly LC shows read-only Today / This week tier lines (R1.13).
 - [x] Decrement disabled at 0; increment allowed (overflow OK if column supports it).
-- [x] Empty customs: still shows LC stepper alone.
+- [x] Empty customs: empty state copy (no LC stepper).
 - [x] Design system buttons/fields; no prototype imports.
+- [x] Weekly goals + Check in cards share a fixed **28rem** height.
 
 ## Edge cases
 
@@ -36,7 +37,7 @@ Prototype reference: `/prototype/f11/habits/weekly` incrementer (variant A).
 
 ## Reuse notes
 
-LC ± via `patchProgressLeetcode` weekly + **medium** tier (F08 R5.17 single write path; untiered = medium). Customs via `stepCustomWeeklyProgress`. Layout reuses `.progress-week-split`. Q13 classic stepper.
+Customs via `stepCustomWeeklyProgress`. LC tier lines via `lcCountsLine` + `progress/today` (`leetcodeTiers` / `leetcodeWeekTiers`). Layout reuses `.progress-week-split`. Q13 classic stepper for customs only.
 
 ## Definition of done
 
@@ -52,5 +53,5 @@ LC ± via `patchProgressLeetcode` weekly + **medium** tier (F08 R5.17 single wri
 ## Verification notes
 
 - `npm run check` clean.
-- Check in sits beside the weekly column; stacks under 860px.
-- LC Check in ± awards medium weekly points / updates today strip via full reload after each LC step.
+- Check in sits beside the weekly column; stacks under 860px; both cards fixed at 28rem.
+- Follow-up: removed LC ± from Check in; restored Today / This week LC tier lines under Weekly LC.

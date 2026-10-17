@@ -4346,15 +4346,22 @@ a.home-section-link:hover,
 .weekly-checkin-title {
   margin: 0;
   font-size: 1rem;
+  flex-shrink: 0;
 }
 .weekly-checkin-hint {
   margin: 0;
   font-size: 0.8rem;
+  flex-shrink: 0;
 }
 .weekly-checkin-msg {
   margin: 0;
   font-size: 0.85rem;
   color: var(--danger-deep);
+  flex-shrink: 0;
+}
+.weekly-checkin-empty {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
 }
 .weekly-checkin-list {
   list-style: none;
@@ -4363,6 +4370,9 @@ a.home-section-link:hover,
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 .weekly-checkin-row {
   display: flex;
@@ -4403,7 +4413,7 @@ a.home-section-link:hover,
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 0.85rem;
-  align-items: start;
+  align-items: stretch;
 }
 .progress-week-main,
 .progress-week-aside {
@@ -4411,6 +4421,18 @@ a.home-section-link:hover,
   flex-direction: column;
   gap: 0.75rem;
   min-width: 0;
+  min-height: 0;
+}
+.progress-week-main > .weekly-goals-card,
+.progress-week-aside > .weekly-checkin {
+  flex: 1 1 auto;
+  height: 28rem;
+  max-height: 28rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 .progress-lc-panel {
   display: flex;
@@ -5471,9 +5493,21 @@ button.progress-cal-cell.effort::after {
   margin-top: 0;
 }
 .weekly-goals-column {
-  /* R.9: scroll inside the column when the list grows */
-  max-height: 28rem;
+  /* R.9: fill the fixed 28rem card; scroll inside when the list grows */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.weekly-goal-lc-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.15rem;
+}
+.weekly-goal-lc-counts .lc-day-line {
+  margin: 0;
 }
 .weekly-goals-column-head {
   display: flex;

@@ -110,6 +110,8 @@ export default function ThisWeekPage() {
             <WeeklyGoalsBlock
               snapshot={weeklyGoals}
               onChange={(next) => setWeeklyGoals(next)}
+              lcToday={today.leetcodeTiers}
+              lcWeek={today.leetcodeWeekTiers}
             />
           </div>
           <div className="progress-week-aside">
@@ -117,9 +119,6 @@ export default function ThisWeekPage() {
               snapshot={weeklyGoals}
               tz={tz}
               onChange={(next) => setWeeklyGoals(next)}
-              onLcLogged={async () => {
-                await reload();
-              }}
             />
           </div>
         </div>

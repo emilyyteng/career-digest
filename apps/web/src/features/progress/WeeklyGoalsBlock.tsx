@@ -13,6 +13,7 @@ import {
   renameCustomWeeklyGoal,
   restoreCustomWeeklyGoal,
   type CustomWeeklyGoalView,
+  type LeetcodeTierCounts,
   type WeeklyGoalView,
   type WeeklyGoalsSnapshot,
   type WeeklyPaceLabel,
@@ -26,6 +27,7 @@ import {
   ModalHeader,
   TextField,
 } from "../../ui";
+import { lcCountsLine } from "./LeetcodeLogger";
 
 const LC_LABEL_MAX = 50;
 /** Display-only weeks-in-a-row flame (R3.9 / F08 R5.28). */
@@ -256,11 +258,15 @@ function SlotRow({
   busy,
   onLcTarget,
   onLcLabel,
+  lcToday,
+  lcWeek,
 }: {
   goal: WeeklyGoalView;
   busy: boolean;
   onLcTarget?: (n: number) => void;
   onLcLabel?: (label: string) => Promise<void>;
+  lcToday?: LeetcodeTierCounts;
+  lcWeek?: LeetcodeTierCounts;
 }) {
   const showBar = goal.total > 0;
   const showPace = goal.total > 0;
@@ -292,6 +298,12 @@ function SlotRow({
         </div>
       )}
       {showBar && <GoalBar done={goal.done} total={goal.total} showOverflow />}
+      {goal.slot === "lc" && lcToday && lcWeek && (
+        <div className="weekly-goal-lc-counts">
+          <p className="muted lc-day-line">{lcCountsLine("Today", lcToday)}</p>
+          <p className="muted lc-day-line">{lcCountsLine("This week", lcWeek)}</p>
+        </div>
+      )}
       {goal.slot === "apps" && <AppsMembers goal={goal} />}
     </div>
   );
@@ -383,10 +395,15 @@ export default function WeeklyGoalsBlock({
   snapshot,
   compact,
   onChange,
+  /** Read-only LC tier lines under Weekly LC (from progress/today). */
+  lcToday,
+  lcWeek,
 }: {
   snapshot: WeeklyGoalsSnapshot | null;
   compact?: boolean;
   onChange?: (next: WeeklyGoalsSnapshot) => void | Promise<void>;
+  lcToday?: LeetcodeTierCounts;
+  lcWeek?: LeetcodeTierCounts;
 }) {
   const titleId = useId();
   const [section, setSection] = useState<Section>("active");
@@ -567,6 +584,8 @@ export default function WeeklyGoalsBlock({
                 busy={busy}
                 onLcTarget={goal.slot === "lc" ? (n) => void patchLcTarget(n) : undefined}
                 onLcLabel={goal.slot === "lc" ? patchLcLabel : undefined}
+                lcToday={lcToday}
+                lcWeek={lcWeek}
               />
             ))}
             {activeCustoms.map((g) => (
