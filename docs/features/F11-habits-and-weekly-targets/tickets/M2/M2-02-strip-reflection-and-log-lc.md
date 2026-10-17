@@ -53,4 +53,4 @@ Prototype reference: `/prototype/f11/habits/strip` foot band.
 
 ## Verification notes
 
-`npm run check` / API tests passed (371). Manual checklist: Add reflection modal → Past work; Log LC ± updates strip; panel hides on Archived; weekly column unchanged. Related: MT-11 for negative-points flash standard. Commit hash in board follow-up.
+`npm run check` / API tests passed (371). Manual checklist: Add reflection modal → Past work; Log LC ± updates strip; panel hides on Archived; weekly column unchanged. Related: F09 M4-02 for negative-points flash standard. Commit hash in board follow-up.

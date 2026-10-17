@@ -22,7 +22,7 @@ export type CapScenario = "under" | "full";
 
 export const CAP_SCENARIOS: ReadonlyArray<{ key: CapScenario; label: string }> = [
   { key: "under", label: "Under cap (2 customs)" },
-  { key: "full", label: "At custom cap (3)" },
+  { key: "full", label: "At custom cap (6)" },
 ];
 
 /** Q14 archive visual language (orthogonal to Q11/Q12 variants). */
@@ -99,6 +99,30 @@ export function seedCustoms(cap: CapScenario): CustomHabit[] {
         createdAt: 3,
       },
       {
+        id: "h5",
+        name: "Walk",
+        length: 2,
+        doneToday: true,
+        archived: false,
+        createdAt: 4,
+      },
+      {
+        id: "h6",
+        name: "Water",
+        length: 7,
+        doneToday: false,
+        archived: false,
+        createdAt: 5,
+      },
+      {
+        id: "h7",
+        name: "Stretch",
+        length: 1,
+        doneToday: false,
+        archived: false,
+        createdAt: 6,
+      },
+      {
         id: "h4",
         name: "Meditate",
         length: 8,
@@ -136,4 +160,4 @@ export function seedCustoms(cap: CapScenario): CustomHabit[] {
   ];
 }
 
-export const CUSTOM_CAP = 3;
+export const CUSTOM_CAP = 6;

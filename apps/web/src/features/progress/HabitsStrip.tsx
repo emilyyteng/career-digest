@@ -40,7 +40,7 @@ import {
   TextField,
 } from "../../ui";
 
-const CUSTOM_CAP = 3;
+const CUSTOM_CAP = 6;
 
 type Section = "active" | "archived";
 
@@ -377,7 +377,7 @@ export default function HabitsStrip({
         >
           <span className="habits-log-lc-label">{lcOpen ? "Hide LC" : "Log LC"}</span>
           <span className="habits-log-lc-caret" aria-hidden="true">
-            ▾
+            {lcOpen ? "▴" : "▾"}
           </span>
         </button>
       )}
@@ -386,7 +386,7 @@ export default function HabitsStrip({
 
   return (
     <section
-      className={["habits-strip", "card", className].filter(Boolean).join(" ")}
+      className={["habits-strip", className].filter(Boolean).join(" ")}
       aria-labelledby={titleId}
     >
       <EarnFlash earn={earn} onDismiss={dismissEarn} />

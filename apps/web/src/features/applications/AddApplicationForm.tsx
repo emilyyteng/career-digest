@@ -183,15 +183,22 @@ const AddApplicationForm = forwardRef<AddApplicationFormHandle, Props>(
             onChange={(event) => setAppliedAt(event.target.value)}
           />
         </label>
-        <label>
-          Job description
+        {/*
+          Do not wrap RichTextField in <label>: toolbar buttons are labelable, so the
+          first (Bold) becomes the label's control — clicks in the editor activate Bold.
+        */}
+        <div className="form-field">
+          <label className="form-field-label" htmlFor="add-app-job-description">
+            Job description
+          </label>
           <RichTextField
+            id="add-app-job-description"
             value={descriptionHtml}
             onChange={setDescriptionHtml}
             placeholder="Paste the job description — links and formatting are kept"
             minHeight="8rem"
           />
-        </label>
+        </div>
         <label>
           Notes
           <textarea

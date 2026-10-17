@@ -316,7 +316,7 @@ export default function ThisWeekPage() {
       {error && <p className="error">{error}</p>}
       <EarnFlash earn={earn} onDismiss={dismissEarn} />
 
-      <div className="progress-today-head">
+      <div className="card progress-today-head">
         <span className="progress-kicker">Today · {formatShort(today.localDate)}</span>
         <HabitsStrip
           today={today}

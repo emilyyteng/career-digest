@@ -62,11 +62,11 @@ describe.skipIf(!integrationReady)("custom habits API (F11 M1-03)", () => {
 
   it("rejects empty name and create at the active cap", async () => {
     await apiClient().post(`/api/habits${q}`).send({ name: "   " }).expect(400);
-    await apiClient().post(`/api/habits${q}`).send({ name: "A" }).expect(201);
-    await apiClient().post(`/api/habits${q}`).send({ name: "B" }).expect(201);
-    await apiClient().post(`/api/habits${q}`).send({ name: "C" }).expect(201);
-    const capped = await apiClient().post(`/api/habits${q}`).send({ name: "D" }).expect(400);
-    expect(capped.body.error).toMatch(/3 active custom habits/i);
+    for (const name of ["A", "B", "C", "D", "E", "F"]) {
+      await apiClient().post(`/api/habits${q}`).send({ name }).expect(201);
+    }
+    const capped = await apiClient().post(`/api/habits${q}`).send({ name: "G" }).expect(400);
+    expect(capped.body.error).toMatch(/6 active custom habits/i);
   });
 
   it("checkoff awards streak points; undo reverses; double checkoff is idempotent", async () => {
@@ -124,25 +124,33 @@ describe.skipIf(!integrationReady)("custom habits API (F11 M1-03)", () => {
   });
 
   it("archive frees cap; restore blocked at cap then succeeds under cap", async () => {
-    const a = await apiClient().post(`/api/habits${q}`).send({ name: "A" }).expect(201);
-    const b = await apiClient().post(`/api/habits${q}`).send({ name: "B" }).expect(201);
-    const c = await apiClient().post(`/api/habits${q}`).send({ name: "C" }).expect(201);
+    const created = [];
+    for (const name of ["A", "B", "C", "D", "E", "F"]) {
+      created.push(
+        (await apiClient().post(`/api/habits${q}`).send({ name }).expect(201)).body,
+      );
+    }
+    const a = created[0]!;
 
-    await apiClient().post(`/api/habits/${a.body.id}/archive${q}`).expect(200);
+    await apiClient().post(`/api/habits/${a.id}/archive${q}`).expect(200);
     const today = await apiClient().get(`/api/progress/today${q}`).expect(200);
-    expect(today.body.habits.active.map((h: { name: string }) => h.name)).toEqual(["B", "C"]);
+    expect(today.body.habits.active.map((h: { name: string }) => h.name)).toEqual([
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+    ]);
     expect(today.body.habits.archived.map((h: { name: string }) => h.name)).toEqual(["A"]);
 
-    const d = await apiClient().post(`/api/habits${q}`).send({ name: "D" }).expect(201);
+    const g = await apiClient().post(`/api/habits${q}`).send({ name: "G" }).expect(201);
     const blocked = await apiClient()
-      .post(`/api/habits/${a.body.id}/restore${q}`)
+      .post(`/api/habits/${a.id}/restore${q}`)
       .expect(400);
-    expect(blocked.body.error).toMatch(/3 active custom habits/i);
+    expect(blocked.body.error).toMatch(/6 active custom habits/i);
 
-    await apiClient().post(`/api/habits/${d.body.id}/archive${q}`).expect(200);
-    const restored = await apiClient()
-      .post(`/api/habits/${a.body.id}/restore${q}`)
-      .expect(200);
+    await apiClient().post(`/api/habits/${g.body.id}/archive${q}`).expect(200);
+    const restored = await apiClient().post(`/api/habits/${a.id}/restore${q}`).expect(200);
     expect(restored.body.archived).toBe(false);
 
     const after = await apiClient().get(`/api/progress/today${q}`).expect(200);
@@ -150,9 +158,10 @@ describe.skipIf(!integrationReady)("custom habits API (F11 M1-03)", () => {
       "A",
       "B",
       "C",
+      "D",
+      "E",
+      "F",
     ]);
-    expect(b.body.id).toBeTruthy();
-    expect(c.body.id).toBeTruthy();
   });
 
   it("rename persists without resetting checkoff history / length", async () => {

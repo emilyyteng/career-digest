@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { LeetcodeTier, LeetcodeTierCounts, LeetcodeType } from "../../api";
-import { Button, Segmented } from "../../ui";
+import { Button } from "../../ui";
 
 const TIERS: LeetcodeTier[] = ["easy", "medium", "hard"];
 const TIER_LABEL: Record<LeetcodeTier, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
@@ -20,10 +20,61 @@ function subtractTiers(total: LeetcodeTierCounts, weekly: LeetcodeTierCounts): L
   };
 }
 
+function TierStepper({
+  tier,
+  type,
+  count,
+  weeklyProgress,
+  busy,
+  onStep,
+  showName,
+}: {
+  tier: LeetcodeTier;
+  type: LeetcodeType;
+  count: number;
+  weeklyProgress?: number;
+  busy: boolean;
+  onStep: (tier: LeetcodeTier, delta: 1 | -1, type: LeetcodeType) => void;
+  /** When false, only the − N + controls (matrix row already shows the name). */
+  showName?: boolean;
+}) {
+  const removeDisabled =
+    busy || count <= 0 || (type === "weekly" && (weeklyProgress ?? 0) <= 0);
+  return (
+    <div className="lc-tier-stepper">
+      {showName !== false && (
+        <span className="lc-tier-name">
+          {TIER_LABEL[tier]}
+          <span className="lc-tier-pts"> +{TIER_POINTS[tier]}</span>
+        </span>
+      )}
+      <Button
+        size="sm"
+        className="lc-step-btn"
+        disabled={removeDisabled}
+        aria-label={`Remove one ${TIER_LABEL[tier]} (${type})`}
+        onClick={() => onStep(tier, -1, type)}
+      >
+        −
+      </Button>
+      <span className="lc-tier-count">{count}</span>
+      <Button
+        size="sm"
+        className="lc-step-btn"
+        disabled={busy}
+        aria-label={`Add one ${TIER_LABEL[tier]} (${type})`}
+        onClick={() => onStep(tier, 1, type)}
+      >
+        +
+      </Button>
+    </div>
+  );
+}
+
 /**
- * The one LeetCode logging control. Today shows the weekly/misc switch; History passes
- * `type="misc"` and no switch, since past days are edited per tier only. Day and week
- * totals live outside this card. The stepper counts follow the selected type.
+ * The one LeetCode logging control. Today uses a tier × (Weekly | Misc) matrix so
+ * all six steppers stay visible. History passes `fixedType="misc"` for a single
+ * column. Day and week totals live outside this card.
  */
 export default function LeetcodeLogger({
   tiers,
@@ -41,13 +92,11 @@ export default function LeetcodeLogger({
   fixedType?: LeetcodeType;
   onChange: (tier: LeetcodeTier, delta: 1 | -1, type: LeetcodeType) => Promise<void>;
 }) {
-  const [chosenType, setChosenType] = useState<LeetcodeType>("weekly");
   const [busy, setBusy] = useState(false);
-  const type = fixedType ?? chosenType;
   const weekly = weeklyTiers ?? { easy: 0, medium: 0, hard: 0 };
-  const display = type === "weekly" ? weekly : subtractTiers(tiers, weekly);
+  const misc = subtractTiers(tiers, weekly);
 
-  async function step(tier: LeetcodeTier, delta: 1 | -1) {
+  async function step(tier: LeetcodeTier, delta: 1 | -1, type: LeetcodeType) {
     setBusy(true);
     try {
       await onChange(tier, delta, type);
@@ -56,55 +105,58 @@ export default function LeetcodeLogger({
     }
   }
 
-  return (
-    <div className="lc-logger">
-      {!fixedType && (
-        <Segmented
-          label="Solve type"
-          value={type}
-          onChange={setChosenType}
-          disabled={busy}
-          options={[
-            { value: "weekly", label: "Weekly" },
-            { value: "misc", label: "Misc" },
-          ]}
-        />
-      )}
-      <div className="lc-tier-list">
-        {TIERS.map((tier) => {
-          const removeDisabled =
-            busy ||
-            display[tier] <= 0 ||
-            (type === "weekly" && (weeklyProgress ?? 0) <= 0);
-          return (
-            <div key={tier} className="lc-tier-stepper">
-              <span className="lc-tier-name">
-                {TIER_LABEL[tier]}
-                <span className="lc-tier-pts"> +{TIER_POINTS[tier]}</span>
-              </span>
-              <Button
-                size="sm"
-                className="lc-step-btn"
-                disabled={removeDisabled}
-                aria-label={`Remove one ${TIER_LABEL[tier]} (${type})`}
-                onClick={() => void step(tier, -1)}
-              >
-                −
-              </Button>
-              <span className="lc-tier-count">{display[tier]}</span>
-              <Button
-                size="sm"
-                className="lc-step-btn"
-                disabled={busy}
-                aria-label={`Add one ${TIER_LABEL[tier]} (${type})`}
-                onClick={() => void step(tier, 1)}
-              >
-                +
-              </Button>
-            </div>
-          );
-        })}
+  if (fixedType) {
+    const display = fixedType === "weekly" ? weekly : misc;
+    return (
+      <div className="lc-logger">
+        <div className="lc-tier-list">
+          {TIERS.map((tier) => (
+            <TierStepper
+              key={tier}
+              tier={tier}
+              type={fixedType}
+              count={display[tier]}
+              weeklyProgress={weeklyProgress}
+              busy={busy}
+              onStep={step}
+            />
+          ))}
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="lc-logger lc-logger-matrix" role="group" aria-label="Today’s LeetCode">
+      <p className="lc-logger-title">Today’s LC</p>
+      <span className="lc-logger-head">Weekly</span>
+      <span className="lc-logger-head">Misc</span>
+      {TIERS.map((tier) => (
+        <div key={tier} className="lc-logger-row-contents">
+          <span className="lc-tier-name">
+            {TIER_LABEL[tier]}
+            <span className="lc-tier-pts"> +{TIER_POINTS[tier]}</span>
+          </span>
+          <TierStepper
+            tier={tier}
+            type="weekly"
+            count={weekly[tier]}
+            weeklyProgress={weeklyProgress}
+            busy={busy}
+            onStep={step}
+            showName={false}
+          />
+          <TierStepper
+            tier={tier}
+            type="misc"
+            count={misc[tier]}
+            weeklyProgress={weeklyProgress}
+            busy={busy}
+            onStep={step}
+            showName={false}
+          />
+        </div>
+      ))}
     </div>
   );
 }

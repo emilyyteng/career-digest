@@ -164,14 +164,17 @@ const AddTaskForm = forwardRef<AddTaskFormHandle, Props>(function AddTaskForm(
           />
         </label>
         {isApplication && (
-          <label>
-            Job description
+          <div className="form-field">
+            <label className="form-field-label" htmlFor="add-task-job-description">
+              Job description
+            </label>
             <RichTextField
+              id="add-task-job-description"
               value={descriptionHtml}
               onChange={setDescriptionHtml}
               placeholder="Paste the job description — kept when you mark applied"
             />
-          </label>
+          </div>
         )}
         <label>
           Notes

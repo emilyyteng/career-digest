@@ -2,7 +2,7 @@
 
 **ID:** F09
 **Status:** Active
-**Last updated:** 2026-10-15
+**Last updated:** 2026-10-16
 
 ## Problem
 
@@ -23,6 +23,7 @@ The app looks less visually consistent with each feature. Recurring issues: blue
 | M1 | Build primitives; remove the global inheritance trap; document interaction/IA patterns (lists, feature shell, paired panel heights, banner placement, compact long pages); enforce mechanically; pilot-migrate **Home** | Done |
 | M2 | Wave migration of core surfaces (Tasks compaction first; then Jobs / Applications / Interviews, including R.6); list pagination defaults as implemented convention | Not started |
 | M3 | Remaining pages; CSS organization if still needed; retire dead opt-out and obsolete prototype styles; feature close-out | Not started |
+| M4 | Cleanup & extensions — ad hoc design-system polish and spikes that don’t fit M2 waves or M3 finish (e.g. heatmap contrast, negative-points banner standard) | Not started |
 
 F08 M7 and M8 are Done (2026-10-15), so the earlier gate that M0 wait on those layouts is cleared. Prefer M1 before F11 habit UI so new screens land on the system.
 
@@ -92,6 +93,8 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 | `EarnFlash` is rendered near the top of the host page/section, not anchored to the control that earned | [`EarnFlash.tsx`](../../../apps/web/src/features/completion/EarnFlash.tsx), [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx), Progress week/past pages | Conflicts R.9 | Pattern locked M1-10; apply near-control in follow/M2 |
 | Tasks is a long, dense scroll surface; common actions often sit below the first viewport | [`Tasks.tsx`](../../../apps/web/src/pages/Tasks.tsx) | Conflicts R.10 | Tactics locked M1-11; migrate M2 |
 | ~~Progress heatmaps used navy-peak JS RGB scale~~ | [`intensityScale`](../../../apps/web/src/features/progress/intensityScale.ts) | Conforms (M1-14) | Vivid-rose `--heat-*` stops |
+| Heat scale too pale / little variation on lower activity days | [`intensityScale`](../../../apps/web/src/features/progress/intensityScale.ts), `--heat-*` | Conflicts R0.3 (readability) | Ticketed **M4-01** |
+| Negative point events: habit uncheck silent; LC decrement may flash mint EarnFlash; no shared reverse-banner standard | EarnFlash hosts; F11 Habits strip | Unspecified vs R.9 / banner rules | Spike **M4-02** (from MT-11) |
 | Most workflow pages wrap content in raised `.card` panels; Rewards often open-canvas; Progress hybrid flat subnav + carded body | `.card` in `styles.css`; [`RewardsLayout.tsx`](../../../apps/web/src/features/rewards/RewardsLayout.tsx); Progress shell + pages | Conflicts (M0 all-carded) | All features carded per M0; migrate Rewards open canvas in surface waves |
 
 ## Out of scope (for now)
@@ -160,3 +163,4 @@ This table is a **parked defect log**, not a complete M0 checklist. M0 must stil
 - **2026-10-15 (M1-12):** Modal inner anatomy locked (`ModalHeader` / `ModalBody` / `ModalFooter`; secondary then primary). Achievement unlock still bypasses ModalLayer (known debt).
 - **2026-10-15 (M1-13):** Q6 answered — `check:ui` script in `npm run check` for bare buttons (full tree) and unclassed fields (Home tree); `ui/` + prototype exempt.
 - **2026-10-15 (M1 close):** M1 Done — primitives, patterns, Home pilot, `check:ui` enforcement. Achievement unlock ModalLayer debt → **M3-01**. Next: M2 surface waves.
+- **2026-10-16:** Added **M4 Cleanup & extensions** for ad hoc system polish. **M4-01** heatmap contrast; **M4-02** negative-points notifications spike (moved from maintenance MT-11).

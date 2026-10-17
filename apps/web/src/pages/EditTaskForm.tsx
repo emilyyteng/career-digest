@@ -234,15 +234,18 @@ const EditTaskForm = forwardRef<EditTaskFormHandle, Props>(function EditTaskForm
           />
         </label>
         {showDescription && (
-          <label>
-            Job description
+          <div className="form-field">
+            <label className="form-field-label" htmlFor="edit-task-job-description">
+              Job description
+            </label>
             <RichTextField
+              id="edit-task-job-description"
               value={descriptionHtml}
               onChange={setDescriptionHtml}
               placeholder="Paste the job description — kept when you mark applied"
               minHeight="8rem"
             />
-          </label>
+          </div>
         )}
         <div className="task-due-datetime-row">
           <label>

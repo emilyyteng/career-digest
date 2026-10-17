@@ -1,11 +1,13 @@
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type ClipboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
+import { Button } from "./ui";
 
 /** Strip dangerous bits from pasted HTML before insert; server re-sanitizes on save. */
 function lightSanitize(html: string): string {
@@ -60,12 +62,22 @@ type LinkBubble = {
   anchor: HTMLAnchorElement;
 };
 
+type FormatMarks = {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+};
+
+const EMPTY_MARKS: FormatMarks = { bold: false, italic: false, underline: false };
+
 type Props = {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: string;
   "aria-label"?: string;
+  /** When set, pairs with an external `<label htmlFor={id}>` (do not wrap this field in a label). */
+  id?: string;
   toolbarExtra?: ReactNode;
 };
 
@@ -75,12 +87,16 @@ export default function RichTextField({
   placeholder,
   minHeight = "10rem",
   "aria-label": ariaLabel,
+  id: idProp,
 }: Props) {
+  const autoId = useId();
+  const editorId = idProp ?? autoId;
   const ref = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const lastEmitted = useRef<string | null>(null);
   const [linkBubble, setLinkBubble] = useState<LinkBubble | null>(null);
+  const [marks, setMarks] = useState<FormatMarks>(EMPTY_MARKS);
 
   useEffect(() => {
     const el = ref.current;
@@ -104,10 +120,28 @@ export default function RichTextField({
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, []);
 
+  function refreshMarks() {
+    const editor = ref.current;
+    if (!editor || document.activeElement !== editor) {
+      setMarks(EMPTY_MARKS);
+      return;
+    }
+    try {
+      setMarks({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    } catch {
+      setMarks(EMPTY_MARKS);
+    }
+  }
+
   function emit() {
     const html = ref.current?.innerHTML ?? "";
     lastEmitted.current = html;
     onChange(html);
+    refreshMarks();
   }
 
   function positionBubble(anchor: HTMLAnchorElement) {
@@ -134,19 +168,28 @@ export default function RichTextField({
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       setLinkBubble(null);
+      refreshMarks();
       return;
     }
     const node = selection.focusNode ?? selection.anchorNode;
     if (!node || !editor.contains(node)) {
       setLinkBubble(null);
+      refreshMarks();
       return;
     }
     const anchor = closestAnchor(node, editor);
     if (!anchor) {
       setLinkBubble(null);
+      refreshMarks();
       return;
     }
     positionBubble(anchor);
+    refreshMarks();
+  }
+
+  /** Keep the editor selection when pressing toolbar buttons (otherwise click steals focus). */
+  function onToolbarMouseDown(event: ReactMouseEvent) {
+    event.preventDefault();
   }
 
   function run(command: string, arg?: string) {
@@ -225,32 +268,54 @@ export default function RichTextField({
 
   return (
     <div className="rich-text">
-      <div className="rich-text-toolbar" role="toolbar" aria-label="Formatting">
-        <button type="button" className="secondary" onClick={() => run("bold")} title="Bold">
-          Bold
-        </button>
-        <button type="button" className="secondary" onClick={() => run("italic")} title="Italic">
-          Italic
-        </button>
-        <button
+      <div
+        className="rich-text-toolbar"
+        role="toolbar"
+        aria-label="Formatting"
+        onMouseDown={onToolbarMouseDown}
+      >
+        <Button
           type="button"
-          className="secondary"
+          size="sm"
+          className={marks.bold ? "rich-text-tool is-active" : "rich-text-tool"}
+          aria-pressed={marks.bold}
+          onClick={() => run("bold")}
+          title="Bold"
+        >
+          Bold
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className={marks.italic ? "rich-text-tool is-active" : "rich-text-tool"}
+          aria-pressed={marks.italic}
+          onClick={() => run("italic")}
+          title="Italic"
+        >
+          Italic
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className={marks.underline ? "rich-text-tool is-active" : "rich-text-tool"}
+          aria-pressed={marks.underline}
           onClick={() => run("underline")}
           title="Underline"
         >
           Underline
-        </button>
-        <button type="button" className="secondary" onClick={addLink} title="Link">
+        </Button>
+        <Button type="button" size="sm" className="rich-text-tool" onClick={addLink} title="Link">
           Link
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="secondary"
+          size="sm"
+          className="rich-text-tool"
           onClick={() => run("insertUnorderedList")}
           title="Bullet list"
         >
           List
-        </button>
+        </Button>
       </div>
       <div className="rich-text-editor-wrap" ref={wrapRef}>
         {empty && placeholder && (
@@ -276,16 +341,17 @@ export default function RichTextField({
               {linkBubble.href}
             </a>
             <div className="rich-text-link-actions">
-              <button type="button" className="secondary" onClick={editLink}>
+              <Button type="button" size="sm" onClick={editLink}>
                 Edit
-              </button>
-              <button type="button" className="secondary" onClick={removeLink}>
+              </Button>
+              <Button type="button" size="sm" onClick={removeLink}>
                 Remove
-              </button>
+              </Button>
             </div>
           </div>
         )}
         <div
+          id={editorId}
           ref={ref}
           className="rich-text-editor"
           style={{ minHeight }}
@@ -296,7 +362,11 @@ export default function RichTextField({
           suppressContentEditableWarning
           onInput={emit}
           onPaste={onPaste}
-          onBlur={emit}
+          onBlur={() => {
+            emit();
+            setMarks(EMPTY_MARKS);
+          }}
+          onFocus={refreshMarks}
           onMouseDown={onEditorMouseDown}
           onKeyUp={showBubbleForSelection}
           onMouseUp={showBubbleForSelection}

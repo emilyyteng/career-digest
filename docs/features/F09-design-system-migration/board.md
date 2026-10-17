@@ -80,3 +80,22 @@ Tickets after M2. Expected: remaining pages; CSS split if still warranted (Q7); 
 |--------|-------|--------|
 
 </details>
+
+## M4: Cleanup & extensions
+
+**Milestone status:** Not started
+
+Ad hoc design-system cleanups and extensions that don’t fit M2 surface waves or M3 finish/harden. Work independently of M2/M3 unless a ticket says otherwise.
+
+| Ticket | Title | Type | Status | Notes |
+|--------|-------|------|--------|-------|
+| [M4-01](./tickets/M4/M4-01-heatmap-color-contrast.md) | Heatmap colors — more contrast on lower activity | build | Draft | Pale / low-variation heat scale |
+| [M4-02](./tickets/M4/M4-02-negative-points-notifications.md) | Spike: notifications for negative point events | spike | Draft | Moved from MT-11 |
+
+<details>
+<summary>Done (0)</summary>
+
+| Ticket | Title | Commit |
+|--------|-------|--------|
+
+</details>

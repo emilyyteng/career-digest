@@ -11,8 +11,8 @@ import {
 
 type Queryable = Pool | PoolClient;
 
-/** Active custom daily habits cap (R.7). Apps + LC always count toward the total of 5. */
-export const CUSTOM_HABIT_ACTIVE_CAP = 3;
+/** Active custom daily habits cap (R.7). Apps + LC always sit beside customs. */
+export const CUSTOM_HABIT_ACTIVE_CAP = 6;
 
 export type CustomHabitView = {
   id: string;

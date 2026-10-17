@@ -11,7 +11,7 @@ API and domain for custom weekly targets: CRUD/archive/restore, mid-week target 
 
 ## Acceptance criteria
 
-- [ ] **Create:** name + target (default **3**); reject at 3 active customs with clear message.
+- [ ] **Create:** name + target (default **3**); reject at 6 active customs with clear message.
 - [ ] **Rename** / **archive** / **restore** (restore blocked at cap with message); archived do not consume cap.
 - [ ] **Patch target** mid-week (near-label stepper data); target ≥ 1; does not go through pencil semantics.
 - [ ] **± progress** for the current week only (done never &lt; 0); apps weekly progress remains task-derived only (no apps ± API here).

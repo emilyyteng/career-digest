@@ -40,7 +40,7 @@ M0 prototypes live under `apps/web/src/prototype/f11-habits-and-weekly-targets/`
 - **R.4** (Established 2026-10-15) No per-habit or per-target custom point rates in F11. Shared formulas only.
 - **R.5** (Established 2026-10-15) LC and apps **daily** streaks stay **derived** from existing domain actions (solves / mark applied). They are not migrated into the custom-habit checkoff store. They never get pencil / archive; they always live in the Active strip view.
 - **R.6** (Established 2026-10-15) Days are local calendar days in the user's timezone (same as F08 B2 / existing streaks). Today does not break a daily habit streak until the day ends.
-- **R.7** (Established 2026-10-15) **Caps:** at most **3 custom** items in each system, and at most **5 total** counting apps + LC + customs. Daily: apps + LC + ≤3 custom habits. Weekly: apps + LC + ≤3 custom weekly targets. Creating or restoring above the custom cap is rejected with a clear message (no silent swap).
+- **R.7** (Established 2026-10-15; revised 2026-10-16) **Caps:** at most **6 custom** items in each system. Daily: apps + LC + ≤6 custom habits (8 slots with apps+LC). Weekly: apps + LC + ≤6 custom weekly targets. Creating or restoring above the custom cap is rejected with a clear message (no silent swap).
 - **R.8** (Established 2026-10-15) Daily habits and custom weekly targets are **separate namespaces**: the same display name may exist in both.
 - **R.9** (Established 2026-10-15) Progress → **This week** is the dedicated habits hub. F11 owns that page’s layout and fixed-height / design-system containerization for the surfaces it introduces (design-system rules already established; do not wait on a separate F09 Progress migration).
 - **R.10** (Established 2026-10-15) Hard delete is out of F11; **archive** is enough for daily habits and custom weekly targets.
@@ -62,7 +62,7 @@ M0 prototypes live under `apps/web/src/prototype/f11-habits-and-weekly-targets/`
 - **R1.8** (Established 2026-10-15) The **Habits** strip appears on **Home and Progress** with the same chrome:
   - Heading: **Habits**.
   - **Active / Archived** section chips (top right of the strip). Archived chip disabled when there are no archived customs. **Archived view shows only archived customs** (apps/LC are Active-only).
-  - **Active order:** Apps, LC, then customs in **creation order**, then a **create** container when fewer than 3 customs are active (create slot gone at the custom cap).
+  - **Active order:** Apps, LC, then customs in **creation order**, then a **create** container when fewer than 6 customs are active (create slot gone at the custom cap).
   - Apps/LC pills remain **display-only** (derived). Custom pills are interactive for today’s checkoff.
   - Per-custom **pencil** (top right of that habit’s container): rename or archive. Apps/LC have no pencil.
   - **Update progress →** sits at the **bottom right** of the strip (Home), linking to Progress → This week as today.
@@ -140,7 +140,7 @@ None. Prototype questions Q11–Q14 are resolved (2026-10-16).
 | Q14a | (superseded by Q14) Active vs archived on daily strip? | Ghost stamp; ChromeTabs; restore-last → Active (2026-10-16) | R1.8 |
 | Q0a | One custom streak vs many? | Multiple daily habits (2026-10-15) | R1.1 |
 | Q0b | Points for daily customs? | Same as LC/apps R5.25 (2026-10-15) | R.3 |
-| Q0c | Cap (first pass)? | Revised to 3 custom / 5 total (2026-10-15) | R.7 |
+| Q0c | Cap (first pass)? | Revised to 3 custom / 5 total (2026-10-15); raised to **6 custom** daily and weekly (2026-10-16) | R.7 |
 | Q0d | Non-daily as streak schedules? | No — weekly goals (2026-10-15) | R.2, R3.1 |
 | Q0e | Rename vs new identity? | Rename OK; new focus = new habit (2026-10-15) | R1.3, R1.4, B1, B2 |
 | Q1 | Archive vs freeze? | Time advances; restore can break streak (2026-10-15) | R1.6 |
@@ -151,7 +151,7 @@ None. Prototype questions Q11–Q14 are resolved (2026-10-16).
 | Q6 | Same name daily vs weekly? | Allowed, separate namespaces (2026-10-15) | R.8 |
 | Q7 | Weekly check-in UX? | ± in incrementer; field chrome in prototype (2026-10-15) | R3.3, Q13 |
 | Q8 | Weekly Seeds? | Same +20 / +100 (2026-10-15) | R3.4 |
-| Q9 | Weekly custom cap? | 3 custom / 5 total with apps+LC (2026-10-15) | R.7 |
+| Q9 | Weekly custom cap? | Same as daily: **6 custom** (2026-10-16; was 3/5 on 2026-10-15) | R.7 |
 | Q10 | Weekly carry / lifecycle? | Name+target carry; archive only; default target 3 (2026-10-15) | R3.5, R.10 |
 | Q15 | Weeks-in-a-row flame? | Yes, like R5.28 (2026-10-15) | R3.9 |
 | Q16 | Home strip full chrome? | Yes (2026-10-15) | R1.8 |
@@ -188,3 +188,4 @@ None. Prototype questions Q11–Q14 are resolved (2026-10-16).
 - **2026-10-15 (grilling):** Cap is **3 custom / 5 total** (apps+LC+customs) for both daily and weekly. Progress → This week is the habits hub; remove Next achievements and Daily progress from that page; Past work owns day lists; Habits strip pencil opens a lightweight today-reflection modal (link, body, lane). Full strip chrome on Home and Progress. Weekly: + / Active/Archived / pencil (rename+archive); near-label target stepper; multi-goal weekly incrementer (no apps ±, no today-LC); Home Targets for customs; same week-close Seeds; weeks-in-a-row flame; default target 3. Archive breaks streaks (no freeze). Today-LC placement and checkoff/edit chrome deferred to M0 prototypes A/B. F08 R5.27 corrected to match intentional `N completed today` copy.
 - **2026-10-16 (M0-01):** Strip verdicts — Q11 mark hit-target; Q12 Log LC disclosure on band; Q14 strip = ghost stamp. Prototype at `/prototype/f11/habits/strip`.
 - **2026-10-16 (M0-02):** Weekly verdicts — Q13 classic stepper; Q14 weekly = ghost stamp (same as strip). Prototype at `/prototype/f11/habits/weekly`. M0 Done. Streak lengths stay **derived** from qualifying days / checkoffs (no stored counter); same pattern as LC/apps and weekly met-weeks.
+- **2026-10-16:** Active custom cap raised **3 → 6** for both daily habits and weekly targets (R.7). Apps + LC still always present beside customs.

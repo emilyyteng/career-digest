@@ -23,10 +23,10 @@ export type CapScenario = "under" | "full";
 
 export const WEEKLY_CAP_SCENARIOS: ReadonlyArray<{ key: CapScenario; label: string }> = [
   { key: "under", label: "Under cap (1 custom)" },
-  { key: "full", label: "At custom cap (3)" },
+  { key: "full", label: "At custom cap (6)" },
 ];
 
-export const CUSTOM_WEEKLY_CAP = 3;
+export const CUSTOM_WEEKLY_CAP = 6;
 
 export function seedWeeklyGoals(cap: CapScenario): WeeklyGoal[] {
   const base: WeeklyGoal[] = [
@@ -89,6 +89,39 @@ export function seedWeeklyGoals(cap: CapScenario): WeeklyGoal[] {
         metWeeksStreak: 0,
         archived: false,
         createdAt: 3,
+      },
+      {
+        id: "g5",
+        kind: "custom",
+        name: "Walk",
+        done: 1,
+        target: 3,
+        pace: "behind",
+        metWeeksStreak: 0,
+        archived: false,
+        createdAt: 4,
+      },
+      {
+        id: "g6",
+        kind: "custom",
+        name: "Cook",
+        done: 0,
+        target: 3,
+        pace: "behind",
+        metWeeksStreak: 1,
+        archived: false,
+        createdAt: 5,
+      },
+      {
+        id: "g7",
+        kind: "custom",
+        name: "Read",
+        done: 3,
+        target: 3,
+        pace: "met",
+        metWeeksStreak: 2,
+        archived: false,
+        createdAt: 6,
       },
       {
         id: "g4",
