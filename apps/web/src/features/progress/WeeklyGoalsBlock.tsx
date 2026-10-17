@@ -373,19 +373,21 @@ function ArchivedCustomRow({
 }) {
   return (
     <div className="weekly-goal-arch-row is-ghost">
-      <span className="habits-arch-stamp">Archived</span>
-      <div className="weekly-goal-arch-main">
+      <div className="weekly-goal-arch-top">
         <strong className="weekly-goal-title">{goal.name}</strong>
-        <span className="muted weekly-goal-arch-meta">
-          target {goal.targetCount}/week
-          {goal.metWeeksStreak >= WEEKLY_STREAK_SHOW_FROM
-            ? ` · ${goal.metWeeksStreak} weeks in a row (paused)`
-            : " · no ± while archived"}
-        </span>
+        <span className="weekly-goal-arch-stamp">Archived</span>
       </div>
-      <Button size="sm" variant="primary" disabled={busy} onClick={onRestore}>
-        Restore
-      </Button>
+      <div className="weekly-goal-arch-bottom">
+        <span className="muted weekly-goal-arch-meta">
+          target {goal.targetCount}/week · no ± while archived
+          {goal.metWeeksStreak >= WEEKLY_STREAK_SHOW_FROM
+            ? ` · ${goal.metWeeksStreak} weeks in a row — breaks if a week closes unmet`
+            : ""}
+        </span>
+        <Button size="sm" variant="primary" disabled={busy} onClick={onRestore}>
+          Restore
+        </Button>
+      </div>
     </div>
   );
 }

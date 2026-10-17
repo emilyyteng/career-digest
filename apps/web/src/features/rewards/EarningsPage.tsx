@@ -23,7 +23,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   reflection: "Reflection",
   weekly_goal: "Weekly goals",
   achievement: "Achievements",
-  streak: "Streaks",
+  streak: "Daily streaks",
   gacha: "Cake",
 };
 

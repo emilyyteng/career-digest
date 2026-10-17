@@ -164,7 +164,9 @@ function ArchivedCustom({
         </span>
       </div>
       <span className="habits-label">{habit.name}</span>
-      <span className="habits-sub muted">streak paused from Active</span>
+      <span className="habits-sub muted">
+        missed days while archived break the streak
+      </span>
       <Button
         size="sm"
         variant="primary"

@@ -100,8 +100,8 @@ export default function WeeklyCheckIn({
           {customs.map((g) => (
             <li key={g.id} className="weekly-checkin-row">
               <div className="weekly-checkin-label">
-                <strong>{g.name}</strong>
-                <span className="muted">
+                <strong className="weekly-goal-title">{g.name}</strong>
+                <span className="muted weekly-goal-fraction">
                   {g.done}/{g.total}
                 </span>
               </div>

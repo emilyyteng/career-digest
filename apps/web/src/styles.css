@@ -5601,13 +5601,10 @@ button.progress-cal-cell.effort::after {
   gap: 0.45rem;
 }
 .weekly-goal-arch-row {
-  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.55rem 0.65rem;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.65rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   background: var(--surface);
@@ -5617,15 +5614,31 @@ button.progress-cal-cell.effort::after {
   background: color-mix(in srgb, var(--surface-2) 70%, transparent);
   border-color: color-mix(in srgb, var(--text-muted) 35%, var(--border));
 }
-.weekly-goal-arch-main {
+.weekly-goal-arch-top,
+.weekly-goal-arch-bottom {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
   min-width: 0;
-  padding-right: 0.5rem;
+}
+.weekly-goal-arch-top .weekly-goal-title {
+  min-width: 0;
+}
+.weekly-goal-arch-stamp {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.05rem 0.3rem;
+  border-radius: var(--radius-pill);
 }
 .weekly-goal-arch-meta {
   font-size: 0.8rem;
+  min-width: 0;
 }
 .weekly-goal-label-target-row {
   display: flex;
