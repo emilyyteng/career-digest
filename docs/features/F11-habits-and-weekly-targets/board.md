@@ -72,6 +72,6 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 | Ticket | Title | Commit |
 |--------|-------|--------|
 | [M3-01](./tickets/M3/M3-01-custom-weekly-schema.md) | Custom weekly targets schema | `5175545` |
-| [M3-02](./tickets/M3/M3-02-custom-weekly-api-seeds.md) | Custom weekly API + week-close Seeds | (this commit) |
+| [M3-02](./tickets/M3/M3-02-custom-weekly-api-seeds.md) | Custom weekly API + week-close Seeds | `f9baa39` |
 
 </details>
