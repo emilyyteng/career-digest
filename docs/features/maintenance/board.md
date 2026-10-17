@@ -13,6 +13,7 @@ Maintenance has no milestones, so the board has one open table and one done list
 | [MT-05](./tickets/MT-05-unapply-delete-application-spike.md) | Spike: should applications be un-appliable or deletable, and what happens to their points and links? | spike | Draft | Not scheduled |
 | [MT-07](./tickets/MT-07-reclaim-postings-columns.md) | Reclaim dropped-column slots on the dev `postings` table | cleanup | Draft | Not scheduled |
 | [MT-10](./tickets/MT-10-npm-audit-review.md) | Review `npm audit` warnings | spike | Draft | Not scheduled |
+| [MT-11](./tickets/MT-11-negative-points-notifications.md) | Spike: notifications for negative point events | spike | Draft | Not scheduled; surfaced F11 M2-01 |
 
 <details>
 <summary>Done (5)</summary>
