@@ -1,6 +1,6 @@
 /**
- * Progress This week — habits hub (F11 M2-03 / R1.12, R.9).
- * Pulse + Habits strip + weekly goals block (M3 replaces column + incrementer).
+ * Progress This week — habits hub (F11 M2–M3 / R1.12, R.9).
+ * Pulse + Habits strip + weekly column + Check in incrementer.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -12,6 +12,7 @@ import {
   type WeeklyGoalsSnapshot,
 } from "../../api";
 import HabitsStrip from "./HabitsStrip";
+import WeeklyCheckIn from "./WeeklyCheckIn";
 import WeeklyGoalsBlock from "./WeeklyGoalsBlock";
 import { formatPulseLine } from "./pulseFormat";
 
@@ -103,13 +104,24 @@ export default function ThisWeekPage() {
         />
       </div>
 
-      {/* M3-03 column; M3-04 adds the multi-goal incrementer beside it. */}
       {weeklyGoals && (
-        <div className="progress-week-goals-slot">
-          <WeeklyGoalsBlock
-            snapshot={weeklyGoals}
-            onChange={(next) => setWeeklyGoals(next)}
-          />
+        <div className="progress-week-split">
+          <div className="progress-week-main progress-week-goals-slot">
+            <WeeklyGoalsBlock
+              snapshot={weeklyGoals}
+              onChange={(next) => setWeeklyGoals(next)}
+            />
+          </div>
+          <div className="progress-week-aside">
+            <WeeklyCheckIn
+              snapshot={weeklyGoals}
+              tz={tz}
+              onChange={(next) => setWeeklyGoals(next)}
+              onLcLogged={async () => {
+                await reload();
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

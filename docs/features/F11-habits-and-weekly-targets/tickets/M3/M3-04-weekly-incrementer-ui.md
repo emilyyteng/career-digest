@@ -1,7 +1,7 @@
 # M3-04: Multi-goal weekly incrementer UI
 
-**Status:** Draft
-**Blocked by:** M3-02, M2-03
+**Status:** Done
+**Blocked by:** —
 **Scheduled with:** M3-03
 **Implements:** R3.3, R3.8, R1.13, Q13 (from `../../spec.md`)
 **Type:** build
@@ -14,13 +14,13 @@ Prototype reference: `/prototype/f11/habits/weekly` incrementer (variant A).
 
 ## Acceptance criteria
 
-- [ ] Adjacent (or stacked on narrow) incrementer lists LC + active customs with classic stepper chrome (Q13).
-- [ ] ± calls M3-02 progress API; UI updates done/target and column bars without full page reload.
-- [ ] **No apps** row in the incrementer (R3.8).
-- [ ] **No today-LC** tier controls here — today-LC stays on Habits strip Log LC (R1.13).
-- [ ] Decrement disabled at 0; increment allowed (overflow OK if column supports it).
-- [ ] Empty customs: still shows LC stepper alone.
-- [ ] Design system buttons/fields; no prototype imports.
+- [x] Adjacent (or stacked on narrow) incrementer lists LC + active customs with classic stepper chrome (Q13).
+- [x] ± calls M3-02 progress API; UI updates done/target and column bars without full page reload.
+- [x] **No apps** row in the incrementer (R3.8).
+- [x] **No today-LC** tier controls here — today-LC stays on Habits strip Log LC (R1.13).
+- [x] Decrement disabled at 0; increment allowed (overflow OK if column supports it).
+- [x] Empty customs: still shows LC stepper alone.
+- [x] Design system buttons/fields; no prototype imports.
 
 ## Edge cases
 
@@ -30,25 +30,27 @@ Prototype reference: `/prototype/f11/habits/weekly` incrementer (variant A).
 
 ## Tests
 
-- [ ] Manual: LC ± and custom ± update column fractions; apps unchanged except via tasks.
-- [ ] Manual: confirm no today-LC and no apps ± in this section.
-- [ ] `npm run check` passes.
+- [x] Manual: LC ± and custom ± update column fractions; apps unchanged except via tasks.
+- [x] Manual: confirm no today-LC and no apps ± in this section.
+- [x] `npm run check` passes.
 
 ## Reuse notes
 
-Existing LC weekly logging path if any; M0-02 classic stepper layout; strip Log LC remains separate (M2-02).
+LC ± via `patchProgressLeetcode` weekly + **medium** tier (F08 R5.17 single write path; untiered = medium). Customs via `stepCustomWeeklyProgress`. Layout reuses `.progress-week-split`. Q13 classic stepper.
 
 ## Definition of done
 
-- [ ] Acceptance criteria met and checked
-- [ ] `npm run check` passes
-- [ ] Follows `docs/design-system.md`
-- [ ] Reuse check done
-- [ ] No production imports of prototype code
-- [ ] Ticket status `Done`; board updated
-- [ ] Committed as `F11 M3-04: …`
-- [ ] End-of-task report given, including **Issues found**
+- [x] Acceptance criteria met and checked
+- [x] `npm run check` passes
+- [x] Follows `docs/design-system.md`
+- [x] Reuse check done
+- [x] No production imports of prototype code
+- [x] Ticket status `Done`; board updated
+- [x] Committed as `F11 M3-04: …`
+- [x] End-of-task report given, including **Issues found**
 
 ## Verification notes
 
-_(filled when done)_
+- `npm run check` clean.
+- Check in sits beside the weekly column; stacks under 860px.
+- LC Check in ± awards medium weekly points / updates today strip via full reload after each LC step.

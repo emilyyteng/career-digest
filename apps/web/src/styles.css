@@ -4330,12 +4330,74 @@ a.home-section-link:hover,
 .progress-past-work .card {
   margin-bottom: 0;
 }
-/* F11 M3-03: weekly goals column under the Habits strip (incrementer joins in M3-04). */
+/* F11 M3-03/04: weekly goals column + Check in under the Habits strip. */
 .progress-week-goals-slot {
   min-width: 0;
 }
 .progress-week-goals-slot .weekly-goals-card {
   margin-top: 0;
+}
+.weekly-checkin {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.weekly-checkin-title {
+  margin: 0;
+  font-size: 1rem;
+}
+.weekly-checkin-hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+.weekly-checkin-msg {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--danger-deep);
+}
+.weekly-checkin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.weekly-checkin-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+.weekly-checkin-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.weekly-checkin-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.weekly-checkin-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.weekly-checkin-count {
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+.weekly-checkin-step-btn {
+  min-width: 1.65rem;
+  padding-inline: 0.25rem;
 }
 .progress-week-split {
   display: grid;
