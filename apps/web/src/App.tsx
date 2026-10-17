@@ -71,17 +71,6 @@ const proto = import.meta.env.DEV
       F09Patterns: lazy(
         () => import("./prototype/f09-design-system/PatternsPage"),
       ),
-      F11HabitsHub: lazy(
-        () => import("./prototype/f11-habits-and-weekly-targets/F11HabitsHub"),
-      ),
-      F11HabitsStrip: lazy(
-        () =>
-          import("./prototype/f11-habits-and-weekly-targets/HabitsStripPrototypePage"),
-      ),
-      F11HabitsWeekly: lazy(
-        () =>
-          import("./prototype/f11-habits-and-weekly-targets/WeeklyGoalsPrototypePage"),
-      ),
     }
   : null;
 
@@ -268,18 +257,6 @@ export default function App() {
                 <Route
                   path="/prototype/f09/patterns"
                   element={<ProtoPage page={proto.F09Patterns} />}
-                />
-                <Route
-                  path="/prototype/f11/habits"
-                  element={<ProtoPage page={proto.F11HabitsHub} />}
-                />
-                <Route
-                  path="/prototype/f11/habits/strip"
-                  element={<ProtoPage page={proto.F11HabitsStrip} />}
-                />
-                <Route
-                  path="/prototype/f11/habits/weekly"
-                  element={<ProtoPage page={proto.F11HabitsWeekly} />}
                 />
               </>
             ) : (

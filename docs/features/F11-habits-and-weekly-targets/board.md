@@ -2,12 +2,13 @@
 
 Index of every ticket in this feature. Each ticket file's `Status:` line is the source of truth; update this board in the same commit. Spec: [spec.md](./spec.md).
 
+When a milestone has no open tickets, write **No open tickets.** under the milestone heading — do not leave an empty open-tickets table.
+
 ## M0: Lock requirements & prototypes
 
 **Milestone status:** Done
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
+No open tickets.
 
 <details>
 <summary>Done (2)</summary>
@@ -23,8 +24,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 **Milestone status:** Done
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
+No open tickets.
 
 <details>
 <summary>Done (3)</summary>
@@ -41,8 +41,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 **Milestone status:** Done
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
+No open tickets.
 
 <details>
 <summary>Done (3)</summary>
@@ -57,14 +56,12 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 
 ## M3: Custom weekly targets
 
-**Milestone status:** In progress
+**Milestone status:** Done
 
-| Ticket | Title | Type | Status | Notes |
-|--------|-------|------|--------|-------|
-| [M3-06](./tickets/M3/M3-06-prototype-cleanup.md) | Delete F11 M0 prototypes | build | Draft | After M2-01/02 + M3-03/04/05 |
+No open tickets.
 
 <details>
-<summary>Done (5)</summary>
+<summary>Done (6)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
@@ -73,5 +70,6 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 | [M3-03](./tickets/M3/M3-03-weekly-column-ui.md) | Progress weekly goals column UI | `60099eb` |
 | [M3-04](./tickets/M3/M3-04-weekly-incrementer-ui.md) | Multi-goal weekly incrementer UI | `76926bf` |
 | [M3-05](./tickets/M3/M3-05-home-targets-customs.md) | Home Targets for custom weeklies | `ad69fdf` |
+| [M3-06](./tickets/M3/M3-06-prototype-cleanup.md) | Delete F11 M0 prototypes | (this commit) |
 
 </details>
