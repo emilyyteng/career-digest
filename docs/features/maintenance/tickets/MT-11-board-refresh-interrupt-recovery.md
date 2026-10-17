@@ -62,4 +62,4 @@ Diagnosing a stuck Jobs banner (“Refreshing board — ingesting listings…”
 
 - Cleared stuck `data/board-refresh.json` manually before the fix (local-only).
 - `npm run check` green (384 tests), including new board-refresh / processAlive / catch-up cases.
-- Commit hash pending follow-up after this commit exists.
+- Commit: `9b8b4e3`.
