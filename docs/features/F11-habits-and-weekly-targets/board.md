@@ -51,7 +51,7 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 |--------|-------|--------|
 | [M2-01](./tickets/M2/M2-01-habits-strip-ui.md) | Habits strip on Home + Progress | 95cb2b5 |
 | [M2-02](./tickets/M2/M2-02-strip-reflection-and-log-lc.md) | Strip Add reflection + Log LC | 67cd4f5 |
-| [M2-03](./tickets/M2/M2-03-this-week-remodel.md) | This week remodel around Habits strip | (this commit) |
+| [M2-03](./tickets/M2/M2-03-this-week-remodel.md) | This week remodel around Habits strip | `8bb766f` |
 
 </details>
 

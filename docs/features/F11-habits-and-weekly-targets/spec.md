@@ -24,7 +24,7 @@ Daily streaks today only cover career prep (applications and LeetCode). Life foc
 |-----------|-------|--------|
 | M0 | Lock requirements (done in grilling); **prototypes** for contested UX (habits strip → weekly column + incrementer) | Done |
 | M1 | Daily custom habits: data, API, points hooks | Done |
-| M2 | Daily habits UI + This week / Home strip remodel (checkoff, archive, reflection pencil, today-LC home from prototype verdict) | Not started |
+| M2 | Daily habits UI + This week / Home strip remodel (checkoff, archive, reflection pencil, today-LC home from prototype verdict) | Done |
 | M3 | Custom weekly targets: data/API/UI (Progress weekly column, incrementer, Home Targets) | Not started |
 
 M0 prototypes live under `apps/web/src/prototype/f11-habits-and-weekly-targets/` (DEV-only routes), per `AGENTS.md` Prototypes. Sequence: **(1)** Habits strip (Home + Progress), **(2)** weekly goals column + multi-goal incrementer + Home Targets mock. M3 follows daily habits so weekly design can learn from that surface.
@@ -106,7 +106,7 @@ Verified by reading code (2026-10-15). No F11 requirements are implemented yet.
 | Customs: qualifying days in `custom_habit_days`; LC/apps still derived | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`042_custom_daily_habits.sql`](../../../apps/api/src/sql/042_custom_daily_habits.sql) | Conforms R1.5 | |
 | Streak points: daily `min(20, 2×length)`, milestones `5×length`, today-only award/reverse, category `streak` | [`streaks.ts`](../../../apps/api/src/streaks.ts), [`pointsFormulas.ts`](../../../apps/api/src/pointsFormulas.ts) | Conforms R.3 | Habits use `habit:<id>:<date>` source ids (M1-02) |
 | Habits strip on Home + Progress: Active/Archived, Apps/LC derived, customs checkoff/pencil, ghost archived, create slot, Add reflection + Log LC | [`HabitsStrip.tsx`](../../../apps/web/src/features/progress/HabitsStrip.tsx) | Conforms R1.8–R1.11, R1.13–R1.14, R1.5, R1.9, Q11–Q12, Q14 (strip) | M2-01 / M2-02 |
-| This week: Habits strip + week/month pulse, weekly goals, Next achievements, LC logger, Daily progress (compose/notes/apps) | [`ThisWeekPage.tsx`](../../../apps/web/src/features/progress/ThisWeekPage.tsx) | Conflicts R1.12, R3.8 (absent) | Strip chrome Conforms via M2-01; remodel is M2-03 |
+| This week: pulse → Habits strip → weekly goals block (no Next achievements / Daily progress / aside LC logger) | [`ThisWeekPage.tsx`](../../../apps/web/src/features/progress/ThisWeekPage.tsx) | Conforms R1.12 (M2-03); R3.8 still Unspecified until M3 | Weekly goals block temporary until M3-03/04 |
 | Home “Update progress →” bottom-right of Habits strip → `/progress` | [`HabitsStrip.tsx`](../../../apps/web/src/features/progress/HabitsStrip.tsx) | Conforms R1.8 (placement) | M2-01 |
 | Weekly goals: apps + LC only; Home Targets Sunday rows for unmet apps/LC | [`weeklyGoals.ts`](../../../apps/api/src/weeklyGoals.ts), [`homeUpcoming.ts`](../../../apps/api/src/homeUpcoming.ts) | Conflicts R3.1–R3.2 (absent) | |
 | Weekly-goal streak display-only for apps/LC | F08 R5.28 | Conforms R3.9 (pattern to extend) | |
@@ -189,3 +189,4 @@ None. Prototype questions Q11–Q14 are resolved (2026-10-16).
 - **2026-10-16 (M0-01):** Strip verdicts — Q11 mark hit-target; Q12 Log LC disclosure on band; Q14 strip = ghost stamp. Prototype at `/prototype/f11/habits/strip`.
 - **2026-10-16 (M0-02):** Weekly verdicts — Q13 classic stepper; Q14 weekly = ghost stamp (same as strip). Prototype at `/prototype/f11/habits/weekly`. M0 Done. Streak lengths stay **derived** from qualifying days / checkoffs (no stored counter); same pattern as LC/apps and weekly met-weeks.
 - **2026-10-16:** Active custom cap raised **3 → 6** for both daily habits and weekly targets (R.7). Apps + LC still always present beside customs.
+- **2026-10-16 (M2-03):** This week remodeled — pulse above Habits strip; Next achievements and Daily progress aside removed; apps/LC `WeeklyGoalsBlock` stays full-width until M3.
