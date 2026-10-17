@@ -106,15 +106,18 @@ function TargetStepper({
   label,
   disabled,
   onChange,
+  /** When false, only − N + shows (outer label supplies the word). */
+  showCaption = true,
 }: {
   value: number;
   label: string;
   disabled?: boolean;
   onChange: (n: number) => void;
+  showCaption?: boolean;
 }) {
   return (
     <div className="weekly-goal-target-step">
-      <span className="muted">Target</span>
+      {showCaption && <span className="muted">Target</span>}
       <span className="weekly-goal-target-controls" role="group" aria-label={`${label} weekly target`}>
         <Button
           size="sm"
@@ -220,19 +223,19 @@ function LabelLine({
 }
 
 function AppsMembers({ goal }: { goal: WeeklyGoalView }) {
-  if (goal.members.length === 0) {
+  const n = goal.members.length;
+  if (n === 0) {
     return (
       <p className="muted weekly-goal-empty">
-        No tagged applications. Tag application tasks as “Target this week” on Tasks. Progress from
-        application tasks only — no ± here.
+        No tagged applications. Tag application tasks as “Target this week” on Tasks.
       </p>
     );
   }
+  const summary =
+    n === 1 ? "1 tagged application" : `${n} tagged applications`;
   return (
-    <>
-      <p className="muted weekly-goal-apps-note">
-        Progress from application-task completion only — no ± here.
-      </p>
+    <details className="weekly-goal-apps-drop">
+      <summary className="weekly-goal-apps-summary">{summary}</summary>
       <ul className="weekly-goal-apps-plain">
         {goal.members.map((m) => {
           const name = m.organization ? `${m.organization} · ${m.title}` : m.title;
@@ -244,7 +247,7 @@ function AppsMembers({ goal }: { goal: WeeklyGoalView }) {
           );
         })}
       </ul>
-    </>
+    </details>
   );
 }
 
@@ -409,10 +412,10 @@ export default function WeeklyGoalsBlock({
 
   if (!snapshot) return null;
 
-  // Active order: apps, LC, then customs (ticket / prototype; API returns LC then apps).
+  // Active order: LC, apps, then customs (API already returns LC then apps).
   const appsGoal = snapshot.goals.find((g) => g.slot === "apps");
   const lcGoal = snapshot.goals.find((g) => g.slot === "lc");
-  const orderedSlots = [appsGoal, lcGoal].filter(Boolean) as WeeklyGoalView[];
+  const orderedSlots = [lcGoal, appsGoal].filter(Boolean) as WeeklyGoalView[];
 
   async function refreshSnapshot() {
     const next = await getWeeklyGoals(tz);
@@ -506,7 +509,7 @@ export default function WeeklyGoalsBlock({
                   ? `Custom cap (${CUSTOM_WEEKLY_CAP}) reached`
                   : "Add custom weekly goal"
               }
-              aria-label="Add custom weekly goal"
+              aria-label="Add goal"
               onClick={() => {
                 if (atCap) {
                   setMessage(
@@ -520,7 +523,7 @@ export default function WeeklyGoalsBlock({
                 setMessage(null);
               }}
             >
-              +
+              Add goal +
             </Button>
             <div
               className="ui-chrome-tabs weekly-goals-section-tabs"
@@ -614,6 +617,9 @@ export default function WeeklyGoalsBlock({
         >
           <ModalHeader id="weekly-create-title" title="New weekly goal" />
           <ModalBody>
+            <p className="muted habits-hint" style={{ marginTop: 0 }}>
+              Default target is 3. Carries week to week; progress resets Mondays.
+            </p>
             <label className="habits-field-label">
               Name
               <TextField
@@ -624,21 +630,16 @@ export default function WeeklyGoalsBlock({
                 onChange={(e) => setCreateName(e.target.value)}
               />
             </label>
-            <label className="habits-field-label" style={{ marginTop: "0.75rem" }}>
-              Weekly target
-              <TextField
-                type="number"
-                fieldSize="num"
-                min={1}
+            <div className="habits-field-label weekly-goal-create-target">
+              <span>Weekly target</span>
+              <TargetStepper
                 value={createTarget}
-                onChange={(e) =>
-                  setCreateTarget(Math.max(1, Number(e.target.value) || 1))
-                }
+                label="new weekly goal"
+                disabled={busy}
+                showCaption={false}
+                onChange={setCreateTarget}
               />
-            </label>
-            <p className="muted habits-hint">
-              Default target is 3. Carries week to week; progress resets Mondays.
-            </p>
+            </div>
           </ModalBody>
           <ModalFooter>
             <Button variant="secondary" onClick={() => setCreateOpen(false)}>
