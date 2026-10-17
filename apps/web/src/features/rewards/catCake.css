@@ -10,6 +10,11 @@
   transform: translateX(78px);
   opacity: 0.45;
 }
+/* Hide without unmounting: `display`/`conditional render` would restart the
+   shine animation (and its --cc-delay freeze) when toggling Night → Day. */
+.cc--night .cc-shine {
+  visibility: hidden;
+}
 .cc--animated .cc-eyes {
   transform-box: fill-box;
   transform-origin: center;
@@ -27,8 +32,11 @@
 }
 .cc--animated .cc-shine {
   opacity: 1;
+  /* backwards: during --cc-delay use the 0% keyframe (off-canvas), not the
+     static mid-cake pose — otherwise a Night→Day remount looks frozen. */
   animation: cc-shine 3.8s ease-in-out infinite;
   animation-delay: var(--cc-delay, 0s);
+  animation-fill-mode: backwards;
 }
 .cc--silhouette {
   filter: brightness(0) opacity(0.16);

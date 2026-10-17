@@ -180,6 +180,7 @@ export default function CollectionPage() {
             size={160}
             animated={sel.edition === "collector" && sel.n > 0}
             silhouette={sel.n === 0}
+            animationDelay={0}
             showName={false}
           />
           <div>

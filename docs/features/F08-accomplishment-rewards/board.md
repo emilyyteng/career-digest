@@ -103,10 +103,11 @@ No open tickets.
 No open tickets.
 
 <details>
-<summary>Done (11)</summary>
+<summary>Done (12)</summary>
 
 | Ticket | Title | Commit |
 |--------|-------|--------|
+| [M7-12](./tickets/M7/M7-12-ce-animation-day-night.md) | CE animations on Day/Night toggle and detail select | |
 | [M7-11](./tickets/M7/M7-11-gacha-rate-simulation.md) | Gacha rate simulation test | `87e6ac6` |
 | [M7-10](./tickets/M7/M7-10-rules-reference.md) | Rewards Rules reference | `3768f93` |
 | [M7-09](./tickets/M7/M7-09-pull-history.md) | Pull history | `3addc8d` |

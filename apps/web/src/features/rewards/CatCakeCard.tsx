@@ -27,6 +27,7 @@ export default function CatCakeCard({
   size = 96,
   animated = true,
   silhouette = false,
+  animationDelay,
   showName = true,
   count,
   selected = false,
@@ -38,6 +39,8 @@ export default function CatCakeCard({
   size?: number;
   animated?: boolean;
   silhouette?: boolean;
+  /** Seconds before CSS animations start. Omit for flavor-based album stagger. */
+  animationDelay?: number;
   showName?: boolean;
   /** Shown as ×N badge when &gt; 1 (typically refundable dupes only). */
   count?: number;
@@ -71,6 +74,7 @@ export default function CatCakeCard({
         size={size}
         animated={animated}
         silhouette={silhouette}
+        animationDelay={animationDelay}
       />
       {showName && (
         <span className="cc-card-name" style={{ maxWidth: Math.max(size, 84) }}>

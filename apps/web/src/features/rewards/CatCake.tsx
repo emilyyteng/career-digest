@@ -344,6 +344,8 @@ export type CatCakeProps = {
   size?: number;
   animated?: boolean;
   silhouette?: boolean;
+  /** Seconds before CSS animations start. Omit for flavor-based album stagger. */
+  animationDelay?: number;
   className?: string;
 };
 
@@ -370,6 +372,7 @@ export default function CatCake({
   size = 96,
   animated = false,
   silhouette = false,
+  animationDelay,
   className,
 }: CatCakeProps) {
   const f = FLAVOR_BY_ID[flavor];
@@ -387,12 +390,16 @@ export default function CatCake({
   const id = (s: string) => `cc-${uid}-${flavor}-${edition}-${collectorStyle}-${s}`;
   const gold = `url(#${id("gold")})`;
   const basePath = BASE_PATH[f.base];
-  const delay = FLAVORS.findIndex((x) => x.id === flavor) * 0.37;
+  const delay =
+    animationDelay ?? FLAVORS.findIndex((x) => x.id === flavor) * 0.37;
   const animate = animated && ce && !silhouette;
 
   const classes = [
     "cc",
     animate ? "cc--animated" : "",
+    // Keep shine mounted across Day/Night so its CSS animation is not
+    // restarted (and frozen for --cc-delay) on every look toggle.
+    ce && !silhouette ? (night ? "cc--night" : "cc--day") : "",
     silhouette ? "cc--silhouette" : "",
     className ?? "",
   ]
@@ -575,7 +582,7 @@ export default function CatCake({
           </g>
         )}
 
-        {day && (
+        {ce && !silhouette && (
           <g clipPath={`url(#${id("body")})`}>
             <g className="cc-shine">
               <rect x={-34} y={-4} width={22} height={128} fill={`url(#${id("shine")})`} transform="skewX(-18)" />
