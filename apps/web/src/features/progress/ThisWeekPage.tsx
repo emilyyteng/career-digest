@@ -103,7 +103,7 @@ export default function ThisWeekPage() {
         />
       </div>
 
-      {/* Temporary until M3-03/M3-04: apps+LC weekly goals stay on This week. */}
+      {/* M3-03 column; M3-04 adds the multi-goal incrementer beside it. */}
       {weeklyGoals && (
         <div className="progress-week-goals-slot">
           <WeeklyGoalsBlock
