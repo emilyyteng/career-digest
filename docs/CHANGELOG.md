@@ -364,43 +364,6 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 
 ---
 
-## Custom habits & weekly targets (F11)
-
-*Spec:* [features/F11-habits-and-weekly-targets/spec.md](./features/F11-habits-and-weekly-targets/spec.md). *Built from 2026-10-15.*
-
-**Why:** Daily streaks only covered career prep (applications and LeetCode). Named personal habits needed the same streak-points rules, plus a place for non-daily quotas as weekly targets rather than alternate streak schedules.
-
-### M0: Requirements lock & prototypes
-
-Grilled requirements for multi-habit daily tracking and custom weekly targets (later capped at 6 customs beside apps+LC each). DEV-only prototypes locked strip and weekly chrome: mark hit-target checkoff, Log LC disclosure, classic weekly stepper, ghost-stamp Archived views. Prototypes were deleted when the feature closed.
-
-**Outcome:** Build tickets could follow locked UX without inventing strip or weekly chrome.
-
-### M1: Daily custom habits — data & API
-
-- Schema for habit identity and per-day checkoffs; streak length stays derived (same idea as LC/apps).
-- Today-only streak points reuse the shared daily/milestone formulas; ledger source ids are `habit:<id>:…` so they never collide with `lc:` / `apps:`.
-- HTTP under `/api/habits` (create, rename, archive, restore, today checkoff) with an active custom cap of 6. `GET /progress/today` adds `habits.active` / `habits.archived` beside unchanged LC/apps streaks.
-
-**Outcome:** The API can drive a Habits strip; UI is M2.
-
-### M2: Habits strip UI + This week remodel
-
-- **Habits strip** on Home and Progress: Active/Archived chips, Apps and LC as derived pills, custom checkoff and rename/archive, create slot under the custom cap, Add reflection and Log LC on the strip band, Update progress on Home.
-- Progress → This week remodeled around the strip: week/month pulse cards stay above; Next achievements and the Daily progress aside are gone.
-
-**Outcome:** Daily customs are checkable where the day is managed; This week is the habits hub.
-
-### M3: Custom weekly targets
-
-- Schema and `/api/weekly-customs` for named weekly quotas (default target 3); open progress and closed week records parallel apps/LC. Week-close Seeds match apps/LC (+20 per unit, +100 when met). Snapshot carries `customs.active` / `customs.archived`.
-- Progress weekly goals column: create, Active/Archived, rename/archive, near-label target stepper, weeks-in-a-row flame. Check in advances customs only (±); LC weekly count moves through Log LC, with Today/This week tier lines under Weekly LC.
-- Home Targets lists unmet active customs on Sundays alongside apps/LC.
-
-**Outcome:** Non-daily quotas live beside apps and LC weekly goals, with the same Seeds schedule and a clear Check in surface.
-
----
-
 ## Documentation & development process (F10)
 
 *Built 2026-08-31 and 2026-10-12 to 2026-10-13.*
@@ -426,3 +389,49 @@ Grilled requirements for multi-habit daily tracking and custom weekly targets (l
 - **This changelog.** Rewritten as a shipped-only history, renumbered per feature.
 
 **Outcome:** Requirements, decisions and known issues live in tracked documents that every working session reads, and this changelog records only what shipped.
+
+---
+
+## Custom habits & weekly targets (F11)
+
+*Spec:* [features/F11-habits-and-weekly-targets/spec.md](./features/F11-habits-and-weekly-targets/spec.md). *Built 2026-10-15 to 2026-10-16.*
+
+**Why:** Daily streaks only covered career prep — applications submitted and LeetCode solves. Personal routines had nowhere to live: no named habit to check off, no way to park one when priorities change, and no weekly quota for things that aren't every day. Stretching daily streaks into custom schedules would have fought the existing weekly-goals model, so F11 added both a multi-habit daily tracker and custom weekly targets beside apps and LC.
+
+### M0: Requirements lock & prototypes
+
+Locked the product rules and settled contested chrome in throwaway prototypes before building.
+
+- Up to six custom daily habits and six custom weekly targets beside always-present apps and LC; same daily streak points as LC/apps; archive does not freeze time; Progress → This week is the habits hub.
+- Prototypes chose checkoff vs edit on habit pills, where today-LC logging lives on the strip, classic weekly ± steppers, and a ghost-stamp Archived look. They were deleted when the feature closed.
+
+**Outcome:** Build work followed locked UX instead of inventing strip or weekly chrome mid-implementation.
+
+### M1: Daily custom habits — data & API
+
+Added named daily habits with the same streak-points rules as LC and apps, exposed over HTTP.
+
+- Each habit is a named identity with a boolean checkoff for today; streak length is derived from those days (same idea as LC/apps).
+- Points reuse the shared daily and milestone formulas, awarded and reversed only for today, under ledger source ids that cannot collide with `lc:` or `apps:`.
+- An API creates, renames, archives, restores, and checks off habits (six active customs max). Today's progress payload includes active and archived habits beside LC and apps streaks.
+
+**Outcome:** The backend can drive a Habits strip; the UI followed in M2.
+
+### M2: Habits strip UI + This week remodel
+
+Shipped a shared Habits strip on Home and Progress, and remodeled This week around it.
+
+- **Habits strip.** Active shows Apps and LC as derived pills, then customs you can check off, rename, or archive, plus a create slot under the custom cap. Archived shows only parked customs; missed days while archived still break the streak. The band also holds Add reflection and Log LC; on Home, Update progress links into Progress.
+- **This week.** Week and month pulse cards stay above the strip. Next achievements and the Daily progress aside were removed so the page is the habits hub, not a second achievements surface.
+
+**Outcome:** Daily customs are checkable where the day is managed, and This week has one clear place for habits work.
+
+### M3: Custom weekly targets
+
+Extended weekly goals with named custom quotas, a Check in panel, and Home Targets — same Seeds as apps and LC.
+
+- Named weekly quotas (default target three) sit beside apps and LC. Name and target carry week to week; archive parks a goal without deleting it. Week-close Seeds match apps/LC (+20 per unit, +100 when met). A weeks-in-a-row indicator appears after two met weeks and breaks if a later week closes unmet, including while archived.
+- Progress weekly column: create, Active/Archived, rename/archive, and a target stepper near each custom label. **Check in** advances only customs with ±; LC weekly progress still comes from Log LC, with read-only Today and This week tier counts under Weekly LC.
+- On Sundays, Home Targets lists unmet active customs alongside apps and LC.
+
+**Outcome:** Non-daily quotas live in the same weekly-goals system as apps and LC, with the same Seeds schedule and a dedicated Check in surface.
