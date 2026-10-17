@@ -2,8 +2,6 @@
 
 A personal hub for life and career management — job search, prep, and day-to-day follow-through in one local app. Pull and rank internship boards when you need them, keep applications and interviews moving, organize tasks across work and personal life, and stay honest with weekly goals, progress, and small rewards.
 
-Development history can be found in the [changelog](./docs/CHANGELOG.md).
-
 ## What it does
 
 | Area             | What you get                                                                                    |
@@ -16,6 +14,8 @@ Development history can be found in the [changelog](./docs/CHANGELOG.md).
 | **Progress**     | This week, Past work, and Lifetime: weekly goals, completions, heatmaps, achievements           |
 | **Rewards**      | Cat Cake Collection gacha: banner pulls, album, earnings, pull history, and rules (seeds)       |
 | **Status**       | Ops dashboard — ingest, scrape, rank, backup health, and board departures                       |
+
+Development history can be found in the [changelog](./docs/CHANGELOG.md).
 
 ## Stack
 
