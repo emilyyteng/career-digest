@@ -305,7 +305,7 @@ Seeds become spendable on a dedicated Rewards area: a bakery gacha with collecti
 
 **Currency and ledger.**
 
-- The user-facing name is **seeds** (one shared display constant so it can be renamed later). Storage may still say `points_*`.
+- The user-facing name is **seeds** (one shared display constant so it can be renamed later). Storage may still say `points_`*.
 - The balance may go negative. Pulls are blocked whenever the purse is below the cost.
 - Chrome shows `{balance} seeds ({lifetime} lifetime)`, where lifetime is all non-spend ledger amounts (work earns plus Cake refunds). Pull spends reduce the balance only.
 - Ledger kinds `spend` and `refund` with category `gacha` record banner activity. Earnings labels refunds as **Cake** and never nets spends into those bars.
@@ -357,7 +357,7 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 
 - Shared primitives: `Button`, fields, `Segmented`, `ChromeTab`, `Badge`; heat/urgency washes; global filled-blue button default and `:not(...)` chain removed.
 - Pilot-migrated **Home** and the app shell (flora.exe, underline chrome-tabs, 1100px).
-- Locked IA patterns in the design system: feature shell / nested tabs; dual-panel **28rem** height with in-panel scroll; chrome budget; shared **`Pager`** contract (size 25, no jump select); EarnFlash near-control; compact long-page tactics (chips → well → pager → clamp); modal header→body→footer; in-content link hover (ink + underline).
+- Locked IA patterns in the design system: feature shell / nested tabs; dual-panel **28rem** height with in-panel scroll; chrome budget; shared `**Pager`** contract (size 25, no jump select); EarnFlash near-control; compact long-page tactics (chips → well → pager → clamp); modal header→body→footer; in-content link hover (ink + underline).
 - Mechanical enforcement: `npm run check:ui` fails bare `<button>` app-wide and unclassed fields on the Home tree.
 
 **Outcome:** The design system is authoritative for new UI. Core surfaces (Tasks, Jobs, Applications, Interviews, Progress polish) migrate in M2.
@@ -379,7 +379,7 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 
 ### M1: Specs, tickets and a written process
 
-- **`AGENTS.md` is the single process reference.** It sets which source wins in a conflict (user, then spec, then ticket, then prototype; the design system on visuals). It defines the feature workflow: spec, tickets, prototype, implement, verify, commit.
+- `**AGENTS.md` is the single process reference.** It sets which source wins in a conflict (user, then spec, then ticket, then prototype; the design system on visuals). It defines the feature workflow: spec, tickets, prototype, implement, verify, commit.
 - **Specs.** Each feature has a permanent ID and, once active, a spec.
   - Requirements are tagged Established (confirmed by the user, and the only kind that may be built) or Proposed (awaiting confirmation).
   - Existing behavior is audited separately, and never treated as a requirement just because it exists.
@@ -396,7 +396,7 @@ Progress becomes a nested hub for weekly pace and lifetime accumulation. Currenc
 
 *Spec:* [features/F11-habits-and-weekly-targets/spec.md](./features/F11-habits-and-weekly-targets/spec.md). *Built 2026-10-15 to 2026-10-16.*
 
-**Why:** Daily streaks only covered career prep — applications submitted and LeetCode solves. Personal routines had nowhere to live: no named habit to check off, no way to park one when priorities change, and no weekly quota for things that aren't every day. Stretching daily streaks into custom schedules would have fought the existing weekly-goals model, so F11 added both a multi-habit daily tracker and custom weekly targets beside apps and LC.
+**Why:** Daily streaks only covered career prep (applications and LeetCode). Named personal habits needed the same streak-points rules, plus a place for non-daily quotas as weekly targets rather than alternate streak schedules.
 
 ### M0: Requirements lock & prototypes
 
