@@ -72,6 +72,6 @@ Index of every ticket in this feature. Each ticket file's `Status:` line is the 
 | [M3-01](./tickets/M3/M3-01-custom-weekly-schema.md) | Custom weekly targets schema | `5175545` |
 | [M3-02](./tickets/M3/M3-02-custom-weekly-api-seeds.md) | Custom weekly API + week-close Seeds | `f9baa39` |
 | [M3-03](./tickets/M3/M3-03-weekly-column-ui.md) | Progress weekly goals column UI | `60099eb` |
-| [M3-04](./tickets/M3/M3-04-weekly-incrementer-ui.md) | Multi-goal weekly incrementer UI | (this commit) |
+| [M3-04](./tickets/M3/M3-04-weekly-incrementer-ui.md) | Multi-goal weekly incrementer UI | `76926bf` |
 
 </details>
