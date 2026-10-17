@@ -55,4 +55,4 @@ Extends `CatCake` / `CatCakeCard` / `catCake.css` and the Collection detail `Cat
 
 ## Verification notes
 
-Manual Collection checks above. Commit hash filled in follow-up once this ticket commit exists.
+Manual Collection checks above. `npm run check` passed. Ticket commit: `5367f19`.
